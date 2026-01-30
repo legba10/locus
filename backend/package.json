@@ -7,6 +7,7 @@
     "dev": "nest start --watch",
     "build": "npx nest build",
     "start": "node dist/main.js",
+    "start:prod": "node dist/main.js",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
     "prisma:fix-windows": "powershell -ExecutionPolicy Bypass -File fix-prisma-windows.ps1",
@@ -23,6 +24,9 @@
     "deploy:local": "APP_ENV=LOCAL node scripts/deploy-check.js",
     "deploy:staging": "APP_ENV=STAGING node scripts/deploy-check.js",
     "deploy:prod": "APP_ENV=PROD node scripts/deploy-check.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
