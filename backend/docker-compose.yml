@@ -1,0 +1,28 @@
+# Local PostgreSQL for development
+# Start: docker-compose up -d
+# Stop: docker-compose down
+# Reset: docker-compose down -v && docker-compose up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: locus-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: locus
+    volumes:
+      - locus_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  locus_pgdata:

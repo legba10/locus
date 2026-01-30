@@ -1,0 +1,394 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════
+   СОВРЕМЕННЫЙ СКРОЛЛИНГ
+   ════════════════════════════════════════════════════════════════ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(124, 58, 237, 0.5);
+}
+
+/* Плавный скроллинг */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Стили для option элементов в select - закругленные углы */
+select option {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: white;
+}
+
+/* Улучшенный скроллинг для контейнеров */
+.scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(124, 58, 237, 0.5);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LOCUS Design System v2 — Premium Real Estate Marketplace
+   
+   🎯 ФОРМУЛА:
+   70% — нейтральный real-estate UI
+   20% — glass / depth / shadows  
+   10% — AI / accent (фиолетовый)
+   
+   ❗ Логотип НЕ синий!
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+  
+  /* ═══════════ BACKGROUNDS ═══════════ */
+  --bg-main: #FFFFFF;
+  --bg-soft: #F7F8FA;
+  --bg-card: #FFFFFF;
+  --bg-gradient: linear-gradient(180deg, #FFFFFF 0%, #F6F7FB 100%);
+  
+  /* ═══════════ TEXT ═══════════ */
+  --text-main: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  
+  /* ═══════════ ACCENT (Фиолетовый — 10%) ═══════════ */
+  --accent-primary: #7C3AED;
+  --accent-light: #A78BFA;
+  --accent-soft: rgba(124, 58, 237, 0.12);
+  --accent-border: rgba(124, 58, 237, 0.2);
+  
+  /* ═══════════ LOGO (НЕ синий! Брендовый оттенок) ═══════════ */
+  --logo-primary: #1C1F26; /* Graphite */
+  --logo-secondary: #374151;
+  --logo-accent: #7C3AED;
+  --logo-muted-blue: #4F46E5; /* Indigo для альтернативного варианта */
+  
+  /* ═══════════ BORDERS ═══════════ */
+  --border-soft: rgba(0, 0, 0, 0.06);
+  --border-default: #E5E7EB;
+  
+  /* ═══════════ SHADOWS (Критично для depth!) ═══════════ */
+  --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 16px 50px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 20px 60px rgba(0, 0, 0, 0.12);
+  --shadow-dropdown: 0 20px 50px rgba(0, 0, 0, 0.15);
+  --shadow-button: 0 4px 14px rgba(124, 58, 237, 0.25);
+  
+  /* ═══════════ GLASS ═══════════ */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: 18px;
+  
+  /* ═══════════ FOOTER ═══════════ */
+  --footer-bg-from: #0B1226;
+  --footer-bg-to: #020617;
+  
+  /* Semantic */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+}
+
+/* Force light mode */
+html {
+  color-scheme: light !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Minimal focus styles — фиолетовый акцент */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color — фиолетовый */
+::selection {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ════════════════════════════════════════════════════════════════ */
+
+/* Shimmer animation for skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Pulse subtle */
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}/* ════════════════════════════════════════════════════════════════
+   GLASSMORPHISM UTILITIES — по ТЗ v3
+   blur(20px), мощные тени
+   ════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+/* Glass Search Card — по ТЗ v3 */
+.glass-search {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+/* Glass Dropdown — по ТЗ v3 */
+.glass-dropdown {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CARD UTILITIES — по ТЗ v3
+   hover: translateY(-6px), shadow: 0 20px 60px
+   ════════════════════════════════════════════════════════════════ */
+
+/* Card with shadow по ТЗ v3 */
+.card {
+  background: #FFFFFF;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Card hover — lift effect по ТЗ v3: translateY(-6px) */
+.card:hover,
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DROPDOWN UTILITIES — по ТЗ v3
+   radius: 14px, shadow: 0 12px 40px, smooth animation 150ms
+   ════════════════════════════════════════════════════════════════ */
+
+.dropdown {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  animation: dropdownFadeIn 150ms ease-out;
+}@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown item hover */
+.dropdown-item:hover {
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 8px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   BUTTON UTILITIES
+   ════════════════════════════════════════════════════════════════ */
+
+.btn-accent {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: var(--shadow-button);
+  transition: all 0.2s ease-out;
+}
+
+.btn-accent:hover {
+  background: var(--accent-light);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CUSTOM UTILITIES
+   ════════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Better select styling — rounded */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1em 1em;
+  padding-right: 2.5rem;
+  border-radius: 14px;
+}
+
+/* Input focus — фиолетовый акцент */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SECTION BACKGROUNDS — по ТЗ v3 (убрать "empty white feeling")
+   ════════════════════════════════════════════════════════════════ */
+
+.section-soft {
+  background: #F8FAFC;
+}
+
+/* Option A: linear gradient */
+.section-gradient {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+/* Option B: premium purple radial (subtle) */
+.section-premium {
+  background: radial-gradient(1200px 600px at 50% 0%, rgba(124, 58, 237, 0.06), transparent 60%);
+}/* Dark section (graphite, НЕ blue) */
+.section-dark {
+  background: linear-gradient(180deg, #0F172A 0%, #020617 100%);
+}

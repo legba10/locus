@@ -1,0 +1,8 @@
+.next/
+node_modules/
+
+.locus-mock-db.json
+playwright-report/
+test-results/
+coverage/
+

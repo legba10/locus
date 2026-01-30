@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * LOCUS Global Styles
+ * 
+ * Fix overlay bug - pointer events
+ */
+
+/* Remove invisible overlays blocking pointer events */
+.overlay-debug {
+  pointer-events: none !important;
+}
+
+/* Ensure only modals and dropdowns capture pointer events */
+[data-modal],
+[data-dropdown] {
+  pointer-events: auto;
+}
+
+/* Layout wrapper should not block clicks */
+.layout-wrapper {
+  pointer-events: auto;
+}
+
+/* Background gradients should not block */
+.bg-gradient,
+.hero-section {
+  pointer-events: none;
+}
+
+/* Card hover layers should not block */
+.card-hover-layer {
+  pointer-events: none;
+}
+
+/* Hero section overlay fix */
+.hero-overlay {
+  pointer-events: none;
+}
+
+/* Ensure clickable elements are accessible */
+button,
+a,
+[role="button"],
+[onclick] {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix for fixed/absolute positioned elements */
+[style*="position: fixed"],
+[style*="position: absolute"] {
+  pointer-events: auto;
+}
+
+/* Only these should capture pointer events */
+.modal-backdrop,
+.dropdown-menu,
+.tooltip {
+  pointer-events: auto;
+}
