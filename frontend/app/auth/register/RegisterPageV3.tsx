@@ -52,17 +52,12 @@ export function RegisterPageV3() {
     setError('')
 
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, role: selectedRole }),
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name, role: selectedRole } },
       })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Ошибка регистрации')
-      }
-
+      if (error) throw new Error(error.message)
       setStep('onboarding')
     } catch (err: any) {
       setError(err.message)

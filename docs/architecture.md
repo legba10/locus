@@ -1,101 +1,84 @@
-## LOCUS New Platform — Architecture (MVP)
+# LOCUS — финальная архитектура
 
-### Goals
+## Стек (не обсуждается)
 
-- A clean **Next.js App Router** frontend with **Admin Control Center**, **Host Dashboard**, and guest flows.
-- A minimal **mock backend** that behaves like real endpoints to enable frontend integration early.
-- **AI-ready hooks** for ranking, recommendations, risk signals, analytics.
-- Strong navigation semantics:
-  - **Cards use `Link` as the root clickable element**
-  - Programmatic navigation uses `router.push`
-  - No global click interceptors
+| Компонент | Технология | Деплой |
+|-----------|------------|--------|
+| Frontend | Next.js | Vercel |
+| Backend | NestJS | **Railway** |
+| Database | Supabase Postgres | Supabase |
+| Storage | Supabase Storage | Supabase |
+| Auth | Supabase Auth + Telegram | — |
+| AI | OpenAI API | только через backend |
 
-### Folder structure (key)
+**Render полностью исключён.**
+
+---
+
+## Структура проекта
 
 ```
-locus-new/
-  frontend/
-    app/                      # Next.js routes (App Router)
-      __router_test__/         # Debug route for router.push vs anchors
-      search/
-      listings/[id]/
-      host/dashboard/
-      admin/
-      auth/login/
-      auth/register/
-      api/                     # Mock backend API routes (Route Handlers)
-        listings/
-        host/
-        admin/
-        search/
-        bookings/
-    domains/                   # Domain-driven modules (typed contracts)
-      user/
-      listing/
-      booking/
-      search/
-      host/
-      admin/
-    shared/
-      ui/                      # UI primitives (Button, Card, LinkCard, Modal…)
-      hooks/                   # React hooks (useFetch via React Query)
-      utils/                   # api client, mock db, AI stub hooks
-    styles/
-      globals.css
-  docs/
-    architecture.md
+locus/
+├── backend/   (NestJS → Railway)
+├── frontend/  (Next.js → Vercel)
+├── shared/    (types, dto, contracts — при необходимости)
+└── docs/
 ```
 
-### Mock backend & DB
+**Запрещено:**
+- смешивать API Vercel и NestJS;
+- дублировать маршруты;
+- использовать mock data в production.
 
-- API routes live under `frontend/app/api/*` and return JSON.
-- Persistence is file-based for dev:
-  - env: `LOCUS_MOCK_DB_FILE` (default `.locus-mock-db.json`)
-  - implemented in `frontend/shared/utils/mock-db.ts`
+---
 
-### API contracts (current)
+## Backend (Railway)
 
-- **Listings**
-  - `GET /api/listings?city&from&to&guests&limit`
-    - returns `{ items: Listing[] }`
-  - `GET /api/listings/:id`
-    - returns `{ item: ListingDetail }`
-- **Host**
-  - `GET /api/host/overview?hostId`
-  - `GET /api/host/listing-stats?hostId`
-  - `GET /api/host/recommendations?hostId`
-  - `GET /api/host/risk-signals?hostId`
-- **Admin**
-  - `GET /api/admin/overview`
-  - `GET /api/admin/moderation-queue`
-  - `GET /api/admin/signals`
-  - `GET /api/admin/recommendations`
-- **Search**
-  - `GET /api/search/cities?q`
-- **Bookings**
-  - `GET /api/bookings`
-  - `POST /api/bookings` (creates a mock booking)
+- **Base URL:** `https://locus-backend.up.railway.app`
+- **API prefix:** `/api/v1` (запрещено использовать `/api` без `/v1`)
 
-### AI extension points (where to plug in)
+Примеры:
+- `GET /api/v1/listings`
+- `POST /api/v1/auth/login`
 
-All AI-facing stubs are centralized in `frontend/shared/utils/ai.ts`:
+**CORS:** только `https://locus.vercel.app` и `http://localhost:3000`.
 
-- **Ranking**: `rankListings(listings, query)`
-- **Host recommendations**: `getHostAiRecommendations(hostId)`
-- **Host risk signals**: `getHostRiskSignals(hostId)`
-- **Admin signals**: `getAdminSignals()`
-- **Admin AI actions**: `getAdminAiRecommendations()`
+**ENV (Railway):** PORT=8080, NODE_ENV=production, FRONTEND_URL, CORS_ORIGINS, DATABASE_URL, SUPABASE_*, REAL_AUTH_ENABLED=true, TELEGRAM_ENABLED, TELEGRAM_BOT_TOKEN, OPENAI_API_KEY, AI_ENABLED=true.
 
-Replace these with real model endpoints later:
+**Запрещено:** REAL_AUTH_ENABLED=false в production, mock data в production.
 
-1. Create a real service (or route handlers) like `/api/ai/recommendations`.
-2. Update the stub implementations to call `fetch('/api/ai/...')`.
-3. Keep the return types stable to avoid UI churn.
+---
 
-### Navigation correctness
+## Frontend (Vercel)
 
-- **Clickable cards**: `ListingCard` is implemented with **`Link` as the root element** (no nested click traps).
-- **Router test route**: `/__router_test__` contains:
-  - a button that uses `router.push('/register')`
-  - a plain `<a href="/register">` anchor for browser behavior validation
+- **Единственный backend URL:** `NEXT_PUBLIC_API_URL=https://locus-backend.up.railway.app`
+- **API client:** `frontend/shared/api/client.ts` — единственная точка вызова backend (API_BASE = NEXT_PUBLIC_API_URL + '/api/v1').
 
+**Запрещено:** onrender.com, относительные пути `/api/listings`, дублирование URL.
+
+---
+
+## Auth
+
+- **Supabase** — главный источник: Frontend → Supabase Auth → JWT → Backend (Bearer).
+- **Telegram:** Telegram → Frontend → Backend (валидация signature, связка telegram_id ↔ supabase_user_id).
+
+---
+
+## Storage
+
+Только Supabase Storage. Запрещено хранить файлы на backend и использовать папку `uploads/` в production.
+
+---
+
+## AI
+
+AI только через backend. Запрещено вызывать OpenAI из frontend.
+
+---
+
+## Чеклист готовности
+
+**Backend:** Railway не засыпает; `/api/v1/listings` отвечает < 500ms; Prisma + Supabase работают; Telegram webhook работает.
+
+**Frontend:** один API URL; нет запросов на Render; нет использования Next.js `/api/*` как backend; auth и фото работают.

@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/utils/apiFetch";
+import { apiFetchRaw } from "@/shared/api/client";
 import { logger } from "@/shared/utils/logger";
 import type { MeResponse } from "./auth-types";
 
@@ -15,12 +15,12 @@ export class AuthApiError extends Error {
 }
 
 /**
- * Fetch current user from backend
- * Token is automatically injected from Supabase session via apiFetch
+ * Fetch current user from backend (Railway).
+ * Token is automatically injected from Supabase session via apiFetchRaw.
  */
 export async function me(): Promise<MeResponse> {
-  const res = await apiFetch("/auth/me", { method: "GET" });
-  
+  const res = await apiFetchRaw("/auth/me", { method: "GET" });
+
   const text = await res.text();
   let payload: unknown;
   try {
@@ -28,14 +28,14 @@ export async function me(): Promise<MeResponse> {
   } catch {
     payload = { message: text || `Request failed: ${res.status}` };
   }
-  
+
   if (!res.ok) {
     const msg =
       (payload as { message?: string })?.message ||
       (res.status === 401 ? "Требуется авторизация" : `Ошибка: ${res.status}`);
-    logger.warn('Auth', `me() error: ${msg}`);
+    logger.warn("Auth", `me() error: ${msg}`);
     throw new AuthApiError(msg, res.status, payload);
   }
-  
+
   return payload as MeResponse;
 }

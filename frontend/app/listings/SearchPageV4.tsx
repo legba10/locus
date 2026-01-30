@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
+import { apiFetchJson } from '@/shared/api/client'
 import { cn } from '@/shared/utils/cn'
 import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
 import { AiSearchWizard, type AiSearchParams } from '@/domains/ai/AiSearchWizard'
@@ -103,29 +104,24 @@ export function SearchPageV4() {
     `/api/listings?${queryParams.toString()}`
   )
 
-  // AI поиск при включенном AI режиме
+  // AI поиск при включенном AI режиме — запрос напрямую в backend (Railway)
   useEffect(() => {
     if (aiEnabled && (city || priceMin || priceMax || type || rooms)) {
-      fetch('/api/ai/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          city: city || undefined,
-          priceMin: priceMin ? Number(priceMin) : undefined,
-          priceMax: priceMax ? Number(priceMax) : undefined,
-          type: type || undefined,
-          rooms: rooms ? Number(rooms) : undefined,
-        }),
-      })
-        .then(res => res.json())
+      const params = new URLSearchParams()
+      if (city) params.set('city', city)
+      if (priceMin) params.set('priceMin', String(priceMin))
+      if (priceMax) params.set('priceMax', String(priceMax))
+      if (type) params.set('type', type)
+      if (rooms) params.set('rooms', String(rooms))
+      apiFetchJson<{ reason?: string; score?: number; items?: any[]; listings?: any[] }>(`/search?${params.toString()}`)
         .then(data => {
-          setAiResults({ reason: data.reason, score: data.score })
-          // Сохраняем AI scores для карточек
-          if (data.listings) {
+          const items = data.items ?? data.listings ?? []
+          setAiResults({ reason: data.reason ?? 'Результаты поиска', score: data.score ?? (items.length ? 70 : 0) })
+          if (items.length) {
             const scoresMap = new Map<string, { score: number; reasons: string[] }>(
-              data.listings.map((l: any) => [
+              items.map((l: any) => [
                 l.id as string,
-                { score: l.score as number, reasons: (l.reasons || []) as string[] }
+                { score: (l.score as number) ?? 70, reasons: ((l.reasons as string[]) || []) }
               ])
             )
             setAiScoresMap(scoresMap)

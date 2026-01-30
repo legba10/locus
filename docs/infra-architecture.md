@@ -22,7 +22,7 @@ LOCUS — AI-first платформа аренды недвижимости. А�
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         BACKEND (NestJS)                                 │
-│                         Deployment: Render                               │
+│                         Deployment: Railway                               │
 │                         URL: https://api.locus.app                       │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
 │  │  API Modules:                                                     │   │
@@ -109,7 +109,7 @@ frontend/
 | Framework | NestJS 10 |
 | ORM | Prisma |
 | Auth | JWT + RBAC |
-| Deployment | Render |
+| Deployment | Railway |
 
 **Структура модулей:**
 ```
@@ -335,7 +335,7 @@ Host confirms/rejects
 
 ### CI/CD
 - **Frontend**: Vercel auto-deploy from `main` branch
-- **Backend**: Render auto-deploy from `main` branch
+- **Backend**: Railway auto-deploy from `main` branch
 - **Database**: Prisma migrations via CI
 
 ---

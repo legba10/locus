@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, type UseQueryOptions, type QueryKey } from '@tanstack/react-query'
-import { apiGet } from '@/shared/utils/api'
+import { apiFetchJson } from '@/shared/api/client'
 
 export function useFetch<TData>(
   queryKey: QueryKey,
@@ -10,7 +10,7 @@ export function useFetch<TData>(
 ) {
   return useQuery<TData>({
     queryKey,
-    queryFn: () => apiGet<TData>(path),
+    queryFn: () => apiFetchJson<TData>(path),
     ...options,
   })
 }

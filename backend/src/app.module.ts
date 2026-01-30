@@ -23,6 +23,8 @@ import { InsightsModule } from "./modules/insights/insights.module";
 import { DecisionModule } from "./modules/decision/decision.module";
 import { DebugModule } from "./debug/debug.module";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -55,7 +57,7 @@ import { DebugModule } from "./debug/debug.module";
     LandlordModule,
     HostModule,
     SystemModule,
-    DebugModule,
+    ...(isProduction ? [] : [DebugModule]),
   ],
 })
 export class AppModule {}

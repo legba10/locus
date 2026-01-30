@@ -40,24 +40,27 @@ export function ImageUpload({
     setUploadProgress(0)
 
     try {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
       const uploadPromises = Array.from(files).map(async (file, index) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('listingId', listingId)
-
-        const response = await fetch('/api/upload/image', {
-          method: 'POST',
-          body: formData,
-        })
-
-        const data = await response.json()
-
-        if (!data.success) {
-          throw new Error(data.error || 'Ошибка загрузки')
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error('Разрешены только JPEG, PNG, WebP')
         }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error('Размер файла не более 10MB')
+        }
+        const ext = file.name.split('.').pop() || 'jpg'
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 12)}.${ext}`
+        const filePath = `listings/${listingId}/${fileName}`
 
+        const { data: uploadData, error } = await supabase.storage
+          .from(LISTINGS_BUCKET)
+          .upload(filePath, file, { contentType: file.type, upsert: false })
+
+        if (error) throw new Error(error.message)
+
+        const { data: urlData } = supabase.storage.from(LISTINGS_BUCKET).getPublicUrl(filePath)
         setUploadProgress(((index + 1) / files.length) * 100)
-        return { url: data.url, path: data.path }
+        return { url: urlData.publicUrl, path: uploadData?.path ?? filePath }
       })
 
       const results = await Promise.all(uploadPromises)

@@ -58,7 +58,12 @@ function seedDb(): MockDb {
   return { version: 1, users, listings, bookings }
 }
 
+const EMPTY_DB: MockDb = { version: 1, users: [], listings: [], bookings: [] }
+
 export async function loadDb(): Promise<MockDb> {
+  if (process.env.NODE_ENV === 'production') {
+    return EMPTY_DB
+  }
   const file = dbFilePath()
   try {
     const raw = await fs.readFile(file, 'utf8')
@@ -71,6 +76,7 @@ export async function loadDb(): Promise<MockDb> {
 }
 
 export async function saveDb(db: MockDb) {
+  if (process.env.NODE_ENV === 'production') return
   const file = dbFilePath()
   await fs.writeFile(file, JSON.stringify(db, null, 2), 'utf8')
 }

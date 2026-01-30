@@ -1,6 +1,6 @@
 /**
  * Single API client for LOCUS frontend.
- * All requests go to Render backend via NEXT_PUBLIC_API_URL only.
+ * All requests go to Railway backend via NEXT_PUBLIC_API_URL only.
  * No hardcoded URLs. Routes use prefix /api/v1.
  */
 

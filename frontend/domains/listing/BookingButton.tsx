@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
+import { apiFetchJson } from '@/shared/api/client'
 
 interface BookingButtonProps {
   listingId: string
@@ -36,22 +37,15 @@ export function BookingButton({ listingId, price }: BookingButtonProps) {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/bookings', {
+      await apiFetchJson<{ item?: unknown }>('/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           listingId,
-          checkIn,
-          checkOut,
+          from: checkIn,
+          to: checkOut,
           guests,
         }),
       })
-
-      if (!response.ok) {
-        throw new Error('Ошибка бронирования')
-      }
-
-      // Успешное бронирование
       alert('Заявка на бронирование отправлена владельцу!')
       setShowBookingModal(false)
     } catch (error) {

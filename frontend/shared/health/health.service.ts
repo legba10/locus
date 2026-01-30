@@ -12,6 +12,7 @@
 
 import { logger } from '../utils/logger'
 import { config } from '../config'
+import { getApiUrl } from '../config/api'
 
 /**
  * Service status
@@ -57,7 +58,7 @@ export async function checkApiHealth(): Promise<HealthCheckResult> {
   const start = Date.now()
   
   try {
-    const response = await fetch(`${config.api.baseUrl}/health`, {
+    const response = await fetch(getApiUrl('/health'), {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })
@@ -92,7 +93,7 @@ export async function checkAuthHealth(): Promise<HealthCheckResult> {
   
   try {
     // Just check if auth endpoint is reachable
-    const response = await fetch(`${config.api.baseUrl}/auth/me`, {
+    const response = await fetch(getApiUrl('/auth/me'), {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })

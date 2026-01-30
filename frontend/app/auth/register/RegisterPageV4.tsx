@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
+import { supabase } from '@/shared/supabase-client'
 
 type UserRole = 'guest' | 'host'
 
@@ -67,28 +68,18 @@ export function RegisterPageV4() {
     setError('')
 
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          role: selectedRole,
-          aiPreferences: selectedRole === 'guest' ? {
-            city: aiCity,
-            budget: aiBudget,
-            type: aiType,
-          } : undefined,
-        }),
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: selectedRole,
+            ai_preferences: selectedRole === 'guest' ? { city: aiCity, budget: aiBudget, type: aiType } : undefined,
+          },
+        },
       })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Ошибка регистрации')
-      }
-
-      // После регистрации переходим на главную
+      if (error) throw new Error(error.message)
       router.push('/')
     } catch (err: any) {
       setError(err.message)

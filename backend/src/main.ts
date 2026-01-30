@@ -6,20 +6,23 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import { join } from "path";
 import { AppModule } from "./app.module";
+import { HttpExceptionFilter } from "./shared/filters/http-exception.filter";
 
-function getCorsOrigins(): (string | RegExp)[] {
+function getCorsOrigins(): string[] {
   const raw = process.env.CORS_ORIGINS;
   if (raw) {
     const list = raw.split(",").map((o) => o.trim()).filter(Boolean);
     if (list.length) return list;
   }
-  return ["http://localhost:3000", "https://locus-i4o2.vercel.app", /\.vercel\.app$/];
+  return ["http://localhost:3000", "https://locus.vercel.app"];
 }
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // CORS: dynamic from CORS_ORIGINS; allow preflight and credentials
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // CORS: Railway → Vercel. Только locus.vercel.app и localhost.
   const corsOrigins = getCorsOrigins();
   app.enableCors({
     origin: corsOrigins,
@@ -31,6 +34,17 @@ async function bootstrap() {
   // Cookie parser for refresh tokens
   app.use(cookieParser());
 
+  // Timeout protection: 10s for incoming requests
+  const REQUEST_TIMEOUT_MS = 10000;
+  app.use((req: any, res: any, next: () => void) => {
+    res.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      if (!res.headersSent) {
+        res.status(408).json({ statusCode: 408, error: "Request Timeout", message: "Request timeout after 10s" });
+      }
+    });
+    next();
+  });
+
   // Request logging (URL, origin, auth presence)
   app.use((req: any, _res: any, next: () => void) => {
     const path = req.path || req.url;
@@ -41,7 +55,8 @@ async function bootstrap() {
     next();
   });
 
-  app.setGlobalPrefix("api/v1", { exclude: ["health", "api"] });
+  // Запрещено /api без /v1. Все маршруты под /api/v1 (включая health).
+  app.setGlobalPrefix("api/v1", { exclude: ["api"] });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -64,32 +79,31 @@ async function bootstrap() {
   // With global prefix "api/v1" this will be served at: /api/v1/docs
   SwaggerModule.setup("docs", app, document);
 
-  app.useStaticAssets(join(__dirname, "..", "uploads"), {
-    prefix: "/uploads",
-  });
+  // Production: только Supabase Storage. uploads/ только для dev/legacy.
+  if (process.env.NODE_ENV !== "production") {
+    app.useStaticAssets(join(__dirname, "..", "uploads"), { prefix: "/uploads" });
+  }
 
-  // Env validation: log missing/optional on startup
+  const port = Number(process.env.PORT) || 8080;
+  await app.listen(port);
+
+  // eslint-disable-next-line no-console
+  console.log("🚀 Backend started on port", port);
+  // eslint-disable-next-line no-console
+  console.log("🌍 Frontend URL:", process.env.FRONTEND_URL ?? "(not set)");
+  // eslint-disable-next-line no-console
+  console.log("🧩 Supabase URL:", !!process.env.SUPABASE_URL);
+  // eslint-disable-next-line no-console
+  console.log("🤖 AI enabled:", process.env.AI_ENABLED === "true");
+  // eslint-disable-next-line no-console
+  console.log("📡 Telegram enabled:", process.env.TELEGRAM_ENABLED === "true");
+
   const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
     // eslint-disable-next-line no-console
     console.warn("Backend env missing (may fail at runtime):", missing.join(", "));
   }
-  // eslint-disable-next-line no-console
-  console.log("Backend env:", {
-    PORT: process.env.PORT ?? 10000,
-    CORS_ORIGINS: process.env.CORS_ORIGINS ?? "(default)",
-    REAL_AUTH_ENABLED: process.env.REAL_AUTH_ENABLED === "true",
-    TELEGRAM_ENABLED: process.env.TELEGRAM_ENABLED === "true",
-    DATABASE_URL: Boolean(process.env.DATABASE_URL),
-    SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
-    SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-  });
-
-  const port = process.env.PORT ? Number(process.env.PORT) : 10000;
-  await app.listen(port);
-  // eslint-disable-next-line no-console
-  console.log(`Backend running on http://localhost:${port}`);
 }
 
 bootstrap().catch((e) => {

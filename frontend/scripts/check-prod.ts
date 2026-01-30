@@ -168,13 +168,14 @@ function registerChecks(): void {
 async function runAsyncChecks(): Promise<void> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const healthUrl = apiUrl ? `${apiUrl.replace(/\/$/, '')}/api/v1/health` : ''
 
-  // API Health
+  // API Health (GET /api/v1/health)
   await checkAsync('Backend Health', 'api', async () => {
-    if (!apiUrl) return { pass: false, message: 'API URL not configured' }
+    if (!healthUrl) return { pass: false, message: 'API URL not configured' }
     
     try {
-      const response = await fetch(`${apiUrl}/health`, {
+      const response = await fetch(healthUrl, {
         signal: AbortSignal.timeout(5000),
       })
       return {
@@ -186,12 +187,12 @@ async function runAsyncChecks(): Promise<void> {
     }
   })
 
-  // Auth Endpoint
+  // Auth Endpoint (GET /api/v1/auth/me)
   await checkAsync('Auth Endpoint', 'auth', async () => {
     if (!apiUrl) return { pass: false, message: 'API URL not configured' }
-    
+    const authUrl = `${apiUrl.replace(/\/$/, '')}/api/v1/auth/me`
     try {
-      const response = await fetch(`${apiUrl}/auth/me`, {
+      const response = await fetch(authUrl, {
         signal: AbortSignal.timeout(5000),
       })
       // 401 is expected without token

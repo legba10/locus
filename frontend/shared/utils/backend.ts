@@ -1,34 +1,18 @@
 import { ApiError } from "./api";
-
-const API_V1 = "/api/v1";
-
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiBaseUrl) {
-    throw new ApiError("NEXT_PUBLIC_API_URL is missing", 500, undefined);
-  }
-  return apiBaseUrl.replace(/\/$/, "");
-}
-
-function normalizePath(path: string): string {
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return p.startsWith(API_V1) ? p : `${API_V1}${p}`;
-}
+import { getApiUrl } from "@/shared/config/api";
 
 /**
- * Full backend URL for a path (for fetch with custom headers).
+ * Full backend URL (server-side). Uses NEXT_PUBLIC_API_URL + /api/v1.
  */
 export function getBackendUrl(path: string): string {
-  return `${getApiBaseUrl()}${normalizePath(path)}`;
+  return getApiUrl(path);
 }
 
 /**
  * Server-side fetch для backend API (используется в API routes и SSR).
- * Path может быть с или без /api/v1 — префикс добавляется автоматически.
  */
 export async function backendGetJson<T>(path: string): Promise<T> {
-  const base = getApiBaseUrl();
-  const url = `${base}${normalizePath(path)}`;
+  const url = getApiUrl(path);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -61,11 +45,10 @@ export async function backendGetJson<T>(path: string): Promise<T> {
 }
 
 /**
- * Server-side POST для backend API (proxy для listings и др.).
+ * Server-side POST для backend API.
  */
 export async function backendPostJson<T>(path: string, body: unknown): Promise<T> {
-  const base = getApiBaseUrl();
-  const url = `${base}${normalizePath(path)}`;
+  const url = getApiUrl(path);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
