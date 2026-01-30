@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "npm run prisma:generate && nest build",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "prisma:generate": "prisma generate",
