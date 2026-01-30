@@ -5,24 +5,11 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "npx prisma generate && npx nest build",
+    "build": "nest build",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
-    "lint": "eslint .",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio",
-    "db:seed": "ts-node -T prisma/seed.ts",
-    "db:test": "ts-node -T scripts/test-db-connection.ts",
-    "db:reset": "prisma db push --force-reset && npm run db:seed",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:reset": "docker-compose down -v && docker-compose up -d",
-    "deploy:check": "node scripts/deploy-check.js",
-    "deploy:local": "APP_ENV=LOCAL node scripts/deploy-check.js",
-    "deploy:staging": "APP_ENV=STAGING node scripts/deploy-check.js",
-    "deploy:prod": "APP_ENV=PROD node scripts/deploy-check.js"
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "npx prisma migrate deploy"
   },
   "engines": {
     "node": ">=18"
