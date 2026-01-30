@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "declaration": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "incremental": false
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "test", "**/*.spec.ts", "dist", "prisma/seed.ts", "**/frontend/**"]
