@@ -3,18 +3,10 @@ export const runtime = "nodejs";
 
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
-  if (!apiBaseUrl) {
-    throw new Error('NEXT_PUBLIC_API_URL is missing')
-  }
-  return apiBaseUrl
-}
+import { getBackendUrl } from '@/shared/utils/backend'
 
 export async function GET(req: Request) {
   try {
-    const apiBaseUrl = getApiBaseUrl()
     const cookieStore = cookies()
     const authHeader = req.headers.get('authorization')
     let token = authHeader?.replace('Bearer ', '')
@@ -28,7 +20,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
-    let response = await fetch(`${apiBaseUrl}/landlord/dashboard`, {
+    let response = await fetch(getBackendUrl('/landlord/dashboard'), {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -36,7 +28,7 @@ export async function GET(req: Request) {
     })
 
     if (response.status === 404) {
-      response = await fetch(`${apiBaseUrl}/host/intelligence`, {
+      response = await fetch(getBackendUrl('/host/intelligence'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

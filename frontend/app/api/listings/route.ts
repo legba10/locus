@@ -257,17 +257,18 @@ export async function GET(req: Request) {
   let data: BackendSearchResponse
   
   try {
-    // Пытаемся получить данные из бэкенда
-    data = await backendGetJson<BackendSearchResponse>(`/api/v1/search${backendQs.toString() ? `?${backendQs.toString()}` : ''}`)
-    
-    // Если нет данных, используем тестовые
+    data = await backendGetJson<BackendSearchResponse>(`/search${backendQs.toString() ? `?${backendQs.toString()}` : ""}`);
     if (!data.items || data.items.length === 0) {
-      data = { items: getMockListings(), ai: null }
+      data = { items: getMockListings(), ai: null };
     }
   } catch (error) {
-    // Если бэкенд недоступен, используем тестовые данные
-    console.warn('Backend unavailable, using mock data:', error)
-    data = { items: getMockListings(), ai: null }
+    console.warn("[API] Backend unavailable:", error);
+    // Production: no mock; return empty. Development: allow mock.
+    if (process.env.NODE_ENV === "production") {
+      data = { items: [], ai: null };
+    } else {
+      data = { items: getMockListings(), ai: null };
+    }
   }
 
   // Фильтруем по городу, если указан

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     let listings: any[] = []
     
     try {
-      const data = await backendGetJson<{ items: any[] }>(`/api/v1/search?${searchParams.toString()}`)
+      const data = await backendGetJson<{ items: any[] }>(`/search?${searchParams.toString()}`)
       listings = data.items || []
     } catch (error) {
       // Если backend недоступен, используем mock данные

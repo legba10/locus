@@ -12,8 +12,6 @@ export class SupabaseAuthGuard implements CanActivate {
 
     if (!authHeader) throw new UnauthorizedException("No token");
 
-    // eslint-disable-next-line no-console
-    console.log("AUTH HEADER", authHeader);
     const [scheme, rawToken] = authHeader.split(" ");
     const token = scheme?.toLowerCase() === "bearer" ? rawToken : undefined;
     if (!token) throw new UnauthorizedException("Invalid token");
@@ -23,8 +21,6 @@ export class SupabaseAuthGuard implements CanActivate {
 
     if (error || !data.user) throw new UnauthorizedException("Invalid token");
 
-    // eslint-disable-next-line no-console
-    console.log("SUPABASE USER", data.user);
     const prismaUser = await this.supabaseAuth.syncUser({
       id: data.user.id,
       email: data.user.email ?? null,

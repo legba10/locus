@@ -3,14 +3,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from 'next/server'
 import { loadDb, saveDb } from '@/shared/utils/mock-db'
-
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
-  if (!apiBaseUrl) {
-    throw new Error('NEXT_PUBLIC_API_URL is missing')
-  }
-  return apiBaseUrl
-}
+import { getBackendUrl } from '@/shared/utils/backend'
 
 export async function GET() {
   const db = await loadDb()
@@ -19,7 +12,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const apiBaseUrl = getApiBaseUrl()
     const body = (await req.json()) as {
       listingId: string
       checkIn: string
@@ -27,9 +19,8 @@ export async function POST(req: Request) {
       guests: number
     }
 
-    // Пытаемся отправить в backend
     try {
-      const response = await fetch(`${apiBaseUrl}/bookings`, {
+      const response = await fetch(getBackendUrl('/bookings'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

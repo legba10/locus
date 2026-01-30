@@ -126,7 +126,11 @@ export async function apiFetchJson<T>(
   }
 
   if (!res.ok) {
-    throw new Error((payload as { message?: string })?.message || `Request failed: ${res.status}`);
+    const msg = (payload as { message?: string })?.message || `Request failed: ${res.status}`;
+    if (typeof window !== "undefined") {
+      console.error("[API] request failed:", url, res.status, msg);
+    }
+    throw new Error(msg);
   }
 
   return payload as T;

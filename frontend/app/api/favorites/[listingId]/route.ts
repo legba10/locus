@@ -3,14 +3,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-
-function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
-  if (!apiBaseUrl) {
-    throw new Error('NEXT_PUBLIC_API_URL is missing')
-  }
-  return apiBaseUrl
-}
+import { getBackendUrl } from '@/shared/utils/backend'
 
 function getToken(req: Request) {
   const cookieStore = cookies()
@@ -27,15 +20,13 @@ function getToken(req: Request) {
 
 export async function POST(req: Request, ctx: { params: { listingId: string } }) {
   try {
-    const apiBaseUrl = getApiBaseUrl()
     const token = getToken(req)
-    
     if (!token) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
     const response = await fetch(
-      `${apiBaseUrl}/favorites/${ctx.params.listingId}`,
+      getBackendUrl(`/favorites/${ctx.params.listingId}`),
       {
         method: 'POST',
         headers: {
@@ -63,15 +54,13 @@ export async function POST(req: Request, ctx: { params: { listingId: string } })
 
 export async function DELETE(req: Request, ctx: { params: { listingId: string } }) {
   try {
-    const apiBaseUrl = getApiBaseUrl()
     const token = getToken(req)
-    
     if (!token) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
     const response = await fetch(
-      `${apiBaseUrl}/favorites/${ctx.params.listingId}`,
+      getBackendUrl(`/favorites/${ctx.params.listingId}`),
       {
         method: 'DELETE',
         headers: {

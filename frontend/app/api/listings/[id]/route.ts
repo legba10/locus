@@ -142,10 +142,9 @@ export async function GET(_req: Request, ctx: { params: { id: string } }) {
     let raw: { item: BackendListing }
     
     try {
-      // Пытаемся получить данные из бэкенда
       raw = await backendGetJson<{ item: BackendListing }>(
-        `/api/v1/listings/${encodeURIComponent(ctx.params.id)}`
-      )
+        `/listings/${encodeURIComponent(ctx.params.id)}`
+      );
     } catch (error) {
       // PRODUCTION: Return 404 if backend fails
       // DEVELOPMENT: Use mock data for testing
