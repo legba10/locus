@@ -5,11 +5,10 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build",
+    "build": "npm run prisma:generate && nest build",
     "start": "node dist/main.js",
-    "start:prod": "node dist/main.js",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate deploy"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   },
   "engines": {
     "node": ">=18"
