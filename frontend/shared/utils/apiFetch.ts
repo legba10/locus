@@ -1,6 +1,6 @@
 "use client";
 
-import { getSupabaseClient } from "@/shared/supabase-client";
+import { supabase } from "@/shared/supabase-client";
 import { logger } from "./logger";
 
 /**
@@ -40,10 +40,7 @@ export async function apiFetch(
   const apiBaseUrl = getApiBaseUrl();
   const { timeout = DEFAULT_TIMEOUT, retries = MAX_RETRIES } = config;
   
-  const supabase = getSupabaseClient();
-  const { data } = supabase
-    ? await supabase.auth.getSession()
-    : { data: { session: null } };
+  const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
   const headers: Record<string, string> = {

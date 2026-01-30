@@ -1,18 +1,8 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { LISTINGS_BUCKET } from '@/shared/supabase-client'
-
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null
-  }
-  return createClient(supabaseUrl, supabaseAnonKey)
-}
+import { supabase, LISTINGS_BUCKET } from '@/shared/supabase-client'
 
 /**
  * POST /api/upload/image
@@ -29,15 +19,6 @@ function getSupabaseClient() {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Проверка наличия Supabase клиента
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Supabase не настроен. Проверьте переменные окружения.' },
-        { status: 500 }
-      )
-    }
-
     // Получение FormData
     const formData = await request.formData()
     const file = formData.get('file') as File | null
@@ -140,14 +121,6 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Supabase не настроен' },
-        { status: 500 }
-      )
-    }
-
     const body = await request.json()
     const { path } = body
 

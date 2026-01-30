@@ -1,7 +1,14 @@
 'use client'
 
-import { AdminDashboardV2 } from './AdminDashboardV2'
+import { Suspense } from 'react'
+import PageClient from './PageClient'
+
+export const dynamic = 'force-dynamic'
 
 export default function AdminPage() {
-  return <AdminDashboardV2 />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageClient />
+    </Suspense>
+  )
 }

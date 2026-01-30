@@ -1,5 +1,12 @@
-import { RegisterPageV5 } from './RegisterPageV5'
+import { Suspense } from 'react'
+import PageClient from './PageClient'
+
+export const dynamic = 'force-dynamic'
 
 export default function RegisterPage() {
-  return <RegisterPageV5 />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageClient />
+    </Suspense>
+  )
 }

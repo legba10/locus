@@ -1,9 +1,12 @@
-import { HomePageV6 } from './HomePageV6'
+import { Suspense } from 'react'
+import PageClient from './PageClient'
 
-// DEBUG
-console.log("[DEBUG] page.tsx: module loaded");
+export const dynamic = 'force-dynamic'
 
 export default function HomePage() {
-  console.log("[DEBUG] page.tsx: HomePage render");
-  return <HomePageV6 />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageClient />
+    </Suspense>
+  )
 }

@@ -1,6 +1,15 @@
-import { SearchPageV4 } from '../listings/SearchPageV4'
+'use client'
+
+import { Suspense } from 'react'
+import PageClient from './PageClient'
+
+export const dynamic = 'force-dynamic'
 
 export default function SearchPage() {
-  return <SearchPageV4 />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageClient />
+    </Suspense>
+  )
 }
 
