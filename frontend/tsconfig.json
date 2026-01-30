@@ -18,7 +18,6 @@
     "jsx": "preserve",
     "incremental": true,
     "types": [
-      "jest",
       "node"
     ],
     "baseUrl": ".",
@@ -58,6 +57,10 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "tests",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "jest.setup.tsx"
   ]
 }
