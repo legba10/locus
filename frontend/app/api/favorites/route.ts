@@ -1,9 +1,16 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-export const dynamic = 'force-dynamic'
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+function getApiBaseUrl(): string {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
+  if (!apiBaseUrl) {
+    throw new Error('NEXT_PUBLIC_API_URL is missing')
+  }
+  return apiBaseUrl
+}
 
 function getToken(req: Request) {
   const cookieStore = cookies()
@@ -20,16 +27,14 @@ function getToken(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    if (!API_BASE_URL) {
-      return NextResponse.json({ error: 'NEXT_PUBLIC_API_URL is missing' }, { status: 500 })
-    }
+    const apiBaseUrl = getApiBaseUrl()
     const token = getToken(req)
     
     if (!token) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
-    const response = await fetch(`${API_BASE_URL}/favorites`, {
+    const response = await fetch(`${apiBaseUrl}/favorites`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

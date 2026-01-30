@@ -8,11 +8,9 @@ import { AuthProvider } from '@/domains/auth/AuthProvider'
 // DEBUG
 console.log("[DEBUG] providers.tsx: module loaded");
 
-// SAFE_MODE: disable auth if backend is down
-const SAFE_MODE = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
-
 export function Providers({ children }: { children: React.ReactNode }) {
-  console.log("[DEBUG] providers.tsx: Providers render, SAFE_MODE=", SAFE_MODE);
+  const safeMode = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
+  console.log("[DEBUG] providers.tsx: Providers render, SAFE_MODE=", safeMode);
   
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -27,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {SAFE_MODE ? (
+      {safeMode ? (
         // SAFE_MODE: skip auth provider entirely
         <>{children}</>
       ) : (

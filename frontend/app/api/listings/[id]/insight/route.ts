@@ -1,8 +1,15 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+function getApiBaseUrl(): string {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL
+  if (!apiBaseUrl) {
+    throw new Error('NEXT_PUBLIC_API_URL is missing')
+  }
+  return apiBaseUrl
+}
 
 export async function GET(
   req: Request,
@@ -11,10 +18,8 @@ export async function GET(
   const { id } = ctx.params
 
   try {
-    if (!API_BASE_URL) {
-      return NextResponse.json({ error: 'NEXT_PUBLIC_API_URL is missing' }, { status: 500 })
-    }
-    const response = await fetch(`${API_BASE_URL}/listings/${id}/insight`, {
+    const apiBaseUrl = getApiBaseUrl()
+    const response = await fetch(`${apiBaseUrl}/listings/${id}/insight`, {
       headers: { 'Content-Type': 'application/json' },
     })
 

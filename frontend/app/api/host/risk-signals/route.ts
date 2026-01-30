@@ -1,7 +1,8 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from 'next/server'
 import { getHostRiskSignals } from '@/shared/utils/ai'
-
-export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
   const url = new URL(req.url)

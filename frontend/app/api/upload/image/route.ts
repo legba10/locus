@@ -1,8 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase, LISTINGS_BUCKET } from '@/shared/supabaseClient'
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { LISTINGS_BUCKET } from '@/shared/supabase-client'
+
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null
+  }
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
 
 /**
  * POST /api/upload/image
@@ -20,6 +30,7 @@ export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
   try {
     // Проверка наличия Supabase клиента
+    const supabase = getSupabaseClient()
     if (!supabase) {
       return NextResponse.json(
         { success: false, error: 'Supabase не настроен. Проверьте переменные окружения.' },
@@ -129,6 +140,7 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
     if (!supabase) {
       return NextResponse.json(
         { success: false, error: 'Supabase не настроен' },

@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { MeResponse, LoginRequest, RegisterRequest, UserRole } from "./auth-types";
 import { AuthApiError, me as fetchMe } from "./auth-api";
-import { supabase } from "@/shared/supabaseClient";
+import { getSupabaseClient } from "@/shared/supabase-client";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
 import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
@@ -28,6 +28,14 @@ type AuthState = {
   hasRole: (role: UserRole) => boolean;
   hasAnyRole: (roles: UserRole[]) => boolean;
 };
+
+function getSupabaseOrThrow() {
+  const client = getSupabaseClient();
+  if (!client) {
+    throw new Error("Supabase client is not available on the server");
+  }
+  return client;
+}
 
 function userFromSession(session: { user: { id: string; email?: string | null } }): MeResponse {
   const u = session.user;
@@ -84,6 +92,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (data) => {
         set({ isLoading: true, error: null });
         try {
+          const supabase = getSupabaseOrThrow();
           const { data: authData, error } = await supabase.auth.signInWithPassword({
             email: data.email,
             password: data.password,
@@ -114,6 +123,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
+          const supabase = getSupabaseOrThrow();
           const { data: authData, error } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
@@ -157,6 +167,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
+          const supabase = getSupabaseOrThrow();
           await supabase.auth.signOut();
         } catch {
           /* ignore */
@@ -168,6 +179,7 @@ export const useAuthStore = create<AuthState>()(
 
       refresh: async () => {
         try {
+          const supabase = getSupabaseOrThrow();
           const { data: d } = await supabase.auth.getSession();
           const session = d?.session;
           if (!session) {
@@ -199,6 +211,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
+          const supabase = getSupabaseOrThrow();
           // Timeout for getSession (3s max)
           const sessionPromise = supabase.auth.getSession();
           const timeoutPromise = new Promise<never>((_, reject) => 

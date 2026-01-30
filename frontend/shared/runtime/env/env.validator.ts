@@ -19,8 +19,8 @@ const REQUIRED_BACKEND = [
 ] as const
 const REQUIRED_FRONTEND = [
   'NEXT_PUBLIC_API_URL',
-  'NEXT_PUBLIC_TELEGRAM_BOT_NAME',
-  'NEXT_PUBLIC_ENV',
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
 ] as const
 
 export function validateEnv(target: EnvTarget, env: AppEnv, throwOnProd = true): string[] {

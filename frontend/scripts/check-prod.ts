@@ -75,89 +75,91 @@ async function checkAsync(
   }
 }
 
-// =====================
-// ENVIRONMENT CHECKS
-// =====================
+function registerChecks(): void {
+  // =====================
+  // ENVIRONMENT CHECKS
+  // =====================
 
-check('API_URL', 'env', () => {
-  const url = process.env.NEXT_PUBLIC_API_URL
-  return {
-    pass: !!url && url.startsWith('http'),
-    message: url ? `${url}` : 'Missing NEXT_PUBLIC_API_URL',
-  }
-})
+  check('API_URL', 'env', () => {
+    const url = process.env.NEXT_PUBLIC_API_URL
+    return {
+      pass: !!url && url.startsWith('http'),
+      message: url ? `${url}` : 'Missing NEXT_PUBLIC_API_URL',
+    }
+  })
 
-check('SUPABASE_URL', 'env', () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  return {
-    pass: !!url && url.includes('supabase'),
-    message: url ? `${url}` : 'Missing NEXT_PUBLIC_SUPABASE_URL',
-  }
-})
+  check('SUPABASE_URL', 'env', () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    return {
+      pass: !!url && url.includes('supabase'),
+      message: url ? `${url}` : 'Missing NEXT_PUBLIC_SUPABASE_URL',
+    }
+  })
 
-check('SUPABASE_ANON_KEY', 'env', () => {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  return {
-    pass: !!key && key.length > 20,
-    message: key ? `Present (${key.length} chars)` : 'Missing',
-  }
-})
+  check('SUPABASE_ANON_KEY', 'env', () => {
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    return {
+      pass: !!key && key.length > 20,
+      message: key ? `Present (${key.length} chars)` : 'Missing',
+    }
+  })
 
-check('NODE_ENV', 'env', () => {
-  const env = process.env.NODE_ENV
-  return {
-    pass: env === 'production',
-    warn: env === 'development',
-    message: env || 'Not set',
-  }
-})
+  check('NODE_ENV', 'env', () => {
+    const env = process.env.NODE_ENV
+    return {
+      pass: env === 'production',
+      warn: env === 'development',
+      message: env || 'Not set',
+    }
+  })
 
-// =====================
-// BUILD CHECKS
-// =====================
+  // =====================
+  // BUILD CHECKS
+  // =====================
 
-check('TypeScript Strict', 'build', () => {
-  // Would check tsconfig.json
-  return {
-    pass: true,
-    message: 'Enabled',
-  }
-})
+  check('TypeScript Strict', 'build', () => {
+    // Would check tsconfig.json
+    return {
+      pass: true,
+      message: 'Enabled',
+    }
+  })
 
-check('Next.js Images', 'build', () => {
-  // Would check next.config.js
-  return {
-    pass: true,
-    message: 'Only Supabase domains allowed',
-  }
-})
+  check('Next.js Images', 'build', () => {
+    // Would check next.config.js
+    return {
+      pass: true,
+      message: 'Only Supabase domains allowed',
+    }
+  })
 
-// =====================
-// CODE QUALITY CHECKS
-// =====================
+  // =====================
+  // CODE QUALITY CHECKS
+  // =====================
 
-check('Logger Service', 'code', () => {
-  return {
-    pass: true,
-    message: 'Using centralized logger',
-  }
-})
+  check('Logger Service', 'code', () => {
+    return {
+      pass: true,
+      message: 'Using centralized logger',
+    }
+  })
 
-check('Mock Data', 'code', () => {
-  const isProd = process.env.NODE_ENV === 'production'
-  return {
-    pass: isProd,
-    warn: !isProd,
-    message: isProd ? 'Disabled in production' : 'Active in development',
-  }
-})
+  check('Mock Data', 'code', () => {
+    const isProd = process.env.NODE_ENV === 'production'
+    return {
+      pass: isProd,
+      warn: !isProd,
+      message: isProd ? 'Disabled in production' : 'Active in development',
+    }
+  })
 
-check('SSR Safety', 'code', () => {
-  return {
-    pass: true,
-    message: 'isClient/useClientReady guards available',
-  }
-})
+  check('SSR Safety', 'code', () => {
+    return {
+      pass: true,
+      message: 'isClient/useClientReady guards available',
+    }
+  })
+}
 
 // =====================
 // ASYNC CHECKS (API, Auth, Media)
@@ -230,6 +232,8 @@ async function main(): Promise<void> {
   console.log('\n╔════════════════════════════════════════════╗')
   console.log('║   LOCUS PRODUCTION READINESS CHECK v4      ║')
   console.log('╚════════════════════════════════════════════╝\n')
+
+  registerChecks()
 
   // Run async checks
   await runAsyncChecks()

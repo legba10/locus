@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/shared/supabaseClient";
+import { getSupabaseClient } from "@/shared/supabase-client";
 import { logger } from "./logger";
 
 /**
@@ -14,14 +14,16 @@ import { logger } from "./logger";
  * - Graceful error handling
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Safe fallback + logging
-if (!API_BASE_URL && typeof window !== 'undefined') {
-  logger.error('API', 'CRITICAL: NEXT_PUBLIC_API_URL is missing!');
+function getApiBaseUrl(): string {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiBaseUrl) {
+    if (typeof window !== "undefined") {
+      logger.error("API", "CRITICAL: NEXT_PUBLIC_API_URL is missing!");
+    }
+    throw new Error("NEXT_PUBLIC_API_URL is missing");
+  }
+  return apiBaseUrl;
 }
-
-const EFFECTIVE_API_URL = API_BASE_URL;
 
 // Configuration
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
@@ -35,12 +37,13 @@ export async function apiFetch(
   options: RequestInit = {},
   config: { timeout?: number; retries?: number } = {}
 ): Promise<Response> {
-  if (!EFFECTIVE_API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL is missing");
-  }
+  const apiBaseUrl = getApiBaseUrl();
   const { timeout = DEFAULT_TIMEOUT, retries = MAX_RETRIES } = config;
   
-  const { data } = await supabase.auth.getSession();
+  const supabase = getSupabaseClient();
+  const { data } = supabase
+    ? await supabase.auth.getSession()
+    : { data: { session: null } };
   const token = data.session?.access_token;
 
   const headers: Record<string, string> = {
@@ -61,7 +64,7 @@ export async function apiFetch(
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(`${EFFECTIVE_API_URL}${url}`, {
+      const response = await fetch(`${apiBaseUrl}${url}`, {
         ...options,
         headers,
         signal: controller.signal,

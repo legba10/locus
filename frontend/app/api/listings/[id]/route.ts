@@ -1,8 +1,9 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { NextResponse } from 'next/server'
 import type { ListingBadge, ListingDetail, ListingImage, ListingIntelligence } from '@/domains/listing'
 import { backendGetJson } from '@/shared/utils/backend'
-
-export const dynamic = 'force-dynamic'
 
 interface BackendListing {
   id: string
