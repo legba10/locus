@@ -7,6 +7,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "zfaryzbrjdnelujpxdtl.supabase.co", pathname: "/**" },
+      { protocol: "https", hostname: "zfarzybrjdnelujpxdtl.supabase.co", pathname: "/**" },
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
+    ],
+  },
 };
 
 module.exports = nextConfig;

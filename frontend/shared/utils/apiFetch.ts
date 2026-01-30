@@ -56,12 +56,19 @@ export async function apiFetch(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // Backend uses prefix /api/v1 — add it when path does not already have it
+  const path =
+    url.startsWith("http") || url.startsWith("/api/v1")
+      ? url
+      : `/api/v1${url.startsWith("/") ? url : `/${url}`}`;
+  const fullUrl = path.startsWith("http") ? path : `${apiBaseUrl.replace(/\/$/, "")}${path}`;
+
   const fetchWithTimeout = async (): Promise<Response> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(`${apiBaseUrl}${url}`, {
+      const response = await fetch(fullUrl, {
         ...options,
         headers,
         signal: controller.signal,

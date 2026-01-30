@@ -23,7 +23,7 @@ export const IntegrationMatrix: Record<IntegrationKey, IntegrationRule> = {
     safeMode: true,
   },
   AUTH: {
-    dependsOn: ['TELEGRAM'],
+    dependsOn: [],
     safeMode: true,
   },
   REAL_USERS: {

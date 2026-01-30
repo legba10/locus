@@ -10,14 +10,24 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // CORS with credentials for Vercel + local
+  // CORS from env or fallback for Vercel + local
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+    : ["http://localhost:3000", /\.vercel\.app$/];
   app.enableCors({
-    origin: ["http://localhost:3000", /\.vercel\.app$/],
+    origin: corsOrigins.length ? corsOrigins : ["http://localhost:3000", /\.vercel\.app$/],
     credentials: true,
   });
 
   // Cookie parser for refresh tokens
   app.use(cookieParser());
+
+  // Request logging
+  app.use((req: any, _res: any, next: () => void) => {
+    // eslint-disable-next-line no-console
+    console.log("API route:", req.method, req.path || req.url);
+    next();
+  });
 
   app.setGlobalPrefix("api/v1", { exclude: ["health", "api"] });
   app.useGlobalPipes(

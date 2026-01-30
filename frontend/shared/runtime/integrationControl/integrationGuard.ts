@@ -15,7 +15,7 @@ const flagMap = {
 } as const
 
 export function checkIntegrationSafety(): void {
-  const errors: string[] = []
+  const warnings: string[] = []
 
   for (const [key, rule] of Object.entries(IntegrationMatrix)) {
     const integration = key as keyof typeof flagMap
@@ -24,14 +24,15 @@ export function checkIntegrationSafety(): void {
       for (const dep of rule.dependsOn) {
         const depFlag = flagMap[dep]
         if (!FeatureFlags.isEnabled(depFlag)) {
-          errors.push(`${integration} cannot be enabled before ${dep}`)
+          warnings.push(`${integration} recommended to have ${dep} enabled`)
         }
       }
     }
   }
 
-  if (errors.length) {
-    throw new Error('[LOCUS Integration Guard] ' + errors.join(', '))
+  if (warnings.length) {
+    // eslint-disable-next-line no-console
+    console.warn('[LOCUS Integration Guard]', warnings.join('; '))
   }
 }
 

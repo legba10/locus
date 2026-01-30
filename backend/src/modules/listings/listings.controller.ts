@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, Delete, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards, Delete, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
@@ -38,8 +38,10 @@ export class ListingsController {
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() dto: CreateListingDto) {
-    return { item: await this.listings.create(req.user.id, dto) };
+    const listing = await this.listings.create(req.user.id, dto);
+    return { item: listing, listing };
   }
 
   @ApiBearerAuth()
