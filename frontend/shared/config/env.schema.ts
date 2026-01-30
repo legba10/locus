@@ -23,9 +23,8 @@ interface EnvVar {
 const ENV_SCHEMA: EnvVar[] = [
   // API
   {
-    key: 'NEXT_PUBLIC_API_BASE_URL',
+    key: 'NEXT_PUBLIC_API_URL',
     required: true,
-    defaultValue: 'http://localhost:4000/api/v1',
     validate: (v) => v.startsWith('http'),
   },
   
@@ -139,7 +138,7 @@ export function logEnvValidation(): void {
  */
 export const config = {
   api: {
-    baseUrl: getEnv('NEXT_PUBLIC_API_BASE_URL', 'http://localhost:4000/api/v1'),
+    baseUrl: getEnv('NEXT_PUBLIC_API_URL', 'http://localhost:4000/api/v1'),
     timeout: 10000,
   },
   supabase: {

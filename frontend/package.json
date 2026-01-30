@@ -1,21 +1,11 @@
 {
-  "name": "locus-new-frontend",
+  "name": "locus-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:e2e": "playwright test",
-    "check:prod": "ts-node --skip-project scripts/check-prod.ts",
-    "locus:integration:test": "ts-node --skip-project scripts/locus-integration-test.ts",
-    "deploy:check": "node scripts/deploy-check.js",
-    "deploy:local": "APP_ENV=LOCAL node scripts/deploy-check.js",
-    "deploy:staging": "APP_ENV=STAGING node scripts/deploy-check.js",
-    "deploy:prod": "APP_ENV=PROD node scripts/deploy-check.js"
+    "start": "next start"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.93.2",
@@ -29,6 +19,7 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "dotenv": "^16.4.7",
     "@playwright/test": "^1.50.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",

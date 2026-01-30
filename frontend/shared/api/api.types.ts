@@ -1,3 +1,6 @@
+import type { ApiErrorCode as ApiErrorCodeBase } from './api.errors'
+import { ERROR_MESSAGES } from './api.errors'
+
 /**
  * LOCUS API Contract
  * 
@@ -28,35 +31,14 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 }
 
 /**
- * Error codes
+ * Error codes (shared with api.errors)
  */
-export type ApiErrorCode =
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'NOT_FOUND'
-  | 'VALIDATION_ERROR'
-  | 'CONFLICT'
-  | 'RATE_LIMITED'
-  | 'INTERNAL_ERROR'
-  | 'TIMEOUT'
-  | 'NETWORK_ERROR'
-  | 'UNKNOWN'
+export type ApiErrorCode = ApiErrorCodeBase
 
 /**
  * Error messages for codes
  */
-export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = {
-  UNAUTHORIZED: 'Требуется авторизация',
-  FORBIDDEN: 'Доступ запрещён',
-  NOT_FOUND: 'Не найдено',
-  VALIDATION_ERROR: 'Ошибка валидации',
-  CONFLICT: 'Конфликт данных',
-  RATE_LIMITED: 'Слишком много запросов',
-  INTERNAL_ERROR: 'Внутренняя ошибка сервера',
-  TIMEOUT: 'Превышено время ожидания',
-  NETWORK_ERROR: 'Ошибка сети',
-  UNKNOWN: 'Неизвестная ошибка',
-}
+export const API_ERROR_MESSAGES: Record<ApiErrorCode, string> = ERROR_MESSAGES
 
 /**
  * Get user-friendly error message
@@ -73,8 +55,8 @@ export function getApiErrorMessage(code?: ApiErrorCode, fallback?: string): stri
  */
 export function httpStatusToErrorCode(status: number): ApiErrorCode {
   switch (status) {
-    case 401: return 'UNAUTHORIZED'
-    case 403: return 'FORBIDDEN'
+    case 401: return 'AUTH_REQUIRED'
+    case 403: return 'AUTH_FORBIDDEN'
     case 404: return 'NOT_FOUND'
     case 409: return 'CONFLICT'
     case 422: return 'VALIDATION_ERROR'

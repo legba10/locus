@@ -79,11 +79,11 @@ async function checkAsync(
 // ENVIRONMENT CHECKS
 // =====================
 
-check('API_BASE_URL', 'env', () => {
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL
+check('API_URL', 'env', () => {
+  const url = process.env.NEXT_PUBLIC_API_URL
   return {
     pass: !!url && url.startsWith('http'),
-    message: url ? `${url}` : 'Missing NEXT_PUBLIC_API_BASE_URL',
+    message: url ? `${url}` : 'Missing NEXT_PUBLIC_API_URL',
   }
 })
 
@@ -164,7 +164,7 @@ check('SSR Safety', 'code', () => {
 // =====================
 
 async function runAsyncChecks(): Promise<void> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
   // API Health

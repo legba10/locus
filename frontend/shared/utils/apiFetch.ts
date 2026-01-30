@@ -14,14 +14,14 @@ import { logger } from "./logger";
  * - Graceful error handling
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Safe fallback + logging
 if (!API_BASE_URL && typeof window !== 'undefined') {
-  logger.error('API', 'CRITICAL: NEXT_PUBLIC_API_BASE_URL is missing! Using fallback.');
+  logger.error('API', 'CRITICAL: NEXT_PUBLIC_API_URL is missing!');
 }
 
-const EFFECTIVE_API_URL = API_BASE_URL || "http://localhost:4000/api/v1";
+const EFFECTIVE_API_URL = API_BASE_URL;
 
 // Configuration
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
@@ -35,6 +35,9 @@ export async function apiFetch(
   options: RequestInit = {},
   config: { timeout?: number; retries?: number } = {}
 ): Promise<Response> {
+  if (!EFFECTIVE_API_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL is missing");
+  }
   const { timeout = DEFAULT_TIMEOUT, retries = MAX_RETRIES } = config;
   
   const { data } = await supabase.auth.getSession();

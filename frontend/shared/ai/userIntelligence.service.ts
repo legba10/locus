@@ -340,47 +340,44 @@ export function updateProfile(
  * Merge analytics events into profile update events
  */
 export function convertAnalyticsEvents(events: TrackedEvent[]): ProfileUpdateEvent[] {
-  return events
-    .filter(e => 
-      e.name === 'listing_view' ||
-      e.name === 'favorite_add' ||
-      e.name === 'favorite_remove' ||
-      e.name === 'search_results' ||
-      e.name === 'listing_contact'
-    )
-    .map(e => {
-      switch (e.name) {
-        case 'listing_view':
-          return { 
-            type: 'listing_view' as const, 
-            listingId: e.properties.listingId as string 
-          }
-        case 'favorite_add':
-          return { 
-            type: 'favorite_add' as const, 
-            listingId: e.properties.listingId as string 
-          }
-        case 'favorite_remove':
-          return { 
-            type: 'favorite_remove' as const, 
-            listingId: e.properties.listingId as string 
-          }
-        case 'search_results':
-          return { 
-            type: 'search' as const, 
-            query: e.properties.searchQuery as string,
-            filters: e.properties.searchFilters as Record<string, unknown>
-          }
-        case 'listing_contact':
-          return { 
-            type: 'contact' as const, 
-            listingId: e.properties.listingId as string 
-          }
-        default:
-          return null
-      }
-    })
-    .filter((e): e is ProfileUpdateEvent => e !== null)
+  return events.reduce<ProfileUpdateEvent[]>((acc, e) => {
+    switch (e.name) {
+      case 'listing_view':
+        acc.push({ 
+          type: 'listing_view' as const, 
+          listingId: e.properties.listingId as string 
+        })
+        break
+      case 'favorite_add':
+        acc.push({ 
+          type: 'favorite_add' as const, 
+          listingId: e.properties.listingId as string 
+        })
+        break
+      case 'favorite_remove':
+        acc.push({ 
+          type: 'favorite_remove' as const, 
+          listingId: e.properties.listingId as string 
+        })
+        break
+      case 'search_results':
+        acc.push({ 
+          type: 'search' as const, 
+          query: e.properties.searchQuery as string,
+          filters: e.properties.searchFilters as Record<string, unknown>
+        })
+        break
+      case 'listing_contact':
+        acc.push({ 
+          type: 'contact' as const, 
+          listingId: e.properties.listingId as string 
+        })
+        break
+      default:
+        break
+    }
+    return acc
+  }, [])
 }
 
 /**

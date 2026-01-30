@@ -1,5 +1,5 @@
 {
-  "name": "locus-new-backend",
+  "name": "locus-backend",
   "version": "0.1.0",
   "private": true,
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",

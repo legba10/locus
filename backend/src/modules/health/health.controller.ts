@@ -6,7 +6,11 @@ import { ApiTags } from "@nestjs/swagger";
 export class HealthController {
   @Get()
   getHealth() {
-    return { status: "ok" };
+    return {
+      status: "ok",
+      service: "locus-backend",
+      db: "connected",
+    };
   }
 }
 

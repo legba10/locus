@@ -8,16 +8,16 @@ const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const swagger_1 = require("@nestjs/swagger");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const path_1 = require("path");
 const app_module_1 = require("./app.module");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    const allowedOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000").split(",");
     app.enableCors({
-        origin: allowedOrigins,
+        origin: ["http://localhost:3000", /\.vercel\.app$/],
         credentials: true,
     });
     app.use((0, cookie_parser_1.default)());
-    app.setGlobalPrefix("api/v1");
+    app.setGlobalPrefix("api/v1", { exclude: ["health", "api"] });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,
@@ -34,7 +34,10 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup("docs", app, document);
-    const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+    app.useStaticAssets((0, path_1.join)(__dirname, "..", "uploads"), {
+        prefix: "/uploads",
+    });
+    const port = process.env.PORT ? Number(process.env.PORT) : 10000;
     await app.listen(port);
     console.log(`Backend running on http://localhost:${port}`);
     console.log("Backend env:", {
@@ -42,7 +45,6 @@ async function bootstrap() {
         SUPABASE_URL: process.env.SUPABASE_URL ?? "",
         SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
         NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-        CORS_ORIGINS: allowedOrigins,
     });
 }
 bootstrap().catch((e) => {

@@ -1,6 +1,6 @@
 import { ApiError } from "./api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Server-side fetch для backend API (используется в API routes и SSR).
@@ -9,6 +9,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4
  * @returns Promise<T>
  */
 export async function backendGetJson<T>(path: string): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new ApiError("NEXT_PUBLIC_API_URL is missing", 500, undefined);
+  }
   // Если путь уже содержит /api/v1, используем базовый URL без него
   let url: string;
   if (path.startsWith("/api/v1")) {

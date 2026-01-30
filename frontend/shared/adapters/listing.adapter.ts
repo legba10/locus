@@ -26,7 +26,7 @@ import { logger } from '../utils/logger'
 /**
  * Raw API listing (any shape from backend)
  */
-interface RawApiListing {
+export interface RawApiListing {
   id?: string
   title?: string
   description?: string

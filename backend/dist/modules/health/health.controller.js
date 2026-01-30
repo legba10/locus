@@ -14,7 +14,11 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 let HealthController = class HealthController {
     getHealth() {
-        return { ok: true, service: "locus-new-backend", version: "v1" };
+        return {
+            status: "ok",
+            service: "locus-backend",
+            db: "connected",
+        };
     }
 };
 exports.HealthController = HealthController;

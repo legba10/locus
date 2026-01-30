@@ -320,6 +320,7 @@ export function getDecisionsOfType(
  */
 export function forceBoostSupply(context: DecisionContext): Decision {
   return createDecision('encourage_listing', {
+    decision: 'encourage_listing',
     priority: 'high',
     urgency: 'immediate',
     confidence: 0.9,
@@ -332,6 +333,7 @@ export function forceBoostSupply(context: DecisionContext): Decision {
  */
 export function forceLimitDemand(context: DecisionContext): Decision {
   return createDecision('limit_visibility', {
+    decision: 'limit_visibility',
     priority: 'high',
     urgency: 'immediate',
     confidence: 0.85,
@@ -344,6 +346,7 @@ export function forceLimitDemand(context: DecisionContext): Decision {
  */
 export function forceMonetization(context: DecisionContext): Decision {
   return createDecision('show_paywall', {
+    decision: 'show_paywall',
     priority: 'critical',
     urgency: 'immediate',
     confidence: 0.95,
