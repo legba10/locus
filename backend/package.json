@@ -5,7 +5,7 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build",
+    "build": "npm nest build",
     "start": "node dist/main.js",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
