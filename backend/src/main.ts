@@ -8,17 +8,16 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS with credentials for httpOnly cookies
-  const allowedOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:3000").split(",");
+  // CORS with credentials for Vercel + local
   app.enableCors({
-    origin: allowedOrigins,
+    origin: ["http://localhost:3000", /\.vercel\.app$/],
     credentials: true,
   });
 
   // Cookie parser for refresh tokens
   app.use(cookieParser());
 
-  app.setGlobalPrefix("api/v1");
+  app.setGlobalPrefix("api/v1", { exclude: ["health"] });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -41,7 +40,7 @@ async function bootstrap() {
   // With global prefix "api/v1" this will be served at: /api/v1/docs
   SwaggerModule.setup("docs", app, document);
 
-  const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+  const port = process.env.PORT ? Number(process.env.PORT) : 10000;
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`Backend running on http://localhost:${port}`);
@@ -51,7 +50,6 @@ async function bootstrap() {
     SUPABASE_URL: process.env.SUPABASE_URL ?? "",
     SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    CORS_ORIGINS: allowedOrigins,
   });
 }
 

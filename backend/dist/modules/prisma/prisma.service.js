@@ -11,6 +11,9 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
+        if (!process.env.DATABASE_URL) {
+            throw new Error("DATABASE_URL is not defined");
+        }
         await this.$connect();
     }
     async onModuleDestroy() {
