@@ -5,12 +5,12 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "npx prisma generate && npx nest build",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
+    "postinstall": "prisma generate",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
-    "prisma:fix-windows": "powershell -ExecutionPolicy Bypass -File fix-prisma-windows.ps1",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
@@ -36,6 +36,7 @@
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/swagger": "^8.1.1",
     "@prisma/client": "^5.22.0",
+    "prisma": "^5.0.0",
     "@supabase/supabase-js": "^2.93.2",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
@@ -56,7 +57,6 @@
     "@types/node": "^20.10.6",
     "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^8.56.0",
-    "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
