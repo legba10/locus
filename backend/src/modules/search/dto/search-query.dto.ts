@@ -73,9 +73,7 @@ export class SearchBodyDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  guests?: number;
-
-  @ApiPropertyOptional({ example: "тихая квартира у метро" })
+  guests?: number;  @ApiPropertyOptional({ example: "тихая квартира у метро" })
   @IsOptional()
   @IsString()
   query?: string;  @ApiPropertyOptional({ example: true, default: true })

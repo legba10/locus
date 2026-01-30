@@ -336,9 +336,7 @@ html {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
-}
-
-/* Line clamp utilities */
+}/* Line clamp utilities */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;

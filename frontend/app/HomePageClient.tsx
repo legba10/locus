@@ -184,6 +184,9 @@ export function HomePageClient() {
     ['listings-home'],
     '/api/listings?limit=9',
   )
+  const apiDocsUrl = process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/docs`
+    : ''
 
   return (
     <div className="space-y-8">
@@ -254,10 +257,11 @@ export function HomePageClient() {
         </Link>
 
         <a 
-          href="http://localhost:4000/api/v1/docs"
+          href={apiDocsUrl || '#'}
           target="_blank"
           rel="noopener noreferrer"
           className="group rounded-2xl border border-border bg-surface-2 p-6 transition hover:border-brand-2/50 hover:bg-surface-3"
+          aria-disabled={!apiDocsUrl}
         >
           <div className="flex items-center gap-4">
             <div className="rounded-xl bg-brand-2/20 p-3">
