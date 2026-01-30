@@ -6,9 +6,10 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "nest start --watch",
-    "build": "prisma generate && nest build",
+    "build": "nest build",
+    "postinstall": "prisma generate",
     "start": "node dist/main.js",
-    "start:prod": "node dist/main.js",
+    "start:prod": "prisma generate && node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "deploy:check": "node scripts/deploy-check.js"
