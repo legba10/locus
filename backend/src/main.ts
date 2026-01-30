@@ -98,11 +98,16 @@ async function bootstrap() {
   // eslint-disable-next-line no-console
   console.log("📡 Telegram enabled:", process.env.TELEGRAM_ENABLED === "true");
 
-  const required = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
-  const missing = required.filter((k) => !process.env[k]);
+  const required = ["PORT", "DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
+  const missing = required.filter((k) => {
+    const v = process.env[k];
+    return !v || (typeof v === "string" && v.trim() === "");
+  });
   if (missing.length) {
     // eslint-disable-next-line no-console
-    console.warn("Backend env missing (may fail at runtime):", missing.join(", "));
+    console.error("❌ Backend ENV missing (required for Railway):", missing.join(", "));
+    // eslint-disable-next-line no-console
+    console.error("   Set in Railway: Variables → PORT, DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
   }
 }
 

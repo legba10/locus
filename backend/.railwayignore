@@ -1,0 +1,5 @@
+# Railway использует Nixpacks (railway.json), не Docker.
+# Игнорировать Docker-файлы в контексте сборки.
+docker-compose.yml
+Dockerfile
+.docker
