@@ -1,7 +1,7 @@
 /**
  * Single API client for LOCUS frontend.
  * All requests go to Railway backend via NEXT_PUBLIC_API_URL only.
- * No hardcoded URLs. Routes use prefix /api/v1.
+ * No hardcoded URLs. Routes use prefix /api (e.g. /api/listings).
  */
 
 import { apiFetch, apiFetchJson } from "@/shared/utils/apiFetch";
@@ -11,7 +11,7 @@ import { apiFetch, apiFetchJson } from "@/shared/utils/apiFetch";
  */
 export { apiFetch, apiFetchJson };
 
-// ——— Typed helpers (all go to backend GET/POST /api/v1/listings, GET /api/v1/auth/me)
+// ——— Typed helpers (all go to backend GET/POST /api/listings, GET /api/auth/me)
 
 export async function getListings(params?: { city?: string; limit?: number }) {
   const qs = new URLSearchParams();

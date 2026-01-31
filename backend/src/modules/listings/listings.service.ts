@@ -28,19 +28,24 @@ export class ListingsService {
 
   async getAll(params: { city?: string; limit?: number } = {}) {
     const { city, limit = 50 } = params;
-    return this.prisma.listing.findMany({
-      where: {
-        status: ListingStatus.PUBLISHED,
-        ...(city ? { city } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      include: {
-        photos: { orderBy: { sortOrder: "asc" }, take: 1 },
-        amenities: { include: { amenity: true } },
-        aiScores: true,
-      },
-    });
+    const where = {
+      status: ListingStatus.PUBLISHED,
+      ...(city ? { city } : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.listing.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        include: {
+          photos: { orderBy: { sortOrder: "asc" }, take: 1 },
+          amenities: { include: { amenity: true } },
+          aiScores: true,
+        },
+      }),
+      this.prisma.listing.count({ where }),
+    ]);
+    return { items, total };
   }
 
   async getById(id: string) {

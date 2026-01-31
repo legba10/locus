@@ -2,7 +2,7 @@ import { ApiError } from "./api";
 import { getApiUrl } from "@/shared/config/api";
 
 /**
- * Full backend URL (server-side). Uses NEXT_PUBLIC_API_URL + /api/v1.
+ * Full backend URL (server-side). Uses NEXT_PUBLIC_API_URL + /api.
  */
 export function getBackendUrl(path: string): string {
   return getApiUrl(path);

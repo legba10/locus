@@ -55,8 +55,8 @@ async function bootstrap() {
     next();
   });
 
-  // Запрещено /api без /v1. Все маршруты под /api/v1 (включая health).
-  app.setGlobalPrefix("api/v1", { exclude: ["api"] });
+  // Контракт: GET/POST /api/listings. Единый префикс api.
+  app.setGlobalPrefix("api");
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

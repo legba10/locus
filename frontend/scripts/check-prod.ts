@@ -168,9 +168,9 @@ function registerChecks(): void {
 async function runAsyncChecks(): Promise<void> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const healthUrl = apiUrl ? `${apiUrl.replace(/\/$/, '')}/api/v1/health` : ''
+  const healthUrl = apiUrl ? `${apiUrl.replace(/\/$/, '')}/api/health` : ''
 
-  // API Health (GET /api/v1/health)
+  // API Health (GET /api/health)
   await checkAsync('Backend Health', 'api', async () => {
     if (!healthUrl) return { pass: false, message: 'API URL not configured' }
     
@@ -187,10 +187,10 @@ async function runAsyncChecks(): Promise<void> {
     }
   })
 
-  // Auth Endpoint (GET /api/v1/auth/me)
+  // Auth Endpoint (GET /api/auth/me)
   await checkAsync('Auth Endpoint', 'auth', async () => {
     if (!apiUrl) return { pass: false, message: 'API URL not configured' }
-    const authUrl = `${apiUrl.replace(/\/$/, '')}/api/v1/auth/me`
+    const authUrl = `${apiUrl.replace(/\/$/, '')}/api/auth/me`
     try {
       const response = await fetch(authUrl, {
         signal: AbortSignal.timeout(5000),

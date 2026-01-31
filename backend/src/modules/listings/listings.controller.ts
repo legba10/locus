@@ -23,11 +23,12 @@ export class ListingsController {
     @Query("city") city?: string,
     @Query("limit") limit?: string,
   ) {
-    const items = await this.listings.getAll({
+    const limitNum = limit ? Number(limit) : 12;
+    const { items, total } = await this.listings.getAll({
       city,
-      limit: limit ? Number(limit) : undefined,
+      limit: limitNum,
     });
-    return { items };
+    return { items, total };
   }
 
   @Get(":id")
