@@ -5,7 +5,7 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "main": "dist/main.js",
   "scripts": {
-    "build": "nest build",
+    "build": "node node_modules/.bin/tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js"
   },
