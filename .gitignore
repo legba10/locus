@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
+!backend/node_modules/
+backend/node_modules/*
+!backend/node_modules/.prisma/
 
-# Build outputs
-dist/
+# Build outputs (backend/dist committed for Railway — no build on deploy)
 .next/
 out/
 
