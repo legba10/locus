@@ -1,53 +1,37 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
-let _client: SupabaseClient | null = null
+const isBuild = typeof window === 'undefined'
 
-/**
- * Dummy client for build/prerender when env is missing — never throws.
- * Next.js prerender runs in Node; if ENV is not set, we return this instead of throwing.
- */
-function createDummyClient(): SupabaseClient {
-  const noop = () => Promise.resolve({ data: null, error: null })
-  const session = { data: { session: null }, error: null }
-  return {
-    auth: {
-      getSession: () => Promise.resolve(session),
-      getUser: noop,
-      signInWithPassword: noop,
-      signUp: noop,
-      signOut: () => Promise.resolve({ error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-    } as SupabaseClient['auth'],
-    storage: {
+export function getSupabaseClient() {
+  if (isBuild) {
+    return {
+      auth: {
+        getSession: async () => ({ data: null, error: null }),
+      },
+      storage: {
+        from: () => ({
+          getPublicUrl: (path: string) => ({ data: { publicUrl: path || '' } }),
+        }),
+      },
       from: () => ({
-        getPublicUrl: (path: string) => ({ data: { publicUrl: path || '' } }),
-        upload: noop,
-        remove: noop,
+        select: async () => ({ data: [], error: null }),
       }),
-    } as SupabaseClient['storage'],
-  } as unknown as SupabaseClient
-}
+    } as ReturnType<typeof createClient>
+  }
 
-/**
- * Lazy Supabase client. During build/prerender (Node, env may be missing) — returns dummy, no throw.
- * In browser with env — creates real client. In browser without env — throws.
- */
-function getSupabase(): SupabaseClient {
-  if (_client) return _client
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const isBuild = typeof window === 'undefined'
+
   if (!url || !key) {
-    if (isBuild) return createDummyClient()
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required')
+    throw new Error('Supabase env missing at runtime')
   }
-  _client = createClient(url, key)
-  return _client
+
+  return createClient(url, key)
 }
 
-export const supabase = new Proxy({} as SupabaseClient, {
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
   get(_, prop) {
-    return (getSupabase() as Record<string, unknown>)[prop as string]
+    return (getSupabaseClient() as Record<string, unknown>)[prop as string]
   },
 })
 
@@ -55,7 +39,8 @@ export const LISTINGS_BUCKET = 'locus-listings'
 
 export function getSupabaseImageUrl(filePath: string): string | null {
   try {
-    const { data } = getSupabase().storage.from(LISTINGS_BUCKET).getPublicUrl(filePath)
+    const client = getSupabaseClient()
+    const { data } = client.storage.from(LISTINGS_BUCKET).getPublicUrl(filePath)
     return data?.publicUrl ?? null
   } catch {
     return null
