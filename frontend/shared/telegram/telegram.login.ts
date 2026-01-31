@@ -4,14 +4,14 @@
  * Auth works without Telegram (Supabase only).
  */
 
-export async function telegramLogin(): Promise<unknown> {
+export async function telegramLogin(): Promise<unknown | null> {
   if (typeof window === "undefined" || typeof document === "undefined") {
     throw new Error("Telegram login is client-only");
   }
 
   const botId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
   if (!botId) {
-    throw new Error("Telegram is disabled: NEXT_PUBLIC_TELEGRAM_BOT_ID is not set");
+    return null;
   }
 
   return new Promise((resolve, reject) => {

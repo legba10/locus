@@ -1,8 +1,9 @@
 import type { Listing, ListingDetail, ListingSearchQuery } from './listing-types'
 import { apiGet } from '@/shared/utils/api'
 
-export type ListingsResponse = { items: Listing[] }
-export type ListingDetailResponse = { item: ListingDetail }
+export type ListingsResponse = { items: Listing[]; total?: number }
+/** Backend returns { listing }; legacy { item } supported for compatibility */
+export type ListingDetailResponse = { listing?: ListingDetail; item?: ListingDetail }
 
 export function buildListingsQuery(query: ListingSearchQuery) {
   const params = new URLSearchParams()

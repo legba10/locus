@@ -14,7 +14,7 @@ function getCorsOrigins(): string[] {
     const list = raw.split(",").map((o) => o.trim()).filter(Boolean);
     if (list.length) return list;
   }
-  return ["http://localhost:3000", "https://locus.vercel.app"];
+  return ["http://localhost:3000", "https://locus.vercel.app", "https://locus-i402.vercel.app"];
 }
 
 async function bootstrap() {
@@ -76,7 +76,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  // With global prefix "api/v1" this will be served at: /api/v1/docs
+  // With global prefix "api" docs are at: /docs
   SwaggerModule.setup("docs", app, document);
 
   // Production: только Supabase Storage. uploads/ только для dev/legacy.

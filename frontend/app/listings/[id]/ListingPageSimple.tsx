@@ -24,7 +24,8 @@ interface ListingData {
 }
 
 interface ListingResponse {
-  item: ListingData
+  listing?: ListingData
+  item?: ListingData
   insight?: LocusInsight
 }
 
@@ -127,7 +128,8 @@ export function ListingPageSimple({ id }: { id: string }) {
 
   if (isLoading) return <PageSkeleton />
 
-  if (error || !data?.item) {
+  const item = data?.listing ?? data?.item
+  if (error || !item) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
         <p className="text-red-700">Не удалось загрузить</p>
@@ -138,7 +140,6 @@ export function ListingPageSimple({ id }: { id: string }) {
     )
   }
 
-  const item = data.item
   const insight = data.insight
 
   return (

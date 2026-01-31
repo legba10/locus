@@ -178,7 +178,7 @@ function ListingDetailSkeleton() {
 // Main component
 export function ListingDetailClient({ id }: { id: string }) {
   const { data, isLoading, error } = useFetch<ListingDetailResponse>(['listing', id], `/api/listings/${id}`)
-  const item = data?.item
+  const item = data?.listing ?? data?.item
 
   if (isLoading) {
     return <ListingDetailSkeleton />

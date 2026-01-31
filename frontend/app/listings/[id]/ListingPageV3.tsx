@@ -45,7 +45,8 @@ interface ListingData {
 }
 
 interface ListingResponse {
-  item: ListingData
+  listing?: ListingData
+  item?: ListingData
 }
 
 function formatPrice(amount: number, currency: string = 'RUB') {
@@ -147,7 +148,7 @@ function ListingPageSkeleton() {
  */
 export function ListingPageV3({ id }: { id: string }) {
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
-  const item = data?.item
+  const item = data?.listing ?? data?.item
 
   if (isLoading) return <ListingPageSkeleton />
 

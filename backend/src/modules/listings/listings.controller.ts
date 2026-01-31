@@ -33,7 +33,8 @@ export class ListingsController {
 
   @Get(":id")
   async getOne(@Param("id") id: string) {
-    return { item: await this.listings.getById(id) };
+    const listing = await this.listings.getById(id);
+    return { listing };
   }
 
   @ApiBearerAuth()
@@ -42,7 +43,7 @@ export class ListingsController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() dto: CreateListingDto) {
     const listing = await this.listings.create(req.user.id, dto);
-    return { item: listing, listing };
+    return { listing };
   }
 
   @ApiBearerAuth()

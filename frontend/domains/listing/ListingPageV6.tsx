@@ -17,7 +17,8 @@ import {
 } from '@/core/i18n/ru'
 
 interface ListingResponse {
-  item: RawListing
+  listing?: RawListing
+  item?: RawListing
   decision?: {
     score: number
     verdict: string
@@ -124,7 +125,8 @@ export function ListingPageV6({ id }: { id: string }) {
 
   if (isLoading) return <PageSkeleton />
 
-  if (error || !data?.item) {
+  const rawItem = data?.listing ?? data?.item
+  if (error || !rawItem) {
     return (
       <Card variant="bordered" className="p-6 text-center">
         <p className="text-red-600 mb-2">{RU.common.error}</p>
@@ -136,7 +138,7 @@ export function ListingPageV6({ id }: { id: string }) {
   }
 
   // Нормализуем данные
-  const item = normalizeListing(data.item)
+  const item = normalizeListing(rawItem)
   const decision = data.decision
   const personalizedReasons = data.personalizedReasons || []
 

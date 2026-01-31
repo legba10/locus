@@ -23,7 +23,8 @@ interface ListingData {
 }
 
 interface ListingResponse {
-  item: ListingData
+  listing?: ListingData
+  item?: ListingData
   decision?: LocusDecisionCore
   whyFits?: string[]
   risks?: string[]
@@ -91,7 +92,8 @@ export function ListingPage({ id }: { id: string }) {
 
   if (isLoading) return <PageSkeleton />
 
-  if (error || !data?.item) {
+  const item = data?.listing ?? data?.item
+  if (error || !item) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
         <p className="text-red-700 mb-2">Не удалось загрузить</p>
@@ -100,7 +102,7 @@ export function ListingPage({ id }: { id: string }) {
     )
   }
 
-  const { item, decision, whyFits, risks } = data
+  const { decision, whyFits, risks } = data ?? {}
 
   return (
     <div className="space-y-4">

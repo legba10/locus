@@ -9,7 +9,8 @@ import { normalizeListing, normalizeDecision, type RawListing, type RawDecision 
 import { cn } from '@/shared/utils/cn'
 
 interface ListingResponse {
-  item: RawListing
+  listing?: RawListing
+  item?: RawListing
   decision?: RawDecision
   personalizedReasons?: string[]
 }
@@ -72,7 +73,8 @@ export function ListingPageV4({ id }: { id: string }) {
 
   if (isLoading) return <PageSkeleton />
 
-  if (error || !data?.item) {
+  const rawItem = data?.listing ?? data?.item
+  if (error || !rawItem) {
     return (
       <Card variant="bordered" className="p-6 text-center">
         <p className="text-red-600 mb-2">Не удалось загрузить объявление</p>
@@ -82,7 +84,7 @@ export function ListingPageV4({ id }: { id: string }) {
   }
 
   // Normalize data - UI never depends on "perfect data"
-  const item = normalizeListing(data.item)
+  const item = normalizeListing(rawItem)
   const decision = data.decision ? normalizeDecision(data.decision) : null
   const personalizedReasons = data.personalizedReasons || []
 

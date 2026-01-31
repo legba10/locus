@@ -394,7 +394,7 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         return
       }
 
-      // 1) Создаём объявление через backend /api/v1/listings
+      // 1) Создаём объявление через backend /api/listings
       const createPayload: any = {
         title,
         description,
@@ -425,13 +425,13 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
       )
 
       const listingId: string | undefined =
-        createData?.item?.id || createData?.id || createData?.listingId
+        createData?.listing?.id ?? createData?.item?.id ?? createData?.id ?? createData?.listingId
 
       if (!listingId) {
         throw new Error('Сервер не вернул ID нового объявления')
       }
 
-      // 2) Загружаем фото через /api/v1/listings/{id}/photos
+      // 2) Загружаем фото через /api/listings/{id}/photos
       for (let i = 0; i < photos.length; i++) {
         const file = photos[i]
         const form = new FormData()

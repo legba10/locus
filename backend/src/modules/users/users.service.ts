@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -32,7 +32,7 @@ export class UsersService {
 
   async register(params: { email: string; password: string; role: "guest" | "host"; name?: string }) {
     const existing = await this.prisma.user.findUnique({ where: { email: params.email } });
-    if (existing) throw new BadRequestException("Email already registered");
+    if (existing) throw new ConflictException("Email already registered");
 
     const passwordHash = await bcrypt.hash(params.password, 10);
     const role = await this.ensureRole(params.role);

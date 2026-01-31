@@ -15,7 +15,37 @@ interface ListingPageV7Props {
 }
 
 interface ListingResponse {
-  item: {
+  listing?: {
+    id: string
+    title: string
+    description: string
+    city: string
+    addressLine?: string
+    pricePerNight: number
+    currency: string
+    bedrooms?: number
+    beds?: number
+    bathrooms?: number
+    area?: number
+    floor?: number
+    totalFloors?: number
+    images?: Array<{ url: string; alt?: string }>
+    photos?: Array<{ url: string }>
+    amenities?: string[]
+    intelligence?: {
+      qualityScore: number
+      demandScore: number
+      riskScore: number
+      explanation?: { text?: string; bullets?: string[] }
+    }
+    aiScores?: { qualityScore?: number }
+    views?: number
+    rating?: number
+    reviewCount?: number
+    lat?: number
+    lng?: number
+  }
+  item?: {
     id: string
     title: string
     description: string
@@ -82,7 +112,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   // Похожие объявления
   const { data: similarData } = useFetch<{ items: any[] }>(
     ['similar-listings', id],
-    `/api/listings?limit=4&city=${data?.item?.city || ''}`
+    `/api/listings?limit=4&city=${(data?.listing ?? data?.item)?.city || ''}`
   )
 
   if (isLoading) {
@@ -103,7 +133,8 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
     )
   }
 
-  if (error || !data?.item) {
+  const item = data?.listing ?? data?.item
+  if (error || !item) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
         <div className="text-center">
@@ -121,8 +152,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
     )
   }
 
-  const item = data.item
-  const decision = data.decision
+  const decision = data?.decision
   
   // Извлекаем фото
   const photos = item.images || item.photos || []

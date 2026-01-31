@@ -7,7 +7,7 @@
 import { apiFetch, apiFetchJson } from "@/shared/utils/apiFetch";
 
 /**
- * Paths are relative; apiFetch adds /api/v1 prefix and NEXT_PUBLIC_API_URL base.
+ * Paths are relative; apiFetch adds /api prefix and NEXT_PUBLIC_API_URL base.
  */
 export { apiFetch, apiFetchJson };
 
