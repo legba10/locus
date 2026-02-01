@@ -25,9 +25,9 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      // Allowed origins
+      // Allowed origins — EXACT domain from Vercel
       const allowed = [
-        "https://locus-i402.vercel.app",
+        "https://locus-i4o2.vercel.app",  // Production (letter O, not zero)
         "http://localhost:3000",
         "http://localhost:3001",
       ];
