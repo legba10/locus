@@ -1,17 +1,19 @@
-function getApiUrl(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is missing");
-  }
-  return apiUrl;
-}
+/**
+ * Legacy API helper — redirects to proxy
+ * 
+ * IMPORTANT: All API calls MUST go through the Next.js proxy (/api/*)
+ * Frontend NEVER talks to Railway directly to avoid CORS issues.
+ */
 
 export async function api(path: string, options?: RequestInit) {
-  const apiUrl = getApiUrl();
-  const res = await fetch(`${apiUrl}${path}`, options);
+  // Ensure path starts with /api
+  const normalizedPath = path.startsWith("/api") ? path : `/api${path}`;
+  
+  // Use relative URL — goes through Next.js proxy
+  const res = await fetch(normalizedPath, options);
   return res.json();
 }
 
 export async function getHealth() {
-  return api("/health");
+  return api("/api/health");
 }

@@ -1,78 +1,63 @@
 /**
- * Next.js API Proxy Route
+ * Next.js API Proxy
  * 
- * ARCHITECTURE:
+ * IMPORTANT:
  * - Auth & Profiles live in Supabase
- * - Business data lives in Neon (via Railway backend)
- * - Frontend NEVER talks to Railway directly
- * - All API calls go through this proxy to avoid CORS
+ * - Business data lives in Neon
+ * - Frontend NEVER talks to Neon directly
+ * - All API calls go through Next.js API layer to avoid CORS
  * 
  * Flow: Browser → /api/* → Railway Backend → Neon
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://locus-production-df4e.up.railway.app";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function proxyRequest(request: NextRequest, path: string) {
-  const url = `${BACKEND_URL}/api/${path}`;
-  
-  // Get authorization from request headers or cookies
-  const authHeader = request.headers.get("authorization");
-  
-  // Build headers for backend request
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  
-  if (authHeader) {
-    headers["Authorization"] = authHeader;
+async function proxy(req: NextRequest, pathSegments: string[]) {
+  if (!BACKEND_URL) {
+    return NextResponse.json(
+      { error: "NEXT_PUBLIC_API_URL not configured" },
+      { status: 500 }
+    );
   }
 
-  // Get request body for non-GET requests
-  let body: string | undefined;
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    try {
-      const text = await request.text();
-      if (text) {
-        body = text;
-      }
-    } catch {
-      // No body
-    }
-  }
+  // Build the backend URL
+  const path = pathSegments.join("/");
+  const url = `${BACKEND_URL}/api/${path}${req.nextUrl.search}`;
 
-  // Forward query params
-  const searchParams = request.nextUrl.searchParams.toString();
-  const fullUrl = searchParams ? `${url}?${searchParams}` : url;
-
-  console.log(`[Proxy] ${request.method} ${fullUrl}`);
+  console.log(`[Proxy] ${req.method} ${url}`);
 
   try {
-    const response = await fetch(fullUrl, {
-      method: request.method,
-      headers,
-      body,
-      cache: "no-store",
+    // Get body for non-GET requests
+    let body: string | undefined;
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      try {
+        body = await req.text();
+      } catch {
+        // No body
+      }
+    }
+
+    // Forward request to backend
+    const res = await fetch(url, {
+      method: req.method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: req.headers.get("authorization") ?? "",
+      },
+      body: body || undefined,
     });
 
-    // Get response data
-    const contentType = response.headers.get("content-type");
-    let data: string | ArrayBuffer;
-    
-    if (contentType?.includes("application/json")) {
-      data = await response.text();
-    } else {
-      data = await response.arrayBuffer();
-    }
+    // Get response body
+    const contentType = res.headers.get("content-type") || "application/json";
+    const data = await res.arrayBuffer();
 
     // Return proxied response
     return new NextResponse(data, {
-      status: response.status,
-      statusText: response.statusText,
+      status: res.status,
       headers: {
-        "Content-Type": contentType || "application/json",
+        "Content-Type": contentType,
       },
     });
   } catch (error) {
@@ -85,56 +70,41 @@ async function proxyRequest(request: NextRequest, path: string) {
 }
 
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  return proxyRequest(request, path.join("/"));
+  return proxy(req, path);
 }
 
 export async function POST(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  return proxyRequest(request, path.join("/"));
+  return proxy(req, path);
 }
 
 export async function PUT(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  return proxyRequest(request, path.join("/"));
+  return proxy(req, path);
 }
 
 export async function DELETE(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  return proxyRequest(request, path.join("/"));
+  return proxy(req, path);
 }
 
 export async function PATCH(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  return proxyRequest(request, path.join("/"));
-}
-
-export async function OPTIONS(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  // Handle preflight requests
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+  return proxy(req, path);
 }
