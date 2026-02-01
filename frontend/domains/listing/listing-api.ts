@@ -1,7 +1,8 @@
 import type { Listing, ListingDetail, ListingSearchQuery } from './listing-types'
 import { apiGet } from '@/shared/utils/api'
 
-export type ListingsResponse = { items: Listing[]; total?: number }
+// Backend returns: { ok: true, data: Listing[], items: Listing[], total: number }
+export type ListingsResponse = { ok?: boolean; data?: Listing[]; items?: Listing[]; total?: number }
 /** Backend returns { listing }; legacy { item } supported for compatibility */
 export type ListingDetailResponse = { listing?: ListingDetail; item?: ListingDetail }
 

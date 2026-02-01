@@ -23,7 +23,10 @@ export class AuthController {
       };
     },
   ) {
-    return req.user;
+    return {
+      ok: true,
+      user: req.user,
+    };
   }
 
   @Post("login")

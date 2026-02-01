@@ -8,33 +8,44 @@ import { join } from "path";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./shared/filters/http-exception.filter";
 
-function getCorsOrigins(): (string | RegExp)[] {
-  const raw = process.env.CORS_ORIGINS;
-  if (raw) {
-    const list = raw.split(",").map((o) => o.trim()).filter(Boolean);
-    if (list.length) return list;
-  }
-  // Fallback: allow localhost and any Vercel preview/production deployments
-  return [
-    "http://localhost:3000",
-    "https://locus.vercel.app",
-    // Match any Vercel deployment: locus-*.vercel.app
-    /^https:\/\/locus(-[a-z0-9]+)?\.vercel\.app$/,
-  ];
-}
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // CORS: Railway → Vercel. Только locus.vercel.app и localhost.
-  const corsOrigins = getCorsOrigins();
+  // CORS: Railway → Vercel. Callback-based, NO regex from env.
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      const allowed = [
+        "https://locus-i402.vercel.app",
+        "http://localhost:3000",
+      ];
+
+      if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.error("CORS BLOCKED:", origin);
+        callback(new Error("CORS BLOCKED: " + origin));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  });
+
+  // Explicit preflight handler — CRITICAL for browsers
+  app.use((req: any, res: any, next: () => void) => {
+    if (req.method === "OPTIONS") {
+      res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      return res.sendStatus(204);
+    }
+    next();
   });
 
   // Cookie parser for refresh tokens
@@ -112,8 +123,6 @@ async function bootstrap() {
   if (missing.length) {
     // eslint-disable-next-line no-console
     console.error("❌ Backend ENV missing (required for Railway):", missing.join(", "));
-    // eslint-disable-next-line no-console
-    console.error("   Set in Railway: Variables → PORT, DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
   }
 }
 
@@ -122,4 +131,3 @@ bootstrap().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

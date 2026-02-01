@@ -4,10 +4,13 @@ export type UserRole = AppRole;
 export type { UserProfile };
 
 /**
- * MeResponse = UserContract
- * Единый контракт между backend /auth/me и frontend
+ * MeResponse — контракт backend /auth/me
+ * Backend returns: { ok: true, user: UserContract }
  */
-export type MeResponse = UserContract;
+export type MeResponse = {
+  ok: boolean;
+  user: UserContract;
+};
 
 export type LoginRequest = {
   email: string;

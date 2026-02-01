@@ -28,7 +28,12 @@ export class ListingsController {
       city,
       limit: limitNum,
     });
-    return { items, total };
+    return {
+      ok: true,
+      data: items,
+      items, // backward compatibility
+      total,
+    };
   }
 
   @Get(":id")

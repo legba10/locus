@@ -29,7 +29,7 @@ type AuthState = {
   hasAnyRole: (roles: UserRole[]) => boolean;
 };
 
-function userFromSession(session: { user: { id: string; email?: string | null } }): MeResponse {
+function userFromSession(session: { user: { id: string; email?: string | null } }): StoredUser {
   const u = session.user;
   return {
     id: u.id,
@@ -40,7 +40,8 @@ function userFromSession(session: { user: { id: string; email?: string | null } 
   };
 }
 
-function userFromBackend(payload: MeResponse): MeResponse {
+function userFromBackend(response: MeResponse): StoredUser {
+  const payload = response.user;
   const backendRoles = payload.roles && payload.roles.length > 0 ? payload.roles : [payload.role];
   const roles = backendRoles.map((role) => normalizeRole(role));
   return {
@@ -52,7 +53,7 @@ function userFromBackend(payload: MeResponse): MeResponse {
   };
 }
 
-function toDomainUser(user: MeResponse | null): DomainUser | null {
+function toDomainUser(user: StoredUser | null): DomainUser | null {
   if (!user) return null;
   return {
     id: user.id,
@@ -63,7 +64,7 @@ function toDomainUser(user: MeResponse | null): DomainUser | null {
   };
 }
 
-async function dispatchAuth(type: "login" | "logout" | "register", user: MeResponse | null) {
+async function dispatchAuth(type: "login" | "logout" | "register", user: StoredUser | null) {
   if (!FeatureFlags.isEnabled("REAL_AUTH_ENABLED")) return;
   try {
     await ActionDispatcher.dispatchAuth(type, toDomainUser(user));
@@ -91,10 +92,10 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 401);
           const session = authData.session;
           if (!session) throw new AuthApiError("Нет сессии после входа", 401);
-          let meUser: MeResponse | null = null;
+          let meUser: StoredUser | null = null;
           try {
-            const backendUser = await fetchMe();
-            meUser = userFromBackend(backendUser);
+            const backendResponse = await fetchMe();
+            meUser = userFromBackend(backendResponse);
           } catch {
             meUser = null;
           }
@@ -127,10 +128,10 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 400);
           const session = authData.session;
           if (session) {
-            let meUser: MeResponse | null = null;
+            let meUser: StoredUser | null = null;
             try {
-              const backendUser = await fetchMe();
-              meUser = userFromBackend(backendUser);
+              const backendResponse = await fetchMe();
+              meUser = userFromBackend(backendResponse);
             } catch {
               meUser = null;
             }
@@ -174,10 +175,10 @@ export const useAuthStore = create<AuthState>()(
             set({ user: null, accessToken: null });
             return false;
           }
-          let meUser: MeResponse | null = null;
+          let meUser: StoredUser | null = null;
           try {
-            const backendUser = await fetchMe();
-            meUser = userFromBackend(backendUser);
+            const backendResponse = await fetchMe();
+            meUser = userFromBackend(backendResponse);
           } catch {
             meUser = null;
           }
@@ -221,7 +222,7 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
           
-          let meUser: MeResponse | null = null;
+          let meUser: StoredUser | null = null;
           
           try {
             // Timeout for fetchMe (3s max) - non-blocking
@@ -230,8 +231,8 @@ export const useAuthStore = create<AuthState>()(
               setTimeout(() => reject(new Error("fetchMe timeout")), 3000)
             );
             
-            const backendUser = await Promise.race([mePromise, meTimeout]);
-            meUser = userFromBackend(backendUser);
+            const backendResponse = await Promise.race([mePromise, meTimeout]);
+            meUser = userFromBackend(backendResponse);
           } catch (e) {
             logger.warn('Auth', 'fetchMe failed (using session data)', e);
             meUser = null;

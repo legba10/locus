@@ -19,7 +19,7 @@ export class AuthApiError extends Error {
  * Token is automatically injected from Supabase session via apiFetchRaw.
  */
 export async function me(): Promise<MeResponse> {
-  const res = await apiFetchRaw("/auth/me", { method: "GET" });
+  const res = await apiFetchRaw("/api/auth/me", { method: "GET" });
 
   const text = await res.text();
   let payload: unknown;

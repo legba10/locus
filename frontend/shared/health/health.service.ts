@@ -93,7 +93,7 @@ export async function checkAuthHealth(): Promise<HealthCheckResult> {
   
   try {
     // Just check if auth endpoint is reachable
-    const response = await fetch(getApiUrl('/auth/me'), {
+    const response = await fetch(getApiUrl('/api/auth/me'), {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })

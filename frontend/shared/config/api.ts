@@ -1,30 +1,21 @@
 /**
- * Единственный источник API URL. Запрещён hardcode URL.
+ * ЕДИНСТВЕННЫЙ источник API URL.
  * Backend: Railway. Render исключён.
+ * 
+ * ЗАПРЕЩЕНО: replace, trim слэшей, авто-нормализация URL
  */
 
-const raw = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_API_URL : "";
-export const API_URL = raw?.trim() ?? "";
-export const API_PREFIX = "/api";
-export const API_BASE = API_URL ? `${API_URL.replace(/\/$/, "")}${API_PREFIX}` : "";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 /**
- * Полный URL для пути к backend. Контракт: GET/POST /api/listings.
- * path: "/listings" или "/api/listings" → API_URL + "/api/listings"
+ * Строит полный URL для backend API.
+ * path должен начинаться с /api/
+ * Пример: getApiUrl('/api/listings') → https://backend.railway.app/api/listings
  */
 export function getApiUrl(path: string): string {
-  if (!API_BASE) {
-    if (typeof window !== "undefined") {
-      console.error("[API] NEXT_PUBLIC_API_URL is missing");
-    }
-    throw new Error("NEXT_PUBLIC_API_URL is missing");
+  if (!API_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL is not configured");
   }
-  // Normalize path: remove leading slash and redundant "api/" prefix
-  let p = path.startsWith("/") ? path.slice(1) : path;
-  if (p.startsWith("api/")) p = p.slice(4);
-  
-  // Build URL without breaking protocol (https://)
-  const url = `${API_BASE}/${p}`;
-  // Only replace multiple slashes AFTER the protocol
-  return url.replace(/(https?:\/\/)|(\/)+/g, (match, protocol) => protocol || "/");
+  // Простая конкатенация без манипуляций
+  return `${API_URL}${path}`;
 }

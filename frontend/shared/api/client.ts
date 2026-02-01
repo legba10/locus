@@ -10,10 +10,11 @@ import { getApiErrorMessage } from "@/shared/utils/apiError";
 import { supabase } from "@/shared/supabase-client";
 
 /**
- * Низкоуровневый вызов — возвращает Response (для auth/me и др., где нужны status/headers).
+ * Низкоуровневый вызов — возвращает Response.
+ * path должен быть полным: "/api/listings", "/api/auth/me"
  */
 export async function apiFetchRaw(path: string, options?: RequestInit): Promise<Response> {
-  const url = path.startsWith("http") ? path : getApiUrl(path.startsWith("/") ? path : `/${path}`);
+  const url = path.startsWith("http") ? path : getApiUrl(path);
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string>),
   };
