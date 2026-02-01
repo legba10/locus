@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException, Logger } from "@nestjs/common";
 import { ListingStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { NeonUserService } from "../users/neon-user.service";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { AiPricingService } from "../ai-orchestrator/services/ai-pricing.service";
@@ -19,8 +20,11 @@ function startOfDayUtc(d: Date) {
 
 @Injectable()
 export class ListingsService {
+  private readonly logger = new Logger(ListingsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
+    private readonly neonUser: NeonUserService,
     private readonly aiQuality: AiQualityService,
     private readonly aiPricing: AiPricingService,
     private readonly aiRisk: AiRiskService,
@@ -64,7 +68,11 @@ export class ListingsService {
     return listing;
   }
 
-  async create(ownerId: string, dto: CreateListingDto) {
+  async create(ownerId: string, dto: CreateListingDto, email?: string) {
+    // Ensure Neon User exists for FK (ownerId = Supabase ID)
+    await this.neonUser.ensureUserExists(ownerId, email);
+    this.logger.debug(`Creating listing for owner: ${ownerId}`);
+
     const listing = await this.prisma.listing.create({
       data: {
         ownerId,

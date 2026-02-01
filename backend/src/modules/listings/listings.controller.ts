@@ -47,7 +47,8 @@ export class ListingsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() dto: CreateListingDto) {
-    const listing = await this.listings.create(req.user.id, dto);
+    // Pass user ID (Supabase) and email for Neon FK relationship
+    const listing = await this.listings.create(req.user.id, dto, req.user.email);
     return { listing };
   }
 
