@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { MeResponse, LoginRequest, RegisterRequest, UserRole } from "./auth-types";
+import type { UserContract } from "@/shared/contracts";
 import { AuthApiError, me as fetchMe } from "./auth-api";
 import { supabase } from "@/shared/supabase-client";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
@@ -10,8 +11,14 @@ import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
 import { ActionDispatcher, FeatureFlags } from "@/shared/runtime";
 
+/**
+ * StoredUser — user object stored in zustand state
+ * Extracted from MeResponse.user or created from session
+ */
+type StoredUser = UserContract;
+
 type AuthState = {
-  user: MeResponse | null;
+  user: StoredUser | null;
   accessToken: string | null;
   isLoading: boolean;
   error: string | null;
@@ -57,10 +64,10 @@ function toDomainUser(user: StoredUser | null): DomainUser | null {
   if (!user) return null;
   return {
     id: user.id,
-    supabaseId: user.supabaseId,
+    supabaseId: user.supabaseId ?? user.id, // fallback to id if supabaseId not set
     email: user.email,
     role: user.role as DomainUser["role"],
-    roles: user.roles as DomainUser["roles"],
+    roles: (user.roles ?? [user.role]) as DomainUser["roles"],
   };
 }
 
@@ -92,13 +99,16 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 401);
           const session = authData.session;
           if (!session) throw new AuthApiError("Нет сессии после входа", 401);
+          
           let meUser: StoredUser | null = null;
           try {
             const backendResponse = await fetchMe();
             meUser = userFromBackend(backendResponse);
-          } catch {
+          } catch (e) {
+            logger.warn("Auth", "fetchMe failed after login, using session", e);
             meUser = null;
           }
+          
           set({
             user: meUser ?? userFromSession(session),
             accessToken: session.access_token,
@@ -142,6 +152,7 @@ export const useAuthStore = create<AuthState>()(
             });
             await dispatchAuth("register", meUser ?? userFromSession(session));
           } else {
+            // No session = email confirmation required
             set({
               user: { id: "", supabaseId: "", email: data.email, role: data.role, roles: [data.role] },
               accessToken: null,

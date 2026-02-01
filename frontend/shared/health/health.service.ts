@@ -1,27 +1,13 @@
 /**
  * LOCUS System Health Service
- * 
- * PATCH 4: System Health & Monitoring
- * 
- * Provides:
- * - System status checks
- * - Health endpoints
- * - Error tracking
- * - Status indicators
  */
 
 import { logger } from '../utils/logger'
 import { config } from '../config'
 import { getApiUrl } from '../config/api'
 
-/**
- * Service status
- */
 export type ServiceStatus = 'ok' | 'degraded' | 'fail' | 'unknown'
 
-/**
- * Service health info
- */
 export interface ServiceHealth {
   status: ServiceStatus
   latency?: number
@@ -29,9 +15,6 @@ export interface ServiceHealth {
   error?: string
 }
 
-/**
- * System health status
- */
 export interface SystemHealth {
   api: ServiceHealth
   auth: ServiceHealth
@@ -41,9 +24,6 @@ export interface SystemHealth {
   timestamp: string
 }
 
-/**
- * Health check result
- */
 export interface HealthCheckResult {
   name: string
   status: ServiceStatus
@@ -58,7 +38,7 @@ export async function checkApiHealth(): Promise<HealthCheckResult> {
   const start = Date.now()
   
   try {
-    const response = await fetch(getApiUrl('/health'), {
+    const response = await fetch(getApiUrl('/api/health'), {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })
@@ -92,7 +72,6 @@ export async function checkAuthHealth(): Promise<HealthCheckResult> {
   const start = Date.now()
   
   try {
-    // Just check if auth endpoint is reachable
     const response = await fetch(getApiUrl('/api/auth/me'), {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
@@ -128,7 +107,6 @@ export async function checkMediaHealth(): Promise<HealthCheckResult> {
   const start = Date.now()
   
   try {
-    // Check if Supabase storage is reachable
     const response = await fetch(
       `${config.supabase.url}/storage/v1/object/info/public/locus-listings`,
       {
@@ -179,7 +157,6 @@ export async function checkSystemHealth(): Promise<SystemHealth> {
     error: result.error,
   })
   
-  // Determine overall status
   const statuses = [api.status, auth.status, media.status]
   let overall: ServiceStatus = 'ok'
   if (statuses.includes('fail')) {
@@ -192,15 +169,12 @@ export async function checkSystemHealth(): Promise<SystemHealth> {
     api: toServiceHealth(api),
     auth: toServiceHealth(auth),
     media: toServiceHealth(media),
-    db: { status: 'unknown' }, // DB check would need backend support
+    db: { status: 'unknown' },
     overall,
     timestamp: new Date().toISOString(),
   }
 }
 
-/**
- * Get status emoji
- */
 export function getStatusEmoji(status: ServiceStatus): string {
   switch (status) {
     case 'ok': return '✅'
@@ -210,9 +184,6 @@ export function getStatusEmoji(status: ServiceStatus): string {
   }
 }
 
-/**
- * Get status color
- */
 export function getStatusColor(status: ServiceStatus): string {
   switch (status) {
     case 'ok': return 'green'
@@ -222,16 +193,10 @@ export function getStatusColor(status: ServiceStatus): string {
   }
 }
 
-/**
- * Last known system health
- */
 let lastHealth: SystemHealth | null = null
 let lastCheckTime: number = 0
-const CACHE_TTL = 30000 // 30 seconds
+const CACHE_TTL = 30000
 
-/**
- * Get cached or fresh system health
- */
 export async function getSystemHealth(forceRefresh = false): Promise<SystemHealth> {
   const now = Date.now()
   

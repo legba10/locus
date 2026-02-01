@@ -13,67 +13,55 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // CORS: Railway → Vercel. Callback-based, NO regex from env.
+  // Cookie parser — BEFORE CORS so cookies work
+  app.use(cookieParser());
+
+  // ЕДИНСТВЕННЫЙ CORS config — NestJS built-in, no manual OPTIONS handler
+  // This handles preflight (OPTIONS) automatically
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
+      // No origin = same-origin or non-browser (curl, mobile) → allow
+      if (!origin) {
+        return callback(null, true);
+      }
 
+      // Allowed origins
       const allowed = [
         "https://locus-i402.vercel.app",
         "http://localhost:3000",
+        "http://localhost:3001",
       ];
 
+      // Check exact match OR any Vercel preview deployment
       if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
-        callback(null, true);
-      } else {
-        console.error("CORS BLOCKED:", origin);
-        callback(new Error("CORS BLOCKED: " + origin));
+        return callback(null, true);
       }
+
+      // Log blocked origin for debugging
+      console.warn("[CORS] Blocked origin:", origin);
+      // Return false (not error) to reject without crashing
+      return callback(null, false);
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+    exposedHeaders: ["Set-Cookie"],
+    maxAge: 86400, // Preflight cache for 24h
   });
 
-  // Explicit preflight handler — CRITICAL for browsers
-  app.use((req: any, res: any, next: () => void) => {
-    if (req.method === "OPTIONS") {
-      res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-      res.header("Access-Control-Allow-Credentials", "true");
-      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-      res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-      return res.sendStatus(204);
-    }
-    next();
-  });
-
-  // Cookie parser for refresh tokens
-  app.use(cookieParser());
-
-  // Timeout protection: 10s for incoming requests
-  const REQUEST_TIMEOUT_MS = 10000;
-  app.use((req: any, res: any, next: () => void) => {
-    res.setTimeout(REQUEST_TIMEOUT_MS, () => {
-      if (!res.headersSent) {
-        res.status(408).json({ statusCode: 408, error: "Request Timeout", message: "Request timeout after 10s" });
-      }
-    });
-    next();
-  });
-
-  // Request logging (URL, origin, auth presence)
+  // Request logging
   app.use((req: any, _res: any, next: () => void) => {
     const path = req.path || req.url;
     const origin = req.get?.("origin") ?? req.headers?.origin ?? "-";
     const hasAuth = !!req.headers?.authorization;
-    // eslint-disable-next-line no-console
-    console.log("API", req.method, path, "origin:", origin, "auth:", hasAuth ? "yes" : "no");
+    console.log(`[API] ${req.method} ${path} | origin: ${origin} | auth: ${hasAuth ? "yes" : "no"}`);
     next();
   });
 
-  // Контракт: GET/POST /api/listings. Единый префикс api.
+  // Global prefix: all routes under /api
   app.setGlobalPrefix("api");
+
+  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -82,21 +70,18 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger docs at /docs (outside /api prefix)
   const config = new DocumentBuilder()
-    .setTitle("LOCUS New API")
-    .setDescription("AI-first rental marketplace API (MVP)")
+    .setTitle("LOCUS API")
+    .setDescription("AI-first rental marketplace")
     .setVersion("v1")
     .addBearerAuth()
-    .addTag("health")
-    .addTag("auth")
-    .addTag("ai")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  // With global prefix "api" docs are at: /docs
   SwaggerModule.setup("docs", app, document);
 
-  // Production: только Supabase Storage. uploads/ только для dev/legacy.
+  // Static assets for dev only
   if (process.env.NODE_ENV !== "production") {
     app.useStaticAssets(join(__dirname, "..", "uploads"), { prefix: "/uploads" });
   }
@@ -104,30 +89,19 @@ async function bootstrap() {
   const port = Number(process.env.PORT) || 8080;
   await app.listen(port);
 
-  // eslint-disable-next-line no-console
-  console.log("🚀 Backend started on port", port);
-  // eslint-disable-next-line no-console
-  console.log("🌍 Frontend URL:", process.env.FRONTEND_URL ?? "(not set)");
-  // eslint-disable-next-line no-console
-  console.log("🧩 Supabase URL:", !!process.env.SUPABASE_URL);
-  // eslint-disable-next-line no-console
-  console.log("🤖 AI enabled:", process.env.AI_ENABLED === "true");
-  // eslint-disable-next-line no-console
-  console.log("📡 Telegram enabled:", process.env.TELEGRAM_ENABLED === "true");
+  console.log(`🚀 Backend running on port ${port}`);
+  console.log(`🌍 Frontend: ${process.env.FRONTEND_URL ?? "(not set)"}`);
+  console.log(`📡 Telegram: ${process.env.TELEGRAM_ENABLED === "true" ? "enabled" : "disabled"}`);
 
+  // Verify required env vars
   const required = ["PORT", "DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
-  const missing = required.filter((k) => {
-    const v = process.env[k];
-    return !v || (typeof v === "string" && v.trim() === "");
-  });
+  const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
-    // eslint-disable-next-line no-console
-    console.error("❌ Backend ENV missing (required for Railway):", missing.join(", "));
+    console.error("❌ Missing env vars:", missing.join(", "));
   }
 }
 
 bootstrap().catch((e) => {
-  // eslint-disable-next-line no-console
-  console.error(e);
+  console.error("Bootstrap failed:", e);
   process.exit(1);
 });

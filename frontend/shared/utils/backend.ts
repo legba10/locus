@@ -2,17 +2,30 @@ import { ApiError } from "./api";
 import { getApiUrl } from "@/shared/config/api";
 
 /**
- * Full backend URL (server-side). Uses NEXT_PUBLIC_API_URL + /api.
+ * Normalize path to include /api/ prefix
  */
-export function getBackendUrl(path: string): string {
-  return getApiUrl(path);
+function normalizePath(path: string): string {
+  if (path.startsWith('http')) return path;
+  
+  let p = path.startsWith('/') ? path : `/${path}`;
+  if (!p.startsWith('/api/') && !p.startsWith('/api?')) {
+    p = `/api${p}`;
+  }
+  return p;
 }
 
 /**
- * Server-side fetch для backend API (используется в API routes и SSR).
+ * Full backend URL
+ */
+export function getBackendUrl(path: string): string {
+  return getApiUrl(normalizePath(path));
+}
+
+/**
+ * Server-side GET for backend API
  */
 export async function backendGetJson<T>(path: string): Promise<T> {
-  const url = getApiUrl(path);
+  const url = getBackendUrl(path);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -45,10 +58,10 @@ export async function backendGetJson<T>(path: string): Promise<T> {
 }
 
 /**
- * Server-side POST для backend API.
+ * Server-side POST for backend API
  */
 export async function backendPostJson<T>(path: string, body: unknown): Promise<T> {
-  const url = getApiUrl(path);
+  const url = getBackendUrl(path);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 

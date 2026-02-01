@@ -1,6 +1,6 @@
 /**
- * ЕДИНСТВЕННЫЙ API client для LOCUS.
- * Все запросы идут на Railway backend. Запрещено: fetch напрямую, axios, hardcode URL.
+ * ЕДИНСТВЕННЫЙ API client для LOCUS
+ * Все запросы идут через Railway backend
  */
 
 "use client";
@@ -10,35 +10,59 @@ import { getApiErrorMessage } from "@/shared/utils/apiError";
 import { supabase } from "@/shared/supabase-client";
 
 /**
- * Низкоуровневый вызов — возвращает Response.
- * path должен быть полным: "/api/listings", "/api/auth/me"
+ * Normalize path to ensure it starts with /api/
  */
-export async function apiFetchRaw(path: string, options?: RequestInit): Promise<Response> {
-  const url = path.startsWith("http") ? path : getApiUrl(path);
-  const headers: Record<string, string> = {
-    ...(options?.headers as Record<string, string>),
-  };
-  if (!(options?.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
+function normalizePath(path: string): string {
+  // Already a full URL
+  if (path.startsWith("http")) return path;
+  
+  // Ensure leading slash
+  let p = path.startsWith("/") ? path : `/${path}`;
+  
+  // Ensure /api/ prefix
+  if (!p.startsWith("/api/") && !p.startsWith("/api?")) {
+    p = `/api${p}`;
   }
-  let token: string | undefined;
-  try {
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token;
-  } catch {
-    // no session
-  }
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  return fetch(url, { credentials: "include", ...options, headers });
+  
+  return p;
 }
 
 /**
- * Единственный способ вызывать backend API из frontend.
- * path — без ведущего слэша или с ним: "/listings", "auth/me"
- * Добавляет Bearer из Supabase session, credentials: include.
- * При !res.ok бросает Error, иначе возвращает разобранный JSON.
+ * Low-level fetch — returns raw Response
+ * Use for cases where you need status/headers (like auth/me)
+ */
+export async function apiFetchRaw(path: string, options?: RequestInit): Promise<Response> {
+  const fullPath = normalizePath(path);
+  const url = fullPath.startsWith("http") ? fullPath : getApiUrl(fullPath);
+  
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string>),
+  };
+  
+  // Set Content-Type for JSON (not for FormData)
+  if (!(options?.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Get Supabase token if available
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.access_token) {
+      headers["Authorization"] = `Bearer ${data.session.access_token}`;
+    }
+  } catch {
+    // No session - continue without auth
+  }
+  
+  return fetch(url, {
+    credentials: "include",
+    ...options,
+    headers,
+  });
+}
+
+/**
+ * Main API fetch — returns parsed JSON or throws on error
  */
 export async function apiFetch<T = unknown>(path: string, options?: RequestInit): Promise<T> {
   const res = await apiFetchRaw(path, options);
@@ -50,23 +74,25 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
     } catch {
       text = "";
     }
+    
     let serverMsg: string | undefined;
     try {
       const json = text ? JSON.parse(text) : {};
-      serverMsg = (json as { message?: string }).message ?? (json as { error?: string }).error;
+      serverMsg = json.message ?? json.error;
     } catch {
       serverMsg = text || undefined;
     }
+    
     const msg = getApiErrorMessage(res.status, serverMsg);
-    if (typeof window !== "undefined") {
-      console.error("[API] request failed:", path, res.status, msg);
-    }
+    console.error("[API] Error:", path, res.status, msg);
     throw new Error(msg);
   }
 
   const contentType = res.headers.get("content-type");
   const text = await res.text();
+  
   if (!text) return undefined as T;
+  
   if (contentType?.includes("application/json")) {
     try {
       return JSON.parse(text) as T;
@@ -74,11 +100,12 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
       return undefined as T;
     }
   }
+  
   return undefined as T;
 }
 
 /**
- * Типизированный вызов с явным возвратом JSON.
+ * Typed JSON fetch
  */
 export async function apiFetchJson<T>(path: string, options?: RequestInit): Promise<T> {
   return apiFetch<T>(path, options);
