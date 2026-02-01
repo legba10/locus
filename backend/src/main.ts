@@ -16,37 +16,24 @@ async function bootstrap() {
   // Cookie parser — BEFORE CORS so cookies work
   app.use(cookieParser());
 
-  // ЕДИНСТВЕННЫЙ CORS config — NestJS built-in, no manual OPTIONS handler
-  // This handles preflight (OPTIONS) automatically
+  // CORS Configuration
+  // IMPORTANT: Auth & Profiles live in Supabase.
+  // Business data lives in Neon.
+  // Frontend NEVER talks to Neon directly.
+  // All API calls go through Next.js API layer to avoid CORS.
+  const allowedOrigins = [
+    "https://locus-i4o2.vercel.app",   // Production Vercel
+    "https://locus-4o2.vercel.app",    // Alternate domain
+    "https://www.locus.ru",            // Production domain
+    "http://localhost:3000",           // Local dev
+    "http://localhost:3001",           // Local dev alt
+  ];
+
   app.enableCors({
-    origin: (origin, callback) => {
-      // No origin = same-origin or non-browser (curl, mobile) → allow
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      // Allowed origins — EXACT domain from Vercel
-      const allowed = [
-        "https://locus-i4o2.vercel.app",  // Production (letter O, not zero)
-        "http://localhost:3000",
-        "http://localhost:3001",
-      ];
-
-      // Check exact match OR any Vercel preview deployment
-      if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
-        return callback(null, true);
-      }
-
-      // Log blocked origin for debugging
-      console.warn("[CORS] Blocked origin:", origin);
-      // Return false (not error) to reject without crashing
-      return callback(null, false);
-    },
+    origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-    exposedHeaders: ["Set-Cookie"],
-    maxAge: 86400, // Preflight cache for 24h
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   // Request logging

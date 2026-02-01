@@ -1,6 +1,13 @@
 /**
- * ЕДИНСТВЕННЫЙ API client для LOCUS
- * Все запросы идут через Railway backend
+ * LOCUS API Client
+ * 
+ * ARCHITECTURE:
+ * - Auth & Profiles live in Supabase
+ * - Business data lives in Neon (via Railway backend)
+ * - Frontend NEVER talks to Railway directly
+ * - All API calls go through Next.js API proxy to avoid CORS
+ * 
+ * Flow: Browser → /api/* (Next.js proxy) → Railway → Neon
  */
 
 "use client";
