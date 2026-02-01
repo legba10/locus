@@ -67,9 +67,7 @@ export class SearchBodyDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  priceMax?: number;
-
-  @ApiPropertyOptional({ example: 2 })
+  priceMax?: number;  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
   @IsInt()
   @Min(1)

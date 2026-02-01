@@ -8,13 +8,19 @@ import { join } from "path";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./shared/filters/http-exception.filter";
 
-function getCorsOrigins(): string[] {
+function getCorsOrigins(): (string | RegExp)[] {
   const raw = process.env.CORS_ORIGINS;
   if (raw) {
     const list = raw.split(",").map((o) => o.trim()).filter(Boolean);
     if (list.length) return list;
   }
-  return ["http://localhost:3000", "https://locus.vercel.app", "https://locus-i402.vercel.app"];
+  // Fallback: allow localhost and any Vercel preview/production deployments
+  return [
+    "http://localhost:3000",
+    "https://locus.vercel.app",
+    // Match any Vercel deployment: locus-*.vercel.app
+    /^https:\/\/locus(-[a-z0-9]+)?\.vercel\.app$/,
+  ];
 }
 
 async function bootstrap() {

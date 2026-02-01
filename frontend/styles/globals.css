@@ -235,9 +235,7 @@ html {
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
-}
-
-/* Glass Search Card — по ТЗ v3 */
+}/* Glass Search Card — по ТЗ v3 */
 .glass-search {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
