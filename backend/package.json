@@ -5,7 +5,7 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "main": "dist/main.js",
   "scripts": {
-    "build": "npx prisma generate && node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate deploy"

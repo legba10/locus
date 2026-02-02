@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
+# Prisma runs at container start (Railway Start Command)
 RUN npm run build
 
 EXPOSE 8080
