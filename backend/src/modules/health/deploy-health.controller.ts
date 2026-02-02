@@ -2,14 +2,15 @@ import { Controller, Get } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 
 @ApiTags("health")
-@Controller("api")
+@Controller("health")
 export class DeployHealthController {
   @Get()
-  getApiHealth() {
+  health() {
     return {
+      ok: true,
       status: "ok",
       service: "locus-backend",
-      db: "connected",
+      timestamp: new Date().toISOString(),
     };
   }
 }
