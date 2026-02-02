@@ -5,8 +5,10 @@
   "description": "LOCUS New backend (NestJS + Prisma + AI Orchestrator)",
   "main": "dist/main.js",
   "scripts": {
-    "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
-    "start": "node dist/main.js"
+    "build": "prisma generate && node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   },
   "engines": {
     "node": ">=18"
