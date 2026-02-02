@@ -6,7 +6,8 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "start:prod": "node node_modules/prisma/build/index.js migrate deploy && node dist/main.js"
   },
   "engines": {
     "node": ">=18"
