@@ -6,9 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
-    "start": "node dist/main.js",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate deploy"
+    "start": "node dist/main.js"
   },
   "engines": {
     "node": ">=18"

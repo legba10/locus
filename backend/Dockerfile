@@ -7,7 +7,10 @@ RUN npm ci
 
 COPY . .
 
-# Prisma runs at container start (Railway Start Command)
+# Generate Prisma Client for Linux (debian-openssl-1.1.x)
+RUN npx prisma generate
+
+# Build TypeScript
 RUN npm run build
 
 EXPOSE 8080
