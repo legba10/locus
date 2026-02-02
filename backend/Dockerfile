@@ -7,8 +7,8 @@ RUN npm ci
 
 COPY . .
 
-# Generate Prisma Client for Linux (debian-openssl-1.1.x)
-RUN npx prisma generate
+# Generate Prisma Client WITHOUT executable permissions
+RUN node node_modules/prisma/build/index.js generate
 
 # Build TypeScript
 RUN npm run build
