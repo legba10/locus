@@ -7,7 +7,9 @@
   "scripts": {
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
-    "start:prod": "node node_modules/prisma/build/index.js migrate deploy && node dist/main.js"
+    "start:prod": "node node_modules/prisma/build/index.js migrate deploy && node dist/main.js",
+    "db:seed": "npx ts-node prisma/seed.ts",
+    "db:seed-test": "npx ts-node scripts/seed-test-listings.ts"
   },
   "engines": {
     "node": ">=18"
