@@ -163,8 +163,8 @@ export default function PageClient() {
               </details>
             )}
 
-            {/* Telegram Login — показывается если NEXT_PUBLIC_TELEGRAM_BOT_ID задан */}
-            {process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID && (
+            {/* Telegram Login — показывается если бот настроен */}
+            {(process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME) && (
               <>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
