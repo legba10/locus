@@ -19,3 +19,4 @@ __exportStar(require("./pricing.strategy"), exports);
 __exportStar(require("./risk.strategy"), exports);
 __exportStar(require("./demand.strategy"), exports);
 __exportStar(require("./search.strategy"), exports);
+//# sourceMappingURL=index.js.map

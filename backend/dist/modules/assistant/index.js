@@ -20,3 +20,4 @@ __exportStar(require("./assistant.controller"), exports);
 __exportStar(require("./services/analysis.service"), exports);
 __exportStar(require("./services/price-advisor.service"), exports);
 __exportStar(require("./services/improvement.service"), exports);
+//# sourceMappingURL=index.js.map

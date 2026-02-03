@@ -15,15 +15,17 @@ const swagger_1 = require("@nestjs/swagger");
 let HealthController = class HealthController {
     getHealth() {
         return {
-            status: "ok",
+            ok: true,
             service: "locus-backend",
-            db: "connected",
+            timestamp: new Date().toISOString(),
         };
     }
 };
 exports.HealthController = HealthController;
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: "Health check endpoint" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Service is healthy" }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -32,3 +34,4 @@ exports.HealthController = HealthController = __decorate([
     (0, swagger_1.ApiTags)("health"),
     (0, common_1.Controller)("health")
 ], HealthController);
+//# sourceMappingURL=health.controller.js.map

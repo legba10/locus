@@ -47,3 +47,4 @@ __decorate([
     (0, class_transformer_1.Type)(() => AvailabilityPatchItemDto),
     __metadata("design:type", Array)
 ], UpdateAvailabilityDto.prototype, "items", void 0);
+//# sourceMappingURL=update-availability.dto.js.map

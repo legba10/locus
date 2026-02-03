@@ -25,3 +25,4 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], UploadPhotoDto.prototype, "sortOrder", void 0);
+//# sourceMappingURL=upload-photo.dto.js.map

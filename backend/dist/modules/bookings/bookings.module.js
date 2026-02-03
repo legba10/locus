@@ -20,3 +20,4 @@ exports.BookingsModule = BookingsModule = __decorate([
         exports: [bookings_service_1.BookingsService],
     })
 ], BookingsModule);
+//# sourceMappingURL=bookings.module.js.map

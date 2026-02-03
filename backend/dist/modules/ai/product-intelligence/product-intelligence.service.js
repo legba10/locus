@@ -197,3 +197,4 @@ exports.ProductIntelligenceService = ProductIntelligenceService = ProductIntelli
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         ai_brain_service_1.AiBrainService])
 ], ProductIntelligenceService);
+//# sourceMappingURL=product-intelligence.service.js.map

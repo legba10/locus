@@ -120,3 +120,4 @@ exports.IntelligenceEventHandler = IntelligenceEventHandler = IntelligenceEventH
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [product_intelligence_service_1.ProductIntelligenceService])
 ], IntelligenceEventHandler);
+//# sourceMappingURL=intelligence.handler.js.map

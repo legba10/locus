@@ -28,3 +28,4 @@ exports.AiCoreModule = AiCoreModule = __decorate([
         exports: [insight_engine_1.InsightEngine, recommendation_engine_1.RecommendationEngine, market_engine_1.MarketEngine],
     })
 ], AiCoreModule);
+//# sourceMappingURL=ai-core.module.js.map

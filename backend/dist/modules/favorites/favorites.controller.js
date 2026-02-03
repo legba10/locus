@@ -95,3 +95,4 @@ exports.FavoritesController = FavoritesController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [favorites_service_1.FavoritesService])
 ], FavoritesController);
+//# sourceMappingURL=favorites.controller.js.map

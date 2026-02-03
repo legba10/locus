@@ -27,18 +27,25 @@ let ListingsController = class ListingsController {
         this.photosService = photosService;
     }
     async getAll(city, limit) {
-        const items = await this.listings.getAll({
+        const limitNum = limit ? Number(limit) : 12;
+        const { items, total } = await this.listings.getAll({
             city,
-            limit: limit ? Number(limit) : undefined,
+            limit: limitNum,
         });
-        return { items };
+        return {
+            ok: true,
+            data: items,
+            items,
+            total,
+        };
     }
     async getOne(id) {
-        return { item: await this.listings.getById(id) };
+        const listing = await this.listings.getById(id);
+        return { listing };
     }
     async create(req, dto) {
-        const listing = await this.listings.create(req.user.id, dto);
-        return { item: listing, listing };
+        const listing = await this.listings.create(req.user.id, dto, req.user.email);
+        return { listing };
     }
     async update(req, id, dto) {
         return { item: await this.listings.update(req.user.id, id, dto) };
@@ -196,3 +203,4 @@ exports.ListingsController = ListingsController = __decorate([
     __metadata("design:paramtypes", [listings_service_1.ListingsService,
         listings_photos_service_1.ListingsPhotosService])
 ], ListingsController);
+//# sourceMappingURL=listings.controller.js.map

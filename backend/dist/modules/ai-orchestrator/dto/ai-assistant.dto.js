@@ -42,3 +42,4 @@ __decorate([
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], AiAssistantRequestDto.prototype, "extra", void 0);
+//# sourceMappingURL=ai-assistant.dto.js.map

@@ -79,3 +79,4 @@ exports.SystemService = SystemService = SystemService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], SystemService);
+//# sourceMappingURL=system.service.js.map

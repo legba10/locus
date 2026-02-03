@@ -43,3 +43,4 @@ __decorate([
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], CreateBookingDto.prototype, "guestsCount", void 0);
+//# sourceMappingURL=create-booking.dto.js.map

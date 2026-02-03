@@ -118,3 +118,4 @@ exports.AiCoreController = AiCoreController = __decorate([
         market_engine_1.MarketEngine,
         recommendation_engine_1.RecommendationEngine])
 ], AiCoreController);
+//# sourceMappingURL=ai-core.controller.js.map

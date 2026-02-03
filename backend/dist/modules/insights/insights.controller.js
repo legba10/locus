@@ -51,3 +51,4 @@ exports.InsightsController = InsightsController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [insights_service_1.InsightsService])
 ], InsightsController);
+//# sourceMappingURL=insights.controller.js.map

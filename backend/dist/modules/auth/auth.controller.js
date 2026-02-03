@@ -18,7 +18,10 @@ const swagger_1 = require("@nestjs/swagger");
 const supabase_auth_guard_1 = require("./guards/supabase-auth.guard");
 let AuthController = class AuthController {
     me(req) {
-        return req.user;
+        return {
+            ok: true,
+            user: req.user,
+        };
     }
     login() {
         throw new common_1.BadRequestException({
@@ -51,3 +54,4 @@ exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)("auth"),
     (0, common_1.Controller)("auth")
 ], AuthController);
+//# sourceMappingURL=auth.controller.js.map

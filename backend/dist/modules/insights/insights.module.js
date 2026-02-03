@@ -30,3 +30,4 @@ exports.InsightsModule = InsightsModule = __decorate([
         exports: [insights_service_1.InsightsService],
     })
 ], InsightsModule);
+//# sourceMappingURL=insights.module.js.map

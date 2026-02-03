@@ -62,3 +62,4 @@ exports.AiAssistantService = AiAssistantService;
 exports.AiAssistantService = AiAssistantService = __decorate([
     (0, common_1.Injectable)()
 ], AiAssistantService);
+//# sourceMappingURL=ai-assistant.service.js.map

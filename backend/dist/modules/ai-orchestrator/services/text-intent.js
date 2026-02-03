@@ -32,3 +32,4 @@ function parseIntent(query, context) {
     }
     return { city, maxMonthlyPrice, wantsQuiet, wantsMetro };
 }
+//# sourceMappingURL=text-intent.js.map

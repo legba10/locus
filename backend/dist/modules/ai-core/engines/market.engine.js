@@ -84,3 +84,4 @@ exports.MarketEngine = MarketEngine = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], MarketEngine);
+//# sourceMappingURL=market.engine.js.map

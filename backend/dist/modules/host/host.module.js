@@ -22,3 +22,4 @@ exports.HostModule = HostModule = __decorate([
         exports: [host_service_1.HostService],
     })
 ], HostModule);
+//# sourceMappingURL=host.module.js.map

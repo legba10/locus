@@ -162,3 +162,4 @@ exports.ListingsPhotosService = ListingsPhotosService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], ListingsPhotosService);
+//# sourceMappingURL=listings-photos.service.js.map

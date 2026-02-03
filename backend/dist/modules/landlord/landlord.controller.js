@@ -93,3 +93,4 @@ exports.LandlordController = LandlordController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [landlord_service_1.LandlordService])
 ], LandlordController);
+//# sourceMappingURL=landlord.controller.js.map

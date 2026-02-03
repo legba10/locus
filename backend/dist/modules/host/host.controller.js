@@ -94,3 +94,4 @@ exports.HostController = HostController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [host_service_1.HostService])
 ], HostController);
+//# sourceMappingURL=host.controller.js.map

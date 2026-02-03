@@ -51,3 +51,4 @@ exports.SearchController = SearchController = __decorate([
     (0, common_1.Controller)("search"),
     __metadata("design:paramtypes", [search_service_1.SearchService])
 ], SearchController);
+//# sourceMappingURL=search.controller.js.map

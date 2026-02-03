@@ -258,3 +258,4 @@ exports.AssistantService = AssistantService = AssistantService_1 = __decorate([
         price_advisor_service_1.PriceAdvisorService,
         improvement_service_1.ImprovementService])
 ], AssistantService);
+//# sourceMappingURL=assistant.service.js.map

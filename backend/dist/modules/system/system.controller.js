@@ -66,3 +66,4 @@ exports.SystemController = SystemController = __decorate([
     (0, common_1.Controller)('system'),
     __metadata("design:paramtypes", [system_service_1.SystemService])
 ], SystemController);
+//# sourceMappingURL=system.controller.js.map

@@ -73,3 +73,4 @@ exports.EventsService = EventsService = EventsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [event_emitter_1.EventEmitter2])
 ], EventsService);
+//# sourceMappingURL=events.service.js.map

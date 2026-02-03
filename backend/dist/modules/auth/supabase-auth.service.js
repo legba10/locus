@@ -5,113 +5,93 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+var SupabaseAuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupabaseAuthService = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
-let SupabaseAuthService = class SupabaseAuthService {
-    constructor(prisma) {
-        this.prisma = prisma;
+const supabase_1 = require("../../shared/lib/supabase");
+let SupabaseAuthService = SupabaseAuthService_1 = class SupabaseAuthService {
+    constructor() {
+        this.logger = new common_1.Logger(SupabaseAuthService_1.name);
     }
-    normalizeRole(value) {
-        if (!value)
+    mapToBusinessRole(profileRole) {
+        if (!profileRole)
+            return "guest";
+        const role = profileRole.toLowerCase();
+        if (role === "admin")
+            return "admin";
+        if (role === "landlord" || role === "manager")
+            return "host";
+        return "guest";
+    }
+    async upsertProfile(user, telegramId) {
+        if (!supabase_1.supabase) {
+            this.logger.error("Supabase client not configured");
             return null;
-        const role = String(value).toLowerCase();
-        if (role === "guest" || role === "host" || role === "admin")
-            return role;
-        return null;
-    }
-    resolveRole(supabaseUser) {
-        const metaRole = this.normalizeRole(supabaseUser.user_metadata?.role) ??
-            this.normalizeRole(supabaseUser.app_metadata?.role) ??
-            this.normalizeRole(supabaseUser.user_metadata?.app_role) ??
-            this.normalizeRole(supabaseUser.app_metadata?.app_role);
-        return metaRole ?? "guest";
-    }
-    async ensureRole(name) {
-        return this.prisma.role.upsert({
-            where: { name },
-            update: {},
-            create: { name, description: `${name} role` },
-        });
-    }
-    async attachDefaultRole(userId, roleName) {
-        const role = await this.ensureRole(roleName);
-        await this.prisma.userRole.create({
-            data: { userId, roleId: role.id },
-        });
-        return this.prisma.user.findUnique({
-            where: { id: userId },
-            include: { roles: { include: { role: true } } },
-        });
-    }
-    async syncUser(supabaseUser) {
-        const email = supabaseUser.email ?? undefined;
-        const emailUpdate = email ? { email } : {};
-        const defaultRole = this.resolveRole(supabaseUser);
-        const existingBySupabase = await this.prisma.user.findUnique({
-            where: { supabaseId: supabaseUser.id },
-            include: { roles: { include: { role: true } } },
-        });
-        if (existingBySupabase) {
-            if (email && existingBySupabase.email !== email) {
-                const updated = await this.prisma.user.update({
-                    where: { id: existingBySupabase.id },
-                    data: { ...emailUpdate },
-                    include: { roles: { include: { role: true } } },
-                });
-                if (updated.roles.length > 0)
-                    return updated;
-                const withRole = await this.attachDefaultRole(updated.id, defaultRole);
-                return withRole ?? updated;
-            }
-            if (existingBySupabase.roles.length > 0)
-                return existingBySupabase;
-            const withRole = await this.attachDefaultRole(existingBySupabase.id, defaultRole);
-            return withRole ?? existingBySupabase;
         }
-        if (email) {
-            const existingByEmail = await this.prisma.user.findUnique({
-                where: { email },
-                include: { roles: { include: { role: true } } },
-            });
-            if (existingByEmail) {
-                const updated = await this.prisma.user.update({
-                    where: { id: existingByEmail.id },
-                    data: { supabaseId: supabaseUser.id },
-                    include: { roles: { include: { role: true } } },
-                });
-                if (updated.roles.length > 0)
-                    return updated;
-                const withRole = await this.attachDefaultRole(updated.id, defaultRole);
-                return withRole ?? updated;
-            }
+        const profileData = {
+            id: user.id,
+            email: user.email ?? null,
+            phone: user.phone ?? null,
+            telegram_id: telegramId ?? user.user_metadata?.telegram_id ?? null,
+            full_name: user.user_metadata?.full_name ?? null,
+        };
+        this.logger.debug(`Upserting profile for user ${user.id}`);
+        const { data, error } = await supabase_1.supabase
+            .from("profiles")
+            .upsert(profileData, {
+            onConflict: "id",
+            ignoreDuplicates: false
+        })
+            .select()
+            .single();
+        if (error) {
+            this.logger.error(`Failed to upsert profile: ${error.message}`);
+            const { data: existing } = await supabase_1.supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+            return existing;
         }
-        const created = await this.prisma.user.create({
-            data: {
-                supabaseId: supabaseUser.id,
-                email: email ?? null,
-                roles: {
-                    create: {
-                        role: {
-                            connectOrCreate: {
-                                where: { name: defaultRole },
-                                create: { name: defaultRole, description: `${defaultRole} role` },
-                            },
-                        },
-                    },
-                },
-            },
-            include: { roles: { include: { role: true } } },
-        });
-        return created;
+        return data;
+    }
+    async getProfile(userId) {
+        if (!supabase_1.supabase) {
+            this.logger.error("Supabase client not configured");
+            return null;
+        }
+        const { data, error } = await supabase_1.supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userId)
+            .single();
+        if (error) {
+            this.logger.warn(`Profile not found for user ${userId}: ${error.message}`);
+            return null;
+        }
+        return data;
+    }
+    async syncUser(supabaseUser, telegramId) {
+        const profile = await this.upsertProfile(supabaseUser, telegramId);
+        const role = this.mapToBusinessRole(profile?.role ?? null);
+        return {
+            id: supabaseUser.id,
+            supabaseId: supabaseUser.id,
+            email: supabaseUser.email ?? profile?.email ?? "",
+            phone: supabaseUser.phone ?? profile?.phone ?? null,
+            role,
+            roles: [role],
+            profile,
+        };
+    }
+    async isAdmin(userId) {
+        const profile = await this.getProfile(userId);
+        return profile?.role === "admin";
     }
 };
 exports.SupabaseAuthService = SupabaseAuthService;
-exports.SupabaseAuthService = SupabaseAuthService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+exports.SupabaseAuthService = SupabaseAuthService = SupabaseAuthService_1 = __decorate([
+    (0, common_1.Injectable)()
 ], SupabaseAuthService);
+//# sourceMappingURL=supabase-auth.service.js.map

@@ -26,3 +26,4 @@ function getSupabaseImageUrl(filePath) {
     const { data } = exports.supabase.storage.from(exports.LISTINGS_BUCKET).getPublicUrl(filePath);
     return data.publicUrl;
 }
+//# sourceMappingURL=supabase.js.map

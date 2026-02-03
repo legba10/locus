@@ -124,3 +124,4 @@ __decorate([
     (0, class_validator_1.IsIn)(["relevance", "price_asc", "price_desc", "rating", "ai_score"]),
     __metadata("design:type", String)
 ], SearchBodyDto.prototype, "sort", void 0);
+//# sourceMappingURL=search-query.dto.js.map

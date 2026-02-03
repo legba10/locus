@@ -211,3 +211,4 @@ exports.InsightEngine = InsightEngine = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         explanation_engine_1.ExplanationEngine])
 ], InsightEngine);
+//# sourceMappingURL=insight.engine.js.map

@@ -247,3 +247,4 @@ exports.InsightService = InsightService = InsightService_1 = __decorate([
         risk_analyzer_1.RiskAnalyzer,
         tips_generator_1.TipsGenerator])
 ], InsightService);
+//# sourceMappingURL=insight.service.js.map

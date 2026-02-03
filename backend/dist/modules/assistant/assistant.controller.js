@@ -125,3 +125,4 @@ exports.AssistantController = AssistantController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [assistant_service_1.AssistantService])
 ], AssistantController);
+//# sourceMappingURL=assistant.controller.js.map

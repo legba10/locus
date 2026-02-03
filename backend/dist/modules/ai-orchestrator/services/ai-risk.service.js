@@ -77,3 +77,4 @@ exports.AiRiskService = AiRiskService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], AiRiskService);
+//# sourceMappingURL=ai-risk.service.js.map

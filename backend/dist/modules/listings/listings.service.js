@@ -8,11 +8,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var ListingsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ListingsService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
+const neon_user_service_1 = require("../users/neon-user.service");
 const ai_pricing_service_1 = require("../ai-orchestrator/services/ai-pricing.service");
 const ai_quality_service_1 = require("../ai-orchestrator/services/ai-quality.service");
 const ai_risk_service_1 = require("../ai-orchestrator/services/ai-risk.service");
@@ -24,30 +26,37 @@ function toJsonValue(value) {
 function startOfDayUtc(d) {
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0));
 }
-let ListingsService = class ListingsService {
-    constructor(prisma, aiQuality, aiPricing, aiRisk) {
+let ListingsService = ListingsService_1 = class ListingsService {
+    constructor(prisma, neonUser, aiQuality, aiPricing, aiRisk) {
         this.prisma = prisma;
+        this.neonUser = neonUser;
         this.aiQuality = aiQuality;
         this.aiPricing = aiPricing;
         this.aiRisk = aiRisk;
+        this.logger = new common_1.Logger(ListingsService_1.name);
     }
     async getAll(params = {}) {
         const { city, limit = 50 } = params;
-        return this.prisma.listing.findMany({
-            where: {
-                status: client_1.ListingStatus.PUBLISHED,
-                ...(city ? { city } : {}),
-            },
-            orderBy: { createdAt: "desc" },
-            take: limit,
-            include: {
-                photos: { orderBy: { sortOrder: "asc" }, take: 1 },
-                amenities: { include: { amenity: true } },
-                aiScores: true,
-            },
-        });
+        const where = {
+            status: client_1.ListingStatus.PUBLISHED,
+            ...(city ? { city } : {}),
+        };
+        const [items, total] = await Promise.all([
+            this.prisma.listing.findMany({
+                where,
+                orderBy: { createdAt: "desc" },
+                take: limit,
+                include: {
+                    photos: { orderBy: { sortOrder: "asc" }, take: 1 },
+                    amenities: { include: { amenity: true } },
+                    aiScores: true,
+                },
+            }),
+            this.prisma.listing.count({ where }),
+        ]);
+        return { items, total };
     }
-    async getById(id) {
+    async getById(id, incrementViews = true) {
         const listing = await this.prisma.listing.findUnique({
             where: { id },
             include: {
@@ -61,9 +70,17 @@ let ListingsService = class ListingsService {
         });
         if (!listing)
             throw new common_1.NotFoundException("Listing not found");
+        if (incrementViews) {
+            this.prisma.listing.update({
+                where: { id },
+                data: { viewsCount: { increment: 1 } },
+            }).catch((err) => this.logger.warn(`Failed to increment views for ${id}: ${err}`));
+        }
         return listing;
     }
-    async create(ownerId, dto) {
+    async create(ownerId, dto, email) {
+        await this.neonUser.ensureUserExists(ownerId, email);
+        this.logger.debug(`Creating listing for owner: ${ownerId}`);
         const listing = await this.prisma.listing.create({
             data: {
                 ownerId,
@@ -174,10 +191,12 @@ let ListingsService = class ListingsService {
     }
 };
 exports.ListingsService = ListingsService;
-exports.ListingsService = ListingsService = __decorate([
+exports.ListingsService = ListingsService = ListingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        neon_user_service_1.NeonUserService,
         ai_quality_service_1.AiQualityService,
         ai_pricing_service_1.AiPricingService,
         ai_risk_service_1.AiRiskService])
 ], ListingsService);
+//# sourceMappingURL=listings.service.js.map

@@ -19,3 +19,4 @@ exports.AnalyticsModule = AnalyticsModule = __decorate([
         providers: [analytics_service_1.AnalyticsService],
     })
 ], AnalyticsModule);
+//# sourceMappingURL=analytics.module.js.map

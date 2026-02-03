@@ -202,3 +202,4 @@ exports.SearchService = SearchService = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         ai_search_service_1.AiSearchService])
 ], SearchService);
+//# sourceMappingURL=search.service.js.map

@@ -76,3 +76,4 @@ exports.RiskAnalyzer = RiskAnalyzer;
 exports.RiskAnalyzer = RiskAnalyzer = __decorate([
     (0, common_1.Injectable)()
 ], RiskAnalyzer);
+//# sourceMappingURL=risk.analyzer.js.map

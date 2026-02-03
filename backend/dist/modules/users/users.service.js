@@ -45,7 +45,7 @@ let UsersService = class UsersService {
     async register(params) {
         const existing = await this.prisma.user.findUnique({ where: { email: params.email } });
         if (existing)
-            throw new common_1.BadRequestException("Email already registered");
+            throw new common_1.ConflictException("Email already registered");
         const passwordHash = await bcryptjs_1.default.hash(params.password, 10);
         const role = await this.ensureRole(params.role);
         const user = await this.prisma.user.create({
@@ -73,3 +73,4 @@ exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], UsersService);
+//# sourceMappingURL=users.service.js.map

@@ -10,6 +10,7 @@ exports.ListingsModule = void 0;
 const common_1 = require("@nestjs/common");
 const ai_orchestrator_module_1 = require("../ai-orchestrator/ai-orchestrator.module");
 const auth_module_1 = require("../auth/auth.module");
+const users_module_1 = require("../users/users.module");
 const listings_controller_1 = require("./listings.controller");
 const listings_service_1 = require("./listings.service");
 const listings_photos_service_1 = require("./listings-photos.service");
@@ -18,9 +19,10 @@ let ListingsModule = class ListingsModule {
 exports.ListingsModule = ListingsModule;
 exports.ListingsModule = ListingsModule = __decorate([
     (0, common_1.Module)({
-        imports: [ai_orchestrator_module_1.AiOrchestratorModule, auth_module_1.AuthModule],
+        imports: [ai_orchestrator_module_1.AiOrchestratorModule, auth_module_1.AuthModule, users_module_1.UsersModule],
         controllers: [listings_controller_1.ListingsController],
         providers: [listings_service_1.ListingsService, listings_photos_service_1.ListingsPhotosService],
         exports: [listings_service_1.ListingsService, listings_photos_service_1.ListingsPhotosService],
     })
 ], ListingsModule);
+//# sourceMappingURL=listings.module.js.map

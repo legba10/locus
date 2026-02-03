@@ -13,11 +13,12 @@ exports.DeployHealthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 let DeployHealthController = class DeployHealthController {
-    getApiHealth() {
+    health() {
         return {
+            ok: true,
             status: "ok",
             service: "locus-backend",
-            db: "connected",
+            timestamp: new Date().toISOString(),
         };
     }
 };
@@ -27,8 +28,9 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], DeployHealthController.prototype, "getApiHealth", null);
+], DeployHealthController.prototype, "health", null);
 exports.DeployHealthController = DeployHealthController = __decorate([
     (0, swagger_1.ApiTags)("health"),
-    (0, common_1.Controller)("api")
+    (0, common_1.Controller)("health")
 ], DeployHealthController);
+//# sourceMappingURL=deploy-health.controller.js.map

@@ -21,3 +21,4 @@ __exportStar(require("./engines/insight.engine"), exports);
 __exportStar(require("./engines/explanation.engine"), exports);
 __exportStar(require("./engines/market.engine"), exports);
 __exportStar(require("./engines/recommendation.engine"), exports);
+//# sourceMappingURL=index.js.map

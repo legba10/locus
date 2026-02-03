@@ -20,3 +20,4 @@ exports.FavoritesModule = FavoritesModule = __decorate([
         exports: [favorites_service_1.FavoritesService],
     })
 ], FavoritesModule);
+//# sourceMappingURL=favorites.module.js.map

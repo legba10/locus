@@ -30,3 +30,4 @@ __decorate([
 exports.DebugController = DebugController = __decorate([
     (0, common_1.Controller)("debug")
 ], DebugController);
+//# sourceMappingURL=debug.controller.js.map

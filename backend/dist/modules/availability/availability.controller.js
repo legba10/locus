@@ -74,3 +74,4 @@ exports.AvailabilityController = AvailabilityController = __decorate([
     __metadata("design:paramtypes", [availability_service_1.AvailabilityService,
         ai_pricing_service_1.AiPricingService])
 ], AvailabilityController);
+//# sourceMappingURL=availability.controller.js.map

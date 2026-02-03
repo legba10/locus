@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./landlord.module"), exports);
 __exportStar(require("./landlord.service"), exports);
 __exportStar(require("./landlord.controller"), exports);
+//# sourceMappingURL=index.js.map

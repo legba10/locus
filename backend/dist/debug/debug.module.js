@@ -17,3 +17,4 @@ exports.DebugModule = DebugModule = __decorate([
         controllers: [debug_controller_1.DebugController],
     })
 ], DebugModule);
+//# sourceMappingURL=debug.module.js.map

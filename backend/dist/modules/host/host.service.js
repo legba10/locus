@@ -148,3 +148,4 @@ exports.HostService = HostService = HostService_1 = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         product_intelligence_service_1.ProductIntelligenceService])
 ], HostService);
+//# sourceMappingURL=host.service.js.map

@@ -30,3 +30,4 @@ exports.EventsModule = EventsModule = __decorate([
         exports: [events_service_1.EventsService],
     })
 ], EventsModule);
+//# sourceMappingURL=events.module.js.map

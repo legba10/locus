@@ -43,3 +43,4 @@ exports.AnalyticsController = AnalyticsController = __decorate([
     (0, common_1.Controller)("analytics"),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])
 ], AnalyticsController);
+//# sourceMappingURL=analytics.controller.js.map

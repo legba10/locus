@@ -9,12 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const prisma_module_1 = require("../prisma/prisma.module");
 const auth_controller_1 = require("./auth.controller");
 const telegram_controller_1 = require("./telegram.controller");
+const auth_telegram_controller_1 = require("./auth-telegram.controller");
 const roles_guard_1 = require("./guards/roles.guard");
 const supabase_auth_guard_1 = require("./guards/supabase-auth.guard");
 const supabase_auth_service_1 = require("./supabase-auth.service");
-const prisma_module_1 = require("../prisma/prisma.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -22,8 +23,9 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [config_1.ConfigModule, prisma_module_1.PrismaModule],
-        controllers: [auth_controller_1.AuthController, telegram_controller_1.TelegramAuthController],
+        controllers: [auth_controller_1.AuthController, telegram_controller_1.TelegramAuthController, auth_telegram_controller_1.AuthTelegramController],
         providers: [roles_guard_1.RolesGuard, supabase_auth_guard_1.SupabaseAuthGuard, supabase_auth_service_1.SupabaseAuthService],
         exports: [roles_guard_1.RolesGuard, supabase_auth_guard_1.SupabaseAuthGuard, supabase_auth_service_1.SupabaseAuthService],
     })
 ], AuthModule);
+//# sourceMappingURL=auth.module.js.map

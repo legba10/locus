@@ -8,53 +8,59 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var SupabaseAuthGuard_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupabaseAuthGuard = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_1 = require("../../../shared/lib/supabase");
 const supabase_auth_service_1 = require("../supabase-auth.service");
-let SupabaseAuthGuard = class SupabaseAuthGuard {
+let SupabaseAuthGuard = SupabaseAuthGuard_1 = class SupabaseAuthGuard {
     constructor(supabaseAuth) {
         this.supabaseAuth = supabaseAuth;
+        this.logger = new common_1.Logger(SupabaseAuthGuard_1.name);
     }
     async canActivate(context) {
         const req = context.switchToHttp().getRequest();
         const authHeader = req.headers["authorization"];
-        if (!authHeader)
-            throw new common_1.UnauthorizedException("No token");
+        if (!authHeader) {
+            throw new common_1.UnauthorizedException("No authorization header");
+        }
         const [scheme, rawToken] = authHeader.split(" ");
         const token = scheme?.toLowerCase() === "bearer" ? rawToken : undefined;
-        if (!token)
-            throw new common_1.UnauthorizedException("Invalid token");
-        if (!supabase_1.supabase)
-            throw new common_1.UnauthorizedException("Supabase not configured");
+        if (!token) {
+            throw new common_1.UnauthorizedException("Invalid authorization format. Use: Bearer <token>");
+        }
+        if (!supabase_1.supabase) {
+            this.logger.error("Supabase client not configured");
+            throw new common_1.UnauthorizedException("Auth service unavailable");
+        }
         const { data, error } = await supabase_1.supabase.auth.getUser(token);
-        if (error || !data.user)
-            throw new common_1.UnauthorizedException("Invalid token");
-        const prismaUser = await this.supabaseAuth.syncUser({
+        if (error || !data.user) {
+            this.logger.warn(`Token validation failed: ${error?.message ?? "No user"}`);
+            throw new common_1.UnauthorizedException("Invalid or expired token");
+        }
+        const telegramId = data.user.user_metadata?.telegram_id;
+        const userInfo = await this.supabaseAuth.syncUser({
             id: data.user.id,
             email: data.user.email ?? null,
+            phone: data.user.phone ?? null,
             user_metadata: data.user.user_metadata,
-            app_metadata: data.user.app_metadata,
-        });
-        const roleNames = prismaUser.roles.map((r) => r.role.name);
-        const primaryRole = roleNames.includes("admin")
-            ? "admin"
-            : roleNames.includes("host")
-                ? "host"
-                : "guest";
+        }, telegramId);
         req.user = {
-            id: prismaUser.id,
-            supabaseId: data.user.id,
-            email: data.user.email ?? prismaUser.email ?? "",
-            role: primaryRole,
-            roles: roleNames.length > 0 ? roleNames : [primaryRole],
+            id: userInfo.id,
+            supabaseId: userInfo.supabaseId,
+            email: userInfo.email,
+            phone: userInfo.phone,
+            role: userInfo.role,
+            roles: userInfo.roles,
         };
+        this.logger.debug(`Authenticated user: ${userInfo.email} (role: ${userInfo.role})`);
         return true;
     }
 };
 exports.SupabaseAuthGuard = SupabaseAuthGuard;
-exports.SupabaseAuthGuard = SupabaseAuthGuard = __decorate([
+exports.SupabaseAuthGuard = SupabaseAuthGuard = SupabaseAuthGuard_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [supabase_auth_service_1.SupabaseAuthService])
 ], SupabaseAuthGuard);
+//# sourceMappingURL=supabase-auth.guard.js.map

@@ -22,3 +22,4 @@ exports.LandlordModule = LandlordModule = __decorate([
         exports: [landlord_service_1.LandlordService],
     })
 ], LandlordModule);
+//# sourceMappingURL=landlord.module.js.map

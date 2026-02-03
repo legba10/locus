@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./favorites.module"), exports);
 __exportStar(require("./favorites.service"), exports);
 __exportStar(require("./favorites.controller"), exports);
+//# sourceMappingURL=index.js.map

@@ -118,3 +118,4 @@ exports.QualityAnalyzer = QualityAnalyzer;
 exports.QualityAnalyzer = QualityAnalyzer = __decorate([
     (0, common_1.Injectable)()
 ], QualityAnalyzer);
+//# sourceMappingURL=quality.analyzer.js.map

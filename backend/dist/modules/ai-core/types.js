@@ -17,3 +17,4 @@ exports.DEMAND_LEVEL_TEXTS = {
     medium: 'Средний спрос',
     high: 'Высокий спрос',
 };
+//# sourceMappingURL=types.js.map

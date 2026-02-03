@@ -77,12 +77,23 @@ export class AuthTelegramController {
       return { authenticated: false, status: session.status.toLowerCase() };
     }
 
-    if (!session.phoneNumber || !session.telegramUserId) {
-      return { authenticated: false, status: "incomplete" };
+    if (!session.phoneNumber) {
+      throw new BadRequestException("Phone number not confirmed");
+    }
+    if (!session.telegramUserId) {
+      throw new BadRequestException("Telegram user ID not confirmed");
     }
 
+    const phoneNumber = session.phoneNumber;
+    const telegramUserId = session.telegramUserId;
+
     try {
-      const { userId, tokenHash } = await this.createOrFindSupabaseUser(session);
+      const { userId, tokenHash } = await this.createOrFindSupabaseUser({
+        phoneNumber,
+        telegramUserId,
+        username: session.username,
+        firstName: session.firstName,
+      });
 
       if (!tokenHash) {
         throw new InternalServerErrorException("Failed to generate session");

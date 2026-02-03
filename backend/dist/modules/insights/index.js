@@ -21,3 +21,4 @@ __exportStar(require("./engines/score.engine"), exports);
 __exportStar(require("./engines/price.engine"), exports);
 __exportStar(require("./engines/explanation.engine"), exports);
 __exportStar(require("./engines/recommendation.engine"), exports);
+//# sourceMappingURL=index.js.map

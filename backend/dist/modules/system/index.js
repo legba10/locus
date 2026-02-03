@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./system.module"), exports);
 __exportStar(require("./system.service"), exports);
 __exportStar(require("./system.controller"), exports);
+//# sourceMappingURL=index.js.map

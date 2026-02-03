@@ -20,3 +20,4 @@ exports.ProductIntelligenceModule = ProductIntelligenceModule = __decorate([
         exports: [product_intelligence_service_1.ProductIntelligenceService],
     })
 ], ProductIntelligenceModule);
+//# sourceMappingURL=product-intelligence.module.js.map

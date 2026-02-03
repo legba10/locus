@@ -23,3 +23,4 @@ __exportStar(require("./analyzers/price.advisor"), exports);
 __exportStar(require("./analyzers/demand.analyzer"), exports);
 __exportStar(require("./analyzers/risk.analyzer"), exports);
 __exportStar(require("./analyzers/tips.generator"), exports);
+//# sourceMappingURL=index.js.map

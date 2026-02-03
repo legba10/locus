@@ -30,6 +30,8 @@ const insight_module_1 = require("./modules/insight/insight.module");
 const ai_core_module_1 = require("./modules/ai-core/ai-core.module");
 const insights_module_1 = require("./modules/insights/insights.module");
 const decision_module_1 = require("./modules/decision/decision.module");
+const admin_module_1 = require("./modules/admin/admin.module");
+const telegram_module_1 = require("./modules/telegram/telegram.module");
 const debug_module_1 = require("./debug/debug.module");
 const isProduction = process.env.NODE_ENV === "production";
 let AppModule = class AppModule {
@@ -64,7 +66,10 @@ exports.AppModule = AppModule = __decorate([
             landlord_module_1.LandlordModule,
             host_module_1.HostModule,
             system_module_1.SystemModule,
+            admin_module_1.AdminModule,
+            telegram_module_1.TelegramModule,
             ...(isProduction ? [] : [debug_module_1.DebugModule]),
         ],
     })
 ], AppModule);
+//# sourceMappingURL=app.module.js.map

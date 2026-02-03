@@ -63,3 +63,4 @@ exports.AvailabilityService = AvailabilityService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], AvailabilityService);
+//# sourceMappingURL=availability.service.js.map

@@ -28,3 +28,4 @@ exports.AssistantModule = AssistantModule = __decorate([
         exports: [assistant_service_1.AssistantService, analysis_service_1.AnalysisService],
     })
 ], AssistantModule);
+//# sourceMappingURL=assistant.module.js.map

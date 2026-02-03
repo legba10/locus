@@ -70,3 +70,4 @@ exports.PricingStrategy = PricingStrategy;
 exports.PricingStrategy = PricingStrategy = __decorate([
     (0, common_1.Injectable)()
 ], PricingStrategy);
+//# sourceMappingURL=pricing.strategy.js.map

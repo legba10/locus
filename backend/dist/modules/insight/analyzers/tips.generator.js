@@ -125,3 +125,4 @@ exports.TipsGenerator = TipsGenerator;
 exports.TipsGenerator = TipsGenerator = __decorate([
     (0, common_1.Injectable)()
 ], TipsGenerator);
+//# sourceMappingURL=tips.generator.js.map
