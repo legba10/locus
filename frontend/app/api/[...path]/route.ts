@@ -27,41 +27,57 @@ async function handleProxy(req: NextRequest, pathSegments: string[]) {
   }
 
   // Build backend path: /api/{path}
-  // Backend uses setGlobalPrefix("api"), so routes are at /api/...
   const path = pathSegments.join("/");
   const url = `${BACKEND_URL}/api/${path}${req.nextUrl.search}`;
 
-  console.log(`[Proxy] ${req.method} ${url}`);
+  const contentType = req.headers.get("content-type") || "";
+  const isMultipart = contentType.includes("multipart/form-data");
+  
+  console.log(`[Proxy] ${req.method} ${url} (multipart: ${isMultipart})`);
 
   try {
+    // Prepare headers
+    const headers: Record<string, string> = {
+      Authorization: req.headers.get("authorization") ?? "",
+    };
+
     // Prepare body for non-GET requests
-    let body: string | undefined = undefined;
+    let body: BodyInit | undefined = undefined;
+    
     if (req.method !== "GET" && req.method !== "HEAD") {
-      try {
-        body = await req.text();
-      } catch {
-        // No body
+      if (isMultipart) {
+        // For file uploads: pass FormData directly
+        // Important: DO NOT set Content-Type - fetch will set it with boundary
+        body = await req.formData();
+      } else {
+        // For JSON requests
+        headers["Content-Type"] = "application/json";
+        try {
+          body = await req.text();
+        } catch {
+          // No body
+        }
       }
+    } else {
+      // GET requests - still set Content-Type for consistency
+      headers["Content-Type"] = "application/json";
     }
 
     // Forward request to backend
     const res = await fetch(url, {
       method: req.method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: req.headers.get("authorization") ?? "",
-      },
+      headers,
       body,
     });
 
     // Get response
     const data = await res.arrayBuffer();
-    const contentType = res.headers.get("content-type") ?? "application/json";
+    const responseContentType = res.headers.get("content-type") ?? "application/json";
 
     return new NextResponse(data, {
       status: res.status,
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": responseContentType,
       },
     });
   } catch (error) {
