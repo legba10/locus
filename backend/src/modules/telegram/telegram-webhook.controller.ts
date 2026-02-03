@@ -1,11 +1,17 @@
-import { Controller, Post, Get, Body, Query, Logger, HttpCode, OnModuleInit, BadRequestException } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiExcludeEndpoint, ApiQuery } from "@nestjs/swagger";
-import { supabase } from "../../shared/lib/supabase";
-import { randomBytes } from "crypto";
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Logger,
+  HttpCode,
+  OnModuleInit,
+  BadRequestException,
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiExcludeEndpoint } from "@nestjs/swagger";
+import { PrismaService } from "../prisma/prisma.service";
 
-/**
- * Telegram Update structure
- */
+/** Telegram Update - message or callback_query */
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -18,46 +24,23 @@ interface TelegramUpdate {
       username?: string;
       language_code?: string;
     };
-    chat: {
-      id: number;
-      first_name?: string;
-      last_name?: string;
-      username?: string;
-      type: "private" | "group" | "supergroup" | "channel";
-    };
+    chat: { id: number; type: string };
     date: number;
     text?: string;
+    contact?: {
+      phone_number: string;
+      first_name?: string;
+      last_name?: string;
+      user_id?: number;
+    };
+  };
+  callback_query?: {
+    id: string;
+    from: { id: number; first_name?: string; username?: string };
+    message?: { chat: { id: number }; message_id: number };
+    data?: string;
   };
 }
-
-interface TelegramUser {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-}
-
-interface LoginSession {
-  status: "pending" | "completed" | "expired";
-  createdAt: number;
-  telegramUser?: TelegramUser;
-  userId?: string;
-  accessToken?: string;
-}
-
-// In-memory storage for login sessions (TTL: 5 minutes)
-const loginSessions = new Map<string, LoginSession>();
-const SESSION_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Cleanup expired sessions periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, session] of loginSessions.entries()) {
-    if (now - session.createdAt > SESSION_TTL) {
-      loginSessions.delete(token);
-    }
-  }
-}, 60 * 1000); // Check every minute
 
 @ApiTags("telegram")
 @Controller("telegram")
@@ -68,17 +51,17 @@ export class TelegramWebhookController implements OnModuleInit {
   private readonly isEnabled = process.env.TELEGRAM_ENABLED === "true";
   private readonly frontendUrl = process.env.FRONTEND_URL || "https://locus-i4o2.vercel.app";
 
+  constructor(private readonly prisma: PrismaService) {}
+
   async onModuleInit() {
     if (!this.isEnabled) {
       this.logger.warn("Telegram is disabled (TELEGRAM_ENABLED !== true)");
       return;
     }
-
     if (!this.botToken) {
       this.logger.error("TELEGRAM_BOT_TOKEN is not set");
       return;
     }
-
     await this.setWebhook();
   }
 
@@ -86,9 +69,7 @@ export class TelegramWebhookController implements OnModuleInit {
     const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN
       ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
       : process.env.BACKEND_URL || "https://locus-production-df4e.up.railway.app";
-    
     const webhookUrl = `${backendUrl}/api/telegram/webhook`;
-
     try {
       const response = await fetch(
         `https://api.telegram.org/bot${this.botToken}/setWebhook`,
@@ -98,9 +79,7 @@ export class TelegramWebhookController implements OnModuleInit {
           body: JSON.stringify({ url: webhookUrl }),
         }
       );
-
       const result = await response.json();
-
       if (result.ok) {
         this.logger.log(`Telegram webhook set: ${webhookUrl}`);
       } else {
@@ -111,88 +90,6 @@ export class TelegramWebhookController implements OnModuleInit {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // AUTH FLOW: Step 1 - Initialize login session
-  // ═══════════════════════════════════════════════════════════════
-  @Get("login/init")
-  @ApiOperation({ summary: "Initialize Telegram login - returns bot URL with token" })
-  async initLogin() {
-    if (!this.isEnabled) {
-      throw new BadRequestException("Telegram login is disabled");
-    }
-
-    // Generate unique token
-    const token = randomBytes(16).toString("hex");
-    
-    // Store session
-    loginSessions.set(token, {
-      status: "pending",
-      createdAt: Date.now(),
-    });
-
-    // Return bot URL with token
-    const botUrl = `https://t.me/${this.botName}?start=login_${token}`;
-    
-    this.logger.log(`Login session created: ${token}`);
-
-    return {
-      ok: true,
-      token,
-      botUrl,
-      botName: this.botName,
-    };
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // AUTH FLOW: Step 3 - Check login status (frontend polls this)
-  // ═══════════════════════════════════════════════════════════════
-  @Get("login/check")
-  @ApiOperation({ summary: "Check Telegram login status" })
-  @ApiQuery({ name: "token", required: true })
-  async checkLogin(@Query("token") token: string) {
-    if (!token) {
-      throw new BadRequestException("Token is required");
-    }
-
-    const session = loginSessions.get(token);
-
-    if (!session) {
-      return { ok: false, status: "not_found" };
-    }
-
-    // Check if expired
-    if (Date.now() - session.createdAt > SESSION_TTL) {
-      loginSessions.delete(token);
-      return { ok: false, status: "expired" };
-    }
-
-    if (session.status === "completed" && session.userId) {
-      // Cleanup token after successful check
-      loginSessions.delete(token);
-
-      return {
-        ok: true,
-        status: "completed",
-        user: {
-          id: session.userId,
-          telegramId: String(session.telegramUser?.id),
-          username: session.telegramUser?.username,
-          firstName: session.telegramUser?.first_name,
-        },
-        // Note: For full auth, you'd return a JWT here
-        // For now, frontend can use this to fetch session from Supabase
-      };
-    }
-
-    return {
-      ok: true,
-      status: session.status,
-    };
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // WEBHOOK: Receives updates from Telegram
-  // ═══════════════════════════════════════════════════════════════
   @Post("webhook")
   @HttpCode(200)
   @ApiExcludeEndpoint()
@@ -200,11 +97,16 @@ export class TelegramWebhookController implements OnModuleInit {
     this.processUpdate(update).catch((err) => {
       this.logger.error(`Error processing update: ${err}`);
     });
-
     return { ok: true };
   }
 
   private async processUpdate(update: TelegramUpdate) {
+    // Handle callback_query (inline buttons: policy accept/cancel)
+    if (update.callback_query) {
+      await this.handleCallbackQuery(update.callback_query);
+      return;
+    }
+
     if (!update.message) return;
 
     const { message } = update;
@@ -212,164 +114,175 @@ export class TelegramWebhookController implements OnModuleInit {
     const fromUser = message.from;
     const text = message.text || "";
 
-    this.logger.log(`Webhook: chat_id=${chatId}, text=${text}`);
+    this.logger.log(`Webhook: chat_id=${chatId}, text=${text?.slice(0, 50)}`);
 
     if (!fromUser) return;
 
-    // Handle /start command
+    // Handle contact (phone shared)
+    if (message.contact) {
+      await this.handleContact(chatId, fromUser.id, message.contact);
+      return;
+    }
+
+    // Handle /start
     if (text.startsWith("/start")) {
       const payload = text.replace("/start", "").trim();
-      
-      // Check if this is a login request
-      if (payload.startsWith("login_")) {
-        const token = payload.replace("login_", "");
-        await this.handleLoginStart(chatId, fromUser, token);
+      if (payload) {
+        await this.handleLoginStart(chatId, fromUser, payload);
         return;
       }
-
-      // Regular /start - just welcome message
       await this.sendWelcomeMessage(chatId);
       return;
     }
 
-    // Other messages
     await this.sendGenericReply(chatId);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // AUTH FLOW: Step 2 - Handle /start login_<token> from Telegram
-  // ═══════════════════════════════════════════════════════════════
-  private async handleLoginStart(chatId: number, from: TelegramUser, token: string) {
-    this.logger.log(`Login attempt: token=${token}, telegram_id=${from.id}`);
+  /** /start <login_token> — save telegram_user_id, request phone */
+  private async handleLoginStart(
+    chatId: number,
+    from: { id: number; first_name: string; last_name?: string; username?: string },
+    loginToken: string
+  ) {
+    this.logger.log(`Login start: token=${loginToken?.slice(0, 8)}..., telegram_id=${from.id}`);
 
-    const session = loginSessions.get(token);
+    const session = await this.prisma.telegramAuthSession.findUnique({
+      where: { loginToken },
+    });
 
     if (!session) {
       await this.sendMessage(chatId, "❌ Ссылка для входа устарела или недействительна.\n\nПопробуйте ещё раз на сайте.");
       return;
     }
 
-    if (session.status === "completed") {
-      await this.sendMessage(chatId, "✅ Вы уже авторизованы! Вернитесь на сайт.");
+    if (session.status === "CONFIRMED") {
+      await this.sendMessage(chatId, "✅ Вход уже подтверждён. Вернитесь на сайт.");
       return;
     }
 
-    try {
-      // Create or find user in Supabase
-      const userId = await this.loginWithTelegram(from);
+    await this.prisma.telegramAuthSession.update({
+      where: { loginToken },
+      data: {
+        telegramUserId: BigInt(from.id),
+        firstName: from.first_name,
+        username: from.username ?? null,
+      },
+    });
 
-      if (!userId) {
-        await this.sendMessage(chatId, "❌ Ошибка авторизации. Попробуйте позже.");
-        return;
-      }
+    const keyboard = {
+      keyboard: [[{ text: "📱 Отправить номер", request_contact: true }]],
+      one_time_keyboard: true,
+      resize_keyboard: true,
+    };
 
-      // Update session
-      session.status = "completed";
-      session.telegramUser = from;
-      session.userId = userId;
-      loginSessions.set(token, session);
-
-      this.logger.log(`Telegram login success: telegram_id=${from.id}, user_id=${userId}`);
-
-      // Send success message
-      await this.sendMessage(chatId, 
-        `✅ Вход выполнен успешно!\n\n` +
-        `👤 ${from.first_name}${from.username ? ` (@${from.username})` : ""}\n\n` +
-        `Вернитесь на сайт — вы будете автоматически авторизованы.`
-      );
-
-    } catch (error) {
-      this.logger.error(`Login error: ${error}`);
-      await this.sendMessage(chatId, "❌ Произошла ошибка. Попробуйте позже.");
-    }
+    await this.sendMessageWithKeyboard(
+      chatId,
+      "👋 Для входа в LOCUS\nнам нужен ваш номер телефона.\n\nНажмите кнопку ниже 👇",
+      keyboard
+    );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // Create or find user by Telegram ID
-  // ═══════════════════════════════════════════════════════════════
-  private async loginWithTelegram(from: TelegramUser): Promise<string | null> {
-    if (!supabase) {
-      this.logger.error("Supabase not initialized");
-      return null;
+  /** On contact received — save phone, ask policy */
+  private async handleContact(
+    chatId: number,
+    telegramUserId: number,
+    contact: { phone_number: string; first_name?: string; last_name?: string; user_id?: number }
+  ) {
+    const phone = contact.phone_number.startsWith("+") ? contact.phone_number : `+${contact.phone_number}`;
+
+    const session = await this.prisma.telegramAuthSession.findFirst({
+      where: { telegramUserId: BigInt(telegramUserId), status: { in: ["PENDING", "PHONE_RECEIVED"] } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!session) {
+      await this.sendMessage(chatId, "❌ Сессия не найдена. Начните вход заново с сайта.");
+      return;
     }
 
-    const telegramId = String(from.id);
-    const email = `telegram_${telegramId}@locus.app`;
-    const fullName = [from.first_name, from.last_name].filter(Boolean).join(" ");
+    await this.prisma.telegramAuthSession.update({
+      where: { id: session.id },
+      data: { phoneNumber: phone, status: "PHONE_RECEIVED" },
+    });
 
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [{ text: "✅ Я принимаю", callback_data: "policy_accept" }],
+        [{ text: "❌ Отмена", callback_data: "policy_cancel" }],
+      ],
+    };
+
+    await this.sendMessageWithInlineKeyboard(
+      chatId,
+      "Подтвердите согласие с политикой обработки персональных данных LOCUS.",
+      inlineKeyboard
+    );
+  }
+
+  /** On callback — policy_accept or policy_cancel */
+  private async handleCallbackQuery(cq: {
+    id: string;
+    from: { id: number };
+    message?: { chat: { id: number }; message_id: number };
+    data?: string;
+  }) {
+    const chatId = cq.message?.chat?.id ?? cq.from.id;
+
+    if (cq.data === "policy_cancel") {
+      await this.answerCallback(cq.id);
+      await this.sendMessage(chatId, "❌ Вход отменён. Вы можете начать заново с сайта.");
+      return;
+    }
+
+    if (cq.data !== "policy_accept") return;
+
+    const session = await this.prisma.telegramAuthSession.findFirst({
+      where: { telegramUserId: BigInt(cq.from.id), status: "PHONE_RECEIVED" },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!session) {
+      await this.answerCallback(cq.id);
+      await this.sendMessage(chatId, "❌ Сессия устарела. Попробуйте войти заново с сайта.");
+      return;
+    }
+
+    await this.prisma.telegramAuthSession.update({
+      where: { id: session.id },
+      data: { status: "CONFIRMED", policyAccepted: true },
+    });
+
+    await this.answerCallback(cq.id);
+
+    const completeUrl = `${this.frontendUrl}/auth/telegram/complete?token=${encodeURIComponent(session.loginToken)}`;
+    const inlineKeyboard = {
+      inline_keyboard: [[{ text: "🔗 Вернуться на сайт", url: completeUrl }]],
+    };
+
+    await this.sendMessageWithInlineKeyboard(
+      chatId,
+      "✅ Вход подтверждён\n\nВы можете вернуться на сайт",
+      inlineKeyboard
+    );
+
+    this.logger.log(`Telegram login confirmed: session=${session.id}`);
+  }
+
+  private async answerCallback(callbackQueryId: string) {
+    if (!this.botToken) return;
     try {
-      // Check if user exists by telegram_id in profiles
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("telegram_id", telegramId)
-        .single();
-
-      if (existingProfile) {
-        this.logger.log(`Found existing user: ${existingProfile.id}`);
-        return existingProfile.id;
-      }
-
-      // Check if user exists with synthetic email
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === email);
-
-      if (existingUser) {
-        // Update profile with telegram_id
-        await supabase
-          .from("profiles")
-          .upsert({
-            id: existingUser.id,
-            email,
-            telegram_id: telegramId,
-            full_name: fullName,
-          }, { onConflict: "id" });
-
-        this.logger.log(`Updated existing user: ${existingUser.id}`);
-        return existingUser.id;
-      }
-
-      // Create new user
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          telegram_id: telegramId,
-          full_name: fullName,
-          username: from.username,
-        },
+      await fetch(`https://api.telegram.org/bot${this.botToken}/answerCallbackQuery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callback_query_id: callbackQueryId }),
       });
-
-      if (createError) {
-        this.logger.error(`Failed to create user: ${createError.message}`);
-        return null;
-      }
-
-      if (!newUser.user) return null;
-
-      // Create profile
-      await supabase.from("profiles").upsert({
-        id: newUser.user.id,
-        email,
-        telegram_id: telegramId,
-        full_name: fullName,
-      }, { onConflict: "id" });
-
-      this.logger.log(`Created new user: ${newUser.user.id}`);
-      return newUser.user.id;
-
-    } catch (error) {
-      this.logger.error(`loginWithTelegram error: ${error}`);
-      return null;
+    } catch (e) {
+      this.logger.error(`answerCallbackQuery failed: ${e}`);
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // Telegram API helpers
-  // ═══════════════════════════════════════════════════════════════
   private async sendMessage(chatId: number, text: string) {
     if (!this.botToken) return;
-
     try {
       await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
         method: "POST",
@@ -385,22 +298,60 @@ export class TelegramWebhookController implements OnModuleInit {
     }
   }
 
+  private async sendMessageWithKeyboard(chatId: number, text: string, replyMarkup: object) {
+    if (!this.botToken) return;
+    try {
+      await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "HTML",
+          reply_markup: replyMarkup,
+        }),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send message: ${error}`);
+    }
+  }
+
+  private async sendMessageWithInlineKeyboard(chatId: number, text: string, replyMarkup: object) {
+    if (!this.botToken) return;
+    try {
+      await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "HTML",
+          reply_markup: replyMarkup,
+        }),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send message: ${error}`);
+    }
+  }
+
   private async sendWelcomeMessage(chatId: number) {
-    await this.sendMessage(chatId, 
+    await this.sendMessage(
+      chatId,
       `👋 <b>Добро пожаловать в LOCUS!</b>\n\n` +
-      `🏠 Это бот для поиска и сдачи жилья с AI-рекомендациями.\n\n` +
-      `Для входа на сайт:\n` +
-      `1. Перейдите на ${this.frontendUrl}\n` +
-      `2. Нажмите "Войти через Telegram"\n` +
-      `3. Вы автоматически авторизуетесь!\n\n` +
-      `📩 Бот подключён и работает.`
+        `🏠 Это бот для поиска и сдачи жилья с AI-рекомендациями.\n\n` +
+        `Для входа на сайт:\n` +
+        `1. Перейдите на ${this.frontendUrl}\n` +
+        `2. Нажмите "Войти через Telegram"\n` +
+        `3. Следуйте инструкциям в боте.\n\n` +
+        `📩 Бот подключён и работает.`
     );
   }
 
   private async sendGenericReply(chatId: number) {
-    await this.sendMessage(chatId,
+    await this.sendMessage(
+      chatId,
       `✅ Сообщение получено.\n\n` +
-      `Для входа на сайт перейдите на ${this.frontendUrl} и нажмите "Войти через Telegram".`
+        `Для входа на сайт перейдите на ${this.frontendUrl} и нажмите "Войти через Telegram".`
     );
   }
 }

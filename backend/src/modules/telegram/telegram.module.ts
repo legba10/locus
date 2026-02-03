@@ -3,16 +3,14 @@ import { TelegramWebhookController } from "./telegram-webhook.controller";
 
 /**
  * TelegramModule — handles Telegram Bot webhook
- * 
+ *
  * Features:
- * - Webhook endpoint for receiving bot updates
- * - Auto-registers webhook on startup
- * - Saves telegram_chat_id for users
- * - Sends notifications (future)
- * 
+ * - Webhook for login flow: phone + policy → CONFIRMED
+ * - Uses Prisma TelegramAuthSession (via global PrismaModule)
+ *
  * Config (env):
- * - TELEGRAM_BOT_TOKEN: Bot token from @BotFather
- * - TELEGRAM_ENABLED: "true" to enable
+ * - TELEGRAM_BOT_TOKEN, TELEGRAM_ENABLED, FRONTEND_URL
+ * - NEXT_PUBLIC_TELEGRAM_BOT_NAME (for bot URL)
  */
 @Module({
   controllers: [TelegramWebhookController],

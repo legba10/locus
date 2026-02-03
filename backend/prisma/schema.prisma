@@ -102,6 +102,29 @@ model RolePermission {
 }
 
 // =========================
+// Auth: Telegram Login with Phone + Policy
+// =========================
+
+enum TelegramAuthStatus {
+  PENDING
+  PHONE_RECEIVED
+  CONFIRMED
+  EXPIRED
+}
+
+model TelegramAuthSession {
+  id              String            @id @default(uuid())
+  loginToken      String            @unique
+  telegramUserId  BigInt?
+  phoneNumber     String?
+  username        String?
+  firstName       String?
+  policyAccepted  Boolean           @default(false)
+  status          TelegramAuthStatus @default(PENDING)
+  createdAt       DateTime          @default(now())
+}
+
+// =========================
 // Auth: Refresh Tokens
 // =========================
 
