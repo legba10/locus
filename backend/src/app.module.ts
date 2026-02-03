@@ -21,6 +21,7 @@ import { InsightModule } from "./modules/insight/insight.module";
 import { AiCoreModule } from "./modules/ai-core/ai-core.module";
 import { InsightsModule } from "./modules/insights/insights.module";
 import { DecisionModule } from "./modules/decision/decision.module";
+import { AdminModule } from "./modules/admin/admin.module";
 import { DebugModule } from "./debug/debug.module";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -57,6 +58,8 @@ const isProduction = process.env.NODE_ENV === "production";
     LandlordModule,
     HostModule,
     SystemModule,
+    // Admin
+    AdminModule,
     ...(isProduction ? [] : [DebugModule]),
   ],
 })

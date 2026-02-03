@@ -128,10 +128,13 @@ model RefreshToken {
 // =========================
 
 enum ListingStatus {
-  DRAFT
-  PUBLISHED
-  BLOCKED
-  ARCHIVED
+  DRAFT              // Черновик (создано, можно редактировать)
+  AWAITING_PAYMENT   // Ожидает оплаты
+  PENDING_REVIEW     // На модерации (после оплаты)
+  PUBLISHED          // Опубликовано (одобрено админом)
+  REJECTED           // Отклонено админом
+  BLOCKED            // Заблокировано
+  ARCHIVED           // В архиве
 }
 
 enum ListingType {
