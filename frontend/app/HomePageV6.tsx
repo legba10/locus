@@ -52,14 +52,14 @@ export function HomePageV6() {
   // Используем данные напрямую из API (они уже содержат все нужные поля)
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
   const listingCards = (data?.items || []).map((listing: any, index: number) => {
-    // Извлекаем фото из images (только Supabase URLs)
-    const photo = listing.images?.[0]?.url || null
+    // Извлекаем фото (backend отправляет photos, но legacy может быть images)
+    const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url || null
     
     // District из API
     const district = listing.district || null
     
-    // Views из API или детерминированное значение на основе ID
-    const views = listing.views || 100
+    // Views из API (backend отправляет viewsCount)
+    const views = listing.viewsCount || listing.views || 0
     
     // isNew из API (backend должен присылать)
     const isNew = listing.isNew || false

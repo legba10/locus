@@ -52,7 +52,7 @@ export class ListingsService {
     return { items, total };
   }
 
-  async getById(id: string) {
+  async getById(id: string, incrementViews = true) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
@@ -65,6 +65,15 @@ export class ListingsService {
       },
     });
     if (!listing) throw new NotFoundException("Listing not found");
+    
+    // Increment views asynchronously (don't block response)
+    if (incrementViews) {
+      this.prisma.listing.update({
+        where: { id },
+        data: { viewsCount: { increment: 1 } },
+      }).catch((err) => this.logger.warn(`Failed to increment views for ${id}: ${err}`));
+    }
+    
     return listing;
   }
 

@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { RU, formatPrice, getVerdictFromScore } from '@/core/i18n/ru'
 import { getImageUrl, getPlaceholderImage } from '@/shared/utils/imageUtils'
+import { apiFetch } from '@/shared/utils/apiFetch'
 
 interface ListingCardLightProps {
   id: string
@@ -22,6 +23,7 @@ interface ListingCardLightProps {
   views?: number     // просмотры
   isNew?: boolean    // новое объявление
   isVerified?: boolean // проверено LOCUS
+  isFavorite?: boolean // уже в избранном
   score?: number
   verdict?: string
   reasons?: string[]
@@ -57,6 +59,7 @@ export function ListingCardLight({
   views = 0,
   isNew = false,
   isVerified = false,
+  isFavorite = false,
   score = 0,
   verdict,
   reasons = [],
@@ -64,7 +67,29 @@ export function ListingCardLight({
   className,
 }: ListingCardLightProps) {
   const [imgError, setImgError] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
+  const [isSaved, setIsSaved] = useState(isFavorite)
+  const [isToggling, setIsToggling] = useState(false)
+
+  const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (isToggling) return
+    
+    setIsToggling(true)
+    const newState = !isSaved
+    setIsSaved(newState) // Optimistic update
+    
+    try {
+      await apiFetch(`/favorites/${id}/toggle`, { method: 'POST' })
+    } catch (err) {
+      // Revert on error
+      setIsSaved(!newState)
+      console.error('Failed to toggle favorite:', err)
+    } finally {
+      setIsToggling(false)
+    }
+  }, [id, isSaved, isToggling])
 
   const verdictType = getVerdictFromScore(score)
   
@@ -168,14 +193,16 @@ export function ListingCardLight({
           
           {/* Save button ❤️ */}
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsSaved(!isSaved) }}
+            onClick={handleFavoriteToggle}
+            disabled={isToggling}
             className={cn(
               'p-1.5 rounded-full',
               'bg-white/90 backdrop-blur-sm',
               'shadow-sm',
               'transition-all duration-200',
               'hover:bg-white hover:scale-110',
-              isSaved && 'bg-red-50'
+              isSaved && 'bg-red-50',
+              isToggling && 'opacity-50 cursor-wait'
             )}
             aria-label={isSaved ? 'Удалить из избранного' : 'Добавить в избранное'}
           >

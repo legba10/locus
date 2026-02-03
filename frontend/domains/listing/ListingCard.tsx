@@ -9,7 +9,10 @@ import { cn } from '@/shared/utils/cn'
 import type { Listing } from './listing-types'
 
 export type ListingCardProps = {
-  listing: Listing
+  listing: Listing & { 
+    photos?: { url: string; sortOrder?: number }[]
+    viewsCount?: number
+  }
   className?: string
 }
 
@@ -26,29 +29,14 @@ function formatPrice(amount: number) {
  * 3. Decision score + verdict
  * 4. 1 reason (price signal)
  * 5. CTA button
- * 
- * UI TEMPLATE:
- * 
- * PHOTO
- * 
- * 38 000 ₽ / month
- * 
- * [82] Fits
- * Below market price
- * 
- * [View details]
- * 
- * REMOVED:
- * - extra metrics
- * - long descriptions
- * - multiple badges
  */
 export function ListingCard({
   listing,
   className,
 }: ListingCardProps) {
   const [imgError, setImgError] = useState(false)
-  const photo = listing.images[0]?.url
+  // Support both 'photos' (backend) and 'images' (legacy)
+  const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url
   const matchScore = listing.aiScores?.qualityScore ?? undefined
   const verdict = matchScore !== undefined ? 'neutral' : undefined
   const priceSignal = undefined
