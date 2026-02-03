@@ -66,6 +66,7 @@ export class SupabaseAuthGuard implements CanActivate {
       phone: userInfo.phone,
       role: userInfo.role,
       roles: userInfo.roles,
+      profile: userInfo.profile,
     };
 
     this.logger.debug(`Authenticated user: ${userInfo.email} (role: ${userInfo.role})`);

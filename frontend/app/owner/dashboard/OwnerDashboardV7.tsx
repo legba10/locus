@@ -26,6 +26,10 @@ type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' |
 export function OwnerDashboardV7() {
   const { user, isAuthenticated } = useAuthStore()
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
+  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
+  const tariff = user?.profile?.tariff ?? 'free'
+  const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
+  const canUsePaid = isAdmin || isPaidTariff
 
   if (!isAuthenticated()) {
     return (
@@ -68,7 +72,7 @@ export function OwnerDashboardV7() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                  )},
+                  ), requiresPaid: true },
                   { id: 'bookings' as DashboardTab, label: 'Бронирования', icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -83,13 +87,13 @@ export function OwnerDashboardV7() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                  )},
+                  ), requiresPaid: true },
                   { id: 'profile' as DashboardTab, label: 'Профиль', icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   )},
-                ].map(tab => (
+                ].filter((tab) => (tab as { requiresPaid?: boolean }).requiresPaid ? canUsePaid : true).map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -114,11 +118,11 @@ export function OwnerDashboardV7() {
               ОСНОВНОЙ КОНТЕНТ
               ═══════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-3">
-            {activeTab === 'listings' && <MyListingsTab onAdd={() => setActiveTab('add')} />}
-            {activeTab === 'add' && <AddListingTab onSuccess={() => setActiveTab('listings')} />}
+            {activeTab === 'listings' && <MyListingsTab onAdd={() => setActiveTab('add')} canCreate={canUsePaid} />}
+            {activeTab === 'add' && (canUsePaid ? <AddListingTab onSuccess={() => setActiveTab('listings')} /> : <PaidFeatureNotice />)}
             {activeTab === 'bookings' && <BookingsTab />}
             {activeTab === 'messages' && <MessagesTab />}
-            {activeTab === 'analytics' && <AnalyticsTab />}
+            {activeTab === 'analytics' && (canUsePaid ? <AnalyticsTab /> : <PaidFeatureNotice />)}
             {activeTab === 'profile' && <ProfileTab />}
           </div>
         </div>
@@ -130,7 +134,7 @@ export function OwnerDashboardV7() {
 // ═══════════════════════════════════════════════════════════════
 // МОИ ОБЪЯВЛЕНИЯ
 // ═══════════════════════════════════════════════════════════════
-function MyListingsTab({ onAdd }: { onAdd: () => void }) {
+function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boolean }) {
   const { data, isLoading } = useFetch<{ items: any[] }>(
     ['owner-listings'],
     '/api/listings?limit=50'
@@ -144,11 +148,12 @@ function MyListingsTab({ onAdd }: { onAdd: () => void }) {
         <h1 className="text-[24px] font-bold text-[#1C1F26]">Мои объявления</h1>
         <button
           type="button"
-          onClick={onAdd}
+          onClick={canCreate ? onAdd : undefined}
+          disabled={!canCreate}
           className={cn(
             'px-5 py-2.5 rounded-[14px]',
-            'bg-violet-600 text-white font-semibold text-[14px]',
-            'hover:bg-violet-500 transition-colors'
+            canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+            'font-semibold text-[14px] transition-colors'
           )}
         >
           + Добавить объявление
@@ -172,15 +177,21 @@ function MyListingsTab({ onAdd }: { onAdd: () => void }) {
           <p className="text-[16px] text-[#6B7280] mb-4">У вас пока нет объявлений</p>
           <button
             type="button"
-            onClick={onAdd}
+            onClick={canCreate ? onAdd : undefined}
+            disabled={!canCreate}
             className={cn(
               'inline-block px-5 py-2.5 rounded-[14px]',
-              'bg-violet-600 text-white font-semibold text-[14px]',
-              'hover:bg-violet-500 transition-colors'
+              canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+              'font-semibold text-[14px] transition-colors'
             )}
           >
             Создать первое объявление
           </button>
+          {!canCreate && (
+            <p className="mt-3 text-[13px] text-[#9CA3AF]">
+              Добавление объявлений доступно на платном тарифе.
+            </p>
+          )}
         </div>
       )}
 
@@ -1226,11 +1237,30 @@ function AnalyticsTab() {
   )
 }
 
+function PaidFeatureNotice() {
+  return (
+    <div className={cn(
+      'bg-white rounded-[18px] p-8 text-center',
+      'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+      'border border-gray-100/80'
+    )}>
+      <div className="text-4xl mb-3">🔒</div>
+      <h2 className="text-[18px] font-bold text-[#1C1F26] mb-2">Функция доступна на платном тарифе</h2>
+      <p className="text-[14px] text-[#6B7280]">
+        Обновите тариф, чтобы добавлять объявления и смотреть аналитику.
+      </p>
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════
 // ПРОФИЛЬ
 // ═══════════════════════════════════════════════════════════════
 function ProfileTab() {
   const { user } = useAuthStore()
+  const tariff = user?.profile?.tariff ?? 'free'
+  const tariffLabel =
+    tariff === 'landlord_basic' ? 'Basic' : tariff === 'landlord_pro' ? 'Pro' : 'Free'
   const [formData, setFormData] = useState({
     name: user?.profile?.name || '',
     email: user?.email || '',
@@ -1266,6 +1296,19 @@ function ProfileTab() {
             <input
               type="email"
               value={formData.email}
+              disabled
+              className={cn(
+                'w-full rounded-[14px] px-4 py-3',
+                'border border-gray-200/60 bg-gray-50',
+                'text-[#1C1F26] text-[14px]'
+              )}
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Тариф</label>
+            <input
+              type="text"
+              value={tariffLabel}
               disabled
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',

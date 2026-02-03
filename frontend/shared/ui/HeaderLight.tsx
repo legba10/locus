@@ -21,6 +21,11 @@ export function HeaderLight() {
   const { user, isAuthenticated, logout } = useAuthStore()
 
   const isActive = (path: string) => pathname === path
+  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
+  const isHost = user?.role === 'host' || (user?.roles?.includes('host') ?? false)
+  const tariff = user?.profile?.tariff ?? 'free'
+  const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
+  const canAccessOwner = isAdmin || (isHost && isPaidTariff)
 
   return (
     <header className={cn(
@@ -60,7 +65,7 @@ export function HeaderLight() {
                   : 'text-gray-600 hover:text-gray-900'
               )}
             >
-              Сдать жильё
+              {canAccessOwner ? 'Кабинет' : 'Сдать жильё'}
             </Link>
             {isAuthenticated() && (
               <Link 
@@ -82,7 +87,7 @@ export function HeaderLight() {
             {isAuthenticated() ? (
               <div className="flex items-center gap-3">
                 {/* Редирект на /admin если role = admin */}
-                {user?.role === 'admin' ? (
+                {isAdmin ? (
                   <Link
                     href="/admin"
                     className={cn(
@@ -93,7 +98,7 @@ export function HeaderLight() {
                   >
                     Админ панель
                   </Link>
-                ) : (
+                ) : canAccessOwner ? (
                   <Link
                     href="/owner/dashboard"
                     className={cn(
@@ -104,7 +109,7 @@ export function HeaderLight() {
                   >
                     Мои объявления
                   </Link>
-                )}
+                ) : null}
                 <div className={cn(
                   'w-9 h-9 rounded-xl',
                   'bg-gradient-to-br from-violet-100 to-violet-50',

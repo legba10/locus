@@ -3,12 +3,15 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { Tariffs } from "../auth/decorators/tariff.decorator";
+import { TariffGuard } from "../auth/guards/tariff.guard";
 import { AnalyticsService } from "./analytics.service";
 
 @ApiTags("analytics")
 @ApiBearerAuth()
-@UseGuards(SupabaseAuthGuard, RolesGuard)
-@Roles("guest", "host", "admin")
+@UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+@Roles("host", "admin")
+@Tariffs("landlord_basic", "landlord_pro")
 @Controller("analytics")
 export class AnalyticsController {
   constructor(private readonly analytics: AnalyticsService) {}

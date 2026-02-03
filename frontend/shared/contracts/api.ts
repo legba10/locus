@@ -96,8 +96,13 @@ export interface Booking {
 export type AppRole = "guest" | "host" | "admin";
 
 export interface UserProfile {
+  name?: string;
   fullName?: string;
   avatarUrl?: string;
+  phone?: string;
+  telegramId?: string;
+  role?: string;
+  tariff?: string;
 }
 
 export interface UserContract {

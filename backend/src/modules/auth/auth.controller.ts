@@ -20,12 +20,38 @@ export class AuthController {
         email: string;
         role: "guest" | "host" | "admin";
         roles: string[];
+        profile?: {
+          full_name: string | null;
+          phone: string | null;
+          telegram_id: string | null;
+          role: string | null;
+          tariff: string | null;
+        } | null;
       };
     },
   ) {
+    const profile = req.user.profile ?? null;
+    const profilePayload = profile
+      ? {
+          name: profile.full_name ?? undefined,
+          fullName: profile.full_name ?? undefined,
+          phone: profile.phone ?? undefined,
+          telegramId: profile.telegram_id ?? undefined,
+          role: profile.role ?? undefined,
+          tariff: profile.tariff ?? undefined,
+        }
+      : undefined;
+
     return {
       ok: true,
-      user: req.user,
+      user: {
+        id: req.user.id,
+        supabaseId: req.user.supabaseId,
+        email: req.user.email,
+        role: req.user.role,
+        roles: req.user.roles,
+        profile: profilePayload,
+      },
     };
   }
 

@@ -5,8 +5,8 @@
  * 1. POST /api/auth/telegram/start → loginToken
  * 2. Открыть Telegram: tg://resolve?domain=BOT&start=loginToken (mobile) или https://t.me/BOT?start=loginToken (desktop)
  * 3. Пользователь в боте: отправляет номер → подтверждает политику
- * 4. Poll GET /api/auth/telegram/status?token=... каждые 1.5 сек
- * 5. При authenticated: verifyOtp(tokenHash) → сохранить сессию → редирект
+ * 4. Poll POST /api/auth/telegram/complete { token } каждые 1.5 сек
+ * 5. При authenticated: setSession(access_token, refresh_token) → редирект
  */
 
 import { apiFetch } from "@/shared/api/client";
@@ -18,8 +18,13 @@ interface StartResponse {
 interface StatusResponse {
   authenticated?: boolean;
   status?: string;
-  tokenHash?: string;
-  supabaseToken?: string;
+  session?: {
+    access_token: string;
+    refresh_token: string;
+    expires_in?: number;
+    expires_at?: number;
+    token_type?: string;
+  };
   user?: { id: string };
 }
 
@@ -63,7 +68,7 @@ export async function handleTelegramLogin(): Promise<void> {
 }
 
 /**
- * Опрос статуса — используется на странице /auth/telegram/complete при возврате пользователя.
+ * Опрос завершения — используется на странице /auth/telegram/complete при возврате пользователя.
  */
 export async function pollTelegramLoginStatus(
   loginToken: string
@@ -72,15 +77,16 @@ export async function pollTelegramLoginStatus(
 
   while (Date.now() - startTime < MAX_POLL_TIME) {
     try {
-      const res = await apiFetch<StatusResponse>(
-        `/auth/telegram/status?token=${encodeURIComponent(loginToken)}`
-      );
+      const res = await apiFetch<StatusResponse>("/auth/telegram/complete", {
+        method: "POST",
+        body: JSON.stringify({ token: loginToken }),
+      });
 
       if (res?.authenticated) {
         return res;
       }
 
-      if (res?.status === "expired" || res?.status === "not_found") {
+      if (res?.status === "expired" || res?.status === "not_found" || res?.status === "used") {
         return res;
       }
 

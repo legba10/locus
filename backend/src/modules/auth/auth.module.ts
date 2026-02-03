@@ -6,6 +6,7 @@ import { TelegramAuthController } from "./telegram.controller";
 import { AuthTelegramController } from "./auth-telegram.controller";
 import { RolesGuard } from "./guards/roles.guard";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
+import { TariffGuard } from "./guards/tariff.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
 
 /**
@@ -21,7 +22,7 @@ import { SupabaseAuthService } from "./supabase-auth.service";
 @Module({
   imports: [ConfigModule, PrismaModule],
   controllers: [AuthController, TelegramAuthController, AuthTelegramController],
-  providers: [RolesGuard, SupabaseAuthGuard, SupabaseAuthService],
-  exports: [RolesGuard, SupabaseAuthGuard, SupabaseAuthService],
+  providers: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
+  exports: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
 })
 export class AuthModule {}

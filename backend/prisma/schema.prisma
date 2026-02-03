@@ -122,6 +122,22 @@ model TelegramAuthSession {
   policyAccepted  Boolean           @default(false)
   status          TelegramAuthStatus @default(PENDING)
   createdAt       DateTime          @default(now())
+
+  loginTokens     TelegramLoginToken[]
+}
+
+model TelegramLoginToken {
+  id            String             @id @default(uuid())
+  token         String             @unique
+  sessionId     String
+  session       TelegramAuthSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId        String?
+  expiresAt     DateTime
+  used          Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+
+  @@index([sessionId])
+  @@index([expiresAt])
 }
 
 // =========================

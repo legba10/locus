@@ -1,0 +1,11 @@
+---
+description: Keep plan files updated for multi-step work
+alwaysApply: true
+---
+
+# Plan tracking
+
+- For any multi-step or cross-file task, keep a plan file updated in `.cursor/plans/`.
+- If a relevant plan exists, update its statuses as work progresses.
+- If no plan exists, create a new plan file and maintain it throughout the work.
+- When a plan is mentioned by the user, treat it as the source of truth and align changes to it.

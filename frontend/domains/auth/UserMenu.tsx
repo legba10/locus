@@ -34,9 +34,15 @@ export function UserMenu() {
   }
 
   const displayName = user.email || "Пользователь";
-  const roleBadge =
-    user.role === "admin" ? "Admin" : user.role === "host" ? "Арендодатель" : "Пользователь";
   const isAdmin = user.role === "admin" || (user.roles ? user.roles.includes("admin") : false);
+  const isHost = user.role === "host" || (user.roles ? user.roles.includes("host") : false);
+  const tariff = user.profile?.tariff ?? "free";
+  const isPaidTariff = tariff === "landlord_basic" || tariff === "landlord_pro";
+  const canAccessOwner = isAdmin || (isHost && isPaidTariff);
+
+  const roleBadge = isAdmin ? "Admin" : isHost ? "Арендодатель" : "Пользователь";
+  const tariffBadge =
+    tariff === "landlord_basic" ? "Basic" : tariff === "landlord_pro" ? "Pro" : "Free";
 
   async function handleLogout() {
     await logout();
@@ -47,15 +53,20 @@ export function UserMenu() {
     <div className="flex items-center gap-3">
       <div className="text-right">
         <p className="text-sm font-medium">{displayName}</p>
-        <p className="text-xs text-text-dim">{roleBadge}</p>
+        <p className="text-xs text-text-dim">
+          {roleBadge}
+          {isHost && <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[10px]">{tariffBadge}</span>}
+        </p>
       </div>
       <div className="flex items-center gap-2">
-        <Link
-          href="/owner/dashboard"
-          className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
-        >
-          Кабинет
-        </Link>
+        {canAccessOwner && (
+          <Link
+            href="/owner/dashboard"
+            className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+          >
+            Кабинет
+          </Link>
+        )}
         {isAdmin && (
           <Link
             href="/admin"

@@ -22,11 +22,11 @@ function CompleteContent() {
       try {
         const res = await pollTelegramLoginStatus(token);
 
-        const otpToken = res?.supabaseToken ?? res?.tokenHash;
-        if (res?.authenticated && otpToken) {
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: otpToken,
-            type: "magiclink",
+        const session = res?.session;
+        if (res?.authenticated && session?.access_token && session?.refresh_token) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
           });
 
           if (error) {
@@ -48,6 +48,8 @@ function CompleteContent() {
           setMessage("Сессия истекла. Попробуйте войти заново.");
         } else if (res?.status === "not_found") {
           setMessage("Сессия не найдена. Начните вход с сайта.");
+        } else if (res?.status === "used") {
+          setMessage("Ссылка уже использована. Попробуйте войти заново.");
         } else {
           setMessage("Вход не завершён. Отправьте номер и подтвердите политику в боте.");
         }

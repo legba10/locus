@@ -3,13 +3,13 @@ import {
   Get,
   Post,
   Query,
+  Body,
   BadRequestException,
   Logger,
   InternalServerErrorException,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiQuery } from "@nestjs/swagger";
 import { PrismaService } from "../prisma/prisma.service";
-import { supabase } from "../../shared/lib/supabase";
 import { SupabaseAuthService } from "./supabase-auth.service";
 import { randomUUID } from "crypto";
 
@@ -88,16 +88,16 @@ export class AuthTelegramController {
     const telegramUserId = session.telegramUserId;
 
     try {
-      const { userId, tokenHash } = await this.createOrFindSupabaseUser({
+      const user = await this.supabaseAuth.ensureTelegramUser({
         phoneNumber,
         telegramUserId,
         username: session.username,
         firstName: session.firstName,
       });
 
-      if (!tokenHash) {
-        throw new InternalServerErrorException("Failed to generate session");
-      }
+      const tokenHash = await this.supabaseAuth.generateMagicLinkToken(
+        user.email ?? `telegram_${String(telegramUserId)}@locus.app`
+      );
 
       // Mark session as consumed (optional: delete to prevent reuse)
       await this.prisma.telegramAuthSession.delete({ where: { loginToken: token } }).catch(() => {});
@@ -106,7 +106,7 @@ export class AuthTelegramController {
         authenticated: true,
         tokenHash,
         supabaseToken: tokenHash,
-        user: { id: userId },
+        user: { id: user.id },
       };
     } catch (error) {
       this.logger.error(`Telegram auth completion error: ${error}`);
@@ -114,117 +114,85 @@ export class AuthTelegramController {
     }
   }
 
-  private async createOrFindSupabaseUser(session: {
-    phoneNumber: string;
-    telegramUserId: bigint;
-    username: string | null;
-    firstName: string | null;
-  }): Promise<{ userId: string; tokenHash: string }> {
-    if (!supabase) {
-      throw new InternalServerErrorException("Auth service unavailable");
+  @Post("complete")
+  @ApiOperation({ summary: "Complete Telegram login - exchanges token for Supabase session" })
+  async complete(@Body("token") token: string) {
+    if (!token) {
+      throw new BadRequestException("Token is required");
     }
 
-    const telegramId = String(session.telegramUserId);
-    const phone = session.phoneNumber.startsWith("+") ? session.phoneNumber : `+${session.phoneNumber}`;
-    const fullName = session.firstName ?? `User ${telegramId}`;
-    const email = `telegram_${telegramId}@locus.app`;
-
-    let supabaseUser: { id: string; email: string | null } | null = null;
-
-    // Check existing by telegram_id in profiles
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id, email")
-      .eq("telegram_id", telegramId)
-      .single();
-
-    if (existingProfile) {
-      const { data: userData } = await supabase.auth.admin.getUserById(existingProfile.id);
-      if (userData?.user) {
-        supabaseUser = { id: userData.user.id, email: userData.user.email ?? null };
-      }
-    }
-
-    // Check existing by phone
-    if (!supabaseUser) {
-      const { data: usersByPhone } = await supabase.auth.admin.listUsers();
-      const byPhone = usersByPhone?.users?.find((u) => u.phone === phone);
-      if (byPhone) {
-        supabaseUser = { id: byPhone.id, email: byPhone.email ?? null };
-        await supabase.from("profiles").upsert(
-          {
-            id: byPhone.id,
-            telegram_id: telegramId,
-            full_name: fullName,
-            phone,
-          },
-          { onConflict: "id" }
-        );
-      }
-    }
-
-    // Create new user
-    if (!supabaseUser) {
-      const { data: createData, error: createError } = await supabase.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        phone,
-        phone_confirm: true,
-        user_metadata: {
-          telegram_id: telegramId,
-          full_name: fullName,
-          username: session.username,
-          auth_provider: "telegram",
-        },
-      });
-
-      if (createError) {
-        if (createError.message.includes("already exists")) {
-          const { data: list } = await supabase.auth.admin.listUsers();
-          const existing = list?.users?.find((u) => u.email === email || u.phone === phone);
-          if (existing) {
-            supabaseUser = { id: existing.id, email: existing.email ?? null };
-          }
-        }
-        if (!supabaseUser) {
-          this.logger.error(`Create user failed: ${createError.message}`);
-          throw new InternalServerErrorException("Failed to create user");
-        }
-      } else if (createData?.user) {
-        supabaseUser = { id: createData.user.id, email: createData.user.email ?? null };
-        await this.supabaseAuth.upsertProfile(
-          {
-            id: createData.user.id,
-            email: createData.user.email ?? null,
-            phone,
-            user_metadata: createData.user.user_metadata,
-          },
-          telegramId
-        );
-      }
-    }
-
-    if (!supabaseUser) {
-      throw new InternalServerErrorException("Failed to get or create user");
-    }
-
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email: supabaseUser.email ?? email,
+    const loginToken = await this.prisma.telegramLoginToken.findUnique({
+      where: { token },
+      include: { session: true },
     });
 
-    const tokenHash =
-      (linkData as { properties?: { hashed_token?: string }; hashed_token?: string })?.properties?.hashed_token ??
-      (linkData as { hashed_token?: string })?.hashed_token;
-
-    if (linkError || !tokenHash) {
-      this.logger.error(`Generate link failed: ${linkError?.message}`);
-      throw new InternalServerErrorException("Failed to generate session");
+    if (!loginToken) {
+      return { authenticated: false, status: "not_found" };
     }
 
-    return {
-      userId: supabaseUser.id,
-      tokenHash,
-    };
+    if (loginToken.used) {
+      return { authenticated: false, status: "used" };
+    }
+
+    if (loginToken.expiresAt.getTime() < Date.now()) {
+      return { authenticated: false, status: "expired" };
+    }
+
+    const session = loginToken.session;
+    if (!session) {
+      return { authenticated: false, status: "not_found" };
+    }
+
+    if (session.status !== "CONFIRMED") {
+      return { authenticated: false, status: session.status.toLowerCase() };
+    }
+
+    if (!session.phoneNumber) {
+      throw new BadRequestException("Phone number not confirmed");
+    }
+    if (!session.telegramUserId) {
+      throw new BadRequestException("Telegram user ID not confirmed");
+    }
+
+    const phoneNumber = session.phoneNumber;
+    const telegramUserId = session.telegramUserId;
+
+    try {
+      const user = await this.supabaseAuth.ensureTelegramUser({
+        phoneNumber,
+        telegramUserId,
+        username: session.username,
+        firstName: session.firstName,
+      });
+
+      const tokenHash = await this.supabaseAuth.generateMagicLinkToken(
+        user.email ?? `telegram_${String(telegramUserId)}@locus.app`
+      );
+
+      const { data: sessionData, error: sessionError } = await this.supabaseAuth.verifyOtpToken(tokenHash);
+
+      if (sessionError || !sessionData?.session) {
+        this.logger.error(`Verify OTP failed: ${sessionError?.message ?? "no session"}`);
+        throw new InternalServerErrorException("Failed to create session");
+      }
+
+      const updated = await this.prisma.telegramLoginToken.updateMany({
+        where: { token, used: false, expiresAt: { gt: new Date() } },
+        data: { used: true, userId: user.id },
+      });
+      if (updated.count === 0) {
+        return { authenticated: false, status: "used" };
+      }
+      await this.prisma.telegramAuthSession.delete({ where: { id: session.id } }).catch(() => {});
+
+      return {
+        authenticated: true,
+        session: sessionData.session,
+        user: { id: user.id },
+      };
+    } catch (error) {
+      this.logger.error(`Telegram auth completion error: ${error}`);
+      throw error;
+    }
   }
 }

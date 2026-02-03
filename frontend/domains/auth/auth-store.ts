@@ -57,6 +57,7 @@ function userFromBackend(response: MeResponse): StoredUser {
     email: payload.email ?? "",
     role: getPrimaryRole(backendRoles),
     roles,
+    profile: payload.profile,
   };
 }
 
@@ -68,6 +69,7 @@ function toDomainUser(user: StoredUser | null): DomainUser | null {
     email: user.email,
     role: user.role as DomainUser["role"],
     roles: (user.roles ?? [user.role]) as DomainUser["roles"],
+    tariff: user.profile?.tariff,
   };
 }
 

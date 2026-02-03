@@ -10,6 +10,10 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiExcludeEndpoint } from "@nestjs/swagger";
 import { PrismaService } from "../prisma/prisma.service";
+import { SupabaseAuthService } from "../auth/supabase-auth.service";
+import { randomUUID } from "crypto";
+
+const LOGIN_TOKEN_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 /** Telegram Update - message or callback_query */
 interface TelegramUpdate {
@@ -51,7 +55,10 @@ export class TelegramWebhookController implements OnModuleInit {
   private readonly isEnabled = process.env.TELEGRAM_ENABLED === "true";
   private readonly frontendUrl = process.env.FRONTEND_URL || "https://locus-i4o2.vercel.app";
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly supabaseAuth: SupabaseAuthService
+  ) {}
 
   async onModuleInit() {
     if (!this.isEnabled) {
@@ -254,7 +261,42 @@ export class TelegramWebhookController implements OnModuleInit {
 
     await this.answerCallback(cq.id);
 
-    const completeUrl = `${this.frontendUrl}/auth/telegram/complete?token=${encodeURIComponent(session.loginToken)}`;
+    if (!session.phoneNumber || !session.telegramUserId) {
+      await this.sendMessage(chatId, "❌ Ошибка входа. Попробуйте начать заново с сайта.");
+      return;
+    }
+
+    const loginToken = randomUUID();
+    const expiresAt = new Date(Date.now() + LOGIN_TOKEN_TTL_MS);
+
+    await this.prisma.telegramLoginToken.deleteMany({
+      where: { sessionId: session.id, used: false },
+    });
+
+    let supabaseUser: { id: string; email: string | null };
+    try {
+      supabaseUser = await this.supabaseAuth.ensureTelegramUser({
+        phoneNumber: session.phoneNumber,
+        telegramUserId: session.telegramUserId,
+        username: session.username,
+        firstName: session.firstName,
+      });
+    } catch (error) {
+      this.logger.error(`Telegram user sync failed: ${error}`);
+      await this.sendMessage(chatId, "❌ Не удалось создать пользователя. Попробуйте позже.");
+      return;
+    }
+
+    await this.prisma.telegramLoginToken.create({
+      data: {
+        token: loginToken,
+        sessionId: session.id,
+        userId: supabaseUser.id,
+        expiresAt,
+      },
+    });
+
+    const completeUrl = `${this.frontendUrl}/auth/telegram/complete?token=${encodeURIComponent(loginToken)}`;
     const inlineKeyboard = {
       inline_keyboard: [[{ text: "🔗 Вернуться на сайт", url: completeUrl }]],
     };

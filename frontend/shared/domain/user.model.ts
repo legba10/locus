@@ -34,6 +34,7 @@ export interface User {
   role: UserRole
   roles: UserRole[]
   provider?: AuthProvider
+  tariff?: string
   
   // Metadata
   createdAt?: string

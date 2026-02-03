@@ -24,6 +24,11 @@ export function GlassHeader({ className }: GlassHeaderProps) {
   const { user, isAuthenticated, logout } = useAuthStore()
 
   const isActive = (path: string) => pathname === path
+  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
+  const isHost = user?.role === 'host' || (user?.roles?.includes('host') ?? false)
+  const tariff = user?.profile?.tariff ?? 'free'
+  const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
+  const canAccessOwner = isAdmin || (isHost && isPaidTariff)
 
   return (
     <header className={cn(
@@ -82,17 +87,19 @@ export function GlassHeader({ className }: GlassHeaderProps) {
             {isAuthenticated() ? (
               <>
                 {/* Owner Dashboard Link */}
-                <Link 
-                  href="/owner/dashboard"
-                  className={cn(
-                    'text-sm font-medium transition-colors',
-                    isActive('/owner/dashboard') 
-                      ? 'text-white' 
-                      : 'text-white/60 hover:text-white'
-                  )}
-                >
-                  {RU.owner.dashboard_title}
-                </Link>
+                {canAccessOwner && (
+                  <Link 
+                    href="/owner/dashboard"
+                    className={cn(
+                      'text-sm font-medium transition-colors',
+                      isActive('/owner/dashboard') 
+                        ? 'text-white' 
+                        : 'text-white/60 hover:text-white'
+                    )}
+                  >
+                    {RU.owner.dashboard_title}
+                  </Link>
+                )}
                 
                 {/* User Menu */}
                 <div className="flex items-center gap-2">

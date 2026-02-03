@@ -12,6 +12,7 @@ export type SupabaseProfile = {
   telegram_id: string | null;
   full_name: string | null;
   role: "user" | "landlord" | "manager" | "admin";
+  tariff: string | null;
   created_at: string;
 };
 
@@ -142,6 +143,144 @@ export class SupabaseAuthService {
       roles: [role],                 // Single role for now
       profile,
     };
+  }
+
+  /**
+   * Ensure Supabase user for Telegram login (by telegram_id or phone)
+   */
+  async ensureTelegramUser(session: {
+    phoneNumber: string;
+    telegramUserId: bigint;
+    username: string | null;
+    firstName: string | null;
+  }): Promise<{ id: string; email: string | null }> {
+    if (!supabase) {
+      throw new Error("Auth service unavailable");
+    }
+
+    const telegramId = String(session.telegramUserId);
+    const phone = session.phoneNumber.startsWith("+") ? session.phoneNumber : `+${session.phoneNumber}`;
+    const fullName = session.firstName ?? `User ${telegramId}`;
+    const email = `telegram_${telegramId}@locus.app`;
+
+    let supabaseUser: { id: string; email: string | null } | null = null;
+
+    // Check existing by telegram_id in profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .eq("telegram_id", telegramId)
+      .single();
+
+    if (existingProfile) {
+      const { data: userData } = await supabase.auth.admin.getUserById(existingProfile.id);
+      if (userData?.user) {
+        supabaseUser = { id: userData.user.id, email: userData.user.email ?? null };
+      }
+    }
+
+    // Check existing by phone
+    if (!supabaseUser) {
+      const { data: usersByPhone } = await supabase.auth.admin.listUsers();
+      const byPhone = usersByPhone?.users?.find((u) => u.phone === phone);
+      if (byPhone) {
+        supabaseUser = { id: byPhone.id, email: byPhone.email ?? null };
+        await supabase.from("profiles").upsert(
+          {
+            id: byPhone.id,
+            telegram_id: telegramId,
+            full_name: fullName,
+            phone,
+          },
+          { onConflict: "id" }
+        );
+      }
+    }
+
+    // Create new user
+    if (!supabaseUser) {
+      const { data: createData, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        phone,
+        phone_confirm: true,
+        user_metadata: {
+          telegram_id: telegramId,
+          full_name: fullName,
+          username: session.username,
+          auth_provider: "telegram",
+        },
+      });
+
+      if (createError) {
+        if (createError.message.includes("already exists")) {
+          const { data: list } = await supabase.auth.admin.listUsers();
+          const existing = list?.users?.find((u) => u.email === email || u.phone === phone);
+          if (existing) {
+            supabaseUser = { id: existing.id, email: existing.email ?? null };
+          }
+        }
+        if (!supabaseUser) {
+          this.logger.error(`Create user failed: ${createError.message}`);
+          throw new Error("Failed to create user");
+        }
+      } else if (createData?.user) {
+        supabaseUser = { id: createData.user.id, email: createData.user.email ?? null };
+        await this.upsertProfile(
+          {
+            id: createData.user.id,
+            email: createData.user.email ?? null,
+            phone,
+            user_metadata: createData.user.user_metadata,
+          },
+          telegramId
+        );
+      }
+    }
+
+    if (!supabaseUser) {
+      throw new Error("Failed to get or create user");
+    }
+
+    return supabaseUser;
+  }
+
+  /**
+   * Generate magiclink token hash for a user email
+   */
+  async generateMagicLinkToken(email: string): Promise<string> {
+    if (!supabase) {
+      throw new Error("Auth service unavailable");
+    }
+
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+
+    const tokenHash =
+      (linkData as { properties?: { hashed_token?: string }; hashed_token?: string })?.properties?.hashed_token ??
+      (linkData as { hashed_token?: string })?.hashed_token;
+
+    if (linkError || !tokenHash) {
+      this.logger.error(`Generate link failed: ${linkError?.message}`);
+      throw new Error("Failed to generate session");
+    }
+
+    return tokenHash;
+  }
+
+  /**
+   * Verify magiclink token hash and return Supabase session
+   */
+  async verifyOtpToken(tokenHash: string) {
+    if (!supabase) {
+      throw new Error("Auth service unavailable");
+    }
+    return supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "magiclink",
+    });
   }
 
   /**
