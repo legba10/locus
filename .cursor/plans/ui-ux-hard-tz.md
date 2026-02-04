@@ -6,4 +6,5 @@ Implement final UI/UX hard TZ changes (boomerang, header, profile, content visua
 - [x] Simplify header desktop and mobile menus per requirements.
 - [x] Rework profile UX blocks and save feedback.
 - [x] Redesign content pages with hero, cards, highlight, CTA.
+- [x] Reset mobile menu and add MVP portal shell.
 - [ ] Ensure global visual consistency and remove duplicates.
