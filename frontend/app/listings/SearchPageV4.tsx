@@ -8,6 +8,7 @@ import { cn } from '@/shared/utils/cn'
 import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
 import { AiSearchWizard, type AiSearchParams } from '@/domains/ai/AiSearchWizard'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
+import { CityInput } from '@/shared/components/CityInput'
 
 interface SearchResponse {
   items: any[]
@@ -284,28 +285,22 @@ export function SearchPageV4() {
                   <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
                     Город
                   </label>
-                  <select
+                  <CityInput
                     value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                    onChange={setCity}
+                    placeholder="Все города"
+                    listId="listings-cities"
                     className={cn(
                       'w-full rounded-[14px] px-4 py-2.5',
                       'border border-white/60',
                       'bg-white/75 backdrop-blur-[18px]',
                       'text-[#1C1F26] text-[14px]',
                       'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all cursor-pointer appearance-none',
+                      'transition-all',
                       'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
                       'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]'
                     )}
-                  >
-                    <option value="">Все города</option>
-                    <option value="Москва">Москва</option>
-                    <option value="Санкт-Петербург">Санкт-Петербург</option>
-                    <option value="Казань">Казань</option>
-                    <option value="Новосибирск">Новосибирск</option>
-                    <option value="Екатеринбург">Екатеринбург</option>
-                    <option value="Сочи">Сочи</option>
-                  </select>
+                  />
                 </div>
 
                 {/* Цена от */}

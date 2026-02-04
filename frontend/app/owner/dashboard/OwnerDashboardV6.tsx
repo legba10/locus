@@ -6,6 +6,7 @@ import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
+import { CITIES } from '@/shared/data/cities'
 
 type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' | 'profile'
 
@@ -283,9 +284,11 @@ function AddListingTab() {
                 )}
               >
                 <option value="">Выберите город</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Казань">Казань</option>
+                {CITIES.map((cityOption) => (
+                  <option key={cityOption} value={cityOption}>
+                    {cityOption}
+                  </option>
+                ))}
               </select>
             </div>
 

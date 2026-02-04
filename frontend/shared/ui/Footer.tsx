@@ -20,8 +20,8 @@ export function Footer({ className }: { className?: string }) {
   const navigation = {
     platform: [
       { name: 'Поиск жилья', href: '/listings' },
-      { name: 'Сдать жильё', href: '/owner/dashboard' },
-      { name: 'Как это работает', href: '#how-it-works' },
+      { name: 'Сдать жильё', href: '/pricing?reason=host' },
+      { name: 'Как это работает', href: '/how-it-works' },
     ],
     company: [
       { name: 'О нас', href: '/about' },
@@ -63,7 +63,7 @@ export function Footer({ className }: { className?: string }) {
             {/* Social Links */}
             <div className="flex gap-3 mt-5">
               <a 
-                href="https://vk.com/locus" 
+                href="https://vk.ru/club235775695" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-white/10 hover:bg-violet-600 flex items-center justify-center transition-all duration-200"
@@ -74,7 +74,7 @@ export function Footer({ className }: { className?: string }) {
                 </svg>
               </a>
               <a 
-                href="https://t.me/locus" 
+                href="https://t.me/Locusrental" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-white/10 hover:bg-violet-600 flex items-center justify-center transition-all duration-200"

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { supabase } from '@/shared/supabase-client'
+import { CITIES } from '@/shared/data/cities'
 
 type UserRole = 'user' | 'landlord'
 
@@ -297,11 +298,11 @@ export function RegisterPageV4() {
                     )}
                   >
                     <option value="">Выберите город</option>
-                    <option value="Москва">Москва</option>
-                    <option value="Санкт-Петербург">Санкт-Петербург</option>
-                    <option value="Казань">Казань</option>
-                    <option value="Новосибирск">Новосибирск</option>
-                    <option value="Екатеринбург">Екатеринбург</option>
+                    {CITIES.map((cityOption) => (
+                      <option key={cityOption} value={cityOption}>
+                        {cityOption}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

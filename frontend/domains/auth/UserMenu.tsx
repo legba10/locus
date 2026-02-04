@@ -6,7 +6,7 @@ import { useAuthStore } from "./auth-store";
 
 export function UserMenu() {
   const router = useRouter();
-  const { user, isLoading, isInitialized, logout } = useAuthStore();
+  const { user, isLoading, isInitialized, error, refresh, clearError, logout } = useAuthStore();
 
   if (!isInitialized || isLoading) {
     return (
@@ -15,6 +15,28 @@ export function UserMenu() {
   }
 
   if (!user) {
+    if (error) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-red-600">{error}</span>
+          <button
+            onClick={async () => {
+              clearError();
+              await refresh();
+            }}
+            className="rounded-lg border border-red-200 bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+          >
+            Повторить
+          </button>
+          <Link
+            href="/auth/login"
+            className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand/90"
+          >
+            Войти
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center gap-2">
         <Link

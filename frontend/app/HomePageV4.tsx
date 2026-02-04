@@ -8,6 +8,8 @@ import { ListingCardV8, ListingCardV8Skeleton } from '@/domains/listing/ListingC
 import { SmartSearchInput } from '@/ui-system/SmartSearchInput'
 import { Card, Button } from '@/ui-system'
 import { normalizeListings } from '@/core/adapters'
+import { CITIES } from '@/shared/data/cities'
+import { useAuthStore } from '@/domains/auth'
 import { RU } from '@/core/i18n/ru'
 
 interface ListingItem {
@@ -38,11 +40,15 @@ interface ListingsResponse {
  */
 export function HomePageV4() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [city, setCity] = useState('')
   const [budget, setBudget] = useState<number | undefined>()
   const [guests, setGuests] = useState(2)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=6')
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -81,11 +87,11 @@ export function HomePageV4() {
                 className="rounded-lg border border-gray-200 px-4 py-3 text-gray-900"
               >
                 <option value="">Выберите город</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Сочи">Сочи</option>
-                <option value="Казань">Казань</option>
-                <option value="Сургут">Сургут</option>
+                {CITIES.map((cityOption) => (
+                  <option key={cityOption} value={cityOption}>
+                    {cityOption}
+                  </option>
+                ))}
               </select>
 
               <select
@@ -170,7 +176,7 @@ export function HomePageV4() {
           <p className="text-gray-600 mb-4">
             LOCUS поможет увеличить доход
           </p>
-          <Link href="/owner/dashboard">
+          <Link href={hostCtaHref}>
             <Button variant="outline" size="lg">
               Кабинет владельца →
             </Button>

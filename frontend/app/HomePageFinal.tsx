@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { ListingCardFinal, ListingCardFinalSkeleton } from '@/domains/listing/ListingCardFinal'
+import { CITIES } from '@/shared/data/cities'
+import { useAuthStore } from '@/domains/auth'
 
 interface ListingItem {
   id: string
@@ -34,10 +36,14 @@ interface ListingsResponse {
  */
 export function HomePageFinal() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [city, setCity] = useState('')
   const [guests, setGuests] = useState(2)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=6')
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +75,11 @@ export function HomePageFinal() {
                 className="rounded-lg border border-gray-200 px-4 py-3 text-gray-900"
               >
                 <option value="">Выберите город</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Сочи">Сочи</option>
-                <option value="Казань">Казань</option>
+                {CITIES.map((cityOption) => (
+                  <option key={cityOption} value={cityOption}>
+                    {cityOption}
+                  </option>
+                ))}
               </select>
 
               <select
@@ -157,7 +164,7 @@ export function HomePageFinal() {
             LOCUS поможет увеличить доход
           </p>
           <Link
-            href="/owner/dashboard"
+            href={hostCtaHref}
             className="inline-block rounded-lg bg-white border border-gray-200 px-6 py-3 font-medium text-gray-900 hover:border-gray-300 transition"
           >
             Кабинет владельца →

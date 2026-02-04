@@ -6,6 +6,7 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { ListingCardV5, ListingCardV5Skeleton } from '@/domains/listing/ListingCardV5'
 import { Card, Button, Badge } from '@/ui-system'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
 
 type SortOption = 'smart' | 'price_asc' | 'price_desc' | 'demand' | 'rating'
 
@@ -48,8 +49,6 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
  * 
  * ADD FILTER: "Only recommended by AI"
  */
-
-const CITIES = ['Все города', 'Москва', 'Санкт-Петербург', 'Сочи', 'Казань', 'Сургут']
 
 /**
  * SearchPageV2 — Product Sorting
@@ -126,8 +125,11 @@ export function SearchPageV2() {
               onChange={(e) => setCity(e.target.value)}
               className="rounded-lg border border-gray-200 px-3 py-2 text-sm bg-white"
             >
-              {CITIES.map(c => (
-                <option key={c} value={c === 'Все города' ? '' : c}>{c}</option>
+              <option value="">Все города</option>
+              {CITIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
 

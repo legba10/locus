@@ -9,6 +9,7 @@ import { Card, Button } from '@/ui-system'
 import { normalizeListings } from '@/core/adapters'
 import { RU } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
 
 interface ListingItem {
   id: string
@@ -123,11 +124,11 @@ export function SearchPageV3() {
             className="rounded-lg border border-gray-200 px-4 py-2.5 text-gray-900"
           >
             <option value="">{RU.common.city}</option>
-            <option value="Москва">Москва</option>
-            <option value="Санкт-Петербург">Санкт-Петербург</option>
-            <option value="Сочи">Сочи</option>
-            <option value="Казань">Казань</option>
-            <option value="Сургут">Сургут</option>
+            {CITIES.map((cityOption) => (
+              <option key={cityOption} value={cityOption}>
+                {cityOption}
+              </option>
+            ))}
           </select>
 
           <select

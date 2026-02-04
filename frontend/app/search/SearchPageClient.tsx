@@ -7,6 +7,7 @@ import { ListingCard, ListingCardSkeleton } from '@/domains/listing/ListingCard'
 import { buildListingsQuery, type ListingsResponse } from '@/domains/listing/listing-api'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
+import { CityInput } from '@/shared/components/CityInput'
 
 // Filter sidebar
 function FilterSidebar({ 
@@ -23,18 +24,13 @@ function FilterSidebar({
       {/* City */}
       <div className="mb-4">
         <label className="block text-sm text-text-mut mb-2">Город</label>
-        <select
+        <CityInput
           value={filters.city || ''}
-          onChange={(e) => onFiltersChange({ ...filters, city: e.target.value || undefined })}
+          onChange={(value) => onFiltersChange({ ...filters, city: value || undefined })}
+          placeholder="Все города"
+          listId="search-cities"
           className="w-full rounded-lg border border-border bg-surface-3 px-3 py-2 text-sm text-text"
-        >
-          <option value="">Все города</option>
-          <option value="Москва">Москва</option>
-          <option value="Санкт-Петербург">Санкт-Петербург</option>
-          <option value="Сочи">Сочи</option>
-          <option value="Казань">Казань</option>
-          <option value="Moscow">Moscow</option>
-        </select>
+        />
       </div>
 
       {/* Price range */}

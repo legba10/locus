@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { ListingCardV3, ListingCardV3Skeleton } from '@/domains/listing/ListingCardV3'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
 
 interface ListingItem {
   id: string
@@ -38,8 +39,6 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'price_desc', label: 'Сначала дороже' },
   { value: 'rating', label: 'По рейтингу' },
 ]
-
-const CITIES = ['', 'Москва', 'Санкт-Петербург', 'Сочи', 'Казань', 'Екатеринбург']
 
 /**
  * SearchPage — страница поиска с сортировкой
@@ -122,8 +121,10 @@ export function SearchPage() {
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Любой город</option>
-              {CITIES.filter(c => c).map(c => (
-                <option key={c} value={c}>{c}</option>
+              {CITIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>

@@ -184,6 +184,10 @@ export function HomePageClient() {
     ['listings-home'],
     '/api/listings?limit=9',
   )
+  const { user } = useAuthStore()
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
   const apiDocsUrl = process.env.NEXT_PUBLIC_API_URL
     ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/docs`
     : ''
@@ -240,7 +244,7 @@ export function HomePageClient() {
       {/* Quick access for hosts/admins */}
       <div className="grid md:grid-cols-2 gap-4">
         <Link 
-          href="/owner/dashboard"
+          href={hostCtaHref}
           className="group rounded-2xl border border-border bg-surface-2 p-6 transition hover:border-brand/50 hover:bg-surface-3"
         >
           <div className="flex items-center gap-4">

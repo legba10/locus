@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { useAuthStore } from '@/domains/auth'
+import { CityInput } from '@/shared/components/CityInput'
 
 type UserRole = 'user' | 'landlord'
 
@@ -290,21 +291,18 @@ export function RegisterPageV5() {
                   <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} className="space-y-4">
                     <div>
                       <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Город</label>
-                      <select
+                      <CityInput
                         value={aiCity}
-                        onChange={(e) => setAiCity(e.target.value)}
+                        onChange={setAiCity}
+                        placeholder="Выберите город"
+                        listId="register-city"
                         className={cn(
                           'w-full rounded-[14px] px-4 py-3',
                           'border border-gray-200/60 bg-white/95',
                           'text-[#1C1F26] text-[14px]',
                           'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                         )}
-                      >
-                        <option value="">Выберите город</option>
-                        <option value="Москва">Москва</option>
-                        <option value="Санкт-Петербург">Санкт-Петербург</option>
-                        <option value="Казань">Казань</option>
-                      </select>
+                      />
                     </div>
 
                     <div>

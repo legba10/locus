@@ -156,7 +156,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   
   // Извлекаем фото
   const photos = item.images || item.photos || []
-  const coverPhoto = photos[0]?.url || '/placeholder.svg'
+  const coverPhoto = photos[0]?.url
   
   // AI данные через ai-engine
   const listingData: Listing = {
@@ -177,43 +177,47 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   const priceAnalysis = marketPriceCompare(listingData)
   
   // Параметры
-  const rooms = item.bedrooms || 1
-  const area = item.area || 40
-  const floor = item.floor || 1
-  const totalFloors = item.totalFloors || 5
+  const rooms = item.bedrooms ?? null
+  const area = item.area ?? null
+  const floor = item.floor ?? null
+  const totalFloors = item.totalFloors ?? null
   
   // Удобства
-  const amenities = item.amenities || ['Wi-Fi', 'Мебель', 'Балкон', 'Парковка', 'Кондиционер']
+  const amenities = item.amenities || []
   
   // HYDRATION-SAFE: Views from API or stable default
-  const views = item.views || 100
+  const views = (item as { views?: number; viewsCount?: number }).viewsCount ?? item.views ?? 0
 
   // Похожие объявления (исключаем текущее)
   // HYDRATION-SAFE: No Math.random() - use data from API
   const similarListings = (similarData?.items || [])
     .filter((l: any) => l.id !== id)
+    .map((listing: any) => {
+      const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url || null
+      return {
+        id: listing.id,
+        photo,
+        title: listing.title,
+        price: listing.pricePerNight ?? listing.basePrice ?? 0,
+        city: listing.city,
+        district: listing.district || null,
+        rooms: listing.bedrooms ?? 0,
+        area: listing.area ?? 0,
+        floor: listing.floor ?? 0,
+        totalFloors: listing.totalFloors ?? 0,
+        views: listing.viewsCount ?? listing.views ?? 0,
+        isNew: listing.isNew ?? false,
+        isVerified: (listing.score || 0) >= 70,
+        score: listing.score ?? 0,
+        verdict: listing.verdict ?? '',
+        reasons: listing.reasons || [],
+        tags: [],
+        aiScore: listing.aiScore ?? 0,
+        aiReasons: listing.aiReasons || [],
+      }
+    })
+    .filter((listing: any) => Boolean(listing.photo && listing.title && listing.city))
     .slice(0, 4)
-    .map((listing: any) => ({
-      id: listing.id,
-      photo: listing.images?.[0]?.url || null,
-      title: listing.title || 'Без названия',
-      price: listing.pricePerNight || listing.basePrice || 0,
-      city: listing.city || 'Не указан',
-      district: listing.district || null,
-      rooms: listing.bedrooms || 1,
-      area: listing.area || 40,
-      floor: listing.floor || 1,
-      totalFloors: listing.totalFloors || 5,
-      views: listing.views || 100,
-      isNew: listing.isNew || false,
-      isVerified: (listing.score || 0) >= 70,
-      score: listing.score || 50,
-      verdict: listing.verdict || 'Средний вариант',
-      reasons: listing.reasons || [],
-      tags: [],
-      aiScore: listing.aiScore || 50,
-      aiReasons: listing.aiReasons || [],
-    }))
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
@@ -243,12 +247,12 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                 {photos.length > 0 ? (
                   <>
                     <Image
-                      src={photos[activeImage]?.url || coverPhoto}
+                      src={photos[activeImage]?.url || coverPhoto || ''}
                       alt={item.title}
                       fill
                       className="object-cover"
                       priority
-                      unoptimized={(photos[activeImage]?.url || coverPhoto).startsWith('http')}
+                      unoptimized={(photos[activeImage]?.url || coverPhoto || '').startsWith('http')}
                     />
                     {/* ТОЛЬКО UI badges, БЕЗ текста */}
                     <div className="absolute top-4 left-4 flex gap-2">
@@ -295,7 +299,9 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                     )}
                   </>
                 ) : (
-                  <Image src={coverPhoto} alt={item.title} fill className="object-cover" />
+                  <div className="w-full h-full flex items-center justify-center text-[14px] text-gray-400">
+                    Фото пока не добавлены
+                  </div>
                 )}
               </div>
             </div>
@@ -381,15 +387,19 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
             <div>
               <p className="text-[13px] text-[#6B7280] mb-1">Комнаты</p>
-              <p className="text-[15px] font-medium text-[#1C1F26]">{rooms}</p>
+              <p className="text-[15px] font-medium text-[#1C1F26]">{rooms ?? '—'}</p>
             </div>
             <div>
               <p className="text-[13px] text-[#6B7280] mb-1">Площадь</p>
-              <p className="text-[15px] font-medium text-[#1C1F26]">{area} м²</p>
+              <p className="text-[15px] font-medium text-[#1C1F26]">
+                {area ? `${area} м²` : '—'}
+              </p>
             </div>
             <div>
               <p className="text-[13px] text-[#6B7280] mb-1">Этаж</p>
-              <p className="text-[15px] font-medium text-[#1C1F26]">{floor}/{totalFloors}</p>
+              <p className="text-[15px] font-medium text-[#1C1F26]">
+                {floor && totalFloors ? `${floor}/${totalFloors}` : '—'}
+              </p>
             </div>
             <div>
               <p className="text-[13px] text-[#6B7280] mb-1">Тип</p>
@@ -492,22 +502,26 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           'border border-gray-100/80'
         )}>
           <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Удобства</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {amenities.map((amenity, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'flex items-center gap-2 p-3 rounded-[12px]',
-                  'bg-gray-50 border border-gray-200'
-                )}
-              >
-                <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-[14px] font-medium text-[#1C1F26]">{amenity}</span>
-              </div>
-            ))}
-          </div>
+          {amenities.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {amenities.map((amenity, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'flex items-center gap-2 p-3 rounded-[12px]',
+                    'bg-gray-50 border border-gray-200'
+                  )}
+                >
+                  <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-[14px] font-medium text-[#1C1F26]">{amenity}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[14px] text-[#6B7280]">Удобства не указаны.</p>
+          )}
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
@@ -571,53 +585,8 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
             )}
           </div>
           
-          {/* Список отзывов (mock) */}
-          <div className="space-y-4 mb-4">
-            {[
-              { id: '1', author: 'Иван И.', rating: 5, text: 'Отличная квартира, всё чисто и аккуратно. Рекомендую!', date: '2026-01-20' },
-              { id: '2', author: 'Мария П.', rating: 4, text: 'Хорошее расположение, рядом метро. Единственный минус - шумно.', date: '2026-01-15' },
-            ].map(review => (
-              <div key={review.id} className="p-4 bg-gray-50 rounded-[12px]">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-semibold text-[#1C1F26]">{review.author}</span>
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <svg key={i} className={cn('w-4 h-4', i < review.rating ? 'text-amber-400 fill-current' : 'text-gray-300')} viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                  </div>
-                  <span className="text-[12px] text-[#6B7280]">{review.date}</span>
-                </div>
-                <p className="text-[14px] text-[#6B7280]">{review.text}</p>
-              </div>
-            ))}
-          </div>
-          
-          {/* Форма добавления отзыва */}
-          <div className="pt-4 border-t border-gray-100">
-            <textarea
-              placeholder="Напишите отзыв..."
-              className={cn(
-                'w-full rounded-[14px] px-4 py-3 mb-3',
-                'border border-gray-200 bg-gray-50',
-                'text-[14px] text-[#1C1F26]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                'resize-none'
-              )}
-              rows={4}
-            />
-            <button
-              className={cn(
-                'px-5 py-2.5 rounded-[14px]',
-                'bg-violet-600 text-white font-semibold text-[14px]',
-                'hover:bg-violet-500 transition-colors'
-              )}
-            >
-              Отправить отзыв
-            </button>
+          <div className="rounded-[12px] bg-gray-50 p-4 text-[14px] text-[#6B7280]">
+            Отзывы появятся после первых бронирований.
           </div>
         </div>
 

@@ -1,9 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 
 export default function PricingPage() {
+  const searchParams = useSearchParams()
+  const reason = searchParams.get('reason')
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-5xl mx-auto px-4 py-10">
@@ -12,6 +16,11 @@ export default function PricingPage() {
           <p className="text-[15px] text-[#6B7280]">
             Выберите тариф для доступа к размещению объявлений и аналитике.
           </p>
+          {reason === 'host' && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-[12px] bg-violet-50 px-4 py-2 text-[13px] text-violet-700">
+              Чтобы разместить объявление, нужен тариф Landlord.
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -20,21 +29,37 @@ export default function PricingPage() {
               id: 'free',
               title: 'Free',
               price: '0 ₽',
-              features: ['Поиск жилья', 'Избранное', 'Сообщения'],
+              features: [
+                'Просмотр объявлений',
+                'Бронирование',
+                'Сообщения',
+                '❌ Нельзя размещать объявления',
+              ],
               accent: false,
             },
             {
               id: 'basic',
               title: 'Landlord Basic',
               price: '990 ₽/мес',
-              features: ['Размещение объявлений', 'Редактирование и удаление', 'Бронирования'],
+              features: [
+                'Размещение объявлений',
+                'Управление жильём',
+                'Бронирования',
+                'Сообщения',
+                'Базовая аналитика',
+              ],
               accent: true,
             },
             {
               id: 'pro',
               title: 'Landlord Pro',
               price: '1990 ₽/мес',
-              features: ['Все возможности Basic', 'Аналитика', 'AI-инструменты'],
+              features: [
+                'Всё из Basic',
+                'Расширенная аналитика',
+                'Приоритет в выдаче',
+                'AI-рекомендации',
+              ],
               accent: false,
             },
           ].map((plan) => (
@@ -79,13 +104,13 @@ export default function PricingPage() {
         )}>
           <h3 className="text-[18px] font-bold text-[#1C1F26] mb-2">Готовы подключить тариф?</h3>
           <p className="text-[14px] text-[#6B7280] mb-4">
-            Оплата будет доступна в ближайшем релизе. Оставьте заявку на подключение.
+            Оставьте заявку на подключение тарифа — мы свяжемся с вами.
           </p>
           <a
             href="mailto:support@locus.app"
             className="inline-flex items-center justify-center px-5 py-2.5 rounded-[12px] bg-violet-600 text-white text-[14px] font-medium hover:bg-violet-500"
           >
-            Купить тариф
+            Оставить заявку
           </a>
         </div>
       </div>

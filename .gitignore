@@ -1,12 +1,12 @@
 # Dependencies
 node_modules/
-!backend/node_modules/
-backend/node_modules/*
-!backend/node_modules/.prisma/
+backend/node_modules/
+backend/node_modules/.prisma/
 
-# Build outputs (backend/dist committed for Railway — no build on deploy)
+# Build outputs
 .next/
 out/
+backend/dist/
 
 # Environment files
 .env

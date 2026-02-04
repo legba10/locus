@@ -4,12 +4,29 @@ import Link from 'next/link'
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Условия использования</h1>
-        <div className="prose prose-gray text-gray-600 space-y-4">
-          <p>Используя сервис LOCUS, вы соглашаетесь с настоящими условиями.</p>
-          <p>Контент и бронирования регулируются правилами платформы и применимым законодательством.</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6">Условия использования</h1>
+        <div className="space-y-4 text-[15px] text-gray-700 leading-relaxed">
+          <p>
+            Используя сервис LOCUS, вы подтверждаете согласие с правилами платформы и обязуетесь
+            соблюдать требования законодательства РФ.
+          </p>
+          <p>
+            Пользователь несёт ответственность за достоверность предоставляемых данных и контента,
+            размещаемого на платформе. Запрещены мошеннические объявления и попытки обмана.
+          </p>
+          <p>
+            Арендодатель отвечает за соответствие объявления реальному объекту, корректность условий
+            и соблюдение договорённостей с арендатором.
+          </p>
+          <p>
+            LOCUS обеспечивает техническую инфраструктуру и поддержку, но не является стороной
+            договора аренды между пользователями.
+          </p>
+          <p>
+            В случае нарушения правил доступ к платформе может быть ограничен или прекращён.
+          </p>
         </div>
         <Link href="/" className="mt-8 inline-block text-violet-600 hover:text-violet-700">
           ← На главную

@@ -8,6 +8,8 @@ import { GlassCard, GlassButton, GlassSelect } from '@/ui-system/glass'
 import { normalizeListings } from '@/core/adapters'
 import { RU } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
+import { useAuthStore } from '@/domains/auth'
 import { ListingCardGlass, ListingCardGlassSkeleton } from '@/domains/listing/ListingCardGlass'
 
 interface ListingItem {
@@ -38,11 +40,15 @@ interface ListingsResponse {
  */
 export function HomePageV5() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [city, setCity] = useState('')
   const [guests, setGuests] = useState('2')
   const [budget, setBudget] = useState('')
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=6')
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -100,11 +106,11 @@ export function HomePageV5() {
                   fullWidth
                 >
                   <option value="">Выберите город</option>
-                  <option value="Москва">Москва</option>
-                  <option value="Санкт-Петербург">Санкт-Петербург</option>
-                  <option value="Сочи">Сочи</option>
-                  <option value="Казань">Казань</option>
-                  <option value="Сургут">Сургут</option>
+                  {CITIES.map((cityOption) => (
+                    <option key={cityOption} value={cityOption}>
+                      {cityOption}
+                    </option>
+                  ))}
                 </GlassSelect>
 
                 {/* Guests */}
@@ -215,7 +221,7 @@ export function HomePageV5() {
             <p className="text-white/70 mb-6">
               LOCUS поможет увеличить доход — анализируйте рынок и улучшайте объявления
             </p>
-            <Link href="/owner/dashboard">
+            <Link href={hostCtaHref}>
               <GlassButton variant="primary" size="lg">
                 {RU.owner.dashboard_title} →
               </GlassButton>

@@ -15,7 +15,11 @@ import { ActionDispatcher, FeatureFlags } from "@/shared/runtime";
  * StoredUser — user object stored in zustand state
  * Extracted from MeResponse.user or created from session
  */
-type StoredUser = UserContract;
+type StoredUser = UserContract & {
+  email?: string;
+  supabaseId?: string;
+  roles?: UserRole[];
+};
 
 type AuthState = {
   user: StoredUser | null;
@@ -48,25 +52,23 @@ function userFromSession(session: { user: { id: string; email?: string | null } 
     role: "user",
     roles: ["user"],
     tariff: "free",
-    verification_status: "pending",
   };
 }
 
-function userFromBackend(response: MeResponse): StoredUser {
+function userFromBackend(response: MeResponse, sessionEmail?: string | null): StoredUser {
   const payload = response;
   const role = normalizeRole(payload.role);
   const roles = [role];
   return {
     id: payload.id,
-    supabaseId: payload.supabaseId ?? payload.id,
-    email: payload.email ?? "",
+    supabaseId: payload.id,
+    email: sessionEmail ?? "",
     phone: payload.phone ?? null,
     telegram_id: payload.telegram_id ?? null,
     full_name: payload.full_name ?? null,
     role: getPrimaryRole(roles),
     roles,
     tariff: payload.tariff ?? "free",
-    verification_status: payload.verification_status ?? "pending",
   };
 }
 
@@ -110,22 +112,15 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 401);
           const session = authData.session;
           if (!session) throw new AuthApiError("Нет сессии после входа", 401);
-          
-          let meUser: StoredUser | null = null;
-          try {
-            const backendResponse = await fetchMe();
-            meUser = userFromBackend(backendResponse);
-          } catch (e) {
-            logger.warn("Auth", "fetchMe failed after login, using session", e);
-            meUser = null;
-          }
-          
+
+          const backendResponse = await fetchMe();
+          const meUser = userFromBackend(backendResponse, session.user.email ?? null);
           set({
-            user: meUser ?? userFromSession(session),
+            user: meUser,
             accessToken: session.access_token,
             isLoading: false,
           });
-          await dispatchAuth("login", meUser ?? userFromSession(session));
+          await dispatchAuth("login", meUser);
         } catch (e) {
           const msg = e instanceof AuthApiError ? e.message : "Ошибка входа";
           set({ isLoading: false, error: msg });
@@ -149,19 +144,14 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 400);
           const session = authData.session;
           if (session) {
-            let meUser: StoredUser | null = null;
-            try {
-              const backendResponse = await fetchMe();
-              meUser = userFromBackend(backendResponse);
-            } catch {
-              meUser = null;
-            }
+            const backendResponse = await fetchMe();
+            const meUser = userFromBackend(backendResponse, session.user.email ?? null);
             set({
-              user: meUser ?? userFromSession(session),
+              user: meUser,
               accessToken: session.access_token,
               isLoading: false,
             });
-            await dispatchAuth("register", meUser ?? userFromSession(session));
+            await dispatchAuth("register", meUser);
           } else {
             // No session = email confirmation required
             set({
@@ -175,7 +165,6 @@ export const useAuthStore = create<AuthState>()(
                 role: data.role,
                 roles: [data.role],
                 tariff: "free",
-                verification_status: "pending",
               },
               accessToken: null,
               isLoading: false,
@@ -190,7 +179,6 @@ export const useAuthStore = create<AuthState>()(
               role: data.role,
               roles: [data.role],
               tariff: "free",
-              verification_status: "pending",
             });
           }
         } catch (e) {
@@ -219,20 +207,15 @@ export const useAuthStore = create<AuthState>()(
             set({ user: null, accessToken: null });
             return false;
           }
-          let meUser: StoredUser | null = null;
-          try {
-            const backendResponse = await fetchMe();
-            meUser = userFromBackend(backendResponse);
-          } catch {
-            meUser = null;
-          }
+          const backendResponse = await fetchMe();
+          const meUser = userFromBackend(backendResponse, session.user.email ?? null);
           set({
-            user: meUser ?? userFromSession(session),
+            user: meUser,
             accessToken: session.access_token,
           });
           return true;
         } catch {
-          set({ user: null, accessToken: null });
+          set({ user: null, accessToken: null, error: "Ошибка авторизации" });
           return false;
         }
       },
@@ -241,7 +224,7 @@ export const useAuthStore = create<AuthState>()(
         if (get().isInitialized) {
           return;
         }
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         
         try {
           // Timeout for getSession (3s max)
@@ -266,31 +249,30 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
           
-          let meUser: StoredUser | null = null;
-          
-          try {
-            // Timeout for fetchMe (3s max) - non-blocking
-            const mePromise = fetchMe();
-            const meTimeout = new Promise<never>((_, reject) => 
-              setTimeout(() => reject(new Error("fetchMe timeout")), 3000)
-            );
-            
-            const backendResponse = await Promise.race([mePromise, meTimeout]);
-            meUser = userFromBackend(backendResponse);
-          } catch (e) {
-            logger.warn('Auth', 'fetchMe failed (using session data)', e);
-            meUser = null;
-          }
-          
+          // Timeout for fetchMe (3s max)
+          const mePromise = fetchMe();
+          const meTimeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("fetchMe timeout")), 3000)
+          );
+
+          const backendResponse = await Promise.race([mePromise, meTimeout]);
+          const meUser = userFromBackend(backendResponse, session.user.email ?? null);
+
           set({
-            user: meUser ?? userFromSession(session),
+            user: meUser,
             accessToken: session.access_token,
             isLoading: false,
             isInitialized: true,
           });
         } catch (e) {
           logger.error('Auth', 'initialize error', e);
-          set({ user: null, accessToken: null, isLoading: false, isInitialized: true });
+          set({
+            user: null,
+            accessToken: null,
+            isLoading: false,
+            isInitialized: true,
+            error: "Ошибка авторизации",
+          });
         }
       },
 

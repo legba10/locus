@@ -4,14 +4,9 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
+import { CITIES, POPULAR_CITIES } from '@/shared/data/cities'
 
-const CITY_SUGGESTIONS = [
-  { name: 'Москва', emoji: '🏙️' },
-  { name: 'Санкт-Петербург', emoji: '🏛️' },
-  { name: 'Сочи', emoji: '🏖️' },
-  { name: 'Казань', emoji: '🕌' },
-  { name: 'Moscow', emoji: '🏙️' },
-]
+const CITY_SUGGESTIONS = POPULAR_CITIES.map((name) => ({ name, emoji: '🏙️' }))
 
 export function SearchBarAdvanced({ className }: { className?: string }) {
   const router = useRouter()
@@ -25,9 +20,7 @@ export function SearchBarAdvanced({ className }: { className?: string }) {
     
     if (query) {
       // Check if query looks like a city or a natural language query
-      const isCity = CITY_SUGGESTIONS.some(c => 
-        c.name.toLowerCase() === query.toLowerCase()
-      )
+      const isCity = CITIES.some((city) => city.toLowerCase() === query.toLowerCase())
       if (isCity) {
         params.set('city', query)
       } else {

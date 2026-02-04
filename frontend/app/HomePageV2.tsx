@@ -7,6 +7,8 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { ListingCardV2, ListingCardV2Skeleton } from '@/domains/listing/ListingCardV2'
 import { LocusScoreBadge } from '@/shared/ui/locus-ai/LocusScoreBadge'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
+import { useAuthStore } from '@/domains/auth'
 
 // Types
 interface ListingItem {
@@ -74,10 +76,11 @@ function HeroSection() {
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="">Любой город</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Сочи">Сочи</option>
-                <option value="Казань">Казань</option>
+                {CITIES.map((cityOption) => (
+                  <option key={cityOption} value={cityOption}>
+                    {cityOption}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -247,6 +250,11 @@ function RecommendedSection() {
 
 // For owners section
 function ForOwnersSection() {
+  const { user } = useAuthStore()
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+
   return (
     <section className="py-16 bg-gradient-to-br from-blue-50 to-emerald-50">
       <div className="max-w-6xl mx-auto px-4">
@@ -276,7 +284,7 @@ function ForOwnersSection() {
               </li>
             </ul>
             <Link
-              href="/owner/dashboard"
+              href={hostCtaHref}
               className="inline-block rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 transition"
             >
               Кабинет владельца →

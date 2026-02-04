@@ -1,17 +1,20 @@
-import { BadRequestException, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
+import { SupabaseAuthService } from "./supabase-auth.service";
 
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
+  constructor(private readonly supabaseAuth: SupabaseAuthService) {}
+
   @Get("me")
   @UseGuards(SupabaseAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get current user. Supabase access_token required." })
   @ApiResponse({ status: 200, description: "Current user" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  me(
+  async me(
     @Req()
     req: {
       user: {
@@ -27,28 +30,26 @@ export class AuthController {
           telegram_id: string | null;
           role: string | null;
           tariff: string | null;
-          verification_status?: "pending" | "verified" | null;
           email?: string | null;
         } | null;
       };
     },
   ) {
-    const profile = req.user.profile ?? null;
-    const role = (profile?.role ?? req.user.role ?? "user") as "user" | "landlord";
-    const tariff =
-      (profile?.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
-    const verificationStatus =
-      (profile?.verification_status ?? "pending") as "pending" | "verified";
+    const profile = await this.supabaseAuth.getProfile(req.user.id);
+    if (!profile) {
+      throw new InternalServerErrorException("PROFILE_NOT_FOUND");
+    }
+
+    const role = (profile.role ?? "user") as "user" | "landlord";
+    const tariff = (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
 
     return {
-      id: req.user.id,
-      email: profile?.email ?? req.user.email ?? "",
-      phone: profile?.phone ?? req.user.phone ?? null,
-      telegram_id: profile?.telegram_id ?? null,
-      full_name: profile?.full_name ?? null,
+      id: profile.id,
+      phone: profile.phone ?? null,
+      telegram_id: profile.telegram_id ?? null,
+      full_name: profile.full_name ?? null,
       role,
       tariff,
-      verification_status: verificationStatus,
     };
   }
 

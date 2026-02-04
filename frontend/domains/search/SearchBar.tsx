@@ -4,8 +4,7 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
-
-const CITY_SUGGESTIONS = ['Москва', 'Санкт-Петербург', 'Казань', 'Сочи', 'Новосибирск', 'Екатеринбург', 'Сургут']
+import { CITIES } from '@/shared/data/cities'
 
 /**
  * SearchBar — Premium Glass Search REDESIGNED
@@ -70,7 +69,7 @@ export function SearchBar({ className, mode }: { className?: string; mode?: 'hom
                 )}
               />
               <datalist id="cities">
-                {CITY_SUGGESTIONS.map((c) => (
+                {CITIES.map((c) => (
                   <option key={c} value={c} />
                 ))}
               </datalist>

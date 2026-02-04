@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
+import { CityInput } from '@/shared/components/CityInput'
 
 type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' | 'profile'
 
@@ -25,12 +27,20 @@ type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' |
  */
 export function OwnerDashboardV7() {
   const { user, isAuthenticated } = useAuthStore()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
   const [editingListing, setEditingListing] = useState<any | null>(null)
   const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
   const canUsePaid = isLandlord && isPaidTariff
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as DashboardTab | null
+    if (tab && ['listings', 'add', 'bookings', 'messages', 'analytics', 'profile'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   if (!isAuthenticated()) {
     return (
@@ -45,9 +55,39 @@ export function OwnerDashboardV7() {
     )
   }
 
+  if (!isLandlord) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+        <div className="text-center max-w-md px-6">
+          <h2 className="text-[22px] font-bold text-[#1C1F26] mb-3">Доступ только для арендодателей</h2>
+          <p className="text-[14px] text-[#6B7280] mb-6">
+            Размещение объявлений доступно на тарифах Landlord. Выберите подходящий тариф, чтобы начать.
+          </p>
+          <Link
+            href="/pricing?reason=host"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-[12px] bg-violet-600 text-white text-[14px] font-medium hover:bg-violet-500"
+          >
+            Перейти к тарифам
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {!isPaidTariff && (
+          <div className="mb-6 rounded-[16px] border border-violet-100 bg-violet-50 px-5 py-4 text-[14px] text-violet-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span>Для размещения объявлений нужен тариф Landlord.</span>
+            <Link
+              href="/pricing?reason=host"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-[10px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500"
+            >
+              Перейти к тарифам
+            </Link>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ═══════════════════════════════════════════════════════════════
               SIDEBAR
@@ -767,21 +807,18 @@ function AddListingTab({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Город</label>
-              <select
+              <CityInput
                 value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, city: value })}
+                placeholder="Выберите город"
+                listId="owner-city"
                 className={cn(
                   'w-full rounded-[14px] px-4 py-3',
                   'border border-gray-200/60 bg-white/95',
                   'text-[#1C1F26] text-[14px]',
                   'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                 )}
-              >
-                <option value="">Выберите город</option>
-                <option value="Москва">Москва</option>
-                <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Казань">Казань</option>
-              </select>
+              />
             </div>
 
             <div>
@@ -1046,18 +1083,17 @@ function ProfileTab() {
     fullName: user?.full_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    verificationStatus: user?.verification_status || 'pending',
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
 
   useEffect(() => {
     setFormData({
       fullName: user?.full_name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      verificationStatus: user?.verification_status || 'pending',
     })
   }, [user])
 
@@ -1141,26 +1177,17 @@ function ProfileTab() {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               placeholder="+7 (999) 123-45-67"
+              readOnly={isTelegramPhone}
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-white/95',
+                isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
                 'text-[#1C1F26] text-[14px]',
                 'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
               )}
             />
-          </div>
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Статус верификации</label>
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                'px-3 py-1 rounded-lg text-[12px] font-medium',
-                formData.verificationStatus === 'verified'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-amber-100 text-amber-700'
-              )}>
-                {formData.verificationStatus === 'verified' ? 'Верифицирован' : 'На проверке'}
-              </span>
-            </div>
+            {isTelegramPhone && (
+              <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
+            )}
           </div>
           {error && <p className="text-[13px] text-red-600">{error}</p>}
           {success && <p className="text-[13px] text-emerald-600">Профиль обновлён</p>}

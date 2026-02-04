@@ -4,12 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { supabase } from "@/shared/supabase-client";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
-import { apiFetch } from "@/shared/api/client";
+import { useAuthStore } from "@/domains/auth";
 
 function CompleteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const refresh = useAuthStore((s) => s.refresh);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Завершение входа...");
 
@@ -38,7 +39,8 @@ function CompleteContent() {
 
           if (data?.session) {
             try {
-              await apiFetch("/auth/me", { method: "GET" });
+              const ok = await refresh();
+              if (!ok) throw new Error("refresh failed");
               setStatus("success");
               setMessage("Вход выполнен. Перенаправление...");
               router.replace("/");
@@ -56,8 +58,6 @@ function CompleteContent() {
           setMessage("Сессия истекла. Попробуйте войти заново.");
         } else if (res?.status === "not_found") {
           setMessage("Сессия не найдена. Начните вход с сайта.");
-        } else if (res?.status === "used") {
-          setMessage("Ссылка уже использована. Попробуйте войти заново.");
         } else if (res?.status === "not_confirmed") {
           setMessage("Вход не подтверждён. Вернитесь в бота и подтвердите.");
         } else {

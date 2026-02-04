@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Logo } from './Logo'
@@ -19,12 +20,57 @@ import { Logo } from './Logo'
 export function HeaderLight() {
   const pathname = usePathname()
   const { user, isAuthenticated, logout } = useAuthStore()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const mobilePanelRef = useRef<HTMLDivElement | null>(null)
 
   const isActive = (path: string) => pathname === path
   const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
   const canAccessOwner = isLandlord && isPaidTariff
+  const hostCtaHref = canAccessOwner ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+
+  const desktopNav = useMemo(() => {
+    if (isLandlord) {
+      return [
+        { label: 'Мои объявления', href: '/owner/dashboard?tab=listings' },
+        { label: 'Добавить объявление', href: hostCtaHref },
+        { label: 'Бронирования', href: '/bookings' },
+        { label: 'Сообщения', href: '/messages' },
+        { label: 'Аналитика', href: '/owner/dashboard?tab=analytics' },
+        { label: 'Профиль', href: '/profile' },
+      ]
+    }
+    return [
+      { label: 'Бронирования', href: '/bookings' },
+      { label: 'Избранное', href: '/favorites' },
+      { label: 'Сообщения', href: '/messages' },
+      { label: 'Профиль', href: '/profile' },
+    ]
+  }, [isLandlord, hostCtaHref])
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    const onClick = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (mobilePanelRef.current && !mobilePanelRef.current.contains(target)) {
+        setMobileOpen(false)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onClick)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onClick)
+    }
+  }, [mobileOpen])
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   return (
     <header className={cn(
@@ -41,75 +87,61 @@ export function HeaderLight() {
           </div>
 
           {/* Navigation — выровнено по центру */}
-          <nav className="hidden md:flex items-center gap-7 h-full">
-            <Link 
+          <nav className="hidden md:flex items-center gap-6 h-full">
+            <Link
               href="/listings"
               className={cn(
                 'text-[14px] font-medium transition-colors',
                 'flex items-center h-full',
-                isActive('/listings') 
-                  ? 'text-violet-600' 
+                isActive('/listings')
+                  ? 'text-violet-600'
                   : 'text-gray-600 hover:text-gray-900'
               )}
             >
               Поиск жилья
             </Link>
-            <Link 
-              href="/owner/dashboard"
+            {isAuthenticated() &&
+              desktopNav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'text-[14px] font-medium transition-colors',
+                    'flex items-center h-full',
+                    isActive(item.href.split('?')[0])
+                      ? 'text-violet-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            <Link
+              href="/pricing"
               className={cn(
-                'text-[14px] font-medium transition-colors',
-                'flex items-center h-full',
-                isActive('/owner/dashboard') 
-                  ? 'text-violet-600' 
-                  : 'text-gray-600 hover:text-gray-900'
+                'text-[14px] font-semibold transition-colors',
+                isActive('/pricing') ? 'text-violet-700' : 'text-violet-600 hover:text-violet-700'
               )}
             >
-              {canAccessOwner ? 'Кабинет' : 'Сдать жильё'}
+              Тарифы
             </Link>
-            {isAuthenticated() && (
-              <Link 
-                href="/favorites"
-                className={cn(
-                  'text-[14px] font-medium transition-colors',
-                  isActive('/favorites') 
-                    ? 'text-violet-600' 
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Избранное
-              </Link>
-            )}
-            {isAuthenticated() && (
-              <Link
-                href="/profile"
-                className={cn(
-                  'text-[14px] font-medium transition-colors',
-                  isActive('/profile')
-                    ? 'text-violet-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Профиль
-              </Link>
-            )}
           </nav>
 
           {/* Auth */}
           <div className="flex items-center gap-3">
             {isAuthenticated() ? (
               <div className="flex items-center gap-3">
-                {canAccessOwner ? (
+                {!canAccessOwner && (
                   <Link
-                    href="/owner/dashboard"
+                    href="/pricing"
                     className={cn(
-                      'hidden md:block text-[13px] font-medium transition-colors',
-                      'flex items-center h-full',
-                      'text-gray-500 hover:text-gray-900'
+                      'hidden md:inline-flex items-center rounded-xl px-3.5 py-2 text-[13px] font-semibold',
+                      'bg-violet-50 text-violet-700 hover:bg-violet-100 transition-colors'
                     )}
                   >
-                    Мои объявления
+                    Тарифы
                   </Link>
-                ) : null}
+                )}
                 <Link
                   href="/profile"
                   className={cn(
@@ -134,35 +166,6 @@ export function HeaderLight() {
                 >
                   Выйти
                 </button>
-                <div className="md:hidden flex items-center gap-2">
-                  <Link
-                    href="/bookings"
-                    className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                    aria-label="Бронирования"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </Link>
-                  <Link
-                    href="/messages"
-                    className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                    aria-label="Сообщения"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                    aria-label="Профиль"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </Link>
-                </div>
               </div>
             ) : (
               <>
@@ -199,6 +202,127 @@ export function HeaderLight() {
           </div>
         </div>
       </div>
+      {/* Mobile Burger Button */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen((prev) => !prev)}
+        className={cn(
+          'md:hidden fixed bottom-4 right-4 z-[60]',
+          'w-12 h-12 rounded-full',
+          'bg-violet-600 text-white shadow-[0_12px_32px_rgba(124,58,237,0.35)]',
+          'flex items-center justify-center text-xl'
+        )}
+        aria-label="Открыть меню"
+      >
+        ☰
+      </button>
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
+          <div
+            ref={mobilePanelRef}
+            className={cn(
+              'fixed right-4 bottom-20 left-4',
+              'rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.2)]',
+              'p-5 space-y-3'
+            )}
+          >
+            {isAuthenticated() ? (
+              <>
+                {isLandlord && (
+                  <div className="space-y-2">
+                    <Link
+                      href="/owner/dashboard?tab=listings"
+                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Мои объявления
+                    </Link>
+                    <Link
+                      href={hostCtaHref}
+                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Добавить объявление
+                    </Link>
+                    <Link
+                      href="/owner/dashboard?tab=analytics"
+                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Аналитика
+                    </Link>
+                  </div>
+                )}
+                <Link
+                  href="/bookings"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Бронирования
+                </Link>
+                <Link
+                  href="/messages"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Сообщения
+                </Link>
+                {!isLandlord && (
+                  <Link
+                    href="/favorites"
+                    className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Избранное
+                  </Link>
+                )}
+                <Link
+                  href="/profile"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Профиль
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await logout()
+                    setMobileOpen(false)
+                  }}
+                  className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
+                >
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Войти
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Регистрация
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-violet-700 hover:bg-violet-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Тарифы
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

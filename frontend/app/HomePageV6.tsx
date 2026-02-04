@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
+import { useAuthStore } from '@/domains/auth'
+import { CITIES } from '@/shared/data/cities'
+import { CityInput } from '@/shared/components/CityInput'
 
 interface ListingsResponse {
   items: any[]
@@ -31,6 +34,7 @@ interface ListingsResponse {
  */
 export function HomePageV6() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [city, setCity] = useState('')
   const [propertyType, setPropertyType] = useState('')
   const [priceRange, setPriceRange] = useState('')
@@ -38,6 +42,9 @@ export function HomePageV6() {
   const [smartSearch, setSmartSearch] = useState(true) // AI toggle
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
+  const isLandlord = user?.role === 'landlord'
+  const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
+  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -143,6 +150,10 @@ export function HomePageV6() {
             Тысячи объявлений с умным подбором
           </p>
 
+        <div className="mx-auto mb-6 max-w-2xl rounded-[14px] border border-violet-100 bg-violet-50 px-4 py-3 text-[13px] text-violet-700">
+          Сначала выберите город — мы подберём лучшие варианты под ваш бюджет.
+        </div>
+
           {/* ═══════════════════════════════════════════════════════════════
               GLASS SEARCH PANEL — по ТЗ v4 (доминирует)
               - backdrop-filter: blur(22px)
@@ -172,20 +183,13 @@ export function HomePageV6() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
-                    <select
+                    <CityInput
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      onChange={setCity}
+                      placeholder="Все города"
                       className={selectStyles}
-                    >
-                      <option value="">Все города</option>
-                      <option value="Москва">Москва</option>
-                      <option value="Санкт-Петербург">Санкт-Петербург</option>
-                      <option value="Казань">Казань</option>
-                      <option value="Новосибирск">Новосибирск</option>
-                      <option value="Екатеринбург">Екатеринбург</option>
-                      <option value="Сочи">Сочи</option>
-                      <option value="Сургут">Сургут</option>
-                    </select>
+                      listId="home-cities"
+                    />
                   </div>
                 </div>
 
@@ -670,7 +674,7 @@ export function HomePageV6() {
               <p className="text-gray-400 text-[13px]">Пользователей</p>
             </div>
             <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-white mb-1">50+</p>
+              <p className="text-[32px] md:text-[40px] font-bold text-white mb-1">{CITIES.length}+</p>
               <p className="text-gray-400 text-[13px]">Городов</p>
             </div>
             <div className="text-center">
@@ -716,7 +720,7 @@ export function HomePageV6() {
                 </p>
                 
                 <Link 
-                  href="/owner/dashboard"
+                  href={hostCtaHref}
                   className={cn(
                     'inline-flex items-center gap-2 px-6 py-3 rounded-[14px]',
                     'bg-violet-600 text-white font-semibold text-[15px]',

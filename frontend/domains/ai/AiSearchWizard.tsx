@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
 
 interface AiSearchWizardProps {
   onSearch: (params: AiSearchParams) => void
@@ -98,12 +99,11 @@ export function AiSearchWizard({ onSearch, initialParams }: AiSearchWizardProps)
             )}
           >
             <option value="">Выберите город</option>
-            <option value="Москва">Москва</option>
-            <option value="Санкт-Петербург">Санкт-Петербург</option>
-            <option value="Казань">Казань</option>
-            <option value="Новосибирск">Новосибирск</option>
-            <option value="Екатеринбург">Екатеринбург</option>
-            <option value="Сочи">Сочи</option>
+            {CITIES.map((cityOption) => (
+              <option key={cityOption} value={cityOption}>
+                {cityOption}
+              </option>
+            ))}
           </select>
         </div>
 

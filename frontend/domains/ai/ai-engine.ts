@@ -1,3 +1,5 @@
+import { CITY_MARKET_PRICE } from "@/shared/data/cities"
+
 /**
  * AI Engine — модуль для расчета AI-рекомендаций
  * 
@@ -145,18 +147,8 @@ export function scoring(listing: Listing, userParams: UserParams): AiScore {
  * Сравнение цены с рынком
  */
 export function marketPriceCompare(listing: Listing): { status: 'below' | 'average' | 'above'; percent: number } {
-  // Mock данные: средние цены по городам (₽/мес)
-  const marketPrices: Record<string, number> = {
-    'Москва': 50000,
-    'Санкт-Петербург': 35000,
-    'Казань': 25000,
-    'Новосибирск': 28000,
-    'Екатеринбург': 27000,
-    'Сочи': 40000,
-  }
-
   const city = listing.city || 'Москва'
-  const marketAvg = marketPrices[city] || 30000
+  const marketAvg = CITY_MARKET_PRICE[city] || 30000
   const diff = ((listing.basePrice - marketAvg) / marketAvg) * 100
 
   if (diff < -10) {

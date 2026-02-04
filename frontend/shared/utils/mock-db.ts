@@ -36,7 +36,6 @@ function seedDb(): MockDb {
       role: 'landlord',
       roles: ['landlord'],
       tariff: 'landlord_basic',
-      verification_status: 'pending',
     },
     {
       id: 'landlord_2',
@@ -48,7 +47,6 @@ function seedDb(): MockDb {
       role: 'landlord',
       roles: ['landlord'],
       tariff: 'landlord_pro',
-      verification_status: 'pending',
     },
     {
       id: 'user_1',
@@ -60,7 +58,6 @@ function seedDb(): MockDb {
       role: 'user',
       roles: ['user'],
       tariff: 'free',
-      verification_status: 'pending',
     },
   ]
 

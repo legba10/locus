@@ -12,18 +12,24 @@ export default function ProfilePage() {
     fullName: user?.full_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    verificationStatus: user?.verification_status || 'pending',
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
+  const roleLabel = user?.role === 'landlord' ? 'Арендодатель' : 'Пользователь'
+  const tariffLabel =
+    user?.tariff === 'landlord_basic'
+      ? 'Landlord Basic'
+      : user?.tariff === 'landlord_pro'
+        ? 'Landlord Pro'
+        : 'Free'
 
   useEffect(() => {
     setFormData({
       fullName: user?.full_name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      verificationStatus: user?.verification_status || 'pending',
     })
   }, [user])
 
@@ -74,6 +80,19 @@ export default function ProfilePage() {
           'border border-gray-100/80'
         )}>
           <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-gray-100 text-gray-700">
+                Роль: {roleLabel}
+              </span>
+              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-violet-100 text-violet-700">
+                Тариф: {tariffLabel}
+              </span>
+              {isTelegramPhone && (
+                <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-emerald-100 text-emerald-700">
+                  Телефон подтверждён
+                </span>
+              )}
+            </div>
             <div>
               <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
               <input
@@ -108,27 +127,28 @@ export default function ProfilePage() {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+7 (999) 123-45-67"
+                readOnly={isTelegramPhone}
                 className={cn(
                   'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
+                  isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
                   'text-[#1C1F26] text-[14px]',
                   'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                 )}
               />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Статус верификации</label>
-              <span className={cn(
-                'inline-flex px-3 py-1 rounded-lg text-[12px] font-medium',
-                formData.verificationStatus === 'verified'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-amber-100 text-amber-700'
-              )}>
-                {formData.verificationStatus === 'verified' ? 'Верифицирован' : 'На проверке'}
-              </span>
+              {isTelegramPhone && (
+                <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
+              )}
             </div>
             {error && <p className="text-[13px] text-red-600">{error}</p>}
             {success && <p className="text-[13px] text-emerald-600">Профиль обновлён</p>}
+            {user?.tariff === 'free' && (
+              <a
+                href="/pricing?reason=host"
+                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
+              >
+                Перейти к тарифам
+              </a>
+            )}
             <button
               type="button"
               onClick={handleSave}

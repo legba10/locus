@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/shared/utils/cn'
+import { CITIES } from '@/shared/data/cities'
 
 interface SmartSearchInputProps {
   city: string
@@ -47,11 +48,11 @@ export function SmartSearchInput({
           className="rounded-lg border border-gray-200 px-4 py-3 text-gray-900 bg-white"
         >
           <option value="">Выберите город</option>
-          <option value="Москва">Москва</option>
-          <option value="Санкт-Петербург">Санкт-Петербург</option>
-          <option value="Сочи">Сочи</option>
-          <option value="Казань">Казань</option>
-          <option value="Сургут">Сургут</option>
+          {CITIES.map((cityOption) => (
+            <option key={cityOption} value={cityOption}>
+              {cityOption}
+            </option>
+          ))}
         </select>
 
         {onBudgetChange && (

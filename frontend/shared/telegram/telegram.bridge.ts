@@ -23,8 +23,8 @@ interface StatusResponse {
     phone: string | null;
     telegram_id: string | null;
     full_name: string | null;
-    role: string | null;
-    tariff: string | null;
+    role: string;
+    tariff: string;
   };
   status?: string;
 }
@@ -91,7 +91,10 @@ export async function pollTelegramLoginStatus(
       }
 
       if (res.status === 409) {
-        return { status: "used" };
+        const msg = (payload as { message?: string })?.message || "";
+        if (msg === "TOKEN_EXPIRED") return { status: "expired" };
+        if (msg === "USER_NOT_FOUND") return { status: "not_found" };
+        return { status: "expired" };
       }
       if (res.status === 400) {
         const msg = (payload as { message?: string })?.message || "";
