@@ -55,12 +55,12 @@ export function HeaderLight() {
         touchStartYRef.current = null
       }
     }
-    document.body.style.overflow = 'hidden'
+    document.body.classList.add('body-scroll-lock')
     window.addEventListener('wheel', handleWheel, { passive: true })
     window.addEventListener('touchstart', handleTouchStart, { passive: true })
     window.addEventListener('touchmove', handleTouchMove, { passive: true })
     return () => {
-      document.body.style.overflow = ''
+      document.body.classList.remove('body-scroll-lock')
       window.removeEventListener('wheel', handleWheel)
       window.removeEventListener('touchstart', handleTouchStart)
       window.removeEventListener('touchmove', handleTouchMove)
@@ -157,21 +157,21 @@ export function HeaderLight() {
             )}
           </div>
 
-          {/* Mobile Burger Button */}
+          {/* Mobile Burger Button — 48×48, единственная навигация вне бургера, выше overlay */}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className={cn(
-              'md:hidden inline-flex items-center justify-center',
-              'w-12 h-12 rounded-full',
+              'md:hidden inline-flex items-center justify-center relative z-[1000]',
+              'w-[48px] h-[48px] min-w-[48px] min-h-[48px] rounded-full',
               'bg-violet-600 text-white',
               'shadow-[0_8px_24px_rgba(124,58,237,0.35)]',
               'hover:bg-violet-500 active:bg-violet-700',
               'transition-all'
             )}
-            aria-label="Открыть меню"
+            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
-            ☰
+            ≡
           </button>
         </div>
       </div>
