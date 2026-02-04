@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Logo } from './Logo'
-import { MobileMenuPortal } from './MobileMenuPortal'
 
 /**
  * HeaderLight — v3 Premium Header
@@ -20,9 +19,8 @@ import { MobileMenuPortal } from './MobileMenuPortal'
  */
 export function HeaderLight() {
   const pathname = usePathname()
-  const router = useRouter()
-  const { user, isAuthenticated, logout } = useAuthStore()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const { isAuthenticated, logout } = useAuthStore()
+  const [isOpen, setIsOpen] = useState(false)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -35,21 +33,10 @@ export function HeaderLight() {
 
   void pathname
 
-  const handleNavigate = (path: string) => {
-    setMobileOpen(false)
-    router.push(path)
-  }
-
-  const handleLogout = async () => {
-    setMobileOpen(false)
-    if (isAuthenticated()) {
-      await logout()
-    }
-  }
-
   return (
     <header className={cn(
       'sticky top-0 z-50',
+      'relative',
       'bg-white/95 backdrop-blur-md',
       'border-b border-gray-100/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
@@ -125,10 +112,10 @@ export function HeaderLight() {
             )}
           </div>
 
-          {/* Mobile Burger Button (MVP, no overlay/lock/animation) */}
+          {/* Mobile Burger Button */}
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => setIsOpen(true)}
             className={cn(
               'md:hidden inline-flex items-center justify-center',
               'w-10 h-10 rounded-full',
@@ -143,12 +130,97 @@ export function HeaderLight() {
           </button>
         </div>
       </div>
-      <MobileMenuPortal
-        isOpen={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-      />
+      {isOpen && (
+        <div className="mobile-menu">
+          <div className="mobile-menu__header px-4 py-3 border-b border-gray-100">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-[14px] font-medium text-gray-700"
+            >
+              ← Назад
+            </button>
+            {!isAuthenticated() && (
+              <div className="mt-4 flex items-center gap-3">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    'px-4 py-2 text-[14px] font-medium rounded-xl',
+                    'text-gray-700',
+                    'hover:bg-gray-100',
+                    'transition-colors'
+                  )}
+                >
+                  Войти
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    'px-4 py-2 text-[14px] font-semibold rounded-xl',
+                    'bg-violet-600 text-white',
+                    'hover:bg-violet-700',
+                    'transition-all duration-200',
+                    'shadow-md shadow-violet-500/25'
+                  )}
+                >
+                  Регистрация
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <nav className="mobile-menu__content px-4 py-4 space-y-2">
+            <Link
+              href="/listings"
+              onClick={() => setIsOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Поиск жилья
+            </Link>
+            <Link
+              href="/favorites"
+              onClick={() => setIsOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Избранное
+            </Link>
+            <Link
+              href="/messages"
+              onClick={() => setIsOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Сообщения
+            </Link>
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Профиль
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setIsOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Тарифы
+            </Link>
+          </nav>
+
+          <div className="px-4 py-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
+            >
+              Выйти
+            </button>
+            <div className="h-6" />
+          </div>
+        </div>
+      )}
     </header>
   )
 }

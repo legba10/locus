@@ -63,11 +63,14 @@ a,
   pointer-events: auto;
 }
 
-/* Mobile menu MVP (no overlay, no animation, no body lock) */
+/* Mobile menu (fullscreen static) */
 .mobile-menu {
-  position: fixed;
-  inset: 0;
-  background: white;
-  z-index: 9999;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+  z-index: 100;
   overflow-y: auto;
 }
