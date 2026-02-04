@@ -22,8 +22,8 @@ export function HeaderLight() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const lastScrollYRef = useRef(0)
-  const touchStartYRef = useRef<number | null>(null)
+  const touchStartXRef = useRef<number | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -38,32 +38,28 @@ export function HeaderLight() {
 
   useEffect(() => {
     if (!isMenuOpen) return
-    lastScrollYRef.current = window.scrollY
-    const handleWheel = (event: WheelEvent) => {
-      if (event.deltaY > 0) {
-        setIsMenuOpen(false)
-      }
-    }
-    const handleTouchStart = (event: TouchEvent) => {
-      touchStartYRef.current = event.touches[0].clientY
-    }
-    const handleTouchMove = (event: TouchEvent) => {
-      if (touchStartYRef.current === null) return
-      const deltaY = event.touches[0].clientY - touchStartYRef.current
-      if (deltaY > 12) {
-        setIsMenuOpen(false)
-        touchStartYRef.current = null
-      }
-    }
     document.body.classList.add('body-scroll-lock')
-    window.addEventListener('wheel', handleWheel, { passive: true })
-    window.addEventListener('touchstart', handleTouchStart, { passive: true })
-    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartXRef.current = e.touches[0].clientX
+    }
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (touchStartXRef.current === null) return
+      const endX = e.changedTouches[0].clientX
+      const deltaX = endX - touchStartXRef.current
+      if (deltaX > 50) setIsMenuOpen(false)
+      touchStartXRef.current = null
+    }
+    const el = menuRef.current
+    if (el) {
+      el.addEventListener('touchstart', handleTouchStart, { passive: true })
+      el.addEventListener('touchend', handleTouchEnd, { passive: true })
+    }
     return () => {
       document.body.classList.remove('body-scroll-lock')
-      window.removeEventListener('wheel', handleWheel)
-      window.removeEventListener('touchstart', handleTouchStart)
-      window.removeEventListener('touchmove', handleTouchMove)
+      if (el) {
+        el.removeEventListener('touchstart', handleTouchStart)
+        el.removeEventListener('touchend', handleTouchEnd)
+      }
     }
   }, [isMenuOpen])
 
@@ -179,117 +175,51 @@ export function HeaderLight() {
         </div>
       </div>
       <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
-      <div className={cn('mobile-menu', isMenuOpen && 'open')}>
+      <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
+        {/* Единый список: menu-item стиль, одинаковая высота/шрифт/отступы. ТЗ FINAL */}
         {!isAuthenticated() ? (
-          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-3">
-            <button
-              type="button"
-              onClick={() => handleNavigate('/auth/login')}
-              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
-            >
+          <div className="mobile-menu__content px-4 pt-20 pb-4">
+            <button type="button" onClick={() => handleNavigate('/auth/login')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Войти
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/auth/register')}
-              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-violet-600 border-2 border-violet-200 hover:bg-violet-50 text-center"
-            >
-              Регистрация
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/listings')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/listings')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Поиск жилья
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/favorites')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/favorites')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Избранное
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/messages')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/messages')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Сообщения
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/profile')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
-              Профиль
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/pricing')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/pricing')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Тарифы
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/help')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/help')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Помощь / Блог
             </button>
           </div>
         ) : (
-          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-3">
-            {/* ТЗ №4/6: только кнопка Выйти, без email/telegram_id */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 text-center border-0"
-            >
-              Выйти
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/listings')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
-              Поиск жилья
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/favorites')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
-              Избранное
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/messages')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
-              Сообщения
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/profile')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+          <div className="mobile-menu__content px-4 pt-20 pb-4">
+            <button type="button" onClick={() => handleNavigate('/profile')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Профиль
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/pricing')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/listings')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
+              Поиск жилья
+            </button>
+            <button type="button" onClick={() => handleNavigate('/favorites')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
+              Избранное
+            </button>
+            <button type="button" onClick={() => handleNavigate('/messages')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
+              Сообщения
+            </button>
+            <button type="button" onClick={() => handleNavigate('/pricing')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Тарифы
             </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('/help')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
-            >
+            <button type="button" onClick={() => handleNavigate('/help')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
               Помощь / Блог
+            </button>
+            <button type="button" onClick={handleLogout} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-red-600 text-left border-b border-gray-100/80 hover:bg-red-50/60 flex items-center">
+              Выйти
             </button>
           </div>
         )}
