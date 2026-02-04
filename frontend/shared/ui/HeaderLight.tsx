@@ -48,6 +48,18 @@ export function HeaderLight() {
   }, [mobileOpen])
 
   useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
+
+  useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
@@ -128,26 +140,29 @@ export function HeaderLight() {
               </>
             )}
           </div>
+
+          {/* Mobile Burger Button (top right) */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className={cn(
+              'md:hidden inline-flex items-center justify-center',
+              'w-10 h-10 rounded-full',
+              'bg-violet-600 text-white',
+              'shadow-[0_8px_24px_rgba(124,58,237,0.35)]',
+              'hover:bg-violet-500 active:bg-violet-700',
+              'transition-all'
+            )}
+            aria-label="Открыть меню"
+          >
+            ☰
+          </button>
         </div>
       </div>
-      {/* Mobile Burger Button */}
-      <button
-        type="button"
-        onClick={() => setMobileOpen((prev) => !prev)}
-        className={cn(
-          'md:hidden fixed bottom-4 right-4 z-[60]',
-          'w-12 h-12 rounded-full',
-          'bg-violet-600 text-white shadow-[0_12px_32px_rgba(124,58,237,0.35)]',
-          'flex items-center justify-center text-xl'
-        )}
-        aria-label="Открыть меню"
-      >
-        ☰
-      </button>
       {/* Mobile Menu */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm overscroll-contain"
           onClick={() => {
             setMobileOpen(false)
             setDragOffset(0)
@@ -162,6 +177,7 @@ export function HeaderLight() {
             style={{
               transform: `translateY(${dragOffset}px)`,
               transition: dragStart ? 'none' : 'transform 220ms ease-out',
+              paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
