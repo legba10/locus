@@ -388,3 +388,58 @@ textarea:focus {
 .section-dark {
   background: linear-gradient(180deg, #0F172A 0%, #020617 100%);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE BURGER — fullscreen overlay, только в бургере (как Циан)
+   В header на мобильном: только логотип + кнопка ≡
+   ════════════════════════════════════════════════════════════════ */
+
+.body-scroll-lock {
+  overflow: hidden !important;
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.18);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 999;
+  overflow-y: auto;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.mobile-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .mobile-menu,
+  .mobile-menu-overlay {
+    display: none;
+  }
+}
