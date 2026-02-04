@@ -295,7 +295,6 @@ export function RegisterPageV5() {
                         value={aiCity}
                         onChange={setAiCity}
                         placeholder="Выберите город"
-                        listId="register-city"
                         className={cn(
                           'w-full rounded-[14px] px-4 py-3',
                           'border border-gray-200/60 bg-white/95',

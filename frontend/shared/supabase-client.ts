@@ -58,9 +58,9 @@ function getOrCreateClient(): SupabaseClient {
   // Create and cache the singleton
   supabaseInstance = createClient(url, key, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   })
 

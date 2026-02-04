@@ -141,14 +141,12 @@ export default function ProfilePage() {
             </div>
             {error && <p className="text-[13px] text-red-600">{error}</p>}
             {success && <p className="text-[13px] text-emerald-600">Профиль обновлён</p>}
-            {user?.tariff === 'free' && (
-              <a
-                href="/pricing?reason=host"
-                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
-              >
-                Перейти к тарифам
-              </a>
-            )}
+            <Link
+              href="/pricing"
+              className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
+            >
+              Посмотреть тарифы
+            </Link>
             <button
               type="button"
               onClick={handleSave}

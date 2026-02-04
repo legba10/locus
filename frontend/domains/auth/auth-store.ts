@@ -6,6 +6,7 @@ import type { MeResponse, LoginRequest, RegisterRequest, UserRole } from "./auth
 import type { UserContract } from "@/shared/contracts";
 import { AuthApiError, me as fetchMe } from "./auth-api";
 import { supabase } from "@/shared/supabase-client";
+import { clearTokens, getAccessToken, setTokens } from "@/shared/auth/token-storage";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
 import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
@@ -40,21 +41,6 @@ type AuthState = {
   hasAnyRole: (roles: UserRole[]) => boolean;
 };
 
-function userFromSession(session: { user: { id: string; email?: string | null } }): StoredUser {
-  const u = session.user;
-  return {
-    id: u.id,
-    supabaseId: u.id,
-    email: u.email ?? "",
-    phone: null,
-    telegram_id: null,
-    full_name: null,
-    role: "user",
-    roles: ["user"],
-    tariff: "free",
-  };
-}
-
 function userFromBackend(response: MeResponse, sessionEmail?: string | null): StoredUser {
   const payload = response;
   const role = normalizeRole(payload.role);
@@ -62,7 +48,7 @@ function userFromBackend(response: MeResponse, sessionEmail?: string | null): St
   return {
     id: payload.id,
     supabaseId: payload.id,
-    email: sessionEmail ?? "",
+    email: payload.email ?? sessionEmail ?? "",
     phone: payload.phone ?? null,
     telegram_id: payload.telegram_id ?? null,
     full_name: payload.full_name ?? null,
@@ -113,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
           const session = authData.session;
           if (!session) throw new AuthApiError("Нет сессии после входа", 401);
 
+          setTokens(session.access_token, session.refresh_token);
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse, session.user.email ?? null);
           set({
@@ -144,6 +131,7 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 400);
           const session = authData.session;
           if (session) {
+            setTokens(session.access_token, session.refresh_token);
             const backendResponse = await fetchMe();
             const meUser = userFromBackend(backendResponse, session.user.email ?? null);
             set({
@@ -195,26 +183,28 @@ export const useAuthStore = create<AuthState>()(
           /* ignore */
         }
         const prevUser = get().user;
+        clearTokens();
         set({ user: null, accessToken: null });
         await dispatchAuth("logout", prevUser);
       },
 
       refresh: async () => {
         try {
-          const { data: d } = await supabase.auth.getSession();
-          const session = d?.session;
-          if (!session) {
+          const token = getAccessToken();
+          if (!token) {
             set({ user: null, accessToken: null });
             return false;
           }
           const backendResponse = await fetchMe();
-          const meUser = userFromBackend(backendResponse, session.user.email ?? null);
+          const meUser = userFromBackend(backendResponse);
+          const nextToken = getAccessToken();
           set({
             user: meUser,
-            accessToken: session.access_token,
+            accessToken: nextToken ?? token,
           });
           return true;
         } catch {
+          clearTokens();
           set({ user: null, accessToken: null, error: "Ошибка авторизации" });
           return false;
         }
@@ -227,24 +217,8 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          // Timeout for getSession (3s max)
-          const sessionPromise = supabase.auth.getSession();
-          const timeoutPromise = new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error("getSession timeout")), 3000)
-          );
-          
-          let sessionData;
-          try {
-            const { data: d } = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: unknown } };
-            sessionData = d;
-          } catch (e) {
-            logger.warn('Auth', 'getSession timeout/error', e);
-            set({ user: null, accessToken: null, isLoading: false, isInitialized: true });
-            return;
-          }
-          
-          const session = sessionData?.session as { user: { id: string; email?: string | null }; access_token: string } | null;
-          if (!session) {
+          const token = getAccessToken();
+          if (!token) {
             set({ user: null, accessToken: null, isLoading: false, isInitialized: true });
             return;
           }
@@ -256,16 +230,18 @@ export const useAuthStore = create<AuthState>()(
           );
 
           const backendResponse = await Promise.race([mePromise, meTimeout]);
-          const meUser = userFromBackend(backendResponse, session.user.email ?? null);
+          const meUser = userFromBackend(backendResponse);
+          const nextToken = getAccessToken();
 
           set({
             user: meUser,
-            accessToken: session.access_token,
+            accessToken: nextToken ?? token,
             isLoading: false,
             isInitialized: true,
           });
         } catch (e) {
           logger.error('Auth', 'initialize error', e);
+          clearTokens();
           set({
             user: null,
             accessToken: null,

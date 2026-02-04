@@ -28,7 +28,6 @@ function FilterSidebar({
           value={filters.city || ''}
           onChange={(value) => onFiltersChange({ ...filters, city: value || undefined })}
           placeholder="Все города"
-          listId="search-cities"
           className="w-full rounded-lg border border-border bg-surface-3 px-3 py-2 text-sm text-text"
         />
       </div>

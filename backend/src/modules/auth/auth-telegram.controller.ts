@@ -16,7 +16,6 @@ import { randomUUID } from "crypto";
 import { supabase } from "../../shared/lib/supabase";
 
 const SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const SESSION_GRACE_MS = 5 * 60 * 1000; // 5 minutes
 
 @ApiTags("auth")
 @Controller("auth/telegram")
@@ -151,16 +150,28 @@ export class AuthTelegramController {
         throw new ConflictException("TOKEN_EXPIRED");
       }
       const isValid = await this.isSessionValid(loginToken.accessToken);
+      let accessToken = loginToken.accessToken;
+      let refreshToken = loginToken.refreshToken;
       if (!isValid) {
-        throw new ConflictException("TOKEN_EXPIRED");
+        try {
+          const refreshed = await this.supabaseAuth.refreshSession(loginToken.refreshToken);
+          accessToken = refreshed.access_token;
+          refreshToken = refreshed.refresh_token;
+          await this.prisma.telegramLoginToken.update({
+            where: { token },
+            data: { accessToken, refreshToken },
+          });
+        } catch {
+          throw new ConflictException("TOKEN_EXPIRED");
+        }
       }
       const profile = await this.supabaseAuth.getProfile(loginToken.userId);
       if (!profile) {
         throw new ConflictException("USER_NOT_FOUND");
       }
       return {
-        access_token: loginToken.accessToken,
-        refresh_token: loginToken.refreshToken,
+        access_token: accessToken,
+        refresh_token: refreshToken,
         user: {
           id: profile.id,
           phone: profile.phone ?? null,
@@ -203,41 +214,55 @@ export class AuthTelegramController {
         where: {
           userId: user.id,
           used: true,
-          usedAt: { gt: new Date(Date.now() - SESSION_GRACE_MS) },
           accessToken: { not: null },
           refreshToken: { not: null },
         },
         orderBy: { usedAt: "desc" },
       });
 
-      if (recentToken && (await this.isSessionValid(recentToken.accessToken))) {
-        await this.prisma.telegramLoginToken.update({
-          where: { token },
-          data: {
-            used: true,
-            usedAt: new Date(),
-            userId: user.id,
-            accessToken: recentToken.accessToken,
-            refreshToken: recentToken.refreshToken,
-          },
-        });
-        await this.prisma.telegramAuthSession.delete({ where: { id: session.id } }).catch(() => {});
-        const profile = await this.supabaseAuth.getProfile(user.id);
-        if (!profile) {
-          throw new InternalServerErrorException("PROFILE_NOT_FOUND");
+      if (recentToken) {
+        let accessToken = recentToken.accessToken ?? "";
+        let refreshToken = recentToken.refreshToken ?? "";
+        const isValid = await this.isSessionValid(accessToken);
+        if (!isValid && refreshToken) {
+          try {
+            const refreshed = await this.supabaseAuth.refreshSession(refreshToken);
+            accessToken = refreshed.access_token;
+            refreshToken = refreshed.refresh_token;
+          } catch {
+            accessToken = "";
+          }
         }
-        return {
-          access_token: recentToken.accessToken ?? "",
-          refresh_token: recentToken.refreshToken ?? "",
-          user: {
-            id: profile.id,
-            phone: profile.phone ?? null,
-            telegram_id: profile.telegram_id ?? null,
-            full_name: profile.full_name ?? null,
-            role: profile.role ?? "user",
-            tariff: (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro",
-          },
-        };
+
+        if (accessToken && refreshToken) {
+          await this.prisma.telegramLoginToken.update({
+            where: { token },
+            data: {
+              used: true,
+              usedAt: new Date(),
+              userId: user.id,
+              accessToken,
+              refreshToken,
+            },
+          });
+          await this.prisma.telegramAuthSession.delete({ where: { id: session.id } }).catch(() => {});
+          const profile = await this.supabaseAuth.getProfile(user.id);
+          if (!profile) {
+            throw new InternalServerErrorException("PROFILE_NOT_FOUND");
+          }
+          return {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            user: {
+              id: profile.id,
+              phone: profile.phone ?? null,
+              telegram_id: profile.telegram_id ?? null,
+              full_name: profile.full_name ?? null,
+              role: profile.role ?? "user",
+              tariff: (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro",
+            },
+          };
+        }
       }
 
       const tokenHash = await this.supabaseAuth.generateMagicLinkToken(

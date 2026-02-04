@@ -188,7 +188,6 @@ export function HomePageV6() {
                       onChange={setCity}
                       placeholder="Все города"
                       className={selectStyles}
-                      listId="home-cities"
                     />
                   </div>
                 </div>

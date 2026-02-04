@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException, Body } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
@@ -42,15 +42,29 @@ export class AuthController {
 
     const role = (profile.role ?? "user") as "user" | "landlord";
     const tariff = (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
+    const email = profile.email ?? req.user.email ?? null;
 
     return {
       id: profile.id,
+      email,
       phone: profile.phone ?? null,
       telegram_id: profile.telegram_id ?? null,
       full_name: profile.full_name ?? null,
       role,
       tariff,
     };
+  }
+
+  @Post("refresh")
+  @ApiOperation({ summary: "Refresh Supabase access token using refresh_token." })
+  @ApiResponse({ status: 200, description: "New access and refresh tokens" })
+  async refresh(@Body("refresh_token") refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException("Refresh token is required");
+    }
+
+    const session = await this.supabaseAuth.refreshSession(refreshToken);
+    return session;
   }
 
   @Post("login")

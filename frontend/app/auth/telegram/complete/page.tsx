@@ -2,9 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { supabase } from "@/shared/supabase-client";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
 import { useAuthStore } from "@/domains/auth";
+import { setTokens } from "@/shared/auth/token-storage";
 
 function CompleteContent() {
   const router = useRouter();
@@ -26,30 +26,18 @@ function CompleteContent() {
         const res = await pollTelegramLoginStatus(token);
 
         if (res?.access_token && res?.refresh_token) {
-          const { data, error } = await supabase.auth.setSession({
-            access_token: res.access_token,
-            refresh_token: res.refresh_token,
-          });
-
-          if (error) {
-            setStatus("error");
-            setMessage("Ошибка сессии. Попробуйте войти ещё раз.");
+          setTokens(res.access_token, res.refresh_token);
+          try {
+            const ok = await refresh();
+            if (!ok) throw new Error("refresh failed");
+            setStatus("success");
+            setMessage("Вход выполнен. Перенаправление...");
+            router.replace("/");
             return;
-          }
-
-          if (data?.session) {
-            try {
-              const ok = await refresh();
-              if (!ok) throw new Error("refresh failed");
-              setStatus("success");
-              setMessage("Вход выполнен. Перенаправление...");
-              router.replace("/");
-              return;
-            } catch {
-              setStatus("error");
-              setMessage("Не удалось подтвердить профиль. Попробуйте войти ещё раз.");
-              return;
-            }
+          } catch {
+            setStatus("error");
+            setMessage("Не удалось подтвердить профиль. Попробуйте войти ещё раз.");
+            return;
           }
         }
 

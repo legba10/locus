@@ -128,7 +128,7 @@ export function HeaderLight() {
           </nav>
 
           {/* Auth */}
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             {isAuthenticated() ? (
               <div className="flex items-center gap-3">
                 {!canAccessOwner && (
@@ -230,29 +230,13 @@ export function HeaderLight() {
             {isAuthenticated() ? (
               <>
                 {isLandlord && (
-                  <div className="space-y-2">
-                    <Link
-                      href="/owner/dashboard?tab=listings"
-                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Мои объявления
-                    </Link>
-                    <Link
-                      href={hostCtaHref}
-                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Добавить объявление
-                    </Link>
-                    <Link
-                      href="/owner/dashboard?tab=analytics"
-                      className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Аналитика
-                    </Link>
-                  </div>
+                  <Link
+                    href="/owner/dashboard?tab=listings"
+                    className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Мои объявления
+                  </Link>
                 )}
                 <Link
                   href="/bookings"
@@ -268,21 +252,19 @@ export function HeaderLight() {
                 >
                   Сообщения
                 </Link>
-                {!isLandlord && (
-                  <Link
-                    href="/favorites"
-                    className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Избранное
-                  </Link>
-                )}
                 <Link
                   href="/profile"
                   className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
                   onClick={() => setMobileOpen(false)}
                 >
                   Профиль
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Тарифы
                 </Link>
                 <button
                   type="button"

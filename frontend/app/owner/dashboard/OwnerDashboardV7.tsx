@@ -243,22 +243,14 @@ function MyListingsTab({
           'shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
         )}>
           <p className="text-[14px] text-[#6B7280] mb-3">
-            Добавление объявлений доступно на платном тарифе.
+            Размещение доступно только на платном тарифе.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Link
-              href="/pricing"
-              className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium border border-gray-200 text-[#1C1F26] hover:bg-gray-50"
-            >
-              Посмотреть тарифы
-            </Link>
-            <Link
-              href="/pricing#cta"
-              className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
-            >
-              Купить тариф
-            </Link>
-          </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
+          >
+            Посмотреть тарифы
+          </Link>
         </div>
       )}
 
@@ -811,7 +803,6 @@ function AddListingTab({
                 value={formData.city}
                 onChange={(value) => setFormData({ ...formData, city: value })}
                 placeholder="Выберите город"
-                listId="owner-city"
                 className={cn(
                   'w-full rounded-[14px] px-4 py-3',
                   'border border-gray-200/60 bg-white/95',

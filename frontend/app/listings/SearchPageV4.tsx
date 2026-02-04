@@ -289,7 +289,6 @@ export function SearchPageV4() {
                     value={city}
                     onChange={setCity}
                     placeholder="Все города"
-                    listId="listings-cities"
                     className={cn(
                       'w-full rounded-[14px] px-4 py-2.5',
                       'border border-white/60',

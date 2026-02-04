@@ -311,6 +311,25 @@ export class SupabaseAuthService {
   }
 
   /**
+   * Refresh Supabase session using refresh token
+   */
+  async refreshSession(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+    if (!supabase) {
+      throw new Error("Auth service unavailable");
+    }
+
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+    if (error || !data?.session) {
+      throw new Error(error?.message ?? "Failed to refresh session");
+    }
+
+    return {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    };
+  }
+
+  /**
    * Check if user is landlord
    */
   async isLandlord(userId: string): Promise<boolean> {

@@ -10,11 +10,9 @@
  * Flow: Browser → /api/* (Next.js proxy) → Railway → Neon
  */
 
-"use client";
-
 import { getApiUrl } from "@/shared/config/api";
 import { getApiErrorMessage } from "@/shared/utils/apiError";
-import { supabase } from "@/shared/supabase-client";
+import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/shared/auth/token-storage";
 
 /**
  * Normalize path to ensure it starts with /api/
@@ -50,22 +48,73 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
   if (!(options?.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
-  
-  // Get Supabase token if available
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.access_token) {
-      headers["Authorization"] = `Bearer ${data.session.access_token}`;
-    }
-  } catch {
-    // No session - continue without auth
+
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
-  
-  return fetch(url, {
+
+  const response = await fetch(url, {
     credentials: "include",
     ...options,
     headers,
   });
+
+  if (response.status === 401 && accessToken && !fullPath.includes("/auth/refresh")) {
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      const retryHeaders: Record<string, string> = {
+        ...(options?.headers as Record<string, string>),
+      };
+      if (!(options?.body instanceof FormData)) {
+        retryHeaders["Content-Type"] = "application/json";
+      }
+      const nextToken = getAccessToken();
+      if (nextToken) {
+        retryHeaders["Authorization"] = `Bearer ${nextToken}`;
+      }
+      return fetch(url, {
+        credentials: "include",
+        ...options,
+        headers: retryHeaders,
+      });
+    }
+  }
+
+  return response;
+}
+
+async function tryRefreshToken(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    clearTokens();
+    return false;
+  }
+
+  try {
+    const refreshUrl = getApiUrl("/api/auth/refresh");
+    const res = await fetch(refreshUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!res.ok) {
+      clearTokens();
+      return false;
+    }
+
+    const payload = (await res.json()) as { access_token?: string; refresh_token?: string };
+    if (payload.access_token && payload.refresh_token) {
+      setTokens(payload.access_token, payload.refresh_token);
+      return true;
+    }
+  } catch {
+    clearTokens();
+  }
+
+  return false;
 }
 
 /**

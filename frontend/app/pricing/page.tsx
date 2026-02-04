@@ -1,12 +1,14 @@
-'use client'
-
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 
-export default function PricingPage() {
-  const searchParams = useSearchParams()
-  const reason = searchParams.get('reason')
+export const dynamic = "force-dynamic";
+
+export default function PricingPage({
+  searchParams,
+}: {
+  searchParams?: { reason?: string }
+}) {
+  const reason = searchParams?.reason
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
