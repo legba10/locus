@@ -93,7 +93,7 @@ export interface Booking {
 }
 
 // ——— User / Auth (совместимо с backend /auth/me)
-export type AppRole = "guest" | "host" | "admin";
+export type AppRole = "user" | "landlord";
 
 export interface UserProfile {
   name?: string;

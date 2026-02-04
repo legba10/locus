@@ -2,7 +2,10 @@ import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/comm
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
+import { RequireLandlord } from "../auth/decorators/require-landlord.decorator";
+import { RequireTariff } from "../auth/decorators/require-tariff.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { TariffGuard } from "../auth/guards/tariff.guard";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 import { BookingsService } from "./bookings.service";
 
@@ -13,7 +16,7 @@ export class BookingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles("guest", "host", "admin")
+  @Roles("user")
   @Post()
   async create(@Req() req: any, @Body() dto: CreateBookingDto) {
     return { item: await this.bookings.create(req.user.id, dto) };
@@ -27,8 +30,9 @@ export class BookingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles("guest", "host", "admin")
+  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/confirm")
   async confirm(@Req() req: any, @Param("id") id: string) {
     return { item: await this.bookings.confirm(id, req.user.id) };

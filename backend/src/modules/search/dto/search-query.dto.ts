@@ -34,6 +34,18 @@ export class SearchQueryDto {
   @Min(1)
   guests?: number;
 
+  @ApiPropertyOptional({ enum: ["APARTMENT", "HOUSE", "ROOM", "STUDIO"] })
+  @IsOptional()
+  @IsIn(["APARTMENT", "HOUSE", "ROOM", "STUDIO"])
+  type?: "APARTMENT" | "HOUSE" | "ROOM" | "STUDIO";
+
+  @ApiPropertyOptional({ description: "Количество комнат", example: 2 })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
+  @IsInt()
+  @Min(0)
+  rooms?: number;
+
   @ApiPropertyOptional({ description: "amenities keys csv", example: "wifi,parking" })
   @IsOptional()
   @IsString()
@@ -67,20 +79,41 @@ export class SearchBodyDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  priceMax?: number;  @ApiPropertyOptional({ example: 2 })
+  priceMax?: number;
+
+  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
   @IsInt()
   @Min(1)
-  guests?: number;  @ApiPropertyOptional({ example: "тихая квартира у метро" })
+  guests?: number;
+
+  @ApiPropertyOptional({ enum: ["APARTMENT", "HOUSE", "ROOM", "STUDIO"] })
+  @IsOptional()
+  @IsIn(["APARTMENT", "HOUSE", "ROOM", "STUDIO"])
+  type?: "APARTMENT" | "HOUSE" | "ROOM" | "STUDIO";
+
+  @ApiPropertyOptional({ example: 2 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  rooms?: number;
+
+  @ApiPropertyOptional({ example: "тихая квартира у метро" })
   @IsOptional()
   @IsString()
-  query?: string;  @ApiPropertyOptional({ example: true, default: true })
+  query?: string;
+
+  @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
   @IsBoolean()
-  useAi?: boolean;  @ApiPropertyOptional({ example: ["wifi", "parking"] })
+  useAi?: boolean;
+
+  @ApiPropertyOptional({ example: ["wifi", "parking"] })
   @IsOptional()
   @IsString({ each: true })
-  amenities?: string[];  @ApiPropertyOptional({ enum: ["relevance", "price_asc", "price_desc", "rating", "ai_score"], default: "relevance" })
+  amenities?: string[];
+
+  @ApiPropertyOptional({ enum: ["relevance", "price_asc", "price_desc", "rating", "ai_score"], default: "relevance" })
   @IsOptional()
   @IsIn(["relevance", "price_asc", "price_desc", "rating", "ai_score"])
   sort?: "relevance" | "price_asc" | "price_desc" | "rating" | "ai_score";

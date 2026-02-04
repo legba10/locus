@@ -13,10 +13,10 @@ export class RegisterDto {
   @MinLength(6)
   password!: string;
 
-  @ApiPropertyOptional({ enum: ["guest", "host"], default: "guest" })
+  @ApiPropertyOptional({ enum: ["user", "landlord"], default: "user" })
   @IsOptional()
-  @IsIn(["guest", "host"])
-  role?: "guest" | "host";
+  @IsIn(["user", "landlord"])
+  role?: "user" | "landlord";
 
   @ApiPropertyOptional({ example: "Иван" })
   @IsOptional()

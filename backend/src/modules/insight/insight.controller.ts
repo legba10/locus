@@ -27,16 +27,14 @@ export class InsightController {
 
   @Get('owners/:id/dashboard')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить данные кабинета владельца' })
   @ApiParam({ name: 'id', description: 'ID владельца' })
   async getOwnerDashboard(@Param('id') id: string, @Req() req: any) {
     // Проверяем права: свои данные или админ
     const userId = req.user.id;
-    const userRoles = req.user.roles || [];
-    
-    if (userId !== id && !userRoles.includes('admin')) {
+    if (userId !== id) {
       return this.insight.getOwnerDashboard(userId);
     }
     
@@ -45,7 +43,7 @@ export class InsightController {
 
   @Get('owner/dashboard')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Кабинет владельца жилья (текущий пользователь)' })
   async getMyDashboard(@Req() req: any) {

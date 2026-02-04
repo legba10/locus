@@ -1,11 +1,13 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards, Delete, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards, Delete, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Res } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from "@nestjs/swagger";
+import { Response } from "express";
+import { randomUUID } from "crypto";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { TariffGuard } from "../auth/guards/tariff.guard";
-import { Roles } from "../auth/decorators/roles.decorator";
-import { Tariffs } from "../auth/decorators/tariff.decorator";
+import { RequireLandlord } from "../auth/decorators/require-landlord.decorator";
+import { RequireTariff } from "../auth/decorators/require-tariff.decorator";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { ListingsService } from "./listings.service";
@@ -40,16 +42,35 @@ export class ListingsController {
     };
   }
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
+  @Get("my")
+  @ApiOperation({ summary: "Get listings for current landlord" })
+  async getMine(@Req() req: any) {
+    return this.listings.getMine(req.user.id);
+  }
+
   @Get(":id")
-  async getOne(@Param("id") id: string) {
-    const listing = await this.listings.getById(id);
+  async getOne(@Req() req: any, @Res({ passthrough: true }) res: Response, @Param("id") id: string) {
+    let sessionId = req.cookies?.locus_view_session as string | undefined;
+    if (!sessionId) {
+      sessionId = randomUUID();
+      res.cookie("locus_view_session", sessionId, {
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24 * 30,
+      });
+    }
+    const listing = await this.listings.getById(id, { sessionId, userId: req.user?.id });
     return { listing };
   }
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() dto: CreateListingDto) {
@@ -60,8 +81,8 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Patch(":id")
   async update(@Req() req: any, @Param("id") id: string, @Body() dto: UpdateListingDto) {
     return { item: await this.listings.update(req.user.id, id, dto) };
@@ -69,8 +90,17 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
+  @Delete(":id")
+  async remove(@Req() req: any, @Param("id") id: string) {
+    return await this.listings.delete(req.user.id, id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/publish")
   async publish(@Req() req: any, @Param("id") id: string) {
     return { item: await this.listings.publish(req.user.id, id) };
@@ -78,8 +108,8 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/unpublish")
   async unpublish(@Req() req: any, @Param("id") id: string) {
     return { item: await this.listings.unpublish(req.user.id, id) };
@@ -97,8 +127,8 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/photos")
   @ApiOperation({ summary: "Upload a photo for a listing" })
   @ApiConsumes("multipart/form-data")
@@ -143,8 +173,8 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Delete(":id/photos/:photoId")
   @ApiOperation({ summary: "Delete a photo from a listing" })
   async deletePhoto(@Req() req: any, @Param("photoId") photoId: string) {
@@ -153,8 +183,8 @@ export class ListingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
-  @Roles("host", "admin")
-  @Tariffs("landlord_basic", "landlord_pro")
+  @RequireLandlord()
+  @RequireTariff("landlord_basic", "landlord_pro")
   @Patch(":id/photos/:photoId/order")
   @ApiOperation({ summary: "Update photo sort order" })
   async updatePhotoOrder(

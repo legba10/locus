@@ -33,16 +33,14 @@ export class AiCoreController {
 
   @Get('owners/:id/insight')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'AI-анализ объявлений владельца' })
   @ApiParam({ name: 'id', description: 'ID владельца' })
   async getOwnerInsight(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.id;
-    const userRoles = req.user.roles || [];
-    
-    // Проверка прав: свои данные или админ
-    if (userId !== id && !userRoles.includes('admin')) {
+    // Проверка прав: только свои данные
+    if (userId !== id) {
       return this.insight.getOwnerInsight(userId);
     }
     
@@ -51,7 +49,7 @@ export class AiCoreController {
 
   @Get('owner/insight')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'AI-анализ для текущего владельца' })
   async getMyInsight(@Req() req: any) {

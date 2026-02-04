@@ -21,11 +21,10 @@ export function HeaderLight() {
   const { user, isAuthenticated, logout } = useAuthStore()
 
   const isActive = (path: string) => pathname === path
-  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
-  const isHost = user?.role === 'host' || (user?.roles?.includes('host') ?? false)
+  const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.profile?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
-  const canAccessOwner = isAdmin || (isHost && isPaidTariff)
+  const canAccessOwner = isLandlord && isPaidTariff
 
   return (
     <header className={cn(
@@ -86,19 +85,7 @@ export function HeaderLight() {
           <div className="flex items-center gap-3">
             {isAuthenticated() ? (
               <div className="flex items-center gap-3">
-                {/* Редирект на /admin если role = admin */}
-                {isAdmin ? (
-                  <Link
-                    href="/admin"
-                    className={cn(
-                      'hidden md:block text-[13px] font-medium transition-colors',
-                      'flex items-center h-full',
-                      'text-violet-600 hover:text-violet-700'
-                    )}
-                  >
-                    Админ панель
-                  </Link>
-                ) : canAccessOwner ? (
+                {canAccessOwner ? (
                   <Link
                     href="/owner/dashboard"
                     className={cn(

@@ -110,9 +110,7 @@ export class ListingsPhotosService {
     }
 
     // Извлекаем путь из URL
-    const url = new URL(photo.url)
-    const pathMatch = url.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
-    const filePath = pathMatch ? pathMatch[1] : null
+    const filePath = this.extractStoragePath(photo.url)
 
     // Удаляем из Supabase Storage
     if (filePath && supabase) {
@@ -169,5 +167,49 @@ export class ListingsPhotosService {
       where: { id: photoId },
       data: { sortOrder },
     })
+  }
+
+  /**
+   * Удаляет все фото объявления (storage + DB)
+   */
+  async deleteAllForListing(listingId: string, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { ownerId: true },
+    })
+
+    if (!listing) {
+      throw new NotFoundException('Объявление не найдено')
+    }
+
+    if (listing.ownerId !== userId) {
+      throw new ForbiddenException('Нет доступа к этому объявлению')
+    }
+
+    const photos = await this.prisma.listingPhoto.findMany({ where: { listingId } })
+    const filePaths = photos
+      .map((photo) => this.extractStoragePath(photo.url))
+      .filter((p): p is string => Boolean(p))
+
+    if (filePaths.length > 0 && supabase) {
+      const { error } = await supabase.storage.from(LISTINGS_BUCKET).remove(filePaths)
+      if (error) {
+        console.warn('Failed to delete listing photos from Supabase Storage:', error)
+      }
+    }
+
+    await this.prisma.listingPhoto.deleteMany({ where: { listingId } })
+
+    return { success: true, count: photos.length }
+  }
+
+  private extractStoragePath(url: string): string | null {
+    try {
+      const parsed = new URL(url)
+      const pathMatch = parsed.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
+      return pathMatch?.[1] ?? null
+    } catch {
+      return null
+    }
   }
 }

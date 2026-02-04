@@ -67,7 +67,7 @@ export function shouldLimitContacts(
   }
 
   // Premium users have no limits
-  if (user.roles.includes('admin')) {
+  if (user.roles.includes('landlord')) {
     return { allowed: true }
   }
 
@@ -208,7 +208,7 @@ export function shouldPushPremium(
   }
 
   // Already premium
-  if (user.roles.includes('admin')) {
+  if (user.tariff && user.tariff !== 'free') {
     return { allowed: false }
   }
 

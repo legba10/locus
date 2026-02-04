@@ -22,7 +22,7 @@ export class UsersService {
     });
   }
 
-  async ensureRole(name: "guest" | "host" | "admin") {
+  async ensureRole(name: "user" | "landlord") {
     return this.prisma.role.upsert({
       where: { name },
       update: {},
@@ -30,7 +30,7 @@ export class UsersService {
     });
   }
 
-  async register(params: { email: string; password: string; role: "guest" | "host"; name?: string }) {
+  async register(params: { email: string; password: string; role: "user" | "landlord"; name?: string }) {
     const existing = await this.prisma.user.findUnique({ where: { email: params.email } });
     if (existing) throw new ConflictException("Email already registered");
 

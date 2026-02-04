@@ -14,12 +14,14 @@ export function buildListingsQuery(query: ListingSearchQuery) {
   if (query.guests) params.set('guests', String(query.guests))
   if (query.priceMin != null) params.set('priceMin', String(query.priceMin))
   if (query.priceMax != null) params.set('priceMax', String(query.priceMax))
+  if (query.type) params.set('type', query.type.toUpperCase())
+  if (query.rooms != null) params.set('rooms', String(query.rooms))
   return params.toString()
 }
 
 export async function fetchListings(query: ListingSearchQuery) {
   const qs = buildListingsQuery(query)
-  return apiGet<ListingsResponse>(`/api/listings${qs ? `?${qs}` : ''}`)
+  return apiGet<ListingsResponse>(`/api/search${qs ? `?${qs}` : ''}`)
 }
 
 export async function fetchListingDetail(id: string) {

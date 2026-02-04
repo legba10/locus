@@ -13,7 +13,7 @@ export class HostController {
   constructor(private readonly hostService: HostService) {}
 
   @Get('intelligence')
-  @Roles('guest', 'host', 'admin')
+  @Roles('landlord')
   @ApiOperation({ summary: 'Get host intelligence dashboard data' })
   @ApiResponse({
     status: 200,
@@ -42,7 +42,7 @@ export class HostController {
   }
 
   @Post('intelligence/recalculate')
-  @Roles('guest', 'host', 'admin')
+  @Roles('landlord')
   @ApiOperation({ summary: 'Recalculate AI profiles for all host properties' })
   @ApiResponse({ status: 200, description: 'Recalculation completed' })
   async recalculateIntelligence(@Req() req: any): Promise<{ success: boolean; message: string }> {
@@ -52,7 +52,7 @@ export class HostController {
   }
 
   @Get('overview')
-  @Roles('guest', 'host', 'admin')
+  @Roles('landlord')
   @ApiOperation({ summary: 'Get host dashboard overview' })
   async getOverview(@Req() req: any) {
     const userId = req.user.id;

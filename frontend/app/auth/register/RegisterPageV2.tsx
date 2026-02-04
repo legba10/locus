@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Card, CardTitle, Button, Divider } from '@/ui-system'
 import { cn } from '@/shared/utils/cn'
 
-type UserRole = 'guest' | 'host'
+type UserRole = 'user' | 'landlord'
 
 interface RoleOption {
   value: UserRole
@@ -16,8 +16,8 @@ interface RoleOption {
 }
 
 const ROLES: RoleOption[] = [
-  { value: 'guest', label: 'Я ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
-  { value: 'host', label: 'Я сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
+  { value: 'user', label: 'Я ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
+  { value: 'landlord', label: 'Я сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
 ]
 
 /**
@@ -214,7 +214,7 @@ export function RegisterPageV2() {
             🔍 Найти жильё
           </Button>
           
-          {selectedRole === 'host' && (
+          {selectedRole === 'landlord' && (
             <Button
               variant="outline"
               fullWidth

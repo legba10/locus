@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/domains/auth";
 
 export default function HostLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute roles={["host", "admin"]}>
+    <ProtectedRoute roles={["landlord"]}>
       {children}
     </ProtectedRoute>
   );

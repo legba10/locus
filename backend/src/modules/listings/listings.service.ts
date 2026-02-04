@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException, Logger } from "@nestjs/common";
-import { ListingStatus, Prisma } from "@prisma/client";
+import { ListingStatus, ListingType, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { NeonUserService } from "../users/neon-user.service";
 import { CreateListingDto } from "./dto/create-listing.dto";
@@ -7,6 +7,7 @@ import { UpdateListingDto } from "./dto/update-listing.dto";
 import { AiPricingService } from "../ai-orchestrator/services/ai-pricing.service";
 import { AiQualityService } from "../ai-orchestrator/services/ai-quality.service";
 import { AiRiskService } from "../ai-orchestrator/services/ai-risk.service";
+import { ListingsPhotosService } from "./listings-photos.service";
 
 // Helper to convert DTO JSON fields to Prisma-compatible InputJsonValue
 function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
@@ -28,6 +29,7 @@ export class ListingsService {
     private readonly aiQuality: AiQualityService,
     private readonly aiPricing: AiPricingService,
     private readonly aiRisk: AiRiskService,
+    private readonly photosService: ListingsPhotosService,
   ) {}
 
   async getAll(params: { city?: string; limit?: number } = {}) {
@@ -52,7 +54,20 @@ export class ListingsService {
     return { items, total };
   }
 
-  async getById(id: string, incrementViews = true) {
+  async getMine(ownerId: string) {
+    const items = await this.prisma.listing.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        amenities: { include: { amenity: true } },
+        aiScores: true,
+      },
+    });
+    return { items, total: items.length };
+  }
+
+  async getById(id: string, view?: { sessionId?: string; userId?: string }) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
@@ -66,15 +81,55 @@ export class ListingsService {
     });
     if (!listing) throw new NotFoundException("Listing not found");
     
-    // Increment views asynchronously (don't block response)
-    if (incrementViews) {
-      this.prisma.listing.update({
-        where: { id },
-        data: { viewsCount: { increment: 1 } },
-      }).catch((err) => this.logger.warn(`Failed to increment views for ${id}: ${err}`));
+    if (view?.sessionId) {
+      this.trackView(id, view.sessionId, view.userId).catch((err) =>
+        this.logger.warn(`Failed to track view for ${id}: ${err}`)
+      );
     }
     
     return listing;
+  }
+
+  private async trackView(listingId: string, sessionId: string, userId?: string | null) {
+    const debounceMs = 10 * 60 * 1000;
+    const now = new Date();
+
+    const existing = await this.prisma.listingView.findUnique({
+      where: { listingId_sessionId: { listingId, sessionId } },
+    });
+
+    if (!existing) {
+      await this.prisma.$transaction([
+        this.prisma.listingView.create({
+          data: {
+            listingId,
+            sessionId,
+            userId: userId ?? null,
+            lastViewedAt: now,
+          },
+        }),
+        this.prisma.listing.update({
+          where: { id: listingId },
+          data: { viewsCount: { increment: 1 } },
+        }),
+      ]);
+      return;
+    }
+
+    if (now.getTime() - existing.lastViewedAt.getTime() < debounceMs) {
+      return;
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.listingView.update({
+        where: { listingId_sessionId: { listingId, sessionId } },
+        data: { lastViewedAt: now, userId: userId ?? existing.userId },
+      }),
+      this.prisma.listing.update({
+        where: { id: listingId },
+        data: { viewsCount: { increment: 1 } },
+      }),
+    ]);
   }
 
   async create(ownerId: string, dto: CreateListingDto, email?: string) {
@@ -97,6 +152,7 @@ export class ListingsService {
         bedrooms: dto.bedrooms ?? 1,
         beds: dto.beds ?? 1,
         bathrooms: dto.bathrooms ?? 1,
+        type: (dto.type as ListingType | undefined) ?? ListingType.APARTMENT,
         houseRules: toJsonValue(dto.houseRules),
         status: ListingStatus.DRAFT,
         photos: dto.photos?.length
@@ -190,6 +246,11 @@ export class ListingsService {
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
 
+    const photosCount = await this.prisma.listingPhoto.count({ where: { listingId: id } });
+    if (photosCount === 0) {
+      throw new ForbiddenException("Listing must have at least one photo before publish");
+    }
+
     await this.prisma.listing.update({ where: { id }, data: { status: ListingStatus.PUBLISHED } });
     return this.getById(id);
   }
@@ -201,6 +262,16 @@ export class ListingsService {
 
     await this.prisma.listing.update({ where: { id }, data: { status: ListingStatus.DRAFT } });
     return this.getById(id);
+  }
+
+  async delete(ownerId: string, id: string) {
+    const listing = await this.prisma.listing.findUnique({ where: { id } });
+    if (!listing) throw new NotFoundException("Listing not found");
+    if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
+
+    await this.photosService.deleteAllForListing(id, ownerId);
+    await this.prisma.listing.delete({ where: { id } });
+    return { success: true };
   }
 }
 

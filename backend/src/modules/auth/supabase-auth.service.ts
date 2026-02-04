@@ -11,7 +11,7 @@ export type SupabaseProfile = {
   phone: string | null;
   telegram_id: string | null;
   full_name: string | null;
-  role: "user" | "landlord" | "manager" | "admin";
+  role: "user" | "landlord";
   tariff: string | null;
   created_at: string;
 };
@@ -23,7 +23,7 @@ type SupabaseAuthUser = {
   user_metadata?: Record<string, unknown> | null;
 };
 
-type BusinessRole = "guest" | "host" | "admin";
+type BusinessRole = "user" | "landlord";
 
 @Injectable()
 export class SupabaseAuthService {
@@ -33,17 +33,12 @@ export class SupabaseAuthService {
    * Map Supabase profile.role to business role
    */
   private mapToBusinessRole(profileRole: string | null): BusinessRole {
-    if (!profileRole) return "guest";
+    if (!profileRole) return "user";
     const role = profileRole.toLowerCase();
-    
-    // admin → admin
-    if (role === "admin") return "admin";
-    
-    // landlord/manager → host (can manage listings)
-    if (role === "landlord" || role === "manager") return "host";
-    
-    // user → guest
-    return "guest";
+
+    if (role === "landlord") return "landlord";
+    if (role === "admin") return "landlord";
+    return "user";
   }
 
   /**
@@ -284,10 +279,10 @@ export class SupabaseAuthService {
   }
 
   /**
-   * Check if user is admin
+   * Check if user is landlord
    */
-  async isAdmin(userId: string): Promise<boolean> {
+  async isLandlord(userId: string): Promise<boolean> {
     const profile = await this.getProfile(userId);
-    return profile?.role === "admin";
+    return profile?.role === "landlord";
   }
 }

@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { useAuthStore } from '@/domains/auth'
 
-type UserRole = 'guest' | 'host'
+type UserRole = 'user' | 'landlord'
 
 interface RoleOption {
   value: UserRole
@@ -17,8 +17,8 @@ interface RoleOption {
 }
 
 const ROLES: RoleOption[] = [
-  { value: 'guest', label: 'Ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
-  { value: 'host', label: 'Сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
+  { value: 'user', label: 'Ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
+  { value: 'landlord', label: 'Сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
 ]
 
 /**
@@ -158,7 +158,7 @@ export function RegisterPageV5() {
               <div className="text-center">
                 <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Создать аккаунт</h1>
                 <p className="text-[13px] text-[#6B7280]">
-                  {selectedRole === 'guest' ? 'Ищу жильё' : 'Сдаю жильё'}
+                  {selectedRole === 'user' ? 'Ищу жильё' : 'Сдаю жильё'}
                 </p>
               </div>
 
@@ -271,7 +271,7 @@ export function RegisterPageV5() {
                 Назад
               </button>
 
-              {selectedRole === 'guest' ? (
+              {selectedRole === 'user' ? (
                 // AI параметры для пользователя
                 <>
                   <div className="text-center">
@@ -384,7 +384,7 @@ export function RegisterPageV5() {
                     <div>
                       <span className="text-[12px] text-[#6B7280]">Тип аккаунта:</span>
                       <p className="text-[14px] font-medium text-[#1C1F26]">
-                        {selectedRole === 'host' ? 'Арендодатель' : 'Пользователь'}
+                        {selectedRole === 'landlord' ? 'Арендодатель' : 'Пользователь'}
                       </p>
                     </div>
                   </div>

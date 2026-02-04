@@ -69,6 +69,8 @@ export type ListingSearchQuery = {
   guests?: number
   priceMin?: number
   priceMax?: number
+  type?: string
+  rooms?: number
   q?: string
 }
 

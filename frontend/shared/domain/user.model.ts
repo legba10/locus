@@ -9,7 +9,7 @@
 /**
  * User role
  */
-export type UserRole = 'guest' | 'tenant' | 'landlord' | 'admin'
+export type UserRole = 'user' | 'landlord'
 
 /**
  * Auth provider

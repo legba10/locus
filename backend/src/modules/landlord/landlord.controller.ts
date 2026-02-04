@@ -3,8 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TariffGuard } from '../auth/guards/tariff.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Tariffs } from '../auth/decorators/tariff.decorator';
+import { RequireLandlord } from '../auth/decorators/require-landlord.decorator';
+import { RequireTariff } from '../auth/decorators/require-tariff.decorator';
 import { LandlordService, LandlordDashboardResponse } from './landlord.service';
 
 @ApiTags('landlord')
@@ -15,8 +15,8 @@ export class LandlordController {
   constructor(private readonly landlord: LandlordService) {}
 
   @Get('dashboard')
-  @Roles('host', 'admin')
-  @Tariffs('landlord_basic', 'landlord_pro')
+  @RequireLandlord()
+  @RequireTariff('landlord_basic', 'landlord_pro')
   @ApiOperation({ summary: 'Получить данные дашборда арендодателя' })
   @ApiResponse({
     status: 200,
@@ -46,8 +46,8 @@ export class LandlordController {
   }
 
   @Post('dashboard/refresh')
-  @Roles('host', 'admin')
-  @Tariffs('landlord_basic', 'landlord_pro')
+  @RequireLandlord()
+  @RequireTariff('landlord_basic', 'landlord_pro')
   @ApiOperation({ summary: 'Пересчитать аналитику LOCUS для всех объектов' })
   @ApiResponse({ status: 200, description: 'Аналитика обновлена' })
   async refreshAnalytics(@Req() req: any): Promise<{ success: boolean; message: string }> {
@@ -57,8 +57,8 @@ export class LandlordController {
 
   // Алиасы для совместимости с host endpoint
   @Get('intelligence')
-  @Roles('host', 'admin')
-  @Tariffs('landlord_basic', 'landlord_pro')
+  @RequireLandlord()
+  @RequireTariff('landlord_basic', 'landlord_pro')
   @ApiOperation({ summary: 'Алиас для dashboard (совместимость)' })
   async getIntelligence(@Req() req: any): Promise<LandlordDashboardResponse> {
     return this.landlord.getDashboard(req.user.id);

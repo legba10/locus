@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -26,10 +26,11 @@ type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' |
 export function OwnerDashboardV7() {
   const { user, isAuthenticated } = useAuthStore()
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
-  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
+  const [editingListing, setEditingListing] = useState<any | null>(null)
+  const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.profile?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
-  const canUsePaid = isAdmin || isPaidTariff
+  const canUsePaid = isLandlord && isPaidTariff
 
   if (!isAuthenticated()) {
     return (
@@ -118,8 +119,34 @@ export function OwnerDashboardV7() {
               ОСНОВНОЙ КОНТЕНТ
               ═══════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-3">
-            {activeTab === 'listings' && <MyListingsTab onAdd={() => setActiveTab('add')} canCreate={canUsePaid} />}
-            {activeTab === 'add' && (canUsePaid ? <AddListingTab onSuccess={() => setActiveTab('listings')} /> : <PaidFeatureNotice />)}
+            {activeTab === 'listings' && (
+              <MyListingsTab
+                onAdd={() => {
+                  setEditingListing(null)
+                  setActiveTab('add')
+                }}
+                onEdit={(listing) => {
+                  setEditingListing(listing)
+                  setActiveTab('add')
+                }}
+                canCreate={canUsePaid}
+              />
+            )}
+            {activeTab === 'add' && (canUsePaid ? (
+              <AddListingTab
+                onSuccess={() => {
+                  setEditingListing(null)
+                  setActiveTab('listings')
+                }}
+                onCancel={() => {
+                  setEditingListing(null)
+                  setActiveTab('listings')
+                }}
+                initialListing={editingListing}
+              />
+            ) : (
+              <PaidFeatureNotice />
+            ))}
             {activeTab === 'bookings' && <BookingsTab />}
             {activeTab === 'messages' && <MessagesTab />}
             {activeTab === 'analytics' && (canUsePaid ? <AnalyticsTab /> : <PaidFeatureNotice />)}
@@ -134,10 +161,19 @@ export function OwnerDashboardV7() {
 // ═══════════════════════════════════════════════════════════════
 // МОИ ОБЪЯВЛЕНИЯ
 // ═══════════════════════════════════════════════════════════════
-function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boolean }) {
+function MyListingsTab({
+  onAdd,
+  onEdit,
+  canCreate,
+}: {
+  onAdd: () => void;
+  onEdit: (listing: any) => void;
+  canCreate: boolean;
+}) {
+  const queryClient = useQueryClient()
   const { data, isLoading } = useFetch<{ items: any[] }>(
     ['owner-listings'],
-    '/api/listings?limit=50'
+    '/api/listings/my'
   )
 
   const listings = data?.items || []
@@ -196,7 +232,7 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
       )}
 
       {!isLoading && listings.length > 0 && (
-        <div className="space-y-4 scroll-container" style={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+        <div className="space-y-4 scroll-container max-h-[70vh] lg:max-h-[calc(100vh-250px)] overflow-y-auto">
           {listings.map((listing: any) => (
             <div
               key={listing.id}
@@ -220,10 +256,8 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                    <div className="w-full h-full flex items-center justify-center text-[#9CA3AF] text-[12px]">
+                      Нет фото
                     </div>
                   )}
                 </div>
@@ -287,11 +321,11 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
                     )}>
                       {listing.status === 'PUBLISHED' ? 'Опубликовано' : listing.status === 'PENDING' ? 'На модерации' : 'Скрыто'}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <Link
                         href={`/listings/${listing.id}`}
                         className={cn(
-                          'px-4 py-2 rounded-[12px]',
+                          'px-4 py-2 rounded-[12px] w-full sm:w-auto text-center',
                           'bg-gray-100 text-[#1C1F26] text-[13px] font-medium',
                           'hover:bg-gray-200 transition-colors'
                         )}
@@ -299,8 +333,10 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
                         Открыть
                       </Link>
                       <button
+                        type="button"
+                        onClick={() => onEdit(listing)}
                         className={cn(
-                          'px-4 py-2 rounded-[12px]',
+                          'px-4 py-2 rounded-[12px] w-full sm:w-auto',
                           'bg-violet-600 text-white text-[13px] font-medium',
                           'hover:bg-violet-500 transition-colors'
                         )}
@@ -308,8 +344,14 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
                         Редактировать
                       </button>
                       <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm('Удалить объявление без возможности восстановления?')) return
+                          await apiFetch(`/listings/${encodeURIComponent(listing.id)}`, { method: 'DELETE' })
+                          await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
+                        }}
                         className={cn(
-                          'px-4 py-2 rounded-[12px]',
+                          'px-4 py-2 rounded-[12px] w-full sm:w-auto',
                           'bg-red-100 text-red-700 text-[13px] font-medium',
                           'hover:bg-red-200 transition-colors'
                         )}
@@ -331,8 +373,17 @@ function MyListingsTab({ onAdd, canCreate }: { onAdd: () => void; canCreate: boo
 // ═══════════════════════════════════════════════════════════════
 // ДОБАВИТЬ ОБЪЯВЛЕНИЕ
 // ═══════════════════════════════════════════════════════════════
-function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
+function AddListingTab({
+  onSuccess,
+  onCancel,
+  initialListing,
+}: {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  initialListing?: any | null;
+}) {
   const queryClient = useQueryClient()
+  const isEdit = Boolean(initialListing?.id)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -346,9 +397,48 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
     type: 'apartment',
   })
   const [photos, setPhotos] = useState<File[]>([])
+  const [existingPhotos, setExistingPhotos] = useState<Array<{ id: string; url: string }>>([])
   const [dragActive, setDragActive] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!initialListing) {
+      setFormData({
+        title: '',
+        description: '',
+        city: '',
+        price: '',
+        rooms: '',
+        area: '',
+        floor: '',
+        totalFloors: '',
+        type: 'apartment',
+      })
+      setPhotos([])
+      setExistingPhotos([])
+      return
+    }
+
+    const houseRules = initialListing.houseRules || {}
+    setFormData({
+      title: initialListing.title ?? '',
+      description: initialListing.description ?? '',
+      city: initialListing.city ?? '',
+      price: String(initialListing.basePrice ?? ''),
+      rooms: String(initialListing.bedrooms ?? ''),
+      area: String(houseRules.area ?? ''),
+      floor: String(houseRules.floor ?? ''),
+      totalFloors: String(houseRules.totalFloors ?? ''),
+      type: houseRules.type ?? initialListing.type ?? 'apartment',
+    })
+    setPhotos([])
+    setExistingPhotos(
+      Array.isArray(initialListing.photos)
+        ? initialListing.photos.map((p: any) => ({ id: p.id, url: p.url }))
+        : []
+    )
+  }, [initialListing])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -382,6 +472,14 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
     setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 
+  const removeExistingPhoto = async (photoId: string) => {
+    if (!initialListing?.id) return
+    await apiFetch(`/listings/${encodeURIComponent(initialListing.id)}/photos/${encodeURIComponent(photoId)}`, {
+      method: 'DELETE',
+    })
+    setExistingPhotos(prev => prev.filter((p) => p.id !== photoId))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isSubmitting) return
@@ -405,8 +503,14 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         return
       }
 
-      // 1) Создаём объявление через backend /api/listings
-      const createPayload: any = {
+      if (photos.length + existingPhotos.length === 0) {
+        setError('Добавьте хотя бы одно фото')
+        setIsSubmitting(false)
+        return
+      }
+
+      const listingType = formData.type ? formData.type.toUpperCase() : 'APARTMENT'
+      const payload: any = {
         title,
         description,
         city,
@@ -414,12 +518,13 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         capacityGuests: 2,
         bedrooms: rooms || 1,
         bathrooms: 1,
+        type: listingType,
         houseRules: {},
       }
 
       if (area) {
-        createPayload.houseRules = {
-          ...(createPayload.houseRules || {}),
+        payload.houseRules = {
+          ...(payload.houseRules || {}),
           area,
           floor,
           totalFloors,
@@ -427,22 +532,30 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         }
       }
 
-      const createData = await apiFetchJson<{ item?: { id: string }; id?: string; listingId?: string }>(
-        '/listings',
-        {
-          method: 'POST',
-          body: JSON.stringify(createPayload),
-        },
-      )
+      let listingId = initialListing?.id as string | undefined
+      if (isEdit) {
+        await apiFetchJson(`/listings/${encodeURIComponent(listingId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        })
+      } else {
+        const createData = await apiFetchJson<{ item?: { id: string }; id?: string; listingId?: string }>(
+          '/listings',
+          {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          },
+        )
 
-      const listingId: string | undefined =
-        createData?.listing?.id ?? createData?.item?.id ?? createData?.id ?? createData?.listingId
+        listingId =
+          createData?.listing?.id ?? createData?.item?.id ?? createData?.id ?? createData?.listingId
 
-      if (!listingId) {
-        throw new Error('Сервер не вернул ID нового объявления')
+        if (!listingId) {
+          throw new Error('Сервер не вернул ID нового объявления')
+        }
       }
 
-      // 2) Загружаем фото через /api/listings/{id}/photos
+      // 2) Загружаем новые фото через /api/listings/{id}/photos
       for (let i = 0; i < photos.length; i++) {
         const file = photos[i]
         const form = new FormData()
@@ -458,11 +571,13 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         )
       }
 
-      // 3) Публикуем объявление (меняем статус с DRAFT на PUBLISHED)
-      await apiFetch(
-        `/listings/${encodeURIComponent(listingId)}/publish`,
-        { method: 'POST' },
-      )
+      // 3) Публикуем объявление (только для создания)
+      if (!isEdit) {
+        await apiFetch(
+          `/listings/${encodeURIComponent(listingId)}/publish`,
+          { method: 'POST' },
+        )
+      }
 
       // 4) Обновляем список объявлений без перезагрузки
       await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
@@ -480,6 +595,7 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
         type: 'apartment',
       })
       setPhotos([])
+      setExistingPhotos([])
 
       // 6) Автоматически переключаемся на вкладку "Мои объявления"
       if (onSuccess) {
@@ -498,7 +614,9 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">Добавить объявление</h1>
+      <h1 className="text-[24px] font-bold text-[#1C1F26]">
+        {isEdit ? 'Редактировать объявление' : 'Добавить объявление'}
+      </h1>
 
       <div className={cn(
         'bg-white rounded-[18px] p-6',
@@ -538,9 +656,32 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
               </label>
             </div>
             
-            {/* Превью фото */}
+            {/* Текущие фото (edit) */}
+            {existingPhotos.length > 0 && (
+              <div className="mt-4">
+                <p className="text-[12px] text-[#6B7280] mb-2">Текущие фотографии</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  {existingPhotos.map((photo) => (
+                    <div key={photo.id} className="relative aspect-square rounded-[12px] overflow-hidden bg-gray-100">
+                      <Image src={photo.url} alt="Existing photo" fill className="object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeExistingPhoto(photo.id)}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Превью новых фото */}
             {photos.length > 0 && (
-              <div className="grid grid-cols-5 gap-3 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4">
                 {photos.map((photo, i) => (
                   <div key={i} className="relative aspect-square rounded-[12px] overflow-hidden bg-gray-100">
                     <Image
@@ -745,19 +886,34 @@ function AddListingTab({ onSuccess }: { onSuccess?: () => void }) {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={cn(
-              'w-full py-3 rounded-[14px]',
-              'bg-violet-600 text-white font-semibold text-[15px]',
-              'hover:bg-violet-500 transition-colors',
-              'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
-              isSubmitting && 'opacity-70 cursor-not-allowed'
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                'w-full py-3 rounded-[14px]',
+                'bg-violet-600 text-white font-semibold text-[15px]',
+                'hover:bg-violet-500 transition-colors',
+                'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
+                isSubmitting && 'opacity-70 cursor-not-allowed'
+              )}
+            >
+              {isSubmitting ? (isEdit ? 'Сохранение...' : 'Создание...') : (isEdit ? 'Сохранить' : 'Создать объявление')}
+            </button>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className={cn(
+                  'w-full py-3 rounded-[14px]',
+                  'border border-gray-200 text-[#1C1F26] text-[15px] font-semibold',
+                  'hover:bg-gray-50 transition-colors'
+                )}
+              >
+                Отмена
+              </button>
             )}
-          >
-            {isSubmitting ? 'Создание...' : 'Создать объявление'}
-          </button>
+          </div>
         </form>
       </div>
     </div>
@@ -833,7 +989,7 @@ function BookingsTab() {
                   <span className="font-semibold text-[#1C1F26]">{formatPrice(booking.totalPrice, 'month')}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <span className={cn(
                   'px-3 py-1 rounded-lg text-[12px] font-medium',
                   booking.status === 'new'
@@ -848,19 +1004,19 @@ function BookingsTab() {
                   <>
                     <button 
                       onClick={() => handleBookingAction(booking.id, 'accept')}
-                      className="px-4 py-2 rounded-[12px] bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500"
+                      className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500"
                     >
                       Принять
                     </button>
                     <button 
                       onClick={() => handleBookingAction(booking.id, 'reject')}
-                      className="px-4 py-2 rounded-[12px] bg-red-600 text-white text-[13px] font-medium hover:bg-red-500"
+                      className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-red-600 text-white text-[13px] font-medium hover:bg-red-500"
                     >
                       Отклонить
                     </button>
                   </>
                 )}
-                <button className="px-4 py-2 rounded-[12px] bg-gray-100 text-[#1C1F26] text-[13px] font-medium hover:bg-gray-200">
+                <button className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-gray-100 text-[#1C1F26] text-[13px] font-medium hover:bg-gray-200">
                   Написать
                 </button>
               </div>
@@ -940,7 +1096,7 @@ function AnalyticsTab() {
   ]
 
   return (
-    <div className="space-y-6 scroll-container" style={{ maxHeight: 'calc(100vh - 250px)', overflowY: 'auto' }}>
+    <div className="space-y-6 scroll-container max-h-[70vh] lg:max-h-[calc(100vh-250px)] overflow-y-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-[24px] font-bold text-[#1C1F26]">Аналитика</h1>
         <div className="flex items-center gap-2">

@@ -118,7 +118,7 @@ function buildFlags(
     isFirstVisit: !profile || profile.behavior.sessionCount <= 1,
     isReturning: (profile?.behavior.sessionCount || 0) > 1,
     isMobile: typeof window !== 'undefined' && window.innerWidth < 768,
-    hasSubscription: user?.roles?.includes('admin') || false, // Placeholder
+    hasSubscription: user?.tariff ? user.tariff !== 'free' : false,
     abTestGroup: null,
   }
 }

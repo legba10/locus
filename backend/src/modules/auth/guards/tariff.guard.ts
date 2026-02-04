@@ -25,10 +25,6 @@ export class TariffGuard implements CanActivate {
     const user = req.user;
     if (!user) return false;
 
-    const isAdmin =
-      user.role?.toLowerCase() === "admin" || (user.roles ?? []).map((r) => r.toLowerCase()).includes("admin");
-    if (isAdmin) return true;
-
     const tariff = user.profile?.tariff?.toLowerCase();
     if (!tariff) return false;
 

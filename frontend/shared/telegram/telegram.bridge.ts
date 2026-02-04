@@ -9,23 +9,24 @@
  * 5. При authenticated: setSession(access_token, refresh_token) → редирект
  */
 
-import { apiFetch } from "@/shared/api/client";
+import { apiFetch, apiFetchRaw } from "@/shared/api/client";
 
 interface StartResponse {
   loginToken: string;
 }
 
 interface StatusResponse {
-  authenticated?: boolean;
-  status?: string;
-  session?: {
-    access_token: string;
-    refresh_token: string;
-    expires_in?: number;
-    expires_at?: number;
-    token_type?: string;
+  access_token?: string;
+  refresh_token?: string;
+  user?: {
+    id: string;
+    phone: string | null;
+    telegram_id: string | null;
+    full_name: string | null;
+    role: string | null;
+    tariff: string | null;
   };
-  user?: { id: string };
+  status?: string;
 }
 
 const POLL_INTERVAL = 1500; // 1.5 sec
@@ -77,17 +78,26 @@ export async function pollTelegramLoginStatus(
 
   while (Date.now() - startTime < MAX_POLL_TIME) {
     try {
-      const res = await apiFetch<StatusResponse>("/auth/telegram/complete", {
+      const res = await apiFetchRaw("/auth/telegram/complete", {
         method: "POST",
         body: JSON.stringify({ token: loginToken }),
       });
 
-      if (res?.authenticated) {
-        return res;
+      const text = await res.text();
+      const payload = text ? (JSON.parse(text) as StatusResponse | { message?: string }) : {};
+
+      if (res.ok) {
+        return payload as StatusResponse;
       }
 
-      if (res?.status === "expired" || res?.status === "not_found" || res?.status === "used") {
-        return res;
+      if (res.status === 409) {
+        return { status: "used" };
+      }
+      if (res.status === 400) {
+        const msg = (payload as { message?: string })?.message || "";
+        if (msg === "TOKEN_EXPIRED") return { status: "expired" };
+        if (msg === "TOKEN_NOT_FOUND") return { status: "not_found" };
+        if (msg === "SESSION_NOT_CONFIRMED") return { status: "not_confirmed" };
       }
 
       await sleep(POLL_INTERVAL);

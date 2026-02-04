@@ -1,11 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { supabase } from "@/shared/supabase-client";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
+import { apiFetch } from "@/shared/api/client";
 
 function CompleteContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -22,11 +24,10 @@ function CompleteContent() {
       try {
         const res = await pollTelegramLoginStatus(token);
 
-        const session = res?.session;
-        if (res?.authenticated && session?.access_token && session?.refresh_token) {
+        if (res?.access_token && res?.refresh_token) {
           const { data, error } = await supabase.auth.setSession({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
+            access_token: res.access_token,
+            refresh_token: res.refresh_token,
           });
 
           if (error) {
@@ -36,10 +37,17 @@ function CompleteContent() {
           }
 
           if (data?.session) {
-            setStatus("success");
-            setMessage("Вход выполнен. Перенаправление...");
-            window.location.href = "/";
-            return;
+            try {
+              await apiFetch("/auth/me", { method: "GET" });
+              setStatus("success");
+              setMessage("Вход выполнен. Перенаправление...");
+              router.replace("/");
+              return;
+            } catch {
+              setStatus("error");
+              setMessage("Не удалось подтвердить профиль. Попробуйте войти ещё раз.");
+              return;
+            }
           }
         }
 
@@ -50,6 +58,8 @@ function CompleteContent() {
           setMessage("Сессия не найдена. Начните вход с сайта.");
         } else if (res?.status === "used") {
           setMessage("Ссылка уже использована. Попробуйте войти заново.");
+        } else if (res?.status === "not_confirmed") {
+          setMessage("Вход не подтверждён. Вернитесь в бота и подтвердите.");
         } else {
           setMessage("Вход не завершён. Отправьте номер и подтвердите политику в боте.");
         }

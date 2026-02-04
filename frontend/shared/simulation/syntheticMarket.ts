@@ -37,7 +37,7 @@ export function createSyntheticListings(
       coverPhoto: null,
       rooms: roomsCount,
       area: Math.round(30 + random() * 50),
-      views: Math.floor(random() * 300),
+    views: 0,
       isNew: random() > 0.6,
       isVerified: random() > 0.5,
     })

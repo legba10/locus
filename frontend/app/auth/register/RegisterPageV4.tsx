@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { supabase } from '@/shared/supabase-client'
 
-type UserRole = 'guest' | 'host'
+type UserRole = 'user' | 'landlord'
 
 interface RoleOption {
   value: UserRole
@@ -17,8 +17,8 @@ interface RoleOption {
 }
 
 const ROLES: RoleOption[] = [
-  { value: 'guest', label: 'Ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
-  { value: 'host', label: 'Сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
+  { value: 'user', label: 'Ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
+  { value: 'landlord', label: 'Сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
 ]
 
 /**
@@ -53,10 +53,10 @@ export function RegisterPageV4() {
     if (!selectedRole) return
 
     // Переходим к шагу 3 только для user
-    if (selectedRole === 'guest') {
+    if (selectedRole === 'user') {
       setStep('ai')
     } else {
-    // Для host сразу регистрируем
+    // Для landlord сразу регистрируем
       await handleRegister()
     }
   }
@@ -75,7 +75,7 @@ export function RegisterPageV4() {
           data: {
             full_name: name,
             role: selectedRole,
-            ai_preferences: selectedRole === 'guest' ? { city: aiCity, budget: aiBudget, type: aiType } : undefined,
+            ai_preferences: selectedRole === 'user' ? { city: aiCity, budget: aiBudget, type: aiType } : undefined,
           },
         },
       })
@@ -175,7 +175,7 @@ export function RegisterPageV4() {
               <div className="text-center">
                 <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Создать аккаунт</h1>
                 <p className="text-[13px] text-[#6B7280]">
-                  {selectedRole === 'guest' ? 'Ищу жильё' : 'Сдаю жильё'}
+                  {selectedRole === 'user' ? 'Ищу жильё' : 'Сдаю жильё'}
                 </p>
               </div>
 
@@ -262,7 +262,7 @@ export function RegisterPageV4() {
         )}
 
         {/* Шаг 3: Параметры для AI (только для user) */}
-        {step === 'ai' && selectedRole === 'guest' && (
+        {step === 'ai' && selectedRole === 'user' && (
           <GlassCard>
             <div className="space-y-6">
               <button

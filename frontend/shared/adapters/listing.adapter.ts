@@ -103,17 +103,6 @@ function adaptPhotos(raw: RawApiListing): ListingMedia[] {
     .map((p, i) => adaptPhoto(p, i))
     .filter((p): p is ListingMedia => p !== null)
   
-  // If no photos, return placeholder
-  if (adapted.length === 0) {
-    return [{
-      id: 'placeholder',
-      url: '/placeholder.svg',
-      storage: 'placeholder',
-      isMain: true,
-      sortOrder: 0,
-    }]
-  }
-  
   return adapted
 }
 

@@ -11,10 +11,10 @@ import {
 import { AiContextDto } from "./ai-context.dto";
 
 export class AiAssistantRequestDto {
-  @ApiProperty({ enum: ["guest", "host", "admin"], example: "guest" })
+  @ApiProperty({ enum: ["user", "landlord"], example: "user" })
   @IsDefined()
-  @IsIn(["guest", "host", "admin"])
-  role!: "guest" | "host" | "admin";
+  @IsIn(["user", "landlord"])
+  role!: "user" | "landlord";
 
   @ApiProperty({ example: "Почему это жильё подходит? Какие риски?" })
   @IsDefined()

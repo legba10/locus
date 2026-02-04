@@ -10,7 +10,7 @@
 
 import type { Listing } from './listing.model'
 import type { User } from './user.model'
-import { isOwner as isOwnerRole, isAdmin } from '../auth/role.guard'
+import { isOwner as isOwnerRole } from '../auth/role.guard'
 
 /**
  * Listing status type
@@ -47,11 +47,6 @@ export function canView(user: User | null, listing: Listing): PermissionResult {
     return { allowed: true }
   }
   
-  // Admin can view everything
-  if (isAdmin(user)) {
-    return { allowed: true }
-  }
-  
   return { 
     allowed: false, 
     reason: 'Это объявление недоступно' 
@@ -64,11 +59,6 @@ export function canView(user: User | null, listing: Listing): PermissionResult {
 export function canEdit(user: User | null, listing: Listing): PermissionResult {
   if (!user) {
     return { allowed: false, reason: 'Войдите в аккаунт' }
-  }
-  
-  // Admin can edit anything
-  if (isAdmin(user)) {
-    return { allowed: true }
   }
   
   // Only owner can edit
@@ -92,11 +82,6 @@ export function canDelete(user: User | null, listing: Listing): PermissionResult
     return { allowed: false, reason: 'Войдите в аккаунт' }
   }
   
-  // Admin can delete anything
-  if (isAdmin(user)) {
-    return { allowed: true }
-  }
-  
   // Only owner can delete
   if (!isListingOwner(user, listing)) {
     return { allowed: false, reason: 'Вы не можете удалить чужое объявление' }
@@ -113,8 +98,8 @@ export function canPublish(user: User | null, listing: Listing): PermissionResul
     return { allowed: false, reason: 'Войдите в аккаунт' }
   }
   
-  // Must be owner or admin
-  if (!isListingOwner(user, listing) && !isAdmin(user)) {
+  // Must be owner
+  if (!isListingOwner(user, listing)) {
     return { allowed: false, reason: 'Вы не можете публиковать чужое объявление' }
   }
   
@@ -152,7 +137,7 @@ export function canArchive(user: User | null, listing: Listing): PermissionResul
     return { allowed: false, reason: 'Войдите в аккаунт' }
   }
   
-  if (!isListingOwner(user, listing) && !isAdmin(user)) {
+  if (!isListingOwner(user, listing)) {
     return { allowed: false, reason: 'Вы не можете архивировать чужое объявление' }
   }
   
@@ -171,7 +156,7 @@ export function canRestore(user: User | null, listing: Listing): PermissionResul
     return { allowed: false, reason: 'Войдите в аккаунт' }
   }
   
-  if (!isListingOwner(user, listing) && !isAdmin(user)) {
+  if (!isListingOwner(user, listing)) {
     return { allowed: false, reason: 'Вы не можете восстановить чужое объявление' }
   }
   

@@ -165,7 +165,7 @@ export const RU = {
     description: 'Описание',
     location: 'Расположение',
     owner: 'Владелец',
-    guest: 'Гость',
+    guest: 'Пользователь',
     loading: 'Загрузка...',
     error: 'Ошибка',
     retry: 'Повторить',

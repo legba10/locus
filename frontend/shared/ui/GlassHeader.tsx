@@ -24,11 +24,10 @@ export function GlassHeader({ className }: GlassHeaderProps) {
   const { user, isAuthenticated, logout } = useAuthStore()
 
   const isActive = (path: string) => pathname === path
-  const isAdmin = user?.role === 'admin' || (user?.roles?.includes('admin') ?? false)
-  const isHost = user?.role === 'host' || (user?.roles?.includes('host') ?? false)
+  const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.profile?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
-  const canAccessOwner = isAdmin || (isHost && isPaidTariff)
+  const canAccessOwner = isLandlord && isPaidTariff
 
   return (
     <header className={cn(

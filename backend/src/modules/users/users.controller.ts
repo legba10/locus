@@ -15,7 +15,7 @@ export class UsersController {
     const user = await this.users.register({
       email: dto.email,
       password: dto.password,
-      role: dto.role ?? "guest",
+      role: dto.role ?? "user",
       name: dto.name,
     });
 

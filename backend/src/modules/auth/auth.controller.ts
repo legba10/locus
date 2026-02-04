@@ -18,7 +18,7 @@ export class AuthController {
         id: string;
         supabaseId: string;
         email: string;
-        role: "guest" | "host" | "admin";
+        role: "user" | "landlord";
         roles: string[];
         profile?: {
           full_name: string | null;

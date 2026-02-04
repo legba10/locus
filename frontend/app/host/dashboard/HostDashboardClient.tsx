@@ -281,7 +281,7 @@ function AuthRequired() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
       </svg>
       <h2 className="mt-4 text-xl font-semibold text-text">Требуется авторизация</h2>
-      <p className="mt-2 text-text-mut">Войдите как хост для доступа к панели управления</p>
+      <p className="mt-2 text-text-mut">Войдите как арендодатель для доступа к панели управления</p>
       <Link href="/auth/login" className="mt-4 inline-block rounded-xl bg-brand px-6 py-2 font-medium text-white hover:bg-brand/90">
         Войти
       </Link>
@@ -295,8 +295,8 @@ export function HostDashboardClient() {
   
   // Fetch intelligence data
   const { data, isLoading, error, refetch } = useFetch<HostIntelligenceResponse>(
-    ['host-intelligence', user?.id],
-    '/api/host/intelligence',
+    ['landlord-intelligence', user?.id],
+    '/api/landlord/intelligence',
     {
       enabled: isAuthenticated() && !!accessToken,
     }
@@ -307,7 +307,7 @@ export function HostDashboardClient() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-text">Кабинет хоста</h1>
+          <h1 className="text-2xl font-bold text-text">Кабинет арендодателя</h1>
           <p className="text-text-mut">AI-аналитика ваших объявлений</p>
         </div>
         <AuthRequired />
@@ -320,7 +320,7 @@ export function HostDashboardClient() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text">Кабинет хоста</h1>
+          <h1 className="text-2xl font-bold text-text">Кабинет арендодателя</h1>
           <p className="text-text-mut">
             AI-аналитика ваших объявлений
             {user && <span className="text-brand ml-2">• {user.email}</span>}
@@ -371,7 +371,7 @@ export function HostDashboardClient() {
       {!isLoading && !error && !data && (
         <div className="rounded-2xl border border-border bg-surface-2 p-8 text-center">
           <p className="text-text-mut">У вас пока нет объявлений</p>
-          <Link href="/host/create" className="mt-4 inline-block text-brand hover:underline">
+          <Link href="/owner/dashboard" className="mt-4 inline-block text-brand hover:underline">
             Создать первое объявление
           </Link>
         </div>

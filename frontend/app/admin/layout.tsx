@@ -8,11 +8,11 @@ import { ProtectedRoute } from "@/domains/auth";
  * Особенности:
  * - Тёмная тема
  * - Без основного header/footer
- * - Защита по роли admin
+ * - Защита по роли landlord
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute roles={["admin"]}>
+    <ProtectedRoute roles={["landlord"]}>
       <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
         {children}
       </div>

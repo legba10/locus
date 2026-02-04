@@ -42,8 +42,8 @@ function userFromSession(session: { user: { id: string; email?: string | null } 
     id: u.id,
     supabaseId: u.id,
     email: u.email ?? "",
-    role: "guest",
-    roles: ["guest"],
+    role: "user",
+    roles: ["user"],
   };
 }
 

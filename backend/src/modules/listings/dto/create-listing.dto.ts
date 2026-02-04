@@ -3,6 +3,7 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsDefined,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -92,6 +93,11 @@ export class CreateListingDto {
   @ApiPropertyOptional({ description: "Произвольные правила (JSON)" })
   @IsOptional()
   houseRules?: Record<string, unknown>;
+
+  @ApiPropertyOptional({ enum: ["APARTMENT", "HOUSE", "ROOM", "STUDIO"] })
+  @IsOptional()
+  @IsIn(["APARTMENT", "HOUSE", "ROOM", "STUDIO"])
+  type?: "APARTMENT" | "HOUSE" | "ROOM" | "STUDIO";
 
   @ApiPropertyOptional({ example: ["wifi", "parking"] })
   @IsOptional()

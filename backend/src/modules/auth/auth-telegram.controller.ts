@@ -5,6 +5,7 @@ import {
   Query,
   Body,
   BadRequestException,
+  ConflictException,
   Logger,
   InternalServerErrorException,
 } from "@nestjs/common";
@@ -127,24 +128,39 @@ export class AuthTelegramController {
     });
 
     if (!loginToken) {
-      return { authenticated: false, status: "not_found" };
+      throw new BadRequestException("TOKEN_NOT_FOUND");
     }
 
     if (loginToken.used) {
-      return { authenticated: false, status: "used" };
+      if (loginToken.accessToken && loginToken.refreshToken) {
+        const profile = loginToken.userId ? await this.supabaseAuth.getProfile(loginToken.userId) : null;
+        return {
+          access_token: loginToken.accessToken,
+          refresh_token: loginToken.refreshToken,
+          user: {
+            id: loginToken.userId ?? "",
+            phone: profile?.phone ?? null,
+            telegram_id: profile?.telegram_id ?? null,
+            full_name: profile?.full_name ?? null,
+            role: profile?.role ?? null,
+            tariff: profile?.tariff ?? null,
+          },
+        };
+      }
+      throw new ConflictException("TOKEN_ALREADY_USED");
     }
 
     if (loginToken.expiresAt.getTime() < Date.now()) {
-      return { authenticated: false, status: "expired" };
+      throw new BadRequestException("TOKEN_EXPIRED");
     }
 
     const session = loginToken.session;
     if (!session) {
-      return { authenticated: false, status: "not_found" };
+      throw new BadRequestException("TOKEN_NOT_FOUND");
     }
 
     if (session.status !== "CONFIRMED") {
-      return { authenticated: false, status: session.status.toLowerCase() };
+      throw new BadRequestException("SESSION_NOT_CONFIRMED");
     }
 
     if (!session.phoneNumber) {
@@ -178,17 +194,47 @@ export class AuthTelegramController {
 
       const updated = await this.prisma.telegramLoginToken.updateMany({
         where: { token, used: false, expiresAt: { gt: new Date() } },
-        data: { used: true, userId: user.id },
+        data: {
+          used: true,
+          usedAt: new Date(),
+          userId: user.id,
+          accessToken: sessionData.session.access_token,
+          refreshToken: sessionData.session.refresh_token,
+        },
       });
       if (updated.count === 0) {
-        return { authenticated: false, status: "used" };
+        const existing = await this.prisma.telegramLoginToken.findUnique({ where: { token } });
+        if (existing?.used && existing.accessToken && existing.refreshToken) {
+          const profile = await this.supabaseAuth.getProfile(user.id);
+          return {
+            access_token: existing.accessToken,
+            refresh_token: existing.refreshToken,
+            user: {
+              id: user.id,
+              phone: profile?.phone ?? null,
+              telegram_id: profile?.telegram_id ?? null,
+              full_name: profile?.full_name ?? null,
+              role: profile?.role ?? null,
+              tariff: profile?.tariff ?? null,
+            },
+          };
+        }
+        throw new ConflictException("TOKEN_ALREADY_USED");
       }
       await this.prisma.telegramAuthSession.delete({ where: { id: session.id } }).catch(() => {});
 
+      const profile = await this.supabaseAuth.getProfile(user.id);
       return {
-        authenticated: true,
-        session: sessionData.session,
-        user: { id: user.id },
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+        user: {
+          id: user.id,
+          phone: profile?.phone ?? null,
+          telegram_id: profile?.telegram_id ?? null,
+          full_name: profile?.full_name ?? null,
+          role: profile?.role ?? null,
+          tariff: profile?.tariff ?? null,
+        },
       };
     } catch (error) {
       this.logger.error(`Telegram auth completion error: ${error}`);

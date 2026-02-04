@@ -6,7 +6,7 @@ export class AiAssistantService {
   async reply(dto: AiAssistantRequestDto) {
     const msg = dto.message.trim().toLowerCase();
 
-    if (dto.role === "guest") {
+    if (dto.role === "user") {
       if (msg.includes("почему") || msg.includes("подходит")) {
         return {
           reply:
@@ -36,7 +36,7 @@ export class AiAssistantService {
       };
     }
 
-    if (dto.role === "host") {
+    if (dto.role === "landlord") {
       if (msg.includes("цена") || msg.includes("прайс") || msg.includes("дорого") || msg.includes("дёшево")) {
         return {
           reply:
@@ -54,11 +54,9 @@ export class AiAssistantService {
       };
     }
 
-    // admin
     return {
       reply:
-        "Я могу подсвечивать кластеры риска, аномалии и очереди модерации. В MVP верну explainable сигналы; дальше подключим граф и поведенческие модели.",
-      suggestions: ["Открыть risk map", "Посмотреть fraud clusters", "Проверить quality heatmap"],
+        "Я помогу повысить загрузку: покажу Quality Score, предложу оптимизацию цены и укажу риски/узкие места в объявлении.",
     };
   }
 }

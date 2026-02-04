@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsArray, IsInt, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsArray, IsIn, IsInt, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
 export class UpdateListingDto {
   @ApiPropertyOptional()
@@ -70,6 +70,11 @@ export class UpdateListingDto {
   @ApiPropertyOptional({ description: "Произвольные правила (JSON)" })
   @IsOptional()
   houseRules?: Record<string, unknown>;
+
+  @ApiPropertyOptional({ enum: ["APARTMENT", "HOUSE", "ROOM", "STUDIO"] })
+  @IsOptional()
+  @IsIn(["APARTMENT", "HOUSE", "ROOM", "STUDIO"])
+  type?: "APARTMENT" | "HOUSE" | "ROOM" | "STUDIO";
 
   @ApiPropertyOptional({ example: ["wifi", "parking"] })
   @IsOptional()

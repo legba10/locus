@@ -34,13 +34,12 @@ export function UserMenu() {
   }
 
   const displayName = user.email || "Пользователь";
-  const isAdmin = user.role === "admin" || (user.roles ? user.roles.includes("admin") : false);
-  const isHost = user.role === "host" || (user.roles ? user.roles.includes("host") : false);
+  const isLandlord = user.role === "landlord" || (user.roles ? user.roles.includes("landlord") : false);
   const tariff = user.profile?.tariff ?? "free";
   const isPaidTariff = tariff === "landlord_basic" || tariff === "landlord_pro";
-  const canAccessOwner = isAdmin || (isHost && isPaidTariff);
+  const canAccessOwner = isLandlord && isPaidTariff;
 
-  const roleBadge = isAdmin ? "Admin" : isHost ? "Арендодатель" : "Пользователь";
+  const roleBadge = isLandlord ? "Арендодатель" : "Пользователь";
   const tariffBadge =
     tariff === "landlord_basic" ? "Basic" : tariff === "landlord_pro" ? "Pro" : "Free";
 
@@ -65,14 +64,6 @@ export function UserMenu() {
             className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
           >
             Кабинет
-          </Link>
-        )}
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
-          >
-            Админ
           </Link>
         )}
         <button

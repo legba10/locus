@@ -132,8 +132,11 @@ model TelegramLoginToken {
   sessionId     String
   session       TelegramAuthSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId        String?
+  accessToken   String?
+  refreshToken  String?
   expiresAt     DateTime
   used          Boolean            @default(false)
+  usedAt        DateTime?
   createdAt     DateTime           @default(now())
 
   @@index([sessionId])
@@ -233,6 +236,9 @@ model Listing {
   
   // AI Assistant Analysis
   analysis     ListingAnalysis?
+
+  // Views
+  views        ListingView[]
 }
 
 enum BookingStatus {
@@ -278,6 +284,20 @@ model ListingPhoto {
   createdAt DateTime @default(now())
 
   @@index([listingId, sortOrder])
+}
+
+model ListingView {
+  id           String   @id @default(uuid())
+  listingId    String
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sessionId    String
+  userId       String?
+  lastViewedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@unique([listingId, sessionId])
+  @@index([listingId])
+  @@index([sessionId])
 }
 
 model Amenity {

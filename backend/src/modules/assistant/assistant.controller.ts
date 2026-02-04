@@ -48,26 +48,23 @@ export class AssistantController {
 
   @Get('landlords/:id/insights')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить аналитику арендодателя' })
   @ApiParam({ name: 'id', description: 'ID арендодателя' })
   async getLandlordInsights(@Param('id') id: string, @Req() req: any) {
     // Проверяем, что пользователь запрашивает свои данные или является админом
     const userId = req.user.id;
-    const userRoles = req.user.roles || [];
-    
-    if (userId !== id && !userRoles.includes('admin')) {
-      // Возвращаем данные текущего пользователя
+    if (userId !== id) {
       return this.assistant.getLandlordInsights(userId);
     }
-    
+
     return this.assistant.getLandlordInsights(id);
   }
 
   @Get('landlord/insights')
   @UseGuards(SupabaseAuthGuard, RolesGuard)
-  @Roles('guest', 'host', 'admin')
+  @Roles('user', 'landlord')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить аналитику текущего арендодателя' })
   async getMyInsights(@Req() req: any) {

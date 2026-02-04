@@ -7,7 +7,7 @@ import { GlassCard, GlassButton, GlassInput } from '@/ui-system/glass'
 import { RU } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
 
-type UserRole = 'guest' | 'host'
+type UserRole = 'user' | 'landlord'
 
 interface RoleOption {
   value: UserRole
@@ -17,8 +17,8 @@ interface RoleOption {
 }
 
 const ROLES: RoleOption[] = [
-  { value: 'guest', label: RU.auth.i_rent, description: 'Найти квартиру для аренды', icon: '🔍' },
-  { value: 'host', label: RU.auth.i_own, description: 'Разместить объявление', icon: '🏠' },
+  { value: 'user', label: RU.auth.i_rent, description: 'Найти квартиру для аренды', icon: '🔍' },
+  { value: 'landlord', label: RU.auth.i_own, description: 'Разместить объявление', icon: '🏠' },
 ]
 
 /**
@@ -265,7 +265,7 @@ export function RegisterPageV3() {
               🔍 Найти жильё
             </GlassButton>
             
-            {selectedRole === 'host' && (
+            {selectedRole === 'landlord' && (
               <GlassButton
                 variant="glass"
                 fullWidth

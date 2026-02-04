@@ -167,8 +167,8 @@ function resolveTelegramIdentity(telegramUserId?: number): { user: User | null; 
     user: {
       id: userId,
       supabaseId: userId,
-      role: 'guest',
-      roles: ['guest'],
+      role: 'user',
+      roles: ['user'],
       provider: 'telegram',
     },
     profile,

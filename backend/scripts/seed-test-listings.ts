@@ -331,7 +331,7 @@ async function main() {
     const listingId = `test-listing-${i + 1}`;
 
     // Случайные данные
-    const viewsCount = Math.floor(Math.random() * 150);
+    const viewsCount = 0;
     const daysAgo = Math.floor(Math.random() * 30);
     const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
 

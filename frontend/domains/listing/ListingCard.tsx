@@ -65,8 +65,8 @@ export function ListingCard({
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">
-            🏠
+          <div className="w-full h-full flex items-center justify-center text-[#9CA3AF] text-[12px]">
+            Фото отсутствует
           </div>
         )}
       </Link>

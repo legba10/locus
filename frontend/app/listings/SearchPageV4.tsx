@@ -79,7 +79,7 @@ export function SearchPageV4() {
     if (city) params.set('city', city)
     if (priceMin) params.set('priceMin', priceMin)
     if (priceMax) params.set('priceMax', priceMax)
-    if (type) params.set('type', type)
+      if (typeParam) params.set('type', typeParam)
     if (rooms) params.set('rooms', rooms)
     if (sort !== 'ai') params.set('sort', sort)
     if (aiEnabled) {
@@ -96,12 +96,15 @@ export function SearchPageV4() {
   if (city) queryParams.set('city', city)
   if (priceMin) queryParams.set('priceMin', priceMin)
   if (priceMax) queryParams.set('priceMax', priceMax)
-  if (type) queryParams.set('type', type)
+  const typeParam = type ? type.toUpperCase() : ''
+  if (typeParam) queryParams.set('type', typeParam)
   if (rooms) queryParams.set('rooms', rooms)
 
+  if (sort !== 'ai') queryParams.set('sort', sort)
+
   const { data, isLoading } = useFetch<SearchResponse>(
-    ['search', city, priceMin, priceMax, type, rooms],
-    `/api/listings?${queryParams.toString()}`
+    ['search', city, priceMin, priceMax, typeParam, rooms, sort],
+    `/api/search?${queryParams.toString()}`
   )
 
   // AI поиск при включенном AI режиме — запрос напрямую в backend (Railway)
@@ -111,7 +114,7 @@ export function SearchPageV4() {
       if (city) params.set('city', city)
       if (priceMin) params.set('priceMin', String(priceMin))
       if (priceMax) params.set('priceMax', String(priceMax))
-      if (type) params.set('type', type)
+      if (typeParam) params.set('type', typeParam)
       if (rooms) params.set('rooms', String(rooms))
       apiFetchJson<{ reason?: string; score?: number; items?: any[]; listings?: any[] }>(`/search?${params.toString()}`)
         .then(data => {
@@ -271,7 +274,7 @@ export function SearchPageV4() {
               'rounded-[20px]',
               'border border-white/60',
               'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-              'p-6 sticky top-6'
+              'p-6 lg:sticky lg:top-6'
             )}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-5">Фильтры</h2>
               

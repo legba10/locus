@@ -304,7 +304,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           {/* БЛОК 3: CTA-блок (справа) */}
           <div className="lg:col-span-1">
             <div className={cn(
-              'bg-white rounded-[18px] p-6 sticky top-6',
+              'bg-white rounded-[18px] p-6 lg:sticky lg:top-6',
               'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
               'border border-gray-100/80'
             )}>

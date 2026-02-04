@@ -725,7 +725,7 @@ export function HomePageV6() {
                     'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
                     'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]',
                     'hover:-translate-y-0.5',
-                    'whitespace-nowrap'
+                    'sm:whitespace-nowrap'
                   )}
                 >
                   Разместить объявление
@@ -742,10 +742,11 @@ export function HomePageV6() {
       {/* ═══════════════════════════════════════════════════════════════
           AI FLOATING WIDGET — переход в поиск с параметрами
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50">
         <button
           className={cn(
-            'flex items-center gap-2 px-5 py-3 rounded-[14px]',
+            'flex items-center justify-center gap-2 px-5 py-3 rounded-[14px]',
+            'w-full sm:w-auto',
             'bg-violet-600 text-white font-semibold text-[14px]',
             'hover:bg-violet-500 active:bg-violet-700',
             'transition-all duration-200',

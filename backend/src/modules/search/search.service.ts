@@ -23,7 +23,7 @@ export class SearchService {
 
       const ids = ai.results.map((r) => r.listingId);
       const listings = await this.prisma.listing.findMany({
-        where: { id: { in: ids }, status: ListingStatus.PUBLISHED },
+        where: { id: { in: ids }, status: ListingStatus.PUBLISHED, photos: { some: {} } },
         include: {
           photos: { orderBy: { sortOrder: "asc" }, take: 1 },
           amenities: { include: { amenity: true } },
@@ -53,6 +53,8 @@ export class SearchService {
       status: ListingStatus.PUBLISHED,
       ...(dto.city ? { city: dto.city } : {}),
       ...(dto.guests ? { capacityGuests: { gte: dto.guests } } : {}),
+      ...(dto.type ? { type: dto.type } : {}),
+      ...(dto.rooms != null ? { bedrooms: { gte: dto.rooms } } : {}),
       ...(dto.priceMin || dto.priceMax
         ? {
             basePrice: {
@@ -76,6 +78,7 @@ export class SearchService {
             },
           }
         : {}),
+      photos: { some: {} },
     };
 
     const items = await this.prisma.listing.findMany({
@@ -110,6 +113,14 @@ export class SearchService {
       where.capacityGuests = { gte: dto.guests };
     }
 
+    if (dto.type) {
+      where.type = dto.type;
+    }
+
+    if (dto.rooms != null) {
+      where.bedrooms = { gte: dto.rooms };
+    }
+
     if (dto.priceMin != null || dto.priceMax != null) {
       where.basePrice = {};
       if (dto.priceMin != null) where.basePrice.gte = dto.priceMin;
@@ -129,6 +140,8 @@ export class SearchService {
         some: { amenity: { key: { in: dto.amenities } } },
       };
     }
+
+    where.photos = { some: {} };
 
     // Determine sort
     let orderBy: any;

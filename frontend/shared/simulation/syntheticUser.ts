@@ -19,8 +19,8 @@ export function createSyntheticUser(config: SyntheticUserConfig): User {
   return {
     id: config.id,
     supabaseId: `sb_${config.id}`,
-    role: config.role || 'tenant',
-    roles: [config.role || 'tenant'],
+    role: config.role || 'user',
+    roles: [config.role || 'user'],
     name: `User ${config.id}`,
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),

@@ -240,7 +240,7 @@ export function HomePageClient() {
       {/* Quick access for hosts/admins */}
       <div className="grid md:grid-cols-2 gap-4">
         <Link 
-          href="/host/dashboard"
+          href="/owner/dashboard"
           className="group rounded-2xl border border-border bg-surface-2 p-6 transition hover:border-brand/50 hover:bg-surface-3"
         >
           <div className="flex items-center gap-4">

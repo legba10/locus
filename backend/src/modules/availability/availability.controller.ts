@@ -10,7 +10,7 @@ import { UpdateAvailabilityDto } from "./dto/update-availability.dto";
 @ApiTags("availability")
 @ApiBearerAuth()
 @UseGuards(SupabaseAuthGuard, RolesGuard)
-@Roles("guest", "host", "admin")
+@Roles("landlord")
 @Controller("availability")
 export class AvailabilityController {
   constructor(
