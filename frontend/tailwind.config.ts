@@ -10,49 +10,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        // LOCUS Design System - Calm & Professional
-        primary: {
-          DEFAULT: '#2563eb',
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+        // GLOBAL UI LOCUS (из логотипа). Цвет = смысл.
+        locus: {
+          primary: '#7B4AE2',     // Главные CTA, AI, активные состояния
+          secondary: '#4AA3E2',  // Вторичные действия, иконки
+          'accent-light': 'rgba(123, 74, 226, 0.1)',
+          'bg-page': '#FFFFFF',
+          'bg-card': '#F9F9FB',
+          divider: '#ECECEC',
+          'text-main': '#1A1A1A',
+          'text-secondary': '#6B6B6B',
+          danger: '#E14C4C',     // Выйти, ошибки
         },
-        // Legacy support
-        surface: {
-          DEFAULT: '#ffffff',
-          2: '#f8fafc',
-          3: '#f1f5f9',
-        },
-        border: '#e2e8f0',
-        text: {
-          DEFAULT: '#0f172a',
-          mut: '#475569',
-          dim: '#94a3b8',
-        },
-        brand: {
-          DEFAULT: '#2563eb',
-          2: '#059669',
-        },
-        // Semantic colors
-        success: {
-          DEFAULT: '#059669',
-          light: '#d1fae5',
-        },
-        warning: {
-          DEFAULT: '#d97706',
-          light: '#fef3c7',
-        },
-        danger: {
-          DEFAULT: '#dc2626',
-          light: '#fee2e2',
-        },
+        // Legacy / alias
+        primary: { DEFAULT: '#7B4AE2', 50: '#f5f0ff', 100: '#ede5ff', 500: '#7B4AE2', 600: '#6b3dd4', 700: '#5a32b8' },
+        surface: { DEFAULT: '#ffffff', 2: '#F9F9FB', 3: '#f1f5f9' },
+        border: '#ECECEC',
+        text: { DEFAULT: '#1A1A1A', mut: '#6B6B6B', dim: '#94a3b8' },
+        brand: { DEFAULT: '#7B4AE2', 2: '#4AA3E2' },
+        success: { DEFAULT: '#059669', light: '#d1fae5' },
+        warning: { DEFAULT: '#d97706', light: '#fef3c7' },
+        danger: { DEFAULT: '#E14C4C', light: '#fee2e2' },
       },
       boxShadow: {
         card: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',

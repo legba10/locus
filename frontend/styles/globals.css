@@ -7,7 +7,7 @@
    ════════════════════════════════════════════════════════════════ */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+  scrollbar-color: rgba(123, 74, 226, 0.3) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -20,14 +20,14 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(124, 58, 237, 0.3);
+  background-color: rgba(123, 74, 226, 0.3);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(124, 58, 237, 0.5);
+  background-color: rgba(123, 74, 226, 0.5);
 }
 
 /* Плавный скроллинг */
@@ -45,7 +45,7 @@ select option {
 /* Улучшенный скроллинг для контейнеров */
 .scroll-container {
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+  scrollbar-color: rgba(123, 74, 226, 0.3) transparent;
 }
 
 .scroll-container::-webkit-scrollbar {
@@ -59,78 +59,68 @@ select option {
 }
 
 .scroll-container::-webkit-scrollbar-thumb {
-  background-color: rgba(124, 58, 237, 0.3);
+  background-color: rgba(123, 74, 226, 0.3);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(124, 58, 237, 0.5);
+  background-color: rgba(123, 74, 226, 0.5);
 }
 
 /* ════════════════════════════════════════════════════════════════
-   LOCUS Design System v2 — Premium Real Estate Marketplace
-   
-   🎯 ФОРМУЛА:
-   70% — нейтральный real-estate UI
-   20% — glass / depth / shadows  
-   10% — AI / accent (фиолетовый)
-   
-   ❗ Логотип НЕ синий!
+   GLOBAL UI / COLOR SYSTEM LOCUS (НА ВЕСЬ САЙТ)
+   ТЗ: только цвета из логотипа, цвет = смысл
    ════════════════════════════════════════════════════════════════ */
 
 :root {
   color-scheme: light;
   
-  /* ═══════════ BACKGROUNDS ═══════════ */
-  --bg-main: #FFFFFF;
-  --bg-soft: #F7F8FA;
-  --bg-card: #FFFFFF;
-  --bg-gradient: linear-gradient(180deg, #FFFFFF 0%, #F6F7FB 100%);
+  /* ═══════════ LOCUS BRAND (из логотипа) ═══════════ */
+  --locus-primary: #7B4AE2;        /* Primary — главные CTA, AI, активные состояния */
+  --locus-secondary: #4AA3E2;      /* Secondary — вторичные действия, иконки */
+  --locus-accent-light: rgba(123, 74, 226, 0.1);  /* Подсветка активных блоков, AI-карточки */
+  --locus-danger: #E14C4C;         /* Ошибки, Выйти */
   
-  /* ═══════════ TEXT ═══════════ */
-  --text-main: #111827;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  /* ═══════════ НЕЙТРАЛЬНЫЕ (база) ═══════════ */
+  --locus-bg-page: #FFFFFF;
+  --locus-bg-card: #F9F9FB;
+  --locus-divider: #ECECEC;
+  --locus-text-main: #1A1A1A;
+  --locus-text-secondary: #6B6B6B;
   
-  /* ═══════════ ACCENT (Фиолетовый — 10%) ═══════════ */
-  --accent-primary: #7C3AED;
+  /* ═══════════ СОВМЕСТИМОСТЬ (alias → locus) ═══════════ */
+  --bg-main: var(--locus-bg-page);
+  --bg-soft: var(--locus-bg-card);
+  --bg-card: var(--locus-bg-card);
+  --bg-gradient: linear-gradient(180deg, var(--locus-bg-page) 0%, #F6F7FB 100%);
+  --text-main: var(--locus-text-main);
+  --text-secondary: var(--locus-text-secondary);
+  --text-muted: var(--locus-text-secondary);
+  --accent-primary: var(--locus-primary);
   --accent-light: #A78BFA;
-  --accent-soft: rgba(124, 58, 237, 0.12);
-  --accent-border: rgba(124, 58, 237, 0.2);
-  
-  /* ═══════════ LOGO (НЕ синий! Брендовый оттенок) ═══════════ */
-  --logo-primary: #1C1F26; /* Graphite */
-  --logo-secondary: #374151;
-  --logo-accent: #7C3AED;
-  --logo-muted-blue: #4F46E5; /* Indigo для альтернативного варианта */
-  
-  /* ═══════════ BORDERS ═══════════ */
-  --border-soft: rgba(0, 0, 0, 0.06);
-  --border-default: #E5E7EB;
-  
-  /* ═══════════ SHADOWS (Критично для depth!) ═══════════ */
+  --accent-soft: var(--locus-accent-light);
+  --accent-border: rgba(123, 74, 226, 0.2);
+  --logo-primary: var(--locus-text-main);
+  --logo-secondary: var(--locus-text-secondary);
+  --logo-accent: var(--locus-primary);
+  --border-soft: var(--locus-divider);
+  --border-default: var(--locus-divider);
   --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.08);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-card-hover: 0 16px 50px rgba(0, 0, 0, 0.12);
   --shadow-glass: 0 20px 60px rgba(0, 0, 0, 0.12);
   --shadow-dropdown: 0 20px 50px rgba(0, 0, 0, 0.15);
-  --shadow-button: 0 4px 14px rgba(124, 58, 237, 0.25);
-  
-  /* ═══════════ GLASS ═══════════ */
+  --shadow-button: 0 4px 14px rgba(123, 74, 226, 0.25);
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(255, 255, 255, 0.5);
   --glass-blur: 18px;
-  
-  /* ═══════════ FOOTER ═══════════ */
   --footer-bg-from: #0B1226;
   --footer-bg-to: #020617;
-  
-  /* Semantic */
   --color-success: #10B981;
   --color-warning: #F59E0B;
-  --color-danger: #EF4444;
+  --color-danger: var(--locus-danger);
 }
 
 /* Force light mode */
@@ -144,9 +134,9 @@ body {
 }
 
 body {
-  background: var(--bg-gradient);
+  background: var(--locus-bg-page);
   background-attachment: fixed;
-  color: var(--text-main);
+  color: var(--locus-text-main);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -302,7 +292,7 @@ html {
 
 /* Dropdown item hover */
 .dropdown-item:hover {
-  background: rgba(124, 58, 237, 0.08);
+  background: rgba(123, 74, 226, 0.08);
   border-radius: 8px;
 }
 
@@ -319,7 +309,7 @@ html {
 
 .btn-accent:hover {
   background: var(--accent-light);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 6px 20px rgba(123, 74, 226, 0.35);
   transform: translateY(-1px);
 }
 
@@ -383,7 +373,7 @@ textarea:focus {
 
 /* Option B: premium purple radial (subtle) */
 .section-premium {
-  background: radial-gradient(1200px 600px at 50% 0%, rgba(124, 58, 237, 0.06), transparent 60%);
+  background: radial-gradient(1200px 600px at 50% 0%, rgba(123, 74, 226, 0.06), transparent 60%);
 }/* Dark section (graphite, НЕ blue) */
 .section-dark {
   background: linear-gradient(180deg, #0F172A 0%, #020617 100%);
@@ -443,3 +433,9 @@ textarea:focus {
     display: none;
   }
 }
+
+/* Locus GLOBAL UI: утилиты по ТЗ (активный пункт = Accent Light + Primary текст) */
+.bg-locus-accent-light { background: var(--locus-accent-light); }
+.mobile-menu-item:hover { background: var(--locus-accent-light); }
+.mobile-menu-item:not([data-logout]):not(.bg-locus-primary):hover { color: var(--locus-primary); }
+.mobile-menu-item[data-logout]:hover { background: rgba(225, 76, 76, 0.08); }

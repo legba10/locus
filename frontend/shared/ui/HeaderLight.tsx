@@ -7,6 +7,25 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Logo } from './Logo'
 
+const iconClass = 'w-5 h-5 flex-shrink-0 text-[#4AA3E2]'
+function SearchIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
+function HeartIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> }
+function MessageIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> }
+function UserIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> }
+function CreditIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> }
+function HelpIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> }
+function LogoutIcon() { return <svg className="w-5 h-5 flex-shrink-0 text-[#E14C4C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> }
+
+function NavItem({ icon, label, onClick }: { icon: 'search' | 'heart' | 'message' | 'user' | 'credit' | 'help'; label: string; onClick: () => void }) {
+  const Icon = icon === 'search' ? SearchIcon : icon === 'heart' ? HeartIcon : icon === 'message' ? MessageIcon : icon === 'user' ? UserIcon : icon === 'credit' ? CreditIcon : HelpIcon
+  return (
+    <button type="button" onClick={onClick} className="burger-panel-btn w-full min-h-[48px] h-12 px-4 py-3 rounded-[12px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2]">
+      <Icon />
+      <span>{label}</span>
+    </button>
+  )
+}
+
 /**
  * HeaderLight — v3 Premium Header
  * 
@@ -99,8 +118,8 @@ export function HeaderLight() {
                   'text-[14px] font-medium transition-colors',
                   'flex items-center h-full',
                   isActive(item.href.split('?')[0])
-                    ? 'text-violet-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'text-[#7B4AE2]'
+                    : 'text-[#6B6B6B] hover:text-[#1A1A1A]'
                 )}
               >
                 {item.label}
@@ -108,61 +127,43 @@ export function HeaderLight() {
             ))}
           </nav>
 
-          {/* Auth */}
+          {/* Auth — ТЗ: одна кнопка Войти/Зарегистрироваться; Выйти = Danger */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated() ? (
               <button
                 onClick={logout}
                 className={cn(
                   'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                  'text-gray-500 hover:text-gray-900',
-                  'hover:bg-gray-50',
+                  'text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)]',
                   'transition-colors'
                 )}
               >
                 Выйти
               </button>
             ) : (
-              <>
-                <Link 
-                  href="/auth/login"
-                  className={cn(
-                    'px-4 py-2 text-[14px] font-medium rounded-xl',
-                    'text-gray-700',
-                    'hover:bg-gray-100',
-                    'transition-colors'
-                  )}
-                >
-                  Войти
-                </Link>
-                <Link 
-                  href="/auth/register"
-                  className={cn(
-                    'px-4 py-2 text-[14px] font-semibold rounded-xl',
-                    'bg-violet-600 text-white',
-                    'hover:bg-violet-700',
-                    'transition-all duration-200',
-                    'shadow-md shadow-violet-500/25',
-                    'hover:shadow-lg hover:shadow-violet-500/30',
-                    'hover:-translate-y-0.5'
-                  )}
-                >
-                  Регистрация
-                </Link>
-              </>
+              <Link
+                href="/auth/login"
+                className={cn(
+                  'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
+                  'bg-[#7B4AE2] text-white',
+                  'hover:opacity-90 transition-opacity'
+                )}
+              >
+                Войти / Зарегистрироваться
+              </Link>
             )}
           </div>
 
-          {/* Mobile Burger — ТЗ №4: только иконка ≡, фиолетовые полоски, без круга/фона */}
+          {/* Mobile Burger — ЖЁСТКОЕ ТЗ: 3 полоски, Primary, без круга, 24×24, справа */}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className={cn(
               'md:hidden inline-flex items-center justify-center relative z-[1000]',
               'min-w-[44px] min-h-[44px] w-11 h-11 p-0',
-              'bg-transparent text-violet-600',
-              'hover:text-violet-700 active:text-violet-800',
-              'transition-colors'
+              'bg-transparent',
+              'text-[#7B4AE2] hover:opacity-90 active:opacity-80',
+              'transition-opacity'
             )}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
@@ -176,53 +177,48 @@ export function HeaderLight() {
       </div>
       <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
       <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
-        {/* Единый список: menu-item стиль, одинаковая высота/шрифт/отступы. ТЗ FINAL */}
-        {!isAuthenticated() ? (
-          <div className="mobile-menu__content px-4 pt-20 pb-4">
-            <button type="button" onClick={() => handleNavigate('/auth/login')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Войти
-            </button>
-            <button type="button" onClick={() => handleNavigate('/listings')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Поиск жилья
-            </button>
-            <button type="button" onClick={() => handleNavigate('/favorites')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Избранное
-            </button>
-            <button type="button" onClick={() => handleNavigate('/messages')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Сообщения
-            </button>
-            <button type="button" onClick={() => handleNavigate('/pricing')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Тарифы
-            </button>
-            <button type="button" onClick={() => handleNavigate('/help')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Помощь / Блог
+        {/* ЖЁСТКОЕ ТЗ: панель с шапкой «Меню» + ✕, блоки-кнопки с иконками, одна «Войти / Зарегистрироваться» */}
+        <div className="flex flex-col h-full bg-[#FFFFFF]">
+          {/* Верхняя часть: заголовок + кнопка закрыть */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-[#ECECEC] shrink-0">
+            <span className="text-[17px] font-semibold text-[#1A1A1A]">Меню</span>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center justify-center w-10 h-10 rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
+              aria-label="Закрыть"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </button>
           </div>
-        ) : (
-          <div className="mobile-menu__content px-4 pt-20 pb-4">
-            <button type="button" onClick={() => handleNavigate('/profile')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Профиль
-            </button>
-            <button type="button" onClick={() => handleNavigate('/listings')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Поиск жилья
-            </button>
-            <button type="button" onClick={() => handleNavigate('/favorites')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Избранное
-            </button>
-            <button type="button" onClick={() => handleNavigate('/messages')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Сообщения
-            </button>
-            <button type="button" onClick={() => handleNavigate('/pricing')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Тарифы
-            </button>
-            <button type="button" onClick={() => handleNavigate('/help')} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-gray-900 text-left border-b border-gray-100/80 hover:bg-violet-50/60 flex items-center">
-              Помощь / Блог
-            </button>
-            <button type="button" onClick={handleLogout} className="mobile-menu-item w-full h-11 px-4 text-[14px] font-medium text-red-600 text-left border-b border-gray-100/80 hover:bg-red-50/60 flex items-center">
-              Выйти
-            </button>
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+            {!isAuthenticated() ? (
+              <>
+                <button type="button" onClick={() => handleNavigate('/auth/login')} className="burger-panel-btn w-full min-h-[48px] h-12 px-4 py-3 rounded-[14px] text-[15px] font-semibold text-white bg-[#7B4AE2] hover:opacity-90 flex items-center justify-center transition-opacity">
+                  Войти / Зарегистрироваться
+                </button>
+                <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+              </>
+            ) : (
+              <>
+                <NavItem icon="user" label="Профиль" onClick={() => handleNavigate('/profile')} />
+                <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+                <button type="button" onClick={handleLogout} className="burger-panel-btn burger-panel-btn--logout w-full min-h-[48px] h-12 px-4 py-3 rounded-[12px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
+                  <LogoutIcon />
+                  Выйти
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </header>
   )

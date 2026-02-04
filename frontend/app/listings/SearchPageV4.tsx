@@ -163,8 +163,8 @@ export function SearchPageV4() {
       null
     const photo = typeof rawPhoto === 'string' ? rawPhoto : rawPhoto?.url || null
     const district = listing.district || null
-    // Views из API или стабильное значение
-    const views = listing.views || 100
+    // Реальные просмотры из API (viewsCount с бэкенда)
+    const views = listing.viewsCount ?? listing.views ?? 0
     // isNew из API
     const isNew = listing.isNew || false
     const isVerified = (listing.score || 0) >= 70
