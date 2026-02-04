@@ -63,12 +63,12 @@ a,
   pointer-events: auto;
 }
 
-/* Mobile menu (overlay panel under header) */
+/* Mobile menu (fullscreen overlay) */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.18);
-  z-index: 90;
+  z-index: 998;
   opacity: 0;
   transition: opacity 180ms ease-out;
   pointer-events: none;
@@ -80,22 +80,26 @@ a,
 
 .mobile-menu {
   position: fixed;
-  top: 56px;
+  top: 0;
   left: 0;
-  width: 100%;
-  min-height: 80vh;
-  height: calc(100vh - 56px);
+  width: 100vw;
+  height: 100vh;
   background: #ffffff;
-  z-index: 100;
+  z-index: 999;
   overflow-y: auto;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 180ms ease-out, transform 180ms ease-out;
+  transition: opacity 180ms ease-out;
   pointer-events: none;
 }
 
 .mobile-menu.open {
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .mobile-menu,
+  .mobile-menu-overlay {
+    display: none;
+  }
 }

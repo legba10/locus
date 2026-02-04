@@ -20,9 +20,10 @@ import { Logo } from './Logo'
 export function HeaderLight() {
   const pathname = usePathname()
   const router = useRouter()
-  const { isAuthenticated, logout } = useAuthStore()
+  const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const lastScrollYRef = useRef(0)
+  const touchStartYRef = useRef<number | null>(null)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -38,20 +39,43 @@ export function HeaderLight() {
   useEffect(() => {
     if (!isMenuOpen) return
     lastScrollYRef.current = window.scrollY
-    const handleScroll = () => {
-      const currentY = window.scrollY
-      if (currentY > lastScrollYRef.current + 8) {
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY > 0) {
         setIsMenuOpen(false)
       }
-      lastScrollYRef.current = currentY
     }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartYRef.current = event.touches[0].clientY
+    }
+    const handleTouchMove = (event: TouchEvent) => {
+      if (touchStartYRef.current === null) return
+      const deltaY = event.touches[0].clientY - touchStartYRef.current
+      if (deltaY > 12) {
+        setIsMenuOpen(false)
+        touchStartYRef.current = null
+      }
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('wheel', handleWheel, { passive: true })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+    }
   }, [isMenuOpen])
 
   const handleLogout = async () => {
     await logout()
+    setIsMenuOpen(false)
     router.push('/')
+  }
+
+  const handleNavigate = (path: string) => {
+    setIsMenuOpen(false)
+    router.push(path)
   }
 
   return (
@@ -155,85 +179,121 @@ export function HeaderLight() {
       <div className={cn('mobile-menu', isMenuOpen && 'open')}>
         {!isAuthenticated() ? (
           <div className="mobile-menu__content px-4 py-4 space-y-2">
-            <Link
-              href="/auth/login"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
+            <button
+              type="button"
+              onClick={() => handleNavigate('/auth/login')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
             >
               Войти
-            </Link>
-            <Link
-              href="/auth/register"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 border border-violet-200 hover:bg-violet-50 text-center"
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/auth/register')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 border border-violet-200 hover:bg-violet-50 text-center"
             >
               Регистрация
-            </Link>
-            <Link
-              href="/listings"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/listings')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
             >
               Поиск жилья
-            </Link>
-            <Link
-              href="/pricing"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/favorites')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Избранное
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/messages')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Сообщения
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/profile')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Профиль
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/pricing')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
             >
               Тарифы
-            </Link>
-            <Link
-              href="/help"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/help')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
             >
               Помощь / Блог
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="mobile-menu__content px-4 py-4 space-y-2">
-            <Link
-              href="/listings"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Поиск жилья
-            </Link>
-            <Link
-              href="/favorites"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Избранное
-            </Link>
-            <Link
-              href="/messages"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Сообщения
-            </Link>
-            <Link
-              href="/profile"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Профиль
-            </Link>
-            <Link
-              href="/pricing"
-              onClick={() => setIsMenuOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Тарифы
-            </Link>
+            <div className="pb-2 border-b border-gray-100">
+              <p className="text-[14px] font-semibold text-[#1C1F26]">
+                {('name' in (user || {}) && (user as { name?: string }).name) || user?.email || 'Профиль'}
+              </p>
+              {user?.email && (
+                <p className="text-[12px] text-[#6B7280]">{user.email}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-2 text-[13px] font-medium text-red-600 hover:text-red-700"
+              >
+                Выйти
+              </button>
+            </div>
             <button
               type="button"
-              onClick={handleLogout}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
+              onClick={() => handleNavigate('/listings')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
             >
-              Выйти
+              Поиск жилья
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/favorites')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Избранное
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/messages')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Сообщения
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/profile')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Профиль
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/pricing')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Тарифы
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/help')}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50 text-left"
+            >
+              Помощь / Блог
             </button>
           </div>
         )}

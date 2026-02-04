@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
@@ -107,6 +107,15 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   const [showAllAmenities, setShowAllAmenities] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const touchStartX = useRef<number | null>(null)
+  const touchStartYRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!isGalleryOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isGalleryOpen])
   
   const { data, isLoading, error } = useFetch<ListingResponse>(
     ['listing', id],
@@ -192,7 +201,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   
   // Views: show only if present
   const viewsValue = (item as { views?: number; viewsCount?: number }).viewsCount ?? item.views
-  const hasViews = Number.isFinite(viewsValue as number)
+  const hasViews = Number.isFinite(viewsValue as number) && Number(viewsValue) > 0
 
   const priceValue = Number(item.pricePerNight ?? (item as { basePrice?: number; price?: number }).basePrice ?? (item as { price?: number }).price ?? null)
   const hasPrice = Number.isFinite(priceValue) && priceValue > 0
@@ -211,6 +220,25 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
       })
     }
     touchStartX.current = null
+  }
+
+  const handleGalleryTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartYRef.current = e.touches[0].clientY
+  }
+
+  const handleGalleryTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartYRef.current !== null) {
+      const deltaY = e.changedTouches[0].clientY - touchStartYRef.current
+      if (deltaY > 60) {
+        setIsGalleryOpen(false)
+        touchStartYRef.current = null
+        touchStartX.current = null
+        return
+      }
+    }
+    handleTouchEnd(e)
+    touchStartYRef.current = null
   }
 
   // Похожие объявления (исключаем текущее)
@@ -284,33 +312,22 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                       priority
                       unoptimized={(photos[activeImage]?.url || coverPhoto || '').startsWith('http')}
                     />
-                    {/* Бейджи — максимум 2 */}
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      {aiScore.score > 0 && (
+                    {/* Бейдж: Только "Проверено" */}
+                    {aiScore.score >= 70 && (
+                      <div className="absolute top-4 left-4">
                         <span className={cn(
                           'px-3 py-1.5 rounded-lg',
-                          'bg-violet-600/90 backdrop-blur-sm',
+                          'bg-emerald-600/90 backdrop-blur-sm',
                           'text-white text-[12px] font-semibold',
                           'flex items-center gap-1.5'
                         )}>
                           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
-                          Подобрано AI
+                          Проверено
                         </span>
-                      )}
-                      <span className={cn(
-                        'px-3 py-1.5 rounded-lg',
-                        'bg-emerald-600/90 backdrop-blur-sm',
-                        'text-white text-[12px] font-semibold',
-                        'flex items-center gap-1.5'
-                      )}>
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        Проверено
-                      </span>
-                    </div>
+                      </div>
+                    )}
                     
                     {/* Навигация по фото */}
                     {photos.length > 1 && (
@@ -675,8 +692,8 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           </button>
           <div
             className="w-full h-full flex items-center justify-center"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
+            onTouchStart={handleGalleryTouchStart}
+            onTouchEnd={handleGalleryTouchEnd}
           >
             <Image
               src={photos[activeImage]?.url || coverPhoto || ''}
