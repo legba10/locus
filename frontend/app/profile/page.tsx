@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [toast, setToast] = useState(false)
   const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
   const roleLabel = user?.role === 'landlord' ? 'Арендодатель' : 'Пользователь'
   const tariffLabel =
@@ -32,6 +33,12 @@ export default function ProfilePage() {
       phone: user?.phone || '',
     })
   }, [user])
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(false), 2500)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   if (!isAuthenticated()) {
     return (
@@ -62,6 +69,7 @@ export default function ProfilePage() {
       })
       await refresh()
       setSuccess(true)
+      setToast(true)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ошибка сохранения профиля'
       setError(msg)
@@ -72,95 +80,122 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-emerald-600 text-white px-4 py-3 text-[14px] shadow-lg">
+          Изменения сохранены
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-4 py-8">
         <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Профиль</h1>
-        <div className={cn(
-          'bg-white rounded-[18px] p-6',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
+        <div className="space-y-6">
+          <section className={cn(
+            'bg-white rounded-[18px] p-6',
+            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+            'border border-gray-100/80'
+          )}>
+            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Личные данные</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className={cn(
+                    'w-full rounded-[14px] px-4 py-3',
+                    'border border-gray-200/60 bg-white/95',
+                    'text-[#1C1F26] text-[14px]',
+                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  className={cn(
+                    'w-full rounded-[14px] px-4 py-3',
+                    'border border-gray-200/60 bg-gray-50',
+                    'text-[#1C1F26] text-[14px]'
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+7 (999) 123-45-67"
+                  readOnly={isTelegramPhone}
+                  className={cn(
+                    'w-full rounded-[14px] px-4 py-3',
+                    isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
+                    'text-[#1C1F26] text-[14px]',
+                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                  )}
+                />
+                {isTelegramPhone && (
+                  <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className={cn(
+            'bg-white rounded-[18px] p-6',
+            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+            'border border-gray-100/80'
+          )}>
+            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Текущий тариф</h2>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-gray-100 text-gray-700">
-                Роль: {roleLabel}
+                Ваш статус: {roleLabel}
               </span>
               <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-violet-100 text-violet-700">
-                Тариф: {tariffLabel}
+                Текущий тариф: {tariffLabel}
               </span>
-              {isTelegramPhone && (
-                <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-emerald-100 text-emerald-700">
-                  Телефон подтверждён
-                </span>
-              )}
             </div>
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
-              <input
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                disabled
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-gray-50',
-                  'text-[#1C1F26] text-[14px]'
-                )}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+7 (999) 123-45-67"
-                readOnly={isTelegramPhone}
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-              {isTelegramPhone && (
-                <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
-              )}
-            </div>
-            {error && <p className="text-[13px] text-red-600">{error}</p>}
-            {success && <p className="text-[13px] text-emerald-600">Профиль обновлён</p>}
+            <p className="text-[14px] text-[#6B7280] mb-4">
+              Управляйте тарифом, чтобы открыть размещение объявлений и аналитику для арендодателей.
+            </p>
             <Link
               href="/pricing"
               className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
             >
               Посмотреть тарифы
             </Link>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className={cn(
-                'w-full py-3 rounded-[14px]',
-                'bg-violet-600 text-white font-semibold text-[15px]',
-                'hover:bg-violet-500 transition-colors',
-                isSaving && 'opacity-70 cursor-not-allowed'
-              )}
-            >
-              {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
-            </button>
-          </div>
+          </section>
+
+          <section className={cn(
+            'bg-white rounded-[18px] p-6',
+            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+            'border border-gray-100/80'
+          )}>
+            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Безопасность</h2>
+            <div className="space-y-2 text-[14px] text-[#6B7280]">
+              <p>Сессия защищена токенами доступа и обновления.</p>
+              <p>{isTelegramPhone ? 'Телефон подтверждён через Telegram.' : 'Телефон можно подтвердить через Telegram.'}</p>
+            </div>
+          </section>
+
+          {error && <p className="text-[13px] text-red-600">{error}</p>}
+          {success && <p className="text-[13px] text-emerald-600">Изменения сохранены</p>}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className={cn(
+              'w-full py-3 rounded-[14px]',
+              'bg-violet-600 text-white font-semibold text-[15px]',
+              'hover:bg-violet-500 transition-colors',
+              isSaving && 'opacity-70 cursor-not-allowed'
+            )}
+          >
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+          </button>
         </div>
       </div>
     </div>

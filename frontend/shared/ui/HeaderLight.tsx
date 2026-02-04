@@ -25,29 +25,15 @@ export function HeaderLight() {
 
   const isActive = (path: string) => pathname === path
   const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
-  const tariff = user?.tariff ?? 'free'
-  const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
-  const canAccessOwner = isLandlord && isPaidTariff
-  const hostCtaHref = canAccessOwner ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+  const landlordHref = isLandlord ? '/owner/dashboard?tab=listings' : '/pricing?reason=host'
 
-  const desktopNav = useMemo(() => {
-    if (isLandlord) {
-      return [
-        { label: 'Мои объявления', href: '/owner/dashboard?tab=listings' },
-        { label: 'Добавить объявление', href: hostCtaHref },
-        { label: 'Бронирования', href: '/bookings' },
-        { label: 'Сообщения', href: '/messages' },
-        { label: 'Аналитика', href: '/owner/dashboard?tab=analytics' },
-        { label: 'Профиль', href: '/profile' },
-      ]
-    }
-    return [
-      { label: 'Бронирования', href: '/bookings' },
-      { label: 'Избранное', href: '/favorites' },
-      { label: 'Сообщения', href: '/messages' },
-      { label: 'Профиль', href: '/profile' },
-    ]
-  }, [isLandlord, hostCtaHref])
+  const desktopNav = useMemo(() => ([
+    { label: 'Поиск жилья', href: '/listings' },
+    { label: 'Избранное', href: '/favorites' },
+    { label: 'Сообщения', href: '/messages' },
+    { label: 'Для арендодателей', href: landlordHref },
+    { label: 'Профиль', href: '/profile' },
+  ]), [landlordHref])
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -88,88 +74,39 @@ export function HeaderLight() {
 
           {/* Navigation — выровнено по центру */}
           <nav className="hidden md:flex items-center gap-6 h-full">
-            <Link
-              href="/listings"
-              className={cn(
-                'text-[14px] font-medium transition-colors',
-                'flex items-center h-full',
-                isActive('/listings')
-                  ? 'text-violet-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              )}
-            >
-              Поиск жилья
-            </Link>
-            {isAuthenticated() &&
-              desktopNav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'text-[14px] font-medium transition-colors',
-                    'flex items-center h-full',
-                    isActive(item.href.split('?')[0])
-                      ? 'text-violet-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            <Link
-              href="/pricing"
-              className={cn(
-                'text-[14px] font-semibold transition-colors',
-                isActive('/pricing') ? 'text-violet-700' : 'text-violet-600 hover:text-violet-700'
-              )}
-            >
-              Тарифы
-            </Link>
+            {desktopNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'text-[14px] font-medium transition-colors',
+                  'flex items-center h-full',
+                  isActive(item.href.split('?')[0])
+                    ? 'text-violet-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Auth */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated() ? (
-              <div className="flex items-center gap-3">
-                {!canAccessOwner && (
-                  <Link
-                    href="/pricing"
-                    className={cn(
-                      'hidden md:inline-flex items-center rounded-xl px-3.5 py-2 text-[13px] font-semibold',
-                      'bg-violet-50 text-violet-700 hover:bg-violet-100 transition-colors'
-                    )}
-                  >
-                    Тарифы
-                  </Link>
+              <button
+                onClick={logout}
+                className={cn(
+                  'px-3.5 py-2 text-[13px] font-medium rounded-xl',
+                  'text-gray-500 hover:text-gray-900',
+                  'hover:bg-gray-50',
+                  'transition-colors'
                 )}
-                <Link
-                  href="/profile"
-                  className={cn(
-                    'w-9 h-9 rounded-xl',
-                    'bg-gradient-to-br from-violet-100 to-violet-50',
-                    'border border-violet-100',
-                    'flex items-center justify-center',
-                    'text-violet-600 text-[14px] font-semibold'
-                  )}
-                  aria-label="Профиль"
-                >
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
-                </Link>
-                <button
-                  onClick={logout}
-                  className={cn(
-                    'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                    'text-gray-500 hover:text-gray-900',
-                    'hover:bg-gray-50',
-                    'transition-colors'
-                  )}
-                >
-                  Выйти
-                </button>
-              </div>
+              >
+                Выйти
+              </button>
             ) : (
               <>
-                {/* Войти */}
                 <Link 
                   href="/auth/login"
                   className={cn(
@@ -181,8 +118,6 @@ export function HeaderLight() {
                 >
                   Войти
                 </Link>
-                
-                {/* Регистрация — фиолетовая CTA */}
                 <Link 
                   href="/auth/register"
                   className={cn(
@@ -229,21 +164,19 @@ export function HeaderLight() {
           >
             {isAuthenticated() ? (
               <>
-                {isLandlord && (
-                  <Link
-                    href="/owner/dashboard?tab=listings"
-                    className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Мои объявления
-                  </Link>
-                )}
                 <Link
-                  href="/bookings"
+                  href="/listings"
                   className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
                   onClick={() => setMobileOpen(false)}
                 >
-                  Бронирования
+                  Поиск жилья
+                </Link>
+                <Link
+                  href="/favorites"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Избранное
                 </Link>
                 <Link
                   href="/messages"
@@ -259,13 +192,6 @@ export function HeaderLight() {
                 >
                   Профиль
                 </Link>
-                <Link
-                  href="/pricing"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Тарифы
-                </Link>
                 <button
                   type="button"
                   onClick={async () => {
@@ -280,6 +206,13 @@ export function HeaderLight() {
             ) : (
               <>
                 <Link
+                  href="/listings"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Поиск жилья
+                </Link>
+                <Link
                   href="/auth/login"
                   className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
                   onClick={() => setMobileOpen(false)}
@@ -292,13 +225,6 @@ export function HeaderLight() {
                   onClick={() => setMobileOpen(false)}
                 >
                   Регистрация
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-violet-700 hover:bg-violet-50"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Тарифы
                 </Link>
               </>
             )}

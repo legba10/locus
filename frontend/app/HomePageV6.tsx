@@ -40,11 +40,31 @@ export function HomePageV6() {
   const [priceRange, setPriceRange] = useState('')
   const [rentPeriod, setRentPeriod] = useState('')
   const [smartSearch, setSmartSearch] = useState(true) // AI toggle
+  const [aiOpen, setAiOpen] = useState(false)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+  const [dragOffset, setDragOffset] = useState(0)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
   const isLandlord = user?.role === 'landlord'
   const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
   const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+
+  const handleAiStart = () => {
+    const params = new URLSearchParams()
+    params.set('ai', 'true')
+    if (city) params.set('city', city)
+    if (priceRange) {
+      const [min, max] = priceRange.split('-')
+      if (min) params.set('priceMin', min)
+      if (max) params.set('priceMax', max)
+    }
+    if (propertyType) params.set('type', propertyType)
+    if (rentPeriod === 'long') params.set('rooms', '1')
+    params.set('sort', 'ai')
+    setAiOpen(false)
+    setDragOffset(0)
+    router.push(`/search?${params.toString()}`)
+  }
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -760,25 +780,7 @@ export function HomePageV6() {
             'hover:shadow-[0_12px_32px_rgba(124,58,237,0.5)]',
             'hover:-translate-y-1'
           )}
-          onClick={() => {
-            // Переход на /search с активацией AI
-            const params = new URLSearchParams()
-            params.set('ai', 'true') // Активируем AI режим
-            
-            // Если есть параметры из формы, передаем их
-            if (city) params.set('city', city)
-            if (priceRange) {
-              const [min, max] = priceRange.split('-')
-              if (min) params.set('priceMin', min)
-              if (max) params.set('priceMax', max)
-            }
-            if (propertyType) params.set('type', propertyType)
-            if (rentPeriod === 'long') params.set('rooms', '1')
-            params.set('sort', 'ai')
-            
-            // Если нет параметров, откроется AI-мастер
-            router.push(`/search?${params.toString()}`)
-          }}
+          onClick={() => setAiOpen(true)}
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
@@ -786,6 +788,101 @@ export function HomePageV6() {
           Подобрать жильё с AI
         </button>
       </div>
+
+      {aiOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
+          onClick={() => {
+            setAiOpen(false)
+            setDragOffset(0)
+          }}
+        >
+          <div
+            className={cn(
+              'w-full rounded-t-3xl bg-white',
+              'shadow-[0_-12px_40px_rgba(0,0,0,0.2)]',
+              'pb-8'
+            )}
+            style={{
+              transform: `translateY(${dragOffset}px)`,
+              transition: dragStart ? 'none' : 'transform 200ms ease',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="px-6 pt-3 pb-2"
+              onTouchStart={(e) => {
+                setDragStart(e.touches[0].clientY)
+              }}
+              onTouchMove={(e) => {
+                if (dragStart === null) return
+                const delta = e.touches[0].clientY - dragStart
+                if (delta > 0) setDragOffset(Math.min(delta, 240))
+              }}
+              onTouchEnd={() => {
+                if (dragOffset > 100) {
+                  setAiOpen(false)
+                  setDragOffset(0)
+                } else {
+                  setDragOffset(0)
+                }
+                setDragStart(null)
+              }}
+            >
+              <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-200" />
+            </div>
+
+            <div className="px-6 pt-2">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-[20px] font-bold text-[#1C1F26]">AI-подбор жилья</h3>
+                  <p className="text-[14px] text-[#6B7280] mt-1">
+                    Быстрый подбор с анализом цены и качества объявлений.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiOpen(false)
+                    setDragOffset(0)
+                  }}
+                  className="rounded-full p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                  aria-label="Закрыть"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                {[
+                  'Сравниваем цену с рынком и подсказываем, где переплата',
+                  'Фильтруем сомнительные варианты и оставляем релевантные',
+                  'Учитываем ваш город, тип жилья и бюджет'
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-violet-500" />
+                    <p className="text-[13px] text-gray-700">{item}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAiStart}
+                className={cn(
+                  'mt-5 w-full rounded-[14px] px-5 py-3 text-[14px] font-semibold',
+                  'bg-violet-600 text-white hover:bg-violet-500 active:bg-violet-700',
+                  'transition-colors'
+                )}
+              >
+                Запустить AI‑подбор
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
