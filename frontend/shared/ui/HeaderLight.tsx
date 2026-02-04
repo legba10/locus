@@ -157,39 +157,42 @@ export function HeaderLight() {
             )}
           </div>
 
-          {/* Mobile Burger Button — 48×48, единственная навигация вне бургера, выше overlay */}
+          {/* Mobile Burger — ТЗ №4: только иконка ≡, фиолетовые полоски, без круга/фона */}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className={cn(
               'md:hidden inline-flex items-center justify-center relative z-[1000]',
-              'w-[48px] h-[48px] min-w-[48px] min-h-[48px] rounded-full',
-              'bg-violet-600 text-white',
-              'shadow-[0_8px_24px_rgba(124,58,237,0.35)]',
-              'hover:bg-violet-500 active:bg-violet-700',
-              'transition-all'
+              'min-w-[44px] min-h-[44px] w-11 h-11 p-0',
+              'bg-transparent text-violet-600',
+              'hover:text-violet-700 active:text-violet-800',
+              'transition-colors'
             )}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
-            ≡
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <line x1="4" y1="7" x2="20" y2="7" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="17" x2="20" y2="17" />
+            </svg>
           </button>
         </div>
       </div>
       <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
       <div className={cn('mobile-menu', isMenuOpen && 'open')}>
         {!isAuthenticated() ? (
-          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-2">
+          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-3">
             <button
               type="button"
               onClick={() => handleNavigate('/auth/login')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
+              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
             >
               Войти
             </button>
             <button
               type="button"
               onClick={() => handleNavigate('/auth/register')}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 border border-violet-200 hover:bg-violet-50 text-center"
+              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-violet-600 border-2 border-violet-200 hover:bg-violet-50 text-center"
             >
               Регистрация
             </button>
@@ -237,22 +240,15 @@ export function HeaderLight() {
             </button>
           </div>
         ) : (
-          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-2">
-            <div className="pb-2 border-b border-gray-100">
-              <p className="text-[14px] font-semibold text-[#1C1F26]">
-                {('name' in (user || {}) && (user as { name?: string }).name) || user?.email || 'Профиль'}
-              </p>
-              {user?.email && (
-                <p className="text-[12px] text-[#6B7280]">{user.email}</p>
-              )}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="mt-2 text-[13px] font-medium text-red-600 hover:text-red-700"
-              >
-                Выйти
-              </button>
-            </div>
+          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-3">
+            {/* ТЗ №4/6: только кнопка Выйти, без email/telegram_id */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full h-[48px] px-4 rounded-[10px] text-[14px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 text-center border-0"
+            >
+              Выйти
+            </button>
             <button
               type="button"
               onClick={() => handleNavigate('/listings')}
