@@ -22,7 +22,8 @@ export function HeaderLight() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
-  const [dragOffset, setDragOffset] = useState(0)
+  const [sheetTranslate, setSheetTranslate] = useState(100)
+  const [isClosing, setIsClosing] = useState(false)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -51,11 +52,11 @@ export function HeaderLight() {
     if (typeof document === 'undefined') return
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
-      setDragOffset(1000)
-      requestAnimationFrame(() => setDragOffset(0))
+      setSheetTranslate(100)
+      requestAnimationFrame(() => setSheetTranslate(0))
     } else {
       document.body.style.overflow = ''
-      setDragOffset(0)
+      setSheetTranslate(100)
     }
     return () => {
       document.body.style.overflow = ''
@@ -63,9 +64,25 @@ export function HeaderLight() {
   }, [mobileOpen])
 
   useEffect(() => {
-    setMobileOpen(false)
-    setDragOffset(0)
+    if (!mobileOpen) return
+    handleCloseMenu()
   }, [pathname])
+
+  const handleOpenMenu = () => {
+    setIsClosing(false)
+    setMobileOpen(true)
+  }
+
+  const handleCloseMenu = () => {
+    if (isClosing) return
+    setIsClosing(true)
+    setSheetTranslate(100)
+    setTimeout(() => {
+      setMobileOpen(false)
+      setIsClosing(false)
+      setDragStart(null)
+    }, 240)
+  }
 
   return (
     <header className={cn(
@@ -148,7 +165,7 @@ export function HeaderLight() {
           {/* Mobile Burger Button (top right) */}
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
+            onClick={handleOpenMenu}
             className={cn(
               'md:hidden inline-flex items-center justify-center',
               'w-10 h-10 rounded-full',
@@ -166,24 +183,23 @@ export function HeaderLight() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-          onClick={() => {
-            setMobileOpen(false)
-            setDragOffset(0)
-          }}
+          className="md:hidden fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
+          onClick={handleCloseMenu}
         >
           <div
             className={cn(
               'fixed bottom-0 left-0 w-screen',
-              'max-h-[90vh] overflow-y-auto overscroll-contain',
+              'max-h-[90dvh] overflow-y-auto overscroll-contain',
               'rounded-t-[16px] bg-white',
               'shadow-[0_-12px_40px_rgba(0,0,0,0.2)]',
               'pb-8'
             )}
             style={{
-              transform: `translateY(${dragOffset}px)`,
+              zIndex: 9999,
+              transform: `translateY(${sheetTranslate}%)`,
               transition: dragStart ? 'none' : 'transform 240ms ease-out',
               paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)',
+              paddingTop: 'calc(env(safe-area-inset-top) + 8px)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -193,14 +209,16 @@ export function HeaderLight() {
               onTouchMove={(e) => {
                 if (dragStart === null) return
                 const delta = e.touches[0].clientY - dragStart
-                if (delta > 0) setDragOffset(Math.min(delta, 240))
+                if (delta > 0) {
+                  const percent = Math.min(100, (delta / window.innerHeight) * 100)
+                  setSheetTranslate(percent)
+                }
               }}
               onTouchEnd={() => {
-                if (dragOffset > 100) {
-                  setMobileOpen(false)
-                  setDragOffset(0)
+                if (sheetTranslate > 30) {
+                  handleCloseMenu()
                 } else {
-                  setDragOffset(0)
+                  setSheetTranslate(0)
                 }
                 setDragStart(null)
               }}
@@ -232,36 +250,36 @@ export function HeaderLight() {
               <div className="space-y-2">
                 <Link
                   href="/listings"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50 min-h-[48px]"
+                  onClick={handleCloseMenu}
                 >
-                  Поиск
+                  Поиск жилья
                 </Link>
                 <Link
                   href="/favorites"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50 min-h-[48px]"
+                  onClick={handleCloseMenu}
                 >
                   Избранное
                 </Link>
                 <Link
                   href="/messages"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50 min-h-[48px]"
+                  onClick={handleCloseMenu}
                 >
                   Сообщения
                 </Link>
                 <Link
                   href="/profile"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50 min-h-[48px]"
+                  onClick={handleCloseMenu}
                 >
                   Профиль
                 </Link>
                 <Link
                   href="/pricing"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50 min-h-[48px]"
+                  onClick={handleCloseMenu}
                 >
                   Тарифы
                 </Link>
@@ -271,9 +289,9 @@ export function HeaderLight() {
                     if (isAuthenticated()) {
                       await logout()
                     }
-                    setMobileOpen(false)
+                    handleCloseMenu()
                   }}
-                  className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
+                  className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50 min-h-[48px]"
                 >
                   Выйти
                 </button>
