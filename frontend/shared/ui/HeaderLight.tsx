@@ -51,8 +51,11 @@ export function HeaderLight() {
     if (typeof document === 'undefined') return
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
+      setDragOffset(1000)
+      requestAnimationFrame(() => setDragOffset(0))
     } else {
       document.body.style.overflow = ''
+      setDragOffset(0)
     }
     return () => {
       document.body.style.overflow = ''
@@ -61,6 +64,7 @@ export function HeaderLight() {
 
   useEffect(() => {
     setMobileOpen(false)
+    setDragOffset(0)
   }, [pathname])
 
   return (
@@ -162,7 +166,7 @@ export function HeaderLight() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm overscroll-contain"
+          className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
           onClick={() => {
             setMobileOpen(false)
             setDragOffset(0)
@@ -170,13 +174,15 @@ export function HeaderLight() {
         >
           <div
             className={cn(
-              'w-full rounded-t-3xl bg-white',
+              'fixed bottom-0 left-0 w-screen',
+              'max-h-[90vh] overflow-y-auto overscroll-contain',
+              'rounded-t-[16px] bg-white',
               'shadow-[0_-12px_40px_rgba(0,0,0,0.2)]',
               'pb-8'
             )}
             style={{
               transform: `translateY(${dragOffset}px)`,
-              transition: dragStart ? 'none' : 'transform 220ms ease-out',
+              transition: dragStart ? 'none' : 'transform 240ms ease-out',
               paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)',
             }}
             onClick={(e) => e.stopPropagation()}
@@ -199,7 +205,7 @@ export function HeaderLight() {
                 setDragStart(null)
               }}
             >
-              <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-200" />
+              <div className="mx-auto h-1.5 w-12 rounded-full bg-violet-200" />
             </div>
 
             <div className="px-6 pt-2">
@@ -252,36 +258,25 @@ export function HeaderLight() {
                 >
                   Профиль
                 </Link>
-                {isAuthenticated() && (
-                  <button
-                    type="button"
-                    onClick={async () => {
+                <Link
+                  href="/pricing"
+                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Тарифы
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (isAuthenticated()) {
                       await logout()
-                      setMobileOpen(false)
-                    }}
-                    className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
-                  >
-                    Выйти
-                  </button>
-                )}
-                {!isAuthenticated() && (
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Link
-                      href="/auth/login"
-                      className="rounded-xl px-4 py-3 text-center text-[14px] font-medium text-gray-900 hover:bg-gray-50 border border-gray-200"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Войти
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      className="rounded-xl px-4 py-3 text-center text-[14px] font-medium text-white bg-violet-600 hover:bg-violet-500"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Регистрация
-                    </Link>
-                  </div>
-                )}
+                    }
+                    setMobileOpen(false)
+                  }}
+                  className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
+                >
+                  Выйти
+                </button>
               </div>
             </div>
           </div>
