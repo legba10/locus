@@ -6,7 +6,6 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/api/client'
 import { cn } from '@/shared/utils/cn'
 import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
-import { AiSearchWizard, type AiSearchParams } from '@/domains/ai/AiSearchWizard'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
 import { CityInput } from '@/shared/components/CityInput'
 
@@ -37,42 +36,9 @@ export function SearchPageV4() {
   const [type, setType] = useState(searchParams.get('type') || '')
   const [rooms, setRooms] = useState(searchParams.get('rooms') || '')
   const [sort, setSort] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'ai')
-  const [aiEnabled, setAiEnabled] = useState(searchParams.get('ai') === 'true' || searchParams.get('smart') === 'true' || sort === 'ai')
+  const [aiEnabled, setAiEnabled] = useState(searchParams.get('ai') === 'true')
   const [aiResults, setAiResults] = useState<{ reason: string; score: number } | null>(null)
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
-  const [showAiWizard, setShowAiWizard] = useState(false)
-  
-  // Проверяем, нужно ли показать AI-мастер (нет параметров и AI включен)
-  useEffect(() => {
-    const hasParams = city || priceMin || priceMax || type || rooms
-    setShowAiWizard(aiEnabled && !hasParams)
-  }, [aiEnabled, city, priceMin, priceMax, type, rooms])
-
-  // Обработчик AI-мастера
-  const handleAiWizardSearch = (params: AiSearchParams) => {
-    const urlParams = new URLSearchParams()
-    urlParams.set('ai', 'true')
-    urlParams.set('smart', 'true')
-    urlParams.set('sort', 'ai')
-    
-    if (params.city) urlParams.set('city', params.city)
-    if (params.priceMin) urlParams.set('priceMin', String(params.priceMin))
-    if (params.priceMax) urlParams.set('priceMax', String(params.priceMax))
-    if (params.type) urlParams.set('type', params.type)
-    if (params.rooms) urlParams.set('rooms', String(params.rooms))
-    if (params.rentPeriod) urlParams.set('rentPeriod', params.rentPeriod)
-    
-    // Обновляем состояние
-    setCity(params.city)
-    setPriceMin(String(params.priceMin))
-    setPriceMax(String(params.priceMax))
-    setType(params.type)
-    setRooms(String(params.rooms))
-    setAiEnabled(true)
-    setShowAiWizard(false)
-    
-    router.push(`/search?${urlParams.toString()}`)
-  }
 
   // Обновляем URL при изменении фильтров
   useEffect(() => {
@@ -83,10 +49,7 @@ export function SearchPageV4() {
       if (typeParam) params.set('type', typeParam)
     if (rooms) params.set('rooms', rooms)
     if (sort !== 'ai') params.set('sort', sort)
-    if (aiEnabled) {
-      params.set('ai', 'true')
-      params.set('smart', 'true')
-    }
+    if (aiEnabled) params.set('ai', 'true')
     
     const newUrl = `/listings${params.toString() ? `?${params.toString()}` : ''}`
     router.replace(newUrl, { scroll: false })
@@ -187,7 +150,18 @@ export function SearchPageV4() {
   // Преобразуем данные для карточек
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
   const listingCards = (data?.items || []).map((listing: any) => {
-    const photo = listing.images?.[0]?.url || null
+    const rawPhoto =
+      listing.images?.[0]?.url ||
+      listing.images?.[0] ||
+      listing.photos?.[0]?.url ||
+      listing.photos?.[0] ||
+      listing.image?.url ||
+      listing.image ||
+      listing.photoUrl ||
+      listing.photo ||
+      listing.cover ||
+      null
+    const photo = typeof rawPhoto === 'string' ? rawPhoto : rawPhoto?.url || null
     const district = listing.district || null
     // Views из API или стабильное значение
     const views = listing.views || 100
@@ -393,6 +367,22 @@ export function SearchPageV4() {
                   </select>
                 </div>
               </div>
+
+              {/* AI-подбор (дополняет фильтры) */}
+              <div className="mt-6 rounded-[16px] border border-violet-100 bg-violet-50/60 p-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={aiEnabled}
+                    onChange={(e) => setAiEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <div>
+                    <div className="text-[13px] font-semibold text-[#1C1F26]">AI‑подбор</div>
+                    <div className="text-[12px] text-[#6B7280]">AI поможет отобрать лучшие варианты</div>
+                  </div>
+                </label>
+              </div>
             </div>
           </aside>
 
@@ -400,20 +390,6 @@ export function SearchPageV4() {
               ОСНОВНОЙ КОНТЕНТ (справа)
               ═══════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-3">
-            {/* AI-мастер подбора (показывается если нет параметров и AI включен) */}
-            {showAiWizard && (
-              <AiSearchWizard
-                onSearch={handleAiWizardSearch}
-                initialParams={{
-                  city,
-                  priceMin: priceMin ? Number(priceMin) : undefined,
-                  priceMax: priceMax ? Number(priceMax) : undefined,
-                  type,
-                  rooms: rooms ? Number(rooms) : undefined,
-                }}
-              />
-            )}
-
             {/* AI ПАНЕЛЬ — показываем только если AI включен */}
             {aiEnabled && !isLoading && sortedListings.length > 0 && (
               <div className={cn(
@@ -446,7 +422,7 @@ export function SearchPageV4() {
               </div>
             )}
 
-            {/* Toggle AI режима */}
+            {/* Результаты + сортировка */}
             <div className="mb-6 flex items-center justify-between">
               <div>
                 {!isLoading && (
@@ -456,32 +432,10 @@ export function SearchPageV4() {
                 )}
               </div>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={aiEnabled}
-                    onChange={(e) => {
-                      setAiEnabled(e.target.checked)
-                      if (e.target.checked) {
-                        setSort('ai')
-                      }
-                    }}
-                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-                  />
-                  <span className="text-[13px] text-[#6B7280] group-hover:text-[#1C1F26] transition-colors flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
-                    Умный подбор
-                  </span>
-                </label>
                 <select
                   value={sort}
                   onChange={(e) => {
                     setSort(e.target.value as SortOption)
-                    if (e.target.value === 'ai') {
-                      setAiEnabled(true)
-                    }
                   }}
                   className={cn(
                     'rounded-[14px] px-4 py-2.5',

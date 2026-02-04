@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
@@ -19,8 +19,9 @@ import { Logo } from './Logo'
  */
 export function HeaderLight() {
   const pathname = usePathname()
+  const router = useRouter()
   const { isAuthenticated, logout } = useAuthStore()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -32,6 +33,11 @@ export function HeaderLight() {
   ]), [])
 
   void pathname
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/')
+  }
 
   return (
     <header className={cn(
@@ -115,10 +121,10 @@ export function HeaderLight() {
           {/* Mobile Burger Button */}
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
             className={cn(
               'md:hidden inline-flex items-center justify-center',
-              'w-10 h-10 rounded-full',
+              'w-11 h-11 rounded-full',
               'bg-violet-600 text-white',
               'shadow-[0_8px_24px_rgba(124,58,237,0.35)]',
               'hover:bg-violet-500 active:bg-violet-700',
@@ -130,95 +136,82 @@ export function HeaderLight() {
           </button>
         </div>
       </div>
-      {isOpen && (
+      {isMenuOpen && (
         <div className="mobile-menu">
-          <div className="mobile-menu__header px-4 py-3 border-b border-gray-100">
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="text-[14px] font-medium text-gray-700"
-            >
-              ← Назад
-            </button>
-            {!isAuthenticated() && (
-              <div className="mt-4 flex items-center gap-3">
-                <Link
-                  href="/auth/login"
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    'px-4 py-2 text-[14px] font-medium rounded-xl',
-                    'text-gray-700',
-                    'hover:bg-gray-100',
-                    'transition-colors'
-                  )}
-                >
-                  Войти
-                </Link>
-                <Link
-                  href="/auth/register"
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    'px-4 py-2 text-[14px] font-semibold rounded-xl',
-                    'bg-violet-600 text-white',
-                    'hover:bg-violet-700',
-                    'transition-all duration-200',
-                    'shadow-md shadow-violet-500/25'
-                  )}
-                >
-                  Регистрация
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <nav className="mobile-menu__content px-4 py-4 space-y-2">
-            <Link
-              href="/listings"
-              onClick={() => setIsOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Поиск жилья
-            </Link>
-            <Link
-              href="/favorites"
-              onClick={() => setIsOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Избранное
-            </Link>
-            <Link
-              href="/messages"
-              onClick={() => setIsOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Сообщения
-            </Link>
-            <Link
-              href="/profile"
-              onClick={() => setIsOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Профиль
-            </Link>
-            <Link
-              href="/pricing"
-              onClick={() => setIsOpen(false)}
-              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-            >
-              Тарифы
-            </Link>
-          </nav>
-
-          <div className="px-4 py-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
-            >
-              Выйти
-            </button>
-            <div className="h-6" />
-          </div>
+          {!isAuthenticated() ? (
+            <div className="mobile-menu__content px-4 py-4 space-y-2">
+              <Link
+                href="/auth/login"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Войти
+              </Link>
+              <Link
+                href="/auth/register"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 hover:bg-violet-50"
+              >
+                Регистрация
+              </Link>
+              <Link
+                href="/listings"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Поиск жилья
+              </Link>
+              <Link
+                href="/pricing"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Тарифы
+              </Link>
+              <Link
+                href="/help"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Помощь / Блог
+              </Link>
+            </div>
+          ) : (
+            <div className="mobile-menu__content px-4 py-4 space-y-2">
+              <Link
+                href="/listings"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Поиск жилья
+              </Link>
+              <Link
+                href="/favorites"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Избранное
+              </Link>
+              <Link
+                href="/messages"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Сообщения
+              </Link>
+              <Link
+                href="/profile"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Профиль
+              </Link>
+              <Link
+                href="/pricing"
+                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Тарифы
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
+              >
+                Выйти
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

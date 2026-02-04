@@ -63,14 +63,11 @@ a,
   pointer-events: auto;
 }
 
-/* Mobile menu (fullscreen static) */
+/* Mobile menu (static under header) */
 .mobile-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
   width: 100%;
-  min-height: 100vh;
+  position: relative;
   background: #ffffff;
-  z-index: 100;
+  z-index: 1;
   overflow-y: auto;
 }
