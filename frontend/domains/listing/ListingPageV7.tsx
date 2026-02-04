@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
@@ -102,7 +102,11 @@ interface ListingResponse {
  */
 export function ListingPageV7({ id }: ListingPageV7Props) {
   const [activeImage, setActiveImage] = useState(0)
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [showAllAmenities, setShowAllAmenities] = useState(false)
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const touchStartX = useRef<number | null>(null)
   
   const { data, isLoading, error } = useFetch<ListingResponse>(
     ['listing', id],
@@ -157,6 +161,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   // Извлекаем фото
   const photos = item.images || item.photos || []
   const coverPhoto = photos[0]?.url
+  const hasPhotos = photos.length > 0
   
   // AI данные через ai-engine
   const listingData: Listing = {
@@ -185,8 +190,28 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   // Удобства
   const amenities = item.amenities || []
   
-  // HYDRATION-SAFE: Views from API or stable default
-  const views = (item as { views?: number; viewsCount?: number }).viewsCount ?? item.views ?? 0
+  // Views: show only if present
+  const viewsValue = (item as { views?: number; viewsCount?: number }).viewsCount ?? item.views
+  const hasViews = Number.isFinite(viewsValue as number)
+
+  const priceValue = Number(item.pricePerNight ?? (item as { basePrice?: number; price?: number }).basePrice ?? (item as { price?: number }).price ?? null)
+  const hasPrice = Number.isFinite(priceValue) && priceValue > 0
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || photos.length < 2) return
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(deltaX) > 50) {
+      setActiveImage((prev) => {
+        if (deltaX < 0) return Math.min(prev + 1, photos.length - 1)
+        return Math.max(prev - 1, 0)
+      })
+    }
+    touchStartX.current = null
+  }
 
   // Похожие объявления (исключаем текущее)
   // HYDRATION-SAFE: No Math.random() - use data from API
@@ -243,8 +268,13 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
               'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
               'border border-gray-100/80'
             )}>
-              <div className="relative aspect-[16/10] bg-gray-100">
-                {photos.length > 0 ? (
+              <div
+                className="relative w-full h-[42vh] sm:h-[45vh] bg-gray-100"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onClick={() => hasPhotos && setIsGalleryOpen(true)}
+              >
+                {hasPhotos ? (
                   <>
                     <Image
                       src={photos[activeImage]?.url || coverPhoto || ''}
@@ -254,9 +284,9 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                       priority
                       unoptimized={(photos[activeImage]?.url || coverPhoto || '').startsWith('http')}
                     />
-                    {/* ТОЛЬКО UI badges, БЕЗ текста */}
+                    {/* Бейджи — максимум 2 */}
                     <div className="absolute top-4 left-4 flex gap-2">
-                      {aiScore.score >= 75 && (
+                      {aiScore.score > 0 && (
                         <span className={cn(
                           'px-3 py-1.5 rounded-lg',
                           'bg-violet-600/90 backdrop-blur-sm',
@@ -266,7 +296,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                           </svg>
-                          AI рекомендует
+                          Подобрано AI
                         </span>
                       )}
                       <span className={cn(
@@ -315,30 +345,32 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
               'border border-gray-100/80'
             )}>
               {/* Цена */}
-              <div className="mb-6">
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[32px] font-bold text-[#1C1F26]">
-                    {formatPrice(item.pricePerNight, 'month')}
-                  </span>
+              {hasPrice && (
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[32px] font-bold text-[#1C1F26]">
+                      {formatPrice(priceValue, 'month')}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[13px] text-[#6B7280]">за месяц</p>
-              </div>
+              )}
 
               {/* Действия */}
               <div className="space-y-3 mb-6">
-                <BookingButton listingId={item.id} price={item.pricePerNight} />
-                
                 <button
                   className={cn(
                     'w-full px-5 py-3 rounded-[14px]',
-                    'bg-white border-2 border-gray-200',
-                    'text-[#1C1F26] font-semibold text-[15px]',
-                    'hover:bg-gray-50 transition-colors'
+                    'bg-violet-600 text-white font-semibold text-[15px]',
+                    'hover:bg-violet-500 active:bg-violet-700',
+                    'transition-all duration-200',
+                    'shadow-[0_4px_14px_rgba(124,58,237,0.35)]'
                   )}
                 >
                   Написать владельцу
                 </button>
-                
+
+                <BookingButton listingId={item.id} price={priceValue || 0} variant="secondary" />
+
                 <button
                   onClick={() => setIsFavorite(!isFavorite)}
                   className={cn(
@@ -357,15 +389,17 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
               </div>
 
               {/* Просмотры */}
-              <div className="pt-6 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-[14px] text-[#6B7280]">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <span className="font-medium">{views} просмотров</span>
+              {hasViews && (
+                <div className="pt-6 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-[14px] text-[#6B7280]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span className="font-medium">{viewsValue} просмотров</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -486,10 +520,20 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           )}>
             <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Описание</h2>
             <div className="prose prose-sm max-w-none">
-              <p className="text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line">
+              <p className={cn(
+                'text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line',
+                !isDescriptionExpanded && 'line-clamp-3'
+              )}>
                 {item.description}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+              className="mt-3 text-[13px] font-medium text-violet-600 hover:text-violet-700"
+            >
+              {isDescriptionExpanded ? 'Свернуть' : 'Развернуть'}
+            </button>
           </div>
         )}
 
@@ -503,8 +547,9 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
         )}>
           <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Удобства</h2>
           {amenities.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {amenities.map((amenity, i) => (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {(showAllAmenities ? amenities : amenities.slice(0, 6)).map((amenity, i) => (
                 <div
                   key={i}
                   className={cn(
@@ -517,8 +562,18 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                   </svg>
                   <span className="text-[14px] font-medium text-[#1C1F26]">{amenity}</span>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {amenities.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllAmenities((prev) => !prev)}
+                  className="mt-4 text-[13px] font-medium text-violet-600 hover:text-violet-700"
+                >
+                  {showAllAmenities ? 'Свернуть' : 'Показать все'}
+                </button>
+              )}
+            </>
           ) : (
             <p className="text-[14px] text-[#6B7280]">Удобства не указаны.</p>
           )}
@@ -552,7 +607,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <p className="text-[14px] text-gray-400">Карта будет доступна после указания координат</p>
+                <p className="text-[14px] text-gray-400">Точный адрес доступен после бронирования</p>
               </div>
             )}
           </div>
@@ -607,6 +662,48 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
           </div>
         )}
       </div>
+
+      {isGalleryOpen && hasPhotos && (
+        <div className="fixed inset-0 z-[1000] bg-black/90">
+          <button
+            type="button"
+            onClick={() => setIsGalleryOpen(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl"
+            aria-label="Закрыть"
+          >
+            ✕
+          </button>
+          <div
+            className="w-full h-full flex items-center justify-center"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <Image
+              src={photos[activeImage]?.url || coverPhoto || ''}
+              alt={item.title}
+              width={1200}
+              height={800}
+              className="max-h-[90vh] w-auto object-contain"
+              priority
+              unoptimized={(photos[activeImage]?.url || coverPhoto || '').startsWith('http')}
+            />
+          </div>
+          {photos.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              {photos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImage(i)}
+                  className={cn(
+                    'w-2.5 h-2.5 rounded-full transition-all',
+                    activeImage === i ? 'bg-white' : 'bg-white/40'
+                  )}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

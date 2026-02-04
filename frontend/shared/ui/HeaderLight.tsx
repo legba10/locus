@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Logo } from './Logo'
@@ -22,6 +22,7 @@ export function HeaderLight() {
   const router = useRouter()
   const { isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const lastScrollYRef = useRef(0)
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -33,6 +34,20 @@ export function HeaderLight() {
   ]), [])
 
   void pathname
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+    lastScrollYRef.current = window.scrollY
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      if (currentY > lastScrollYRef.current + 8) {
+        setIsMenuOpen(false)
+      }
+      lastScrollYRef.current = currentY
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isMenuOpen])
 
   const handleLogout = async () => {
     await logout()
@@ -124,7 +139,7 @@ export function HeaderLight() {
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className={cn(
               'md:hidden inline-flex items-center justify-center',
-              'w-11 h-11 rounded-full',
+              'w-12 h-12 rounded-full',
               'bg-violet-600 text-white',
               'shadow-[0_8px_24px_rgba(124,58,237,0.35)]',
               'hover:bg-violet-500 active:bg-violet-700',
@@ -136,84 +151,93 @@ export function HeaderLight() {
           </button>
         </div>
       </div>
-      {isMenuOpen && (
-        <div className="mobile-menu">
-          {!isAuthenticated() ? (
-            <div className="mobile-menu__content px-4 py-4 space-y-2">
-              <Link
-                href="/auth/login"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Войти
-              </Link>
-              <Link
-                href="/auth/register"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 hover:bg-violet-50"
-              >
-                Регистрация
-              </Link>
-              <Link
-                href="/listings"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Поиск жилья
-              </Link>
-              <Link
-                href="/pricing"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Тарифы
-              </Link>
-              <Link
-                href="/help"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Помощь / Блог
-              </Link>
-            </div>
-          ) : (
-            <div className="mobile-menu__content px-4 py-4 space-y-2">
-              <Link
-                href="/listings"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Поиск жилья
-              </Link>
-              <Link
-                href="/favorites"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Избранное
-              </Link>
-              <Link
-                href="/messages"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Сообщения
-              </Link>
-              <Link
-                href="/profile"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Профиль
-              </Link>
-              <Link
-                href="/pricing"
-                className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-              >
-                Тарифы
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
-              >
-                Выйти
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
+      <div className={cn('mobile-menu', isMenuOpen && 'open')}>
+        {!isAuthenticated() ? (
+          <div className="mobile-menu__content px-4 py-4 space-y-2">
+            <Link
+              href="/auth/login"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 text-center"
+            >
+              Войти
+            </Link>
+            <Link
+              href="/auth/register"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-semibold text-violet-600 border border-violet-200 hover:bg-violet-50 text-center"
+            >
+              Регистрация
+            </Link>
+            <Link
+              href="/listings"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Поиск жилья
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Тарифы
+            </Link>
+            <Link
+              href="/help"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Помощь / Блог
+            </Link>
+          </div>
+        ) : (
+          <div className="mobile-menu__content px-4 py-4 space-y-2">
+            <Link
+              href="/listings"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Поиск жилья
+            </Link>
+            <Link
+              href="/favorites"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Избранное
+            </Link>
+            <Link
+              href="/messages"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Сообщения
+            </Link>
+            <Link
+              href="/profile"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Профиль
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Тарифы
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl text-[14px] font-medium text-red-600 hover:bg-red-50 text-left"
+            >
+              Выйти
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   )
 }

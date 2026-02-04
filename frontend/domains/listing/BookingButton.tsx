@@ -9,12 +9,13 @@ import { apiFetchJson } from '@/shared/api/client'
 interface BookingButtonProps {
   listingId: string
   price: number
+  variant?: 'primary' | 'secondary'
 }
 
 /**
  * BookingButton — Кнопка бронирования с flow выбора даты
  */
-export function BookingButton({ listingId, price }: BookingButtonProps) {
+export function BookingButton({ listingId, price, variant = 'primary' }: BookingButtonProps) {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
   const [showBookingModal, setShowBookingModal] = useState(false)
@@ -67,12 +68,11 @@ export function BookingButton({ listingId, price }: BookingButtonProps) {
           setShowBookingModal(true)
         }}
         className={cn(
-          'w-full px-5 py-3 rounded-[14px]',
-          'bg-violet-600 text-white font-semibold text-[15px]',
-          'hover:bg-violet-500 active:bg-violet-700',
+          'w-full px-5 py-3 rounded-[14px] font-semibold text-[15px]',
+          variant === 'primary'
+            ? 'bg-violet-600 text-white hover:bg-violet-500 active:bg-violet-700 shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
+            : 'bg-white text-[#1C1F26] border-2 border-gray-200 hover:bg-gray-50',
           'transition-all duration-200',
-          'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
-          'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
         disabled={loading}

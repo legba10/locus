@@ -63,11 +63,39 @@ a,
   pointer-events: auto;
 }
 
-/* Mobile menu (static under header) */
+/* Mobile menu (overlay panel under header) */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+}
+
 .mobile-menu {
+  position: fixed;
+  top: 56px;
+  left: 0;
   width: 100%;
-  position: relative;
+  min-height: 80vh;
+  height: calc(100vh - 56px);
   background: #ffffff;
-  z-index: 1;
+  z-index: 100;
   overflow-y: auto;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
+  pointer-events: none;
+}
+
+.mobile-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
