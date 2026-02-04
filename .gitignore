@@ -40,3 +40,5 @@ coverage/
 # Misc
 *.tsbuildinfo
 **/*.tsbuildinfo
+.env
+.env.*
