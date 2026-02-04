@@ -95,6 +95,7 @@ export function ListingCardLight({
   
   // AI badge показывается только если score > 50
   const showAiBadge = score > 50
+  const showAiSignals = score > 0
 
   // Формируем строку параметров
   const params: string[] = []
@@ -161,6 +162,16 @@ export function ListingCardLight({
                 Новое
               </span>
             )}
+            {/* AI-анализ */}
+            {showAiSignals && (
+              <span className={cn(
+                'px-2 py-0.5 rounded-md',
+                'bg-violet-100 text-violet-700',
+                'text-[10px] font-semibold'
+              )}>
+                AI-анализ
+              </span>
+            )}
             {/* Проверено LOCUS */}
             {isVerified && (
               <span className={cn(
@@ -222,7 +233,7 @@ export function ListingCardLight({
             </div>
           )}
           
-          {/* AI Badge — 🧠 AI рекомендует (если score > 75) */}
+          {/* AI Badge — Рекомендовано (если score > 75) */}
           {showAiBadge && score > 75 && (
             <div className={cn(
               'px-2.5 py-1 rounded-md ml-auto',
@@ -231,7 +242,7 @@ export function ListingCardLight({
               'flex items-center gap-1'
             )}>
               <span className="text-[12px]">🧠</span>
-              AI рекомендует
+              Рекомендовано
             </div>
           )}
         </div>
@@ -273,12 +284,16 @@ export function ListingCardLight({
         )}
 
         {/* AI Block — по ТЗ: AI score и reasons */}
-        {showAiBadge && score > 0 && (
+        {showAiSignals && score > 0 && (
           <div className="pt-2.5 mt-2.5 border-t border-gray-100">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[13px] font-semibold text-violet-600">
                 Подходит на {score}%
               </span>
+            </div>
+            <div className="flex flex-wrap gap-2 text-[11px] text-gray-500 mb-1.5">
+              <span className="px-2 py-0.5 rounded bg-gray-100">Подобрано AI</span>
+              <span className="px-2 py-0.5 rounded bg-gray-100">Сравнено с рынком</span>
             </div>
             {reasons.length > 0 && (
               <ul className="space-y-0.5">

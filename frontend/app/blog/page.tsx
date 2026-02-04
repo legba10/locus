@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useMemo, useState } from 'react'
+import { cn } from '@/shared/utils/cn'
 
 const posts = [
   {
@@ -46,6 +48,12 @@ const posts = [
 ]
 
 export default function BlogPage() {
+  const [activeCategory, setActiveCategory] = useState('аренда')
+  const categories = ['аренда', 'цены', 'безопасность', 'советы']
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) => post.category === activeCategory)
+  }, [activeCategory])
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-12 space-y-10">
@@ -60,24 +68,49 @@ export default function BlogPage() {
             <p className="text-[15px] text-gray-700 mt-3">
               Практические материалы о рынке аренды, ценах, безопасности и AI‑подборе.
             </p>
+            <p className="text-[13px] text-violet-600 mt-2">Аналитика рынка и безопасность с AI</p>
           </div>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {['аренда', 'цены', 'безопасность', 'советы'].map((item) => (
-            <div key={item} className="rounded-xl border border-gray-200 bg-white p-4 text-[13px] text-gray-700 uppercase tracking-wide text-center">
+          {categories.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setActiveCategory(item)}
+              className={cn(
+                'rounded-xl border p-4 text-[13px] uppercase tracking-wide text-center transition-all',
+                activeCategory === item
+                  ? 'border-violet-200 bg-violet-50 text-violet-700'
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+              )}
+            >
               {item}
-            </div>
+            </button>
           ))}
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {posts.map((post) => (
-            <article key={post.id} className="rounded-xl border border-gray-200 bg-white p-5 h-full">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-2">
-                <span>{post.date}</span>
-                <span>•</span>
-                <span className="uppercase tracking-wide">{post.category}</span>
+          {filteredPosts.map((post) => (
+            <article
+              key={post.id}
+              className={cn(
+                'rounded-xl border border-gray-200 bg-white p-5 h-full',
+                'transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]'
+              )}
+            >
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="uppercase tracking-wide bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                    {post.category}
+                  </span>
+                  <span>{post.date}</span>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M13 16h-1v-4H8m1-4h4m-4 8h4m-2 0v2m0-10V6" />
+                  </svg>
+                </div>
               </div>
               <h2 className="text-[16px] font-semibold text-gray-900 mb-2">{post.title}</h2>
               <p className="text-[14px] text-gray-700 leading-relaxed">{post.excerpt}</p>

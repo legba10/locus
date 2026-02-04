@@ -27,7 +27,10 @@ export default function HowItWorksPage() {
             { title: 'Шаг 2. Анализ', text: 'Сравнение цены с рынком и выявление подозрений.' },
             { title: 'Шаг 3. Общение', text: 'Сообщения и бронирования в понятной логике.' },
           ].map((item) => (
-            <div key={item.title} className="rounded-xl border border-gray-200 bg-white p-5 h-full">
+            <div
+              key={item.title}
+              className="rounded-xl border border-gray-200 bg-white p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
+            >
               <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{item.title}</h3>
               <p className="text-[14px] text-gray-700 leading-relaxed">{item.text}</p>
             </div>

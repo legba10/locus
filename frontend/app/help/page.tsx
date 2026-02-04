@@ -45,7 +45,10 @@ export default function HelpPage() {
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {FAQ.map((item) => (
-            <div key={item.q} className="rounded-xl border border-gray-200 bg-white p-5 h-full">
+            <div
+              key={item.q}
+              className="rounded-xl border border-gray-200 bg-white p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
+            >
               <h2 className="text-[15px] font-semibold text-gray-900 mb-2">{item.q}</h2>
               <p className="text-[14px] text-gray-700 leading-relaxed">{item.a}</p>
             </div>
@@ -66,7 +69,7 @@ export default function HelpPage() {
             href="/contacts"
             className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-[14px] font-semibold text-white hover:bg-violet-500"
           >
-            Связаться с поддержкой
+            Задать вопрос
           </Link>
         </section>
       </div>

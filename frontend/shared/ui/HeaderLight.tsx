@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Logo } from './Logo'
@@ -21,36 +21,29 @@ export function HeaderLight() {
   const pathname = usePathname()
   const { user, isAuthenticated, logout } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const mobilePanelRef = useRef<HTMLDivElement | null>(null)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+  const [dragOffset, setDragOffset] = useState(0)
 
   const isActive = (path: string) => pathname === path
-  const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
-  const landlordHref = isLandlord ? '/owner/dashboard?tab=listings' : '/pricing?reason=host'
-
   const desktopNav = useMemo(() => ([
-    { label: 'Поиск жилья', href: '/listings' },
+    { label: 'Поиск', href: '/listings' },
     { label: 'Избранное', href: '/favorites' },
     { label: 'Сообщения', href: '/messages' },
-    { label: 'Для арендодателей', href: landlordHref },
     { label: 'Профиль', href: '/profile' },
-  ]), [landlordHref])
+    { label: 'Тарифы', href: '/pricing' },
+  ]), [])
 
   useEffect(() => {
     if (!mobileOpen) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false)
-    }
-    const onClick = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (mobilePanelRef.current && !mobilePanelRef.current.contains(target)) {
+      if (event.key === 'Escape') {
         setMobileOpen(false)
+        setDragOffset(0)
       }
     }
     document.addEventListener('keydown', onKey)
-    document.addEventListener('mousedown', onClick)
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.removeEventListener('mousedown', onClick)
     }
   }, [mobileOpen])
 
@@ -153,23 +146,74 @@ export function HeaderLight() {
       </button>
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
+        <div
+          className="md:hidden fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
+          onClick={() => {
+            setMobileOpen(false)
+            setDragOffset(0)
+          }}
+        >
           <div
-            ref={mobilePanelRef}
             className={cn(
-              'fixed right-4 bottom-20 left-4',
-              'rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.2)]',
-              'p-5 space-y-3'
+              'w-full rounded-t-3xl bg-white',
+              'shadow-[0_-12px_40px_rgba(0,0,0,0.2)]',
+              'pb-8'
             )}
+            style={{
+              transform: `translateY(${dragOffset}px)`,
+              transition: dragStart ? 'none' : 'transform 220ms ease-out',
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {isAuthenticated() ? (
-              <>
+            <div
+              className="px-6 pt-3 pb-2"
+              onTouchStart={(e) => setDragStart(e.touches[0].clientY)}
+              onTouchMove={(e) => {
+                if (dragStart === null) return
+                const delta = e.touches[0].clientY - dragStart
+                if (delta > 0) setDragOffset(Math.min(delta, 240))
+              }}
+              onTouchEnd={() => {
+                if (dragOffset > 100) {
+                  setMobileOpen(false)
+                  setDragOffset(0)
+                } else {
+                  setDragOffset(0)
+                }
+                setDragStart(null)
+              }}
+            >
+              <div className="mx-auto h-1.5 w-12 rounded-full bg-gray-200" />
+            </div>
+
+            <div className="px-6 pt-2">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="text-[18px] font-semibold text-[#1C1F26]">Меню</h3>
+                  <p className="text-[13px] text-[#6B7280]">Быстрый доступ к основным разделам</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false)
+                    setDragOffset(0)
+                  }}
+                  className="rounded-full p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                  aria-label="Закрыть"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-2">
                 <Link
                   href="/listings"
                   className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
                   onClick={() => setMobileOpen(false)}
                 >
-                  Поиск жилья
+                  Поиск
                 </Link>
                 <Link
                   href="/favorites"
@@ -192,42 +236,38 @@ export function HeaderLight() {
                 >
                   Профиль
                 </Link>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await logout()
-                    setMobileOpen(false)
-                  }}
-                  className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
-                >
-                  Выйти
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/listings"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Поиск жилья
-                </Link>
-                <Link
-                  href="/auth/login"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Войти
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="block rounded-xl px-4 py-3 text-[14px] font-medium text-gray-900 hover:bg-gray-50"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Регистрация
-                </Link>
-              </>
-            )}
+                {isAuthenticated() && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await logout()
+                      setMobileOpen(false)
+                    }}
+                    className="w-full text-left rounded-xl px-4 py-3 text-[14px] font-medium text-red-600 hover:bg-red-50"
+                  >
+                    Выйти
+                  </button>
+                )}
+                {!isAuthenticated() && (
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <Link
+                      href="/auth/login"
+                      className="rounded-xl px-4 py-3 text-center text-[14px] font-medium text-gray-900 hover:bg-gray-50 border border-gray-200"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Войти
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="rounded-xl px-4 py-3 text-center text-[14px] font-medium text-white bg-violet-600 hover:bg-violet-500"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Регистрация
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
