@@ -178,7 +178,7 @@ export function HeaderLight() {
       <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
       <div className={cn('mobile-menu', isMenuOpen && 'open')}>
         {!isAuthenticated() ? (
-          <div className="mobile-menu__content px-4 py-4 space-y-2">
+          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-2">
             <button
               type="button"
               onClick={() => handleNavigate('/auth/login')}
@@ -237,7 +237,7 @@ export function HeaderLight() {
             </button>
           </div>
         ) : (
-          <div className="mobile-menu__content px-4 py-4 space-y-2">
+          <div className="mobile-menu__content px-4 pt-20 pb-4 space-y-2">
             <div className="pb-2 border-b border-gray-100">
               <p className="text-[14px] font-semibold text-[#1C1F26]">
                 {('name' in (user || {}) && (user as { name?: string }).name) || user?.email || 'Профиль'}
