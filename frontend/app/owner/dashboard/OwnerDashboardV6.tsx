@@ -378,56 +378,15 @@ function AddListingTab() {
 
 // Бронирования
 function BookingsTab() {
-  const mockBookings = [
-    { id: '1', listingTitle: 'Квартира в центре', guestName: 'Иван Иванов', status: 'new', date: '2026-02-01' },
-    { id: '2', listingTitle: 'Студия у метро', guestName: 'Мария Петрова', status: 'accepted', date: '2026-02-05' },
-  ]
-
   return (
     <div className="space-y-6">
       <h1 className="text-[24px] font-bold text-[#1C1F26]">Бронирования</h1>
-
-      <div className="space-y-4">
-        {mockBookings.map(booking => (
-          <div
-            key={booking.id}
-            className={cn(
-              'bg-white rounded-[18px] p-6',
-              'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-              'border border-gray-100/80'
-            )}
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-[16px] font-bold text-[#1C1F26] mb-1">{booking.listingTitle}</h3>
-                <p className="text-[14px] text-[#6B7280] mb-2">{booking.guestName}</p>
-                <p className="text-[13px] text-[#6B7280]">Дата: {booking.date}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  'px-3 py-1 rounded-lg text-[12px] font-medium',
-                  booking.status === 'new'
-                    ? 'bg-amber-100 text-amber-700'
-                    : booking.status === 'accepted'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-gray-100 text-gray-600'
-                )}>
-                  {booking.status === 'new' ? 'Новое' : booking.status === 'accepted' ? 'Принято' : 'Отказано'}
-                </span>
-                {booking.status === 'new' && (
-                  <>
-                    <button className="px-4 py-2 rounded-[12px] bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500">
-                      Принять
-                    </button>
-                    <button className="px-4 py-2 rounded-[12px] bg-red-600 text-white text-[13px] font-medium hover:bg-red-500">
-                      Отклонить
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className={cn(
+        'bg-white rounded-[18px] p-8 text-center',
+        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+        'border border-gray-100/80'
+      )}>
+        <p className="text-[15px] text-[#6B7280]">Пока нет бронирований.</p>
       </div>
     </div>
   )
@@ -495,7 +454,7 @@ function ProfileTab() {
             <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
             <input
               type="text"
-              value={user?.profile?.name || ''}
+              value={user?.full_name || ''}
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
                 'border border-gray-200/60 bg-white/95',

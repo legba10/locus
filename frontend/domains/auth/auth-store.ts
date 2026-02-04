@@ -42,22 +42,31 @@ function userFromSession(session: { user: { id: string; email?: string | null } 
     id: u.id,
     supabaseId: u.id,
     email: u.email ?? "",
+    phone: null,
+    telegram_id: null,
+    full_name: null,
     role: "user",
     roles: ["user"],
+    tariff: "free",
+    verification_status: "pending",
   };
 }
 
 function userFromBackend(response: MeResponse): StoredUser {
-  const payload = response.user;
-  const backendRoles = payload.roles && payload.roles.length > 0 ? payload.roles : [payload.role];
-  const roles = backendRoles.map((role) => normalizeRole(role));
+  const payload = response;
+  const role = normalizeRole(payload.role);
+  const roles = [role];
   return {
     id: payload.id,
-    supabaseId: payload.supabaseId,
+    supabaseId: payload.supabaseId ?? payload.id,
     email: payload.email ?? "",
-    role: getPrimaryRole(backendRoles),
+    phone: payload.phone ?? null,
+    telegram_id: payload.telegram_id ?? null,
+    full_name: payload.full_name ?? null,
+    role: getPrimaryRole(roles),
     roles,
-    profile: payload.profile,
+    tariff: payload.tariff ?? "free",
+    verification_status: payload.verification_status ?? "pending",
   };
 }
 
@@ -69,7 +78,7 @@ function toDomainUser(user: StoredUser | null): DomainUser | null {
     email: user.email,
     role: user.role as DomainUser["role"],
     roles: (user.roles ?? [user.role]) as DomainUser["roles"],
-    tariff: user.profile?.tariff,
+    tariff: user.tariff,
   };
 }
 
@@ -156,11 +165,33 @@ export const useAuthStore = create<AuthState>()(
           } else {
             // No session = email confirmation required
             set({
-              user: { id: "", supabaseId: "", email: data.email, role: data.role, roles: [data.role] },
+              user: {
+                id: "",
+                supabaseId: "",
+                email: data.email,
+                phone: null,
+                telegram_id: null,
+                full_name: data.name ?? null,
+                role: data.role,
+                roles: [data.role],
+                tariff: "free",
+                verification_status: "pending",
+              },
               accessToken: null,
               isLoading: false,
             });
-            await dispatchAuth("register", { id: "", supabaseId: "", email: data.email, role: data.role, roles: [data.role] });
+            await dispatchAuth("register", {
+              id: "",
+              supabaseId: "",
+              email: data.email,
+              phone: null,
+              telegram_id: null,
+              full_name: data.name ?? null,
+              role: data.role,
+              roles: [data.role],
+              tariff: "free",
+              verification_status: "pending",
+            });
           }
         } catch (e) {
           const msg = e instanceof AuthApiError ? e.message : "Ошибка регистрации";

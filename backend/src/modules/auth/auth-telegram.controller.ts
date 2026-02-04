@@ -142,8 +142,9 @@ export class AuthTelegramController {
             phone: profile?.phone ?? null,
             telegram_id: profile?.telegram_id ?? null,
             full_name: profile?.full_name ?? null,
-            role: profile?.role ?? null,
-            tariff: profile?.tariff ?? null,
+            role: profile?.role ?? "user",
+            tariff: profile?.tariff ?? "free",
+            verification_status: profile?.verification_status ?? "pending",
           },
         };
       }
@@ -214,8 +215,9 @@ export class AuthTelegramController {
               phone: profile?.phone ?? null,
               telegram_id: profile?.telegram_id ?? null,
               full_name: profile?.full_name ?? null,
-              role: profile?.role ?? null,
-              tariff: profile?.tariff ?? null,
+              role: profile?.role ?? "user",
+              tariff: profile?.tariff ?? "free",
+              verification_status: profile?.verification_status ?? "pending",
             },
           };
         }
@@ -232,8 +234,9 @@ export class AuthTelegramController {
           phone: profile?.phone ?? null,
           telegram_id: profile?.telegram_id ?? null,
           full_name: profile?.full_name ?? null,
-          role: profile?.role ?? null,
-          tariff: profile?.tariff ?? null,
+          role: profile?.role ?? "user",
+          tariff: profile?.tariff ?? "free",
+          verification_status: profile?.verification_status ?? "pending",
         },
       };
     } catch (error) {

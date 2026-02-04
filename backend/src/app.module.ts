@@ -24,6 +24,7 @@ import { DecisionModule } from "./modules/decision/decision.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { TelegramModule } from "./modules/telegram/telegram.module";
 import { DebugModule } from "./debug/debug.module";
+import { ProfileModule } from "./modules/profile/profile.module";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -39,6 +40,7 @@ const isProduction = process.env.NODE_ENV === "production";
     HealthModule,
     // Core modules
     AuthModule,
+    ProfileModule,
     UsersModule,
     ListingsModule,
     SearchModule,

@@ -26,9 +26,42 @@ function dbFilePath() {
 function seedDb(): MockDb {
   const now = new Date().toISOString()
   const users: User[] = [
-    { id: 'landlord_1', supabaseId: 'landlord_1', email: 'landlord1@locus.local', role: 'landlord', roles: ['landlord'] },
-    { id: 'landlord_2', supabaseId: 'landlord_2', email: 'landlord2@locus.local', role: 'landlord', roles: ['landlord'] },
-    { id: 'user_1', supabaseId: 'user_1', email: 'user@locus.local', role: 'user', roles: ['user'] },
+    {
+      id: 'landlord_1',
+      supabaseId: 'landlord_1',
+      email: 'landlord1@locus.local',
+      phone: null,
+      telegram_id: null,
+      full_name: 'Landlord One',
+      role: 'landlord',
+      roles: ['landlord'],
+      tariff: 'landlord_basic',
+      verification_status: 'pending',
+    },
+    {
+      id: 'landlord_2',
+      supabaseId: 'landlord_2',
+      email: 'landlord2@locus.local',
+      phone: null,
+      telegram_id: null,
+      full_name: 'Landlord Two',
+      role: 'landlord',
+      roles: ['landlord'],
+      tariff: 'landlord_pro',
+      verification_status: 'pending',
+    },
+    {
+      id: 'user_1',
+      supabaseId: 'user_1',
+      email: 'user@locus.local',
+      phone: null,
+      telegram_id: null,
+      full_name: 'User One',
+      role: 'user',
+      roles: ['user'],
+      tariff: 'free',
+      verification_status: 'pending',
+    },
   ]
 
   const listings: DbListing[] = MOCK_LISTINGS.map((l) => ({

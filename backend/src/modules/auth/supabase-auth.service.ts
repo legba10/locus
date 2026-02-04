@@ -13,6 +13,7 @@ export type SupabaseProfile = {
   full_name: string | null;
   role: "user" | "landlord";
   tariff: string | null;
+  verification_status: "pending" | "verified" | null;
   created_at: string;
 };
 
@@ -103,6 +104,37 @@ export class SupabaseAuthService {
 
     if (error) {
       this.logger.warn(`Profile not found for user ${userId}: ${error.message}`);
+      return null;
+    }
+
+    return data as SupabaseProfile;
+  }
+
+  /**
+   * Update profile fields in Supabase
+   */
+  async updateProfile(
+    userId: string,
+    patch: { full_name?: string | null; phone?: string | null; telegram_id?: string | null }
+  ): Promise<SupabaseProfile | null> {
+    if (!supabase) {
+      this.logger.error("Supabase client not configured");
+      return null;
+    }
+
+    const payload: Record<string, unknown> = { id: userId };
+    if (patch.full_name !== undefined) payload.full_name = patch.full_name;
+    if (patch.phone !== undefined) payload.phone = patch.phone;
+    if (patch.telegram_id !== undefined) payload.telegram_id = patch.telegram_id;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" })
+      .select("*")
+      .single();
+
+    if (error) {
+      this.logger.error(`Failed to update profile: ${error.message}`);
       return null;
     }
 

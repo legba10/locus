@@ -5,12 +5,9 @@ export type { UserProfile };
 
 /**
  * MeResponse — контракт backend /auth/me
- * Backend returns: { ok: true, user: UserContract }
+ * Backend returns UserContract
  */
-export type MeResponse = {
-  ok: boolean;
-  user: UserContract;
-};
+export type MeResponse = UserContract;
 
 export type LoginRequest = {
   email: string;

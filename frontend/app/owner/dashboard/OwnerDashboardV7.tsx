@@ -28,7 +28,7 @@ export function OwnerDashboardV7() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
   const [editingListing, setEditingListing] = useState<any | null>(null)
   const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
-  const tariff = user?.profile?.tariff ?? 'free'
+  const tariff = user?.tariff ?? 'free'
   const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
   const canUsePaid = isLandlord && isPaidTariff
 
@@ -195,6 +195,32 @@ function MyListingsTab({
           + Добавить объявление
         </button>
       </div>
+
+      {!canCreate && (
+        <div className={cn(
+          'bg-white rounded-[16px] p-5',
+          'border border-gray-100/80',
+          'shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+        )}>
+          <p className="text-[14px] text-[#6B7280] mb-3">
+            Добавление объявлений доступно на платном тарифе.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link
+              href="/pricing"
+              className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium border border-gray-200 text-[#1C1F26] hover:bg-gray-50"
+            >
+              Посмотреть тарифы
+            </Link>
+            <Link
+              href="/pricing#cta"
+              className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
+            >
+              Купить тариф
+            </Link>
+          </div>
+        </div>
+      )}
 
       {isLoading && (
         <div className="space-y-4">
@@ -924,105 +950,17 @@ function AddListingTab({
 // БРОНИРОВАНИЯ
 // ═══════════════════════════════════════════════════════════════
 function BookingsTab() {
-  const mockBookings = [
-    { 
-      id: '1', 
-      listingTitle: 'Квартира в центре', 
-      guestName: 'Иван Иванов', 
-      guestEmail: 'ivan@example.com',
-      status: 'new', 
-      checkIn: '2026-02-01',
-      checkOut: '2026-02-05',
-      guests: 2,
-      totalPrice: 12000
-    },
-    { 
-      id: '2', 
-      listingTitle: 'Студия у метро', 
-      guestName: 'Мария Петрова', 
-      guestEmail: 'maria@example.com',
-      status: 'accepted', 
-      checkIn: '2026-02-10',
-      checkOut: '2026-02-15',
-      guests: 1,
-      totalPrice: 15000
-    },
-    { 
-      id: '3', 
-      listingTitle: 'Квартира в центре', 
-      guestName: 'Петр Сидоров', 
-      guestEmail: 'petr@example.com',
-      status: 'rejected', 
-      checkIn: '2026-02-20',
-      checkOut: '2026-02-25',
-      guests: 3,
-      totalPrice: 18000
-    },
-  ]
-
-  const handleBookingAction = (bookingId: string, action: 'accept' | 'reject') => {
-    console.log(`Booking ${bookingId}: ${action}`)
-    // TODO: API call
-  }
-
   return (
     <div className="space-y-6">
       <h1 className="text-[24px] font-bold text-[#1C1F26]">Бронирования</h1>
-
-      <div className="space-y-4">
-        {mockBookings.map(booking => (
-          <div
-            key={booking.id}
-            className={cn(
-              'bg-white rounded-[18px] p-6',
-              'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-              'border border-gray-100/80'
-            )}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="text-[16px] font-bold text-[#1C1F26] mb-1">{booking.listingTitle}</h3>
-                <p className="text-[14px] text-[#6B7280] mb-2">{booking.guestName} • {booking.guestEmail}</p>
-                <div className="flex items-center gap-4 text-[13px] text-[#6B7280] mb-2">
-                  <span>📅 {booking.checkIn} - {booking.checkOut}</span>
-                  <span>👥 {booking.guests} {booking.guests === 1 ? 'гость' : 'гостей'}</span>
-                  <span className="font-semibold text-[#1C1F26]">{formatPrice(booking.totalPrice, 'month')}</span>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <span className={cn(
-                  'px-3 py-1 rounded-lg text-[12px] font-medium',
-                  booking.status === 'new'
-                    ? 'bg-amber-100 text-amber-700'
-                    : booking.status === 'accepted'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-red-100 text-red-700'
-                )}>
-                  {booking.status === 'new' ? 'Новое' : booking.status === 'accepted' ? 'Принято' : 'Отказано'}
-                </span>
-                {booking.status === 'new' && (
-                  <>
-                    <button 
-                      onClick={() => handleBookingAction(booking.id, 'accept')}
-                      className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500"
-                    >
-                      Принять
-                    </button>
-                    <button 
-                      onClick={() => handleBookingAction(booking.id, 'reject')}
-                      className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-red-600 text-white text-[13px] font-medium hover:bg-red-500"
-                    >
-                      Отклонить
-                    </button>
-                  </>
-                )}
-                <button className="px-4 py-2 rounded-[12px] w-full sm:w-auto bg-gray-100 text-[#1C1F26] text-[13px] font-medium hover:bg-gray-200">
-                  Написать
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className={cn(
+        'bg-white rounded-[18px] p-8 text-center',
+        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+        'border border-gray-100/80'
+      )}>
+        <p className="text-[15px] text-[#6B7280]">
+          Пока нет бронирований. Заявки появятся после первых арендаторов.
+        </p>
       </div>
     </div>
   )
@@ -1050,344 +988,17 @@ function MessagesTab() {
 // АНАЛИТИКА — Расширенная версия с AI функциями
 // ═══════════════════════════════════════════════════════════════
 function AnalyticsTab() {
-  const mockStats = {
-    views: { total: 1523, today: 45, change: 12, byDay: [120, 145, 132, 158, 145, 167, 180] },
-    bookings: { total: 23, thisMonth: 8, change: 5, byDay: [2, 1, 3, 2, 1, 2, 3] },
-    revenue: { total: 345000, thisMonth: 120000, change: 15, byDay: [15000, 18000, 16000, 20000, 17000, 19000, 21000] },
-    conversion: { rate: 1.5, change: 0.3, trend: 'up' },
-    aiScore: { average: 78, best: 92, worst: 45 },
-    demand: { high: 5, medium: 8, low: 2 },
-    priceAnalysis: { belowMarket: 3, average: 10, aboveMarket: 2 },
-  }
-
-  const aiRecommendations = [
-    {
-      id: '1',
-      title: 'Оптимизация цены',
-      description: '3 объявления имеют цену выше рынка на 15-20%',
-      impact: 'high',
-      action: 'Снизить цену на 10-15% для увеличения просмотров',
-      potentialIncrease: '+25% просмотров'
-    },
-    {
-      id: '2',
-      title: 'Улучшение фотографий',
-      description: '5 объявлений имеют менее 3 фотографий',
-      impact: 'high',
-      action: 'Добавить минимум 5 качественных фото',
-      potentialIncrease: '+40% конверсии'
-    },
-    {
-      id: '3',
-      title: 'Оптимизация описаний',
-      description: 'Описания слишком короткие, не содержат ключевых слов',
-      impact: 'medium',
-      action: 'Расширить описания, добавить информацию о районе и удобствах',
-      potentialIncrease: '+18% просмотров'
-    },
-    {
-      id: '4',
-      title: 'Время публикации',
-      description: 'Публикация в вечернее время увеличивает просмотры на 30%',
-      impact: 'medium',
-      action: 'Планировать публикацию новых объявлений на 18:00-20:00',
-      potentialIncrease: '+30% просмотров'
-    }
-  ]
-
   return (
-    <div className="space-y-6 scroll-container max-h-[70vh] lg:max-h-[calc(100vh-250px)] overflow-y-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-[24px] font-bold text-[#1C1F26]">Аналитика</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-[#6B7280]">Период:</span>
-          <select className={cn(
-            'rounded-[14px] px-3 py-1.5 text-[13px]',
-            'border border-white/60 bg-white/75 backdrop-blur-[18px]',
-            'text-[#1C1F26] focus:outline-none focus:ring-2 focus:ring-violet-500/20',
-            'shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
-          )}>
-            <option>Последние 7 дней</option>
-            <option>Последние 30 дней</option>
-            <option>Последние 3 месяца</option>
-            <option>Все время</option>
-          </select>
-        </div>
-      </div>
-
-      {/* KPI карточки */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className={cn(
-          'bg-white rounded-[18px] p-6',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] text-[#6B7280]">Просмотры</span>
-            <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-          </div>
-          <p className="text-[28px] font-bold text-[#1C1F26]">{mockStats.views.total.toLocaleString()}</p>
-          <p className="text-[12px] text-emerald-600">+{mockStats.views.change}% за месяц</p>
-        </div>
-
-        <div className={cn(
-          'bg-white rounded-[18px] p-6',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] text-[#6B7280]">Бронирования</span>
-            <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <p className="text-[28px] font-bold text-[#1C1F26]">{mockStats.bookings.total}</p>
-          <p className="text-[12px] text-emerald-600">+{mockStats.bookings.change} за месяц</p>
-        </div>
-
-        <div className={cn(
-          'bg-white rounded-[18px] p-6',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] text-[#6B7280]">Доход</span>
-            <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-[28px] font-bold text-[#1C1F26]">{formatPrice(mockStats.revenue.total, 'month')}</p>
-          <p className="text-[12px] text-emerald-600">+{mockStats.revenue.change}% за месяц</p>
-        </div>
-
-        <div className={cn(
-          'bg-white rounded-[18px] p-6',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] text-[#6B7280]">Конверсия</span>
-            <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
-          <p className="text-[28px] font-bold text-[#1C1F26]">{mockStats.conversion.rate}%</p>
-          <p className="text-[12px] text-emerald-600">+{mockStats.conversion.change}% за месяц</p>
-        </div>
-      </div>
-
-      {/* AI-анализ объявлений */}
+    <div className="space-y-6">
+      <h1 className="text-[24px] font-bold text-[#1C1F26]">Аналитика</h1>
       <div className={cn(
-        'bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6',
-        'border border-white/60',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]'
+        'bg-white rounded-[18px] p-8 text-center',
+        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
+        'border border-gray-100/80'
       )}>
-        <div className="flex items-center gap-2 mb-4">
-          <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-          </svg>
-          <h2 className="text-[18px] font-bold text-[#1C1F26]">AI-анализ ваших объявлений</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-violet-50 rounded-[12px] border border-violet-100">
-            <p className="text-[12px] text-[#6B7280] mb-1">Средний AI-рейтинг</p>
-            <p className="text-[24px] font-bold text-violet-600">{mockStats.aiScore.average}%</p>
-          </div>
-          <div className="p-4 bg-emerald-50 rounded-[12px] border border-emerald-100">
-            <p className="text-[12px] text-[#6B7280] mb-1">Лучший рейтинг</p>
-            <p className="text-[24px] font-bold text-emerald-600">{mockStats.aiScore.best}%</p>
-          </div>
-          <div className="p-4 bg-amber-50 rounded-[12px] border border-amber-100">
-            <p className="text-[12px] text-[#6B7280] mb-1">Требует улучшения</p>
-            <p className="text-[24px] font-bold text-amber-600">{mockStats.aiScore.worst}%</p>
-          </div>
-        </div>
-
-        {/* Анализ спроса */}
-        <div className="mb-6">
-          <h3 className="text-[14px] font-semibold text-[#1C1F26] mb-3">Спрос по объявлениям</h3>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-[12px]">
-              <span className="text-[13px] text-[#1C1F26]">Высокий спрос</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${(mockStats.demand.high / (mockStats.demand.high + mockStats.demand.medium + mockStats.demand.low)) * 100}%` }} />
-                </div>
-                <span className="text-[13px] font-semibold text-emerald-600">{mockStats.demand.high}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-[12px]">
-              <span className="text-[13px] text-[#1C1F26]">Средний спрос</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(mockStats.demand.medium / (mockStats.demand.high + mockStats.demand.medium + mockStats.demand.low)) * 100}%` }} />
-                </div>
-                <span className="text-[13px] font-semibold text-amber-600">{mockStats.demand.medium}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-[12px]">
-              <span className="text-[13px] text-[#1C1F26]">Низкий спрос</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${(mockStats.demand.low / (mockStats.demand.high + mockStats.demand.medium + mockStats.demand.low)) * 100}%` }} />
-                </div>
-                <span className="text-[13px] font-semibold text-red-600">{mockStats.demand.low}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Анализ цены */}
-        <div>
-          <h3 className="text-[14px] font-semibold text-[#1C1F26] mb-3">Позиционирование цены</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 bg-emerald-50 rounded-[12px] border border-emerald-100 text-center">
-              <p className="text-[20px] font-bold text-emerald-600">{mockStats.priceAnalysis.belowMarket}</p>
-              <p className="text-[11px] text-[#6B7280]">Ниже рынка</p>
-            </div>
-            <div className="p-3 bg-blue-50 rounded-[12px] border border-blue-100 text-center">
-              <p className="text-[20px] font-bold text-blue-600">{mockStats.priceAnalysis.average}</p>
-              <p className="text-[11px] text-[#6B7280]">По рынку</p>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-[12px] border border-amber-100 text-center">
-              <p className="text-[20px] font-bold text-amber-600">{mockStats.priceAnalysis.aboveMarket}</p>
-              <p className="text-[11px] text-[#6B7280]">Выше рынка</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* AI Рекомендации */}
-      <div className={cn(
-        'bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6',
-        'border border-white/60',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]'
-      )}>
-        <div className="flex items-center gap-2 mb-4">
-          <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          <h2 className="text-[18px] font-bold text-[#1C1F26]">AI Рекомендации по оптимизации</h2>
-        </div>
-        <div className="space-y-4">
-          {aiRecommendations.map(rec => (
-            <div key={rec.id} className={cn(
-              'p-5 rounded-[14px] border',
-              rec.impact === 'high'
-                ? 'bg-violet-50 border-violet-200'
-                : 'bg-blue-50 border-blue-200'
-            )}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-[15px] font-semibold text-[#1C1F26]">{rec.title}</h4>
-                    <span className={cn(
-                      'px-2 py-0.5 rounded-md text-[11px] font-medium',
-                      rec.impact === 'high'
-                        ? 'bg-violet-600 text-white'
-                        : 'bg-blue-600 text-white'
-                    )}>
-                      {rec.impact === 'high' ? 'Высокий приоритет' : 'Средний приоритет'}
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-[#6B7280] mb-2">{rec.description}</p>
-                  <p className="text-[13px] font-medium text-[#1C1F26] mb-2 flex items-start gap-2">
-                    <svg className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <span>{rec.action}</span>
-                  </p>
-                  <p className="text-[13px] text-emerald-700 font-semibold">
-                    Потенциальный рост: {rec.potentialIncrease}
-                  </p>
-                </div>
-                <button className={cn(
-                  'px-4 py-2 rounded-[12px] text-[13px] font-medium ml-4',
-                  'bg-violet-600 text-white',
-                  'hover:bg-violet-500 transition-colors'
-                )}>
-                  Применить
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Графики */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={cn(
-          'bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6',
-          'border border-white/60',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]'
-        )}>
-          <h2 className="text-[16px] font-bold text-[#1C1F26] mb-4">Просмотры по дням</h2>
-          <div className="h-64 bg-gray-50 rounded-[12px] flex items-center justify-center border border-gray-100">
-            <div className="text-center">
-              <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <p className="text-[13px] text-[#6B7280]">График просмотров скоро появится</p>
-            </div>
-          </div>
-        </div>
-
-        <div className={cn(
-          'bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6',
-          'border border-white/60',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]'
-        )}>
-          <h2 className="text-[16px] font-bold text-[#1C1F26] mb-4">Конверсия по объявлениям</h2>
-          <div className="h-64 bg-gray-50 rounded-[12px] flex items-center justify-center border border-gray-100">
-            <div className="text-center">
-              <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              <p className="text-[13px] text-[#6B7280]">График конверсии скоро появится</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Детальная статистика по объявлениям */}
-      <div className={cn(
-        'bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6',
-        'border border-white/60',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]'
-      )}>
-        <h2 className="text-[16px] font-bold text-[#1C1F26] mb-4">Статистика по объявлениям</h2>
-        <div className="space-y-3">
-          {[
-            { title: 'Квартира в центре', views: 523, bookings: 8, conversion: 1.5, aiScore: 87 },
-            { title: 'Современная студия', views: 234, bookings: 3, conversion: 1.3, aiScore: 72 },
-            { title: 'Дом в Сочи', views: 156, bookings: 2, conversion: 1.3, aiScore: 65 },
-          ].map((item, i) => (
-            <div key={i} className="p-4 bg-gray-50 rounded-[12px] border border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-[14px] font-semibold text-[#1C1F26]">{item.title}</h4>
-                <span className="text-[13px] font-semibold text-violet-600">AI: {item.aiScore}%</span>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-[11px] text-[#6B7280] mb-0.5">Просмотры</p>
-                  <p className="text-[16px] font-bold text-[#1C1F26]">{item.views}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#6B7280] mb-0.5">Бронирования</p>
-                  <p className="text-[16px] font-bold text-[#1C1F26]">{item.bookings}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#6B7280] mb-0.5">Конверсия</p>
-                  <p className="text-[16px] font-bold text-[#1C1F26]">{item.conversion}%</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-[15px] text-[#6B7280]">
+          Данные появятся после первых просмотров и бронирований.
+        </p>
       </div>
     </div>
   )
@@ -1405,6 +1016,20 @@ function PaidFeatureNotice() {
       <p className="text-[14px] text-[#6B7280]">
         Обновите тариф, чтобы добавлять объявления и смотреть аналитику.
       </p>
+      <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+        <Link
+          href="/pricing"
+          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium border border-gray-200 text-[#1C1F26] hover:bg-gray-50"
+        >
+          Посмотреть тарифы
+        </Link>
+        <Link
+          href="/pricing#cta"
+          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
+        >
+          Купить тариф
+        </Link>
+      </div>
     </div>
   )
 }
@@ -1413,16 +1038,52 @@ function PaidFeatureNotice() {
 // ПРОФИЛЬ
 // ═══════════════════════════════════════════════════════════════
 function ProfileTab() {
-  const { user } = useAuthStore()
-  const tariff = user?.profile?.tariff ?? 'free'
+  const { user, refresh } = useAuthStore()
+  const tariff = user?.tariff ?? 'free'
   const tariffLabel =
     tariff === 'landlord_basic' ? 'Basic' : tariff === 'landlord_pro' ? 'Pro' : 'Free'
   const [formData, setFormData] = useState({
-    name: user?.profile?.name || '',
+    fullName: user?.full_name || '',
     email: user?.email || '',
-    phone: '',
-    verificationStatus: 'pending',
+    phone: user?.phone || '',
+    verificationStatus: user?.verification_status || 'pending',
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    setFormData({
+      fullName: user?.full_name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      verificationStatus: user?.verification_status || 'pending',
+    })
+  }, [user])
+
+  const handleSave = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      await apiFetchJson('/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          full_name: formData.fullName.trim() || null,
+          phone: formData.phone.trim() || null,
+        }),
+      })
+      await refresh()
+      setSuccess(true)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ошибка сохранения профиля'
+      setError(msg)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -1437,8 +1098,8 @@ function ProfileTab() {
             <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
                 'border border-gray-200/60 bg-white/95',
@@ -1501,14 +1162,20 @@ function ProfileTab() {
               </span>
             </div>
           </div>
+          {error && <p className="text-[13px] text-red-600">{error}</p>}
+          {success && <p className="text-[13px] text-emerald-600">Профиль обновлён</p>}
           <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
             className={cn(
               'w-full py-3 rounded-[14px]',
               'bg-violet-600 text-white font-semibold text-[15px]',
-              'hover:bg-violet-500 transition-colors'
+              'hover:bg-violet-500 transition-colors',
+              isSaving && 'opacity-70 cursor-not-allowed'
             )}
           >
-            Сохранить изменения
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
         </div>
       </div>

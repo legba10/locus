@@ -94,24 +94,29 @@ export interface Booking {
 
 // ——— User / Auth (совместимо с backend /auth/me)
 export type AppRole = "user" | "landlord";
+export type UserTariff = "free" | "landlord_basic" | "landlord_pro";
+export type VerificationStatus = "pending" | "verified";
 
 export interface UserProfile {
-  name?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  phone?: string;
-  telegramId?: string;
-  role?: string;
-  tariff?: string;
+  full_name?: string | null;
+  phone?: string | null;
+  telegram_id?: string | null;
+  role?: string | null;
+  tariff?: UserTariff | null;
+  verification_status?: VerificationStatus | null;
 }
 
 export interface UserContract {
   id: string;
-  supabaseId?: string;
   email: string;
+  phone: string | null;
+  telegram_id: string | null;
+  full_name: string | null;
   role: AppRole;
-  roles?: string[];
-  profile?: UserProfile;
+  tariff: UserTariff;
+  verification_status: VerificationStatus;
+  supabaseId?: string;
+  roles?: AppRole[];
 }
 
 // ——— API responses

@@ -18,6 +18,7 @@ export class AuthController {
         id: string;
         supabaseId: string;
         email: string;
+        phone: string | null;
         role: "user" | "landlord";
         roles: string[];
         profile?: {
@@ -26,32 +27,28 @@ export class AuthController {
           telegram_id: string | null;
           role: string | null;
           tariff: string | null;
+          verification_status?: "pending" | "verified" | null;
+          email?: string | null;
         } | null;
       };
     },
   ) {
     const profile = req.user.profile ?? null;
-    const profilePayload = profile
-      ? {
-          name: profile.full_name ?? undefined,
-          fullName: profile.full_name ?? undefined,
-          phone: profile.phone ?? undefined,
-          telegramId: profile.telegram_id ?? undefined,
-          role: profile.role ?? undefined,
-          tariff: profile.tariff ?? undefined,
-        }
-      : undefined;
+    const role = (profile?.role ?? req.user.role ?? "user") as "user" | "landlord";
+    const tariff =
+      (profile?.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
+    const verificationStatus =
+      (profile?.verification_status ?? "pending") as "pending" | "verified";
 
     return {
-      ok: true,
-      user: {
-        id: req.user.id,
-        supabaseId: req.user.supabaseId,
-        email: req.user.email,
-        role: req.user.role,
-        roles: req.user.roles,
-        profile: profilePayload,
-      },
+      id: req.user.id,
+      email: profile?.email ?? req.user.email ?? "",
+      phone: profile?.phone ?? req.user.phone ?? null,
+      telegram_id: profile?.telegram_id ?? null,
+      full_name: profile?.full_name ?? null,
+      role,
+      tariff,
+      verification_status: verificationStatus,
     };
   }
 

@@ -742,7 +742,10 @@ export function HomePageV6() {
       {/* ═══════════════════════════════════════════════════════════════
           AI FLOATING WIDGET — переход в поиск с параметрами
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50">
+      <div
+        className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         <button
           className={cn(
             'flex items-center justify-center gap-2 px-5 py-3 rounded-[14px]',

@@ -35,6 +35,7 @@ export interface User {
   roles: UserRole[]
   provider?: AuthProvider
   tariff?: string
+  verificationStatus?: 'pending' | 'verified'
   
   // Metadata
   createdAt?: string
