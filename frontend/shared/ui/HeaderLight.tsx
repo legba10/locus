@@ -5,14 +5,14 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User, ArrowLeft } from 'lucide-react'
 
-const menuIconWrap = 'flex shrink-0 text-[#8A8FA3] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
+const menuIconWrap = 'flex shrink-0 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
 
 function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <li className="menu-item">
-      <button type="button" onClick={onClick} className="menu-item-btn w-full h-12 rounded-[12px] py-3 px-4 text-[15px] font-medium text-[#1A1A1A] hover:bg-[var(--locus-accent-light)] hover:text-[var(--locus-primary)] flex items-center gap-3 transition-colors [&_.menu-icon-wrap]:hover:text-[var(--locus-primary)] [&_.menu-icon-wrap]:hover:opacity-100">
+      <button type="button" onClick={onClick} className="menu-item-btn w-full text-[15px] flex items-center transition-colors">
         <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
         <span>{label}</span>
       </button>
@@ -146,40 +146,63 @@ export function HeaderLight() {
         onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
       />
       <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
-        <div className="drawer-inner flex flex-col h-full">
-          <nav className="menu flex-1 overflow-y-auto">
-            {!isAuthenticated() ? (
-              <>
-                <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
-                  Войти / Зарегистрироваться
-                </button>
-                <ul className="menu-list">
-                  <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                  <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                  <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                  <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                  <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
-                </ul>
-              </>
-            ) : (
-              <>
-                <ul className="menu-list">
-                  <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                  <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                  <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                  <NavItem icon={<User size={20} strokeWidth={1.8} />} label="Профиль" onClick={() => handleNavigate('/profile')} />
-                  <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                  <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
-                </ul>
+        <div className="drawer-inner">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(false)}
+            className="mobile-menu-close"
+            aria-label="Закрыть меню"
+          >
+            <ArrowLeft size={28} strokeWidth={1.8} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNavigate('/profile')}
+            className="mobile-menu-profile-block"
+          >
+            <div className="mobile-menu-profile-inner">
+              <div className="mobile-menu-profile-avatar" aria-hidden>
+                {isAuthenticated() && user?.full_name
+                  ? (user.full_name.trim().charAt(0) || 'П').toUpperCase()
+                  : 'Г'}
+              </div>
+              <div className="mobile-menu-profile-text">
+                <div className="mobile-menu-profile-name">
+                  {isAuthenticated() && user?.full_name ? user.full_name : 'Гость'}
+                </div>
+                <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
+              </div>
+            </div>
+          </button>
+          {!isAuthenticated() && (
+            <div className="mobile-menu-cta-wrap">
+              <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
+                Войти / Зарегистрироваться
+              </button>
+            </div>
+          )}
+          <nav className="mobile-menu-nav menu">
+            <ul className="menu-list">
+              <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+              <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
+              <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+              <NavItem icon={<User size={20} strokeWidth={1.8} />} label="Профиль" onClick={() => handleNavigate('/profile')} />
+              <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+              <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
+            </ul>
+          </nav>
+          {isAuthenticated() && (
+            <div className="mobile-menu-logout-wrap">
+              <ul className="menu-list">
                 <li className="menu-item">
-                  <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout w-full h-12 rounded-[12px] px-[14px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
-                    <span className={cn('menu-icon-wrap', menuIconWrap)}><LogOut size={20} strokeWidth={1.8} className="text-[#E14C4C]" /></span>
+                  <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout">
+                    <span className={cn('menu-icon-wrap', menuIconWrap)}><LogOut size={20} strokeWidth={1.8} /></span>
                     <span>Выйти</span>
                   </button>
                 </li>
-              </>
-            )}
-          </nav>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </header>

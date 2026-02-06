@@ -433,67 +433,121 @@ textarea:focus {
   overflow: hidden !important;
 }
 
+/* Overlay: полупрозрачный затемнённый фон */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(3px);
   z-index: 40;
   opacity: 0;
-  transition: opacity 180ms ease-out;
+  transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
-
 .mobile-menu-overlay.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Drawer: выезд справа, продуктовые углы и тень */
+/* Drawer: slide-menu слева, белый фон */
 .drawer.mobile-menu {
   position: fixed;
-  right: 0;
+  left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 86%;
-  max-width: 360px;
-  background: #fff;
-  border-top-left-radius: 22px;
-  border-bottom-left-radius: 22px;
-  padding: 18px 16px 20px;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(14px);
+  width: 88%;
+  max-width: 380px;
+  background: #ffffff;
+  border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
+  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.12);
   z-index: 50;
   overflow: hidden;
   overflow-y: auto;
-  transform: translateX(100%);
-  transition: transform 220ms ease-out;
+  transform: translateX(-100%);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
-
 .drawer.mobile-menu.open {
   transform: translateX(0);
   pointer-events: auto;
 }
+.drawer.mobile-menu .drawer-inner {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-/* Кнопка закрытия (если есть в разметке) */
+/* Кнопка закрытия: одна, стрелка назад */
 .mobile-menu-close {
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #6f6f6f;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.mobile-menu-close:hover {
+  color: #000;
 }
 .mobile-menu-close svg {
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
+  stroke-width: 1.8;
 }
-.mobile-menu-header {
-  margin-bottom: 6px;
+
+/* Шапка меню: контейнер профиля */
+.mobile-menu-profile-block {
+  padding: 20px 20px 12px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.mobile-menu-profile-block:active {
+  opacity: 0.9;
+}
+.mobile-menu-profile-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mobile-menu-profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7b61ff 0%, #9f7bff 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mobile-menu-profile-text {
+  flex: 1;
+  min-width: 0;
+}
+.mobile-menu-profile-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+}
+.mobile-menu-profile-subtitle {
+  font-size: 13px;
+  color: #8a8f98;
+  margin-top: 2px;
 }
 
 /* Header: лого 30px, gap 6px, текст жирнее, выравнивание */
@@ -617,70 +671,101 @@ textarea:focus {
   transform: translateY(-6px) rotate(-45deg);
 }
 
-/* Кнопка Войти: компактная, не упирается в верх */
+/* Основные пункты меню */
+.mobile-menu-nav {
+  margin-top: 18px;
+  padding: 0 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+.menu .menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.menu .menu-item {
+  list-style: none;
+}
+.menu .menu-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  border-radius: 12px;
+  padding: 0 12px;
+  width: 100%;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: left;
+}
+.menu .menu-item-btn:hover {
+  background: #f5f6fa;
+}
+.menu .menu-item-btn .menu-icon-wrap,
+.menu .menu-item-btn .menu-icon-wrap svg,
+.menu .menu-item-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #8f96a3;
+  stroke-width: 1.8;
+  flex-shrink: 0;
+}
+.menu .menu-item-btn:hover .menu-icon-wrap,
+.menu .menu-item-btn:hover .menu-icon-wrap svg,
+.menu .menu-item-btn:hover svg {
+  color: #7b61ff;
+}
+
+/* Обёртка кнопки Войти */
+.mobile-menu-cta-wrap {
+  padding: 0 10px;
+  margin-top: 4px;
+}
 .menu-cta,
 .mobile-menu .auth-button {
-  position: relative;
-  z-index: 1;
+  margin-bottom: 4px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  margin-top: 14px;
-  margin-bottom: 14px;
-  padding: 0 16px;
-  background: linear-gradient(135deg, #7B4AE2 0%, #9B6AE2 100%);
+  padding: 0 14px;
+  background: linear-gradient(135deg, #7b61ff 0%, #9f7bff 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: opacity 0.2s;
+  border: none;
+  cursor: pointer;
+  width: 100%;
 }
 .menu-cta:hover,
 .mobile-menu .auth-button:hover {
   opacity: 0.92;
 }
 
-/* Пункты меню: 44px, ритм 6px, иконки 20px opacity 0.7 */
-.menu .menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.menu .menu-item {
-  list-style: none;
-}
-.menu .menu-item + .menu-item {
-  margin-top: 6px;
-}
-.menu .menu-item-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  border-radius: 12px;
-  padding: 0 10px;
-  transition: background 0.15s ease;
-}
-.menu .menu-item-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-.menu .menu-item-btn .menu-icon-wrap svg,
-.menu .menu-item-btn svg {
-  width: 20px;
-  height: 20px;
-  opacity: 0.7;
-}
-.menu .menu-item-btn:hover .menu-icon-wrap svg,
-.menu .menu-item-btn:hover svg {
-  opacity: 1;
+/* Нижний блок: Выйти (прижат к низу) */
+.mobile-menu-logout-wrap {
+  margin-top: auto;
+  padding: 14px 10px 24px;
 }
 .menu .menu-item-btn--logout {
-  margin-top: 8px;
-  color: #E14C4C;
+  color: #ff4d4f;
+}
+.menu .menu-item-btn--logout .menu-icon-wrap svg,
+.menu .menu-item-btn--logout svg {
+  color: #ff4d4f;
 }
 .menu .menu-item-btn--logout:hover {
-  background: rgba(225, 76, 76, 0.08);
+  background: rgba(255, 77, 79, 0.08);
+}
+.menu .menu-item-btn--logout:hover svg {
+  color: #ff4d4f;
 }
 
 @media (min-width: 768px) {
