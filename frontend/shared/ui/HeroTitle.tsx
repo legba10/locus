@@ -2,13 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react'
 
-const PREFIX = 'Найдите жильё, '
+const BASE = 'Найдите жильё'
 const PHRASES = [
-  'которое подходит вам',
-  'быстро и без стресса',
-  'с умным подбором AI',
-  'в нужном районе',
-  'по вашему бюджету',
+  ', которое подходит вам',
+  ' в пару кликов',
 ]
 
 const TYPE_MS = 35
@@ -19,7 +16,7 @@ const PAUSE_AFTER_ERASE_MS = 300
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export function HeroTitle() {
-  const [displayed, setDisplayed] = useState(PREFIX)
+  const [displayed, setDisplayed] = useState(BASE)
   const phraseIndexRef = useRef(0)
 
   useEffect(() => {
@@ -28,23 +25,23 @@ export function HeroTitle() {
     const run = async () => {
       while (!cancelled) {
         const phrase = PHRASES[phraseIndexRef.current]
-        const fullText = PREFIX + phrase
+        const fullText = BASE + phrase
 
-        // 1. Type tail (prefix already shown; we add chars of phrase)
+        // 1. Type phrase (base already shown)
         for (let i = 1; i <= phrase.length; i++) {
           if (cancelled) return
-          setDisplayed(fullText.slice(0, PREFIX.length + i))
+          setDisplayed(BASE + phrase.slice(0, i))
           await delay(TYPE_MS)
         }
 
-        // 2. Pause after full string
+        // 2. Pause 1200ms after full string
         await delay(PAUSE_AFTER_FULL_MS)
         if (cancelled) return
 
-        // 3. Erase back to PREFIX
-        for (let i = phrase.length; i >= 0; i--) {
+        // 3. Erase back to BASE
+        for (let i = phrase.length - 1; i >= 0; i--) {
           if (cancelled) return
-          setDisplayed(PREFIX + phrase.slice(0, i))
+          setDisplayed(BASE + phrase.slice(0, i))
           await delay(ERASE_MS)
         }
 
@@ -52,7 +49,6 @@ export function HeroTitle() {
         await delay(PAUSE_AFTER_ERASE_MS)
         if (cancelled) return
 
-        // 5. Next phrase
         phraseIndexRef.current = (phraseIndexRef.current + 1) % PHRASES.length
       }
     }

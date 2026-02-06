@@ -67,13 +67,13 @@ export function HeaderLight() {
 
   return (
     <header className={cn(
-      'sticky top-0 z-50',
+      'sticky top-0 z-40',
       'relative',
       'bg-white/95 backdrop-blur-md',
       'border-b border-gray-100/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
     )}>
-      <div className={cn('header mx-auto max-w-6xl px-4', !isMenuOpen && 'relative z-[1000]')}>
+      <div className="header mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between h-14">
           <div className="logo flex items-center gap-2 shrink-0">
             <img src="/logo-locus-icon.png" alt="" className="header-logo-img" />
