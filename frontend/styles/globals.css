@@ -462,7 +462,7 @@ textarea:focus {
   background: #fff;
   border-top-right-radius: 18px;
   border-bottom-right-radius: 18px;
-  padding: 12px 20px 20px;
+  padding: 16px 20px 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   z-index: 50;
   overflow-y: auto;
@@ -474,19 +474,6 @@ textarea:focus {
 .drawer.mobile-menu.open {
   transform: translateX(0);
   pointer-events: auto;
-}
-
-/* Лого в drawer: 28px, текст 16px, gap 8px */
-.drawer-logo {
-  gap: 8px;
-}
-.drawer-logo-img {
-  height: 28px;
-  width: auto;
-  display: block;
-}
-.drawer-logo-text {
-  font-size: 16px;
 }
 
 /* Header: лого 24px, gap 8px, текст 16px weight 600 */
@@ -501,6 +488,28 @@ textarea:focus {
 }
 .header .logo {
   gap: 8px;
+}
+
+/* Логотип → главная: клик, hover, пульсация иконки */
+.locus-home-link {
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.locus-home-link:hover {
+  transform: scale(1.04);
+  opacity: 0.9;
+}
+.header .logo .header-logo-img {
+  animation: locusPulse 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .header .logo .header-logo-img {
+    animation: none;
+  }
+}
+@keyframes locusPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
 }
 @media (min-width: 768px) {
   .header .logo .header-logo-img {
@@ -566,7 +575,7 @@ textarea:focus {
 .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
 }
 .menu .menu-item {
   list-style: none;

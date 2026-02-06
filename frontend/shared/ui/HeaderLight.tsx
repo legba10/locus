@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User } from 'lucide-react'
 
-const menuIconWrap = 'flex shrink-0 text-[#7C8CA5] opacity-75 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
+const menuIconWrap = 'flex shrink-0 text-[#8A8FA3] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
 
 function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
@@ -75,10 +75,10 @@ export function HeaderLight() {
     )}>
       <div className="header mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between h-14">
-          <div className="logo flex items-center gap-2 shrink-0">
-            <img src="/logo-locus-icon.png" alt="" className="header-logo-img" />
+          <Link href="/" className="logo locus-home-link flex items-center gap-2 shrink-0">
+            <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
             <span className="header-logo-text font-semibold text-[#1A1A1A]">LOCUS</span>
-          </div>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-6 h-full">
             {desktopNav.map((item) => (
@@ -147,10 +147,6 @@ export function HeaderLight() {
       />
       <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
         <div className="drawer-inner flex flex-col h-full">
-          <div className="drawer-logo flex items-center gap-2 mt-1 mb-4 shrink-0">
-            <img src="/logo-locus-icon.png" alt="" className="drawer-logo-img" />
-            <span className="drawer-logo-text font-semibold text-[#1A1A1A]">LOCUS</span>
-          </div>
           <nav className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
               <>

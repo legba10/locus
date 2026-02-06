@@ -9,9 +9,9 @@ const PHRASES = [
   ' под ваш бюджет',
 ]
 
-const TYPE_MS = 45
-const ERASE_MS = 30
-const PAUSE_AFTER_FULL_MS = 1800
+const TYPE_MS = 55
+const ERASE_MS = 35
+const PAUSE_AFTER_FULL_MS = 1400
 const PAUSE_AFTER_ERASE_MS = 300
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
