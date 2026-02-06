@@ -5,9 +5,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User, ArrowLeft } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft } from 'lucide-react'
 
-const menuIconWrap = 'flex shrink-0 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
+const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
 function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
@@ -153,7 +153,7 @@ export function HeaderLight() {
             className="mobile-menu-close"
             aria-label="Закрыть меню"
           >
-            <ArrowLeft size={28} strokeWidth={1.8} />
+            <ArrowLeft size={22} strokeWidth={1.8} />
           </button>
           <button
             type="button"
@@ -183,12 +183,11 @@ export function HeaderLight() {
           )}
           <nav className="mobile-menu-nav menu">
             <ul className="menu-list">
-              <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-              <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-              <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-              <NavItem icon={<User size={20} strokeWidth={1.8} />} label="Профиль" onClick={() => handleNavigate('/profile')} />
-              <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-              <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
+              <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+              <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
+              <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+              <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+              <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
             </ul>
           </nav>
           {isAuthenticated() && (
@@ -196,7 +195,7 @@ export function HeaderLight() {
               <ul className="menu-list">
                 <li className="menu-item">
                   <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout">
-                    <span className={cn('menu-icon-wrap', menuIconWrap)}><LogOut size={20} strokeWidth={1.8} /></span>
+                    <span className={cn('menu-icon-wrap', menuIconWrap)}><LogOut size={22} strokeWidth={1.8} /></span>
                     <span>Выйти</span>
                   </button>
                 </li>

@@ -433,7 +433,7 @@ textarea:focus {
   overflow: hidden !important;
 }
 
-/* Overlay: полупрозрачный затемнённый фон */
+/* Overlay: затемнение фона, выше CTA */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
@@ -441,9 +441,9 @@ textarea:focus {
   height: 100vh;
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(3px);
-  z-index: 40;
+  z-index: 9998;
   opacity: 0;
-  transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 200ms ease-out;
   pointer-events: none;
 }
 .mobile-menu-overlay.open {
@@ -451,24 +451,24 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Drawer: slide-menu слева, белый фон */
+/* Drawer: белый контейнер слева, выше CTA */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 88%;
+  width: 86%;
   max-width: 380px;
   background: #ffffff;
-  border-top-right-radius: 24px;
-  border-bottom-right-radius: 24px;
-  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.12);
-  z-index: 50;
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 280ms ease-out;
   pointer-events: none;
 }
 .drawer.mobile-menu.open {
@@ -482,13 +482,13 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* Кнопка закрытия: одна, стрелка назад */
+/* Стрелка закрытия: только одна, справа в шапке */
 .mobile-menu-close {
   position: absolute;
   top: 18px;
   right: 18px;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -496,21 +496,23 @@ textarea:focus {
   border: none;
   background: transparent;
   color: #6f6f6f;
+  opacity: 0.7;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 .mobile-menu-close:hover {
+  opacity: 1;
   color: #000;
 }
 .mobile-menu-close svg {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   stroke-width: 1.8;
 }
 
-/* Шапка меню: контейнер профиля */
+/* Шапка меню: контейнер профиля (компактно) */
 .mobile-menu-profile-block {
-  padding: 20px 20px 12px;
+  padding: 16px 20px 12px;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
@@ -673,15 +675,15 @@ textarea:focus {
 
 /* Основные пункты меню */
 .mobile-menu-nav {
-  margin-top: 18px;
-  padding: 0 10px;
+  margin-top: 8px;
+  padding: 16px 20px;
   flex: 1;
   overflow-y: auto;
 }
 .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 14px;
 }
 .menu .menu-item {
   list-style: none;
@@ -689,7 +691,7 @@ textarea:focus {
 .menu .menu-item-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   height: 48px;
   border-radius: 12px;
   padding: 0 12px;
@@ -704,13 +706,13 @@ textarea:focus {
   text-align: left;
 }
 .menu .menu-item-btn:hover {
-  background: #f5f6fa;
+  background: #f6f6f8;
 }
 .menu .menu-item-btn .menu-icon-wrap,
 .menu .menu-item-btn .menu-icon-wrap svg,
 .menu .menu-item-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: #8f96a3;
   stroke-width: 1.8;
   flex-shrink: 0;
@@ -721,19 +723,19 @@ textarea:focus {
   color: #7b61ff;
 }
 
-/* Обёртка кнопки Войти */
+/* Кнопка Войти (только для гостя) */
 .mobile-menu-cta-wrap {
-  padding: 0 10px;
-  margin-top: 4px;
+  padding: 0 20px;
 }
 .menu-cta,
 .mobile-menu .auth-button {
-  margin-bottom: 4px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
   padding: 0 14px;
+  margin-top: 14px;
+  margin-bottom: 10px;
   background: linear-gradient(135deg, #7b61ff 0%, #9f7bff 100%);
   color: #fff;
   display: flex;
@@ -749,10 +751,10 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Нижний блок: Выйти (прижат к низу) */
+/* Нижний блок: Выйти (над safe-area) */
 .mobile-menu-logout-wrap {
   margin-top: auto;
-  padding: 14px 10px 24px;
+  padding: 14px 20px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 .menu .menu-item-btn--logout {
   color: #ff4d4f;
