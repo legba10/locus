@@ -123,6 +123,43 @@ select option {
   --color-danger: var(--locus-danger);
 }
 
+/* ════════════════════════════════════════════════════════════════
+   HERO TITLE — typing animation (один запуск, курсор исчезает)
+   ════════════════════════════════════════════════════════════════ */
+.hero-title {
+  font-size: 48px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px;
+  color: var(--locus-text-main);
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 28px;
+    padding: 0 20px;
+  }
+}
+
+.hero-title-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  background: var(--locus-primary);
+  animation: hero-cursor-blink 0.7s infinite;
+}
+
+@keyframes hero-cursor-blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
 /* Force light mode */
 html {
   color-scheme: light !important;
@@ -408,29 +445,31 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Панель бургер-меню: выезжает справа, 85% width, max 360px */
-.mobile-menu {
+/* Drawer: выезд справа, 88% max 380px, radius 20px слева, padding 20px */
+.drawer.mobile-menu {
   position: fixed;
-  top: 0;
   right: 0;
-  width: 85%;
-  max-width: 360px;
-  height: 100vh;
+  top: 0;
+  bottom: 0;
+  width: 88%;
+  max-width: 380px;
   background: #fff;
+  border-radius: 20px 0 0 20px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   z-index: 999;
   overflow-y: auto;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
   transform: translateX(100%);
   transition: transform 220ms ease-out;
   pointer-events: none;
 }
 
-.mobile-menu.open {
+.drawer.mobile-menu.open {
   transform: translateX(0);
   pointer-events: auto;
 }
 
-/* Header: лого + LOCUS — desktop 28px / 18px, mobile 24px / 16px */
+/* Header: лого 24px, gap 8px, текст 16px weight 600 */
 .header .logo .header-logo-img {
   height: 24px;
   width: auto;
@@ -438,6 +477,10 @@ textarea:focus {
 }
 .header .logo .header-logo-text {
   font-size: 16px;
+  font-weight: 600;
+}
+.header .logo {
+  gap: 8px;
 }
 @media (min-width: 768px) {
   .header .logo .header-logo-img {
@@ -446,43 +489,49 @@ textarea:focus {
   .header .logo .header-logo-text {
     font-size: 18px;
   }
-  .header .logo {
-    gap: 8px;
-  }
 }
 
-/* Верх меню: лого + LOCUS, справа X */
-.menu-header .menu-header-logo-img {
-  height: 28px;
-  width: auto;
-  display: block;
+/* Бургер: 32×32, 3 полоски → X анимация (200ms ease) */
+.burger {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
 }
-.menu-header .menu-header-logo-text {
-  font-size: 18px;
-}
-
-/* Бургер: 3 полоски, фиолетовый из логотипа, 22×2px, gap 4px */
 .burger span {
   display: block;
-  width: 22px;
+  width: 18px;
   height: 2px;
-  background: #7B4AE2;
+  background: var(--locus-primary, #7B4AE2);
   margin: 4px 0;
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.burger.open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.burger.open span:nth-child(2) {
+  opacity: 0;
+}
+.burger.open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
-/* Кнопка Войти / Зарегистрироваться: 52px, radius 14px, gradient */
+/* Кнопка Войти: 52px, radius 14px, margin-bottom 16px, gradient */
 .menu-cta {
+  height: 52px;
+  border-radius: 14px;
+  margin-bottom: 16px;
   background: linear-gradient(135deg, #7B4AE2 0%, #9B6AE2 100%);
-  margin: 16px 20px 8px;
 }
 .menu-cta:hover {
   opacity: 0.92;
 }
 
-/* Пункты меню: 52px, radius 12px, padding 16px, иконка слева, текст слева, hover светлый фиолетовый */
-.menu {
-  padding: 20px;
-}
+/* Пункты меню: 48px, radius 12px, gap 12px, иконка 20px #7C8CA5, hover locus-accent-light */
 .menu .menu-list {
   display: flex;
   flex-direction: column;
@@ -492,7 +541,12 @@ textarea:focus {
   list-style: none;
 }
 .menu .menu-item-btn {
-  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  border-radius: 12px;
+  padding: 0 14px;
 }
 .menu .menu-item-btn--logout {
   margin-top: 8px;

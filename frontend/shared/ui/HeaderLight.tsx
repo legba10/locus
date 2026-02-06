@@ -5,22 +5,15 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User } from 'lucide-react'
 
-const iconClass = 'w-5 h-5 flex-shrink-0 text-[#4AA3E2]'
-function SearchIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
-function HeartIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> }
-function MessageIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> }
-function UserIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> }
-function CreditIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> }
-function HelpIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> }
-function LogoutIcon() { return <svg className="w-5 h-5 flex-shrink-0 text-[#E14C4C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> }
+const menuIconWrap = 'flex shrink-0 text-[#7C8CA5] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
 
-function NavItem({ icon, label, onClick }: { icon: 'search' | 'heart' | 'message' | 'user' | 'credit' | 'help'; label: string; onClick: () => void }) {
-  const Icon = icon === 'search' ? SearchIcon : icon === 'heart' ? HeartIcon : icon === 'message' ? MessageIcon : icon === 'user' ? UserIcon : icon === 'credit' ? CreditIcon : HelpIcon
+function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <li className="menu-item">
-      <button type="button" onClick={onClick} className="menu-item-btn w-full h-[52px] px-4 rounded-[12px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:opacity-60">
-        <Icon />
+      <button type="button" onClick={onClick} className="menu-item-btn w-full h-12 rounded-[12px] px-[14px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[var(--locus-accent-light)] hover:text-[var(--locus-primary)] flex items-center gap-3 transition-colors [&_.menu-icon-wrap]:hover:text-[var(--locus-primary)]">
+        <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
         <span>{label}</span>
       </button>
     </li>
@@ -84,7 +77,7 @@ export function HeaderLight() {
         <div className="flex items-center justify-between h-14">
           <div className="logo flex items-center gap-2 shrink-0">
             <img src="/logo-locus-icon.png" alt="" className="header-logo-img" />
-            <span className="header-logo-text font-bold text-[#1A1A1A]">LOCUS</span>
+            <span className="header-logo-text font-semibold text-[#1A1A1A]">LOCUS</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-6 h-full">
@@ -134,7 +127,7 @@ export function HeaderLight() {
 
           <button
             type="button"
-            className="burger md:hidden inline-flex flex-col items-center justify-center relative z-[1000] min-w-[44px] min-h-[44px] w-11 h-11 p-0 bg-transparent border-0 cursor-pointer"
+            className={cn('burger md:hidden relative z-[1000] w-8 h-8 p-0 bg-transparent border-0 cursor-pointer flex items-center justify-center', isMenuOpen && 'open')}
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
@@ -152,55 +145,41 @@ export function HeaderLight() {
         onClick={() => setIsMenuOpen(false)}
         onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
       />
-      <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
-        <div className="mobile-menu-inner flex flex-col h-full bg-[#fff]">
-          <div className="menu-header flex items-center justify-between shrink-0 px-4 py-4 border-b border-[#ECECEC]">
-            <div className="logo flex items-center gap-2">
-              <img src="/logo-locus-icon.png" alt="" className="menu-header-logo-img" />
-              <span className="menu-header-logo-text font-bold text-[#1A1A1A]">LOCUS</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="menu-close w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
-              aria-label="Закрыть"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
-          </div>
-          <div className="menu flex-1 overflow-y-auto">
+      <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
+        <div className="drawer-inner flex flex-col h-full">
+          <nav className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
               <>
                 <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta w-full h-[52px] rounded-[14px] text-[15px] font-semibold text-white flex items-center justify-center transition-opacity">
                   Войти / Зарегистрироваться
                 </button>
                 <ul className="menu-list">
-                  <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                  <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                  <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                  <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                  <NavItem icon="help" label="Помощь" onClick={() => handleNavigate('/help')} />
+                  <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                  <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                  <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                  <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                  <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
                 </ul>
               </>
             ) : (
               <>
                 <ul className="menu-list">
-                  <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                  <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                  <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                  <NavItem icon="user" label="Профиль" onClick={() => handleNavigate('/profile')} />
-                  <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                  <NavItem icon="help" label="Помощь" onClick={() => handleNavigate('/help')} />
+                  <NavItem icon={<Search size={20} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                  <NavItem icon={<Heart size={20} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                  <NavItem icon={<MessageCircle size={20} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                  <NavItem icon={<User size={20} strokeWidth={1.8} />} label="Профиль" onClick={() => handleNavigate('/profile')} />
+                  <NavItem icon={<CreditCard size={20} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                  <NavItem icon={<HelpCircle size={20} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
                 </ul>
                 <li className="menu-item">
-                  <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout w-full h-[52px] px-4 rounded-[12px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
-                    <LogoutIcon />
+                  <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout w-full h-12 rounded-[12px] px-[14px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
+                    <span className={cn('menu-icon-wrap', menuIconWrap)}><LogOut size={20} strokeWidth={1.8} className="text-[#E14C4C]" /></span>
                     <span>Выйти</span>
                   </button>
                 </li>
               </>
             )}
-          </div>
+          </nav>
         </div>
       </div>
     </header>

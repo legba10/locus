@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
+import { HeroTitle } from '@/shared/ui/HeroTitle'
 import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
@@ -160,10 +161,7 @@ export function HomePageV6() {
           ═══════════════════════════════════════════════════════════════ */}
       <section className="relative pt-10 pb-14 md:pt-14 md:pb-18">
         <div className="max-w-5xl mx-auto px-4 text-center">
-          {/* Headline — по ТЗ v4 */}
-          <h1 className="text-[36px] md:text-[44px] font-bold text-[#1C1F26] mb-3 leading-[1.1] tracking-tight">
-            Найдите жильё, которое подходит вам
-          </h1>
+          <HeroTitle />
 
           {/* Subtitle — по ТЗ v4 */}
           <p className="text-[15px] md:text-[16px] text-[#6B7280] mb-10 max-w-lg mx-auto leading-relaxed">
