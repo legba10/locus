@@ -747,43 +747,48 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Выйти: под «Помощь», красная, не перекрыта AI */
+/* Выйти: под «Помощь», красный блок, выравнивание как у пунктов */
 .mobile-menu-logout-wrap {
   margin-top: 20px;
   margin-bottom: 90px;
-  padding: 0;
+  padding: 0 20px;
 }
 .mobile-menu-logout-wrap .menu-list {
   gap: 0;
 }
-.menu .menu-item-btn--logout {
+.drawer.mobile-menu .menu-item-btn--logout {
   display: flex;
   align-items: center;
   gap: 12px;
   height: 48px;
   border-radius: 12px;
-  padding-left: 4px;
-  padding-right: 12px;
-  color: #ff3b30;
+  padding: 0 12px 0 4px;
+  width: 100%;
+  font-size: 15px;
   font-weight: 500;
+  color: #ff3b30 !important;
   background: transparent;
+  border: none;
+  cursor: pointer;
   transition: background 0.15s ease;
+  text-align: left;
 }
-.menu .menu-item-btn--logout .menu-icon-wrap,
-.menu .menu-item-btn--logout .menu-icon-wrap svg,
-.menu .menu-item-btn--logout svg {
-  color: #ff3b30;
-  stroke: #ff3b30;
-  opacity: 0.9;
+.drawer.mobile-menu .menu-item-btn--logout .menu-icon-wrap,
+.drawer.mobile-menu .menu-item-btn--logout .menu-icon-wrap svg,
+.drawer.mobile-menu .menu-item-btn--logout svg {
+  color: #ff3b30 !important;
+  stroke: #ff3b30 !important;
+  opacity: 1;
+  flex-shrink: 0;
 }
-.menu .menu-item-btn--logout:hover {
+.drawer.mobile-menu .menu-item-btn--logout:hover {
   background: rgba(255, 59, 48, 0.08);
 }
-.menu .menu-item-btn--logout:hover svg {
-  color: #ff3b30;
+.drawer.mobile-menu .menu-item-btn--logout:hover svg {
+  color: #ff3b30 !important;
   opacity: 1;
 }
-.menu .menu-item-btn--logout:active {
+.drawer.mobile-menu .menu-item-btn--logout:active {
   background: rgba(255, 59, 48, 0.12);
 }
 
