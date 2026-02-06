@@ -451,27 +451,26 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Drawer: белый контейнер слева, выше AI-кнопки */
+/* Drawer: по макету — 86–90%, max 420px, тень, отступы */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 86%;
-  max-width: 380px;
+  width: 88%;
+  max-width: 420px;
   background: #ffffff;
-  border-radius: 24px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
   z-index: 999;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.25s ease-out;
   pointer-events: none;
-  padding: 20px;
+  padding: 20px 18px 24px;
 }
 .drawer.mobile-menu.open {
   transform: translateX(0);
@@ -485,11 +484,15 @@ textarea:focus {
   padding-bottom: 100px;
 }
 
-/* Стрелка закрытия: ОДНА, внутри контейнера, справа в header */
+/* Верхняя строка: профиль + стрелка закрытия */
+.mobile-menu-header-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 .mobile-menu-close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
+  margin-left: auto;
+  margin-right: 4px;
   width: 36px;
   height: 36px;
   display: flex;
@@ -498,25 +501,29 @@ textarea:focus {
   padding: 0;
   border: none;
   background: transparent;
-  color: #6f6f6f;
-  opacity: 0.7;
+  color: #9b9ba1;
   cursor: pointer;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
 }
 .mobile-menu-close:hover {
-  opacity: 1;
-  color: #000;
+  color: #1c1c1e;
 }
 .mobile-menu-close svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   stroke-width: 1.8;
 }
 
-/* Шапка меню: аватар + имя */
+/* Блок профиля: аватар + имя + «Перейти в профиль» */
 .mobile-menu-profile-block {
-  padding: 20px 20px 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
+  text-align: left;
   transition: opacity 0.15s ease;
 }
 .mobile-menu-profile-block:active {
@@ -528,10 +535,10 @@ textarea:focus {
   gap: 12px;
 }
 .mobile-menu-profile-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7b61ff 0%, #9f7bff 100%);
+  background: linear-gradient(135deg, #7b5cff 0%, #a88bff 100%);
   color: #fff;
   font-weight: 600;
   font-size: 16px;
@@ -547,12 +554,20 @@ textarea:focus {
 .mobile-menu-profile-name {
   font-size: 16px;
   font-weight: 600;
-  color: #111;
+  line-height: 1.2;
+  color: #1c1c1e;
 }
 .mobile-menu-profile-subtitle {
   font-size: 13px;
-  color: #8a8f98;
+  color: #8e8e93;
   margin-top: 2px;
+}
+
+/* Разделитель после профиля */
+.mobile-menu-separator {
+  margin: 16px 0;
+  height: 1px;
+  background: #f0f0f2;
 }
 
 /* Header: лого 30px, gap 6px, текст жирнее, выравнивание */
@@ -669,59 +684,58 @@ textarea:focus {
   border-radius: 1px;
 }
 
-/* Основные пункты меню */
+/* Список пунктов меню (по макету) */
 .mobile-menu-nav {
-  margin-top: 8px;
-  padding: 20px;
+  margin-top: 4px;
+  padding: 0;
   flex: 1;
   overflow-y: auto;
 }
-.menu .menu-list {
+.drawer.mobile-menu .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 4px;
 }
-.menu .menu-item {
+.drawer.mobile-menu .menu .menu-item {
   list-style: none;
 }
-.menu .menu-item-btn {
+.drawer.mobile-menu .menu .menu-item-btn {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   height: 48px;
   border-radius: 12px;
-  padding: 0 12px;
+  padding: 0 6px;
   width: 100%;
   font-size: 15px;
   font-weight: 500;
-  color: #111;
+  color: #1c1c1e;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: background 0.15s ease;
   text-align: left;
 }
-.menu .menu-item-btn:hover {
+.drawer.mobile-menu .menu .menu-item-btn:hover {
   background: #f6f6f8;
 }
-.menu .menu-item-btn .menu-icon-wrap,
-.menu .menu-item-btn .menu-icon-wrap svg,
-.menu .menu-item-btn svg {
+.drawer.mobile-menu .menu .menu-item-btn .menu-icon-wrap,
+.drawer.mobile-menu .menu .menu-item-btn .menu-icon-wrap svg,
+.drawer.mobile-menu .menu .menu-item-btn svg {
   width: 22px;
   height: 22px;
-  color: #8f96a3;
+  color: #8e8e93;
   stroke-width: 1.8;
   flex-shrink: 0;
 }
-.menu .menu-item-btn:hover .menu-icon-wrap,
-.menu .menu-item-btn:hover .menu-icon-wrap svg,
-.menu .menu-item-btn:hover svg {
-  color: #7b61ff;
+.drawer.mobile-menu .menu .menu-item-btn:hover .menu-icon-wrap,
+.drawer.mobile-menu .menu .menu-item-btn:hover svg {
+  color: #1c1c1e;
 }
 
-/* Кнопка Войти (только для гостя, под header) */
+/* Кнопка Войти (только для гостя) */
 .mobile-menu-cta-wrap {
-  padding: 0 20px;
+  padding: 0;
 }
 .menu-cta,
 .mobile-menu .auth-button {
@@ -747,11 +761,11 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Выйти: под «Помощь», красный блок, выравнивание как у пунктов */
+/* Выйти: под «Помощь», отступ 14px, в одну линию с пунктами */
 .mobile-menu-logout-wrap {
-  margin-top: 20px;
+  margin-top: 14px;
   margin-bottom: 90px;
-  padding: 0 20px;
+  padding: 0;
 }
 .mobile-menu-logout-wrap .menu-list {
   gap: 0;
@@ -762,10 +776,11 @@ textarea:focus {
   gap: 12px;
   height: 48px;
   border-radius: 12px;
-  padding: 0 12px 0 4px;
+  padding: 0 6px;
   width: 100%;
   font-size: 15px;
   font-weight: 500;
+  line-height: 1.2;
   color: #ff3b30 !important;
   background: transparent;
   border: none;

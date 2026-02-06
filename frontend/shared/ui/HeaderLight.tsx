@@ -147,33 +147,36 @@ export function HeaderLight() {
       />
       <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
         <div className="drawer-inner">
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(false)}
-            className="mobile-menu-close"
-            aria-label="Закрыть меню"
-          >
-            <ArrowLeft size={20} strokeWidth={1.8} />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNavigate('/profile')}
-            className="mobile-menu-profile-block"
-          >
-            <div className="mobile-menu-profile-inner">
-              <div className="mobile-menu-profile-avatar" aria-hidden>
-                {isAuthenticated() && user?.full_name
-                  ? (user.full_name.trim().charAt(0) || 'П').toUpperCase()
-                  : 'Г'}
-              </div>
-              <div className="mobile-menu-profile-text">
-                <div className="mobile-menu-profile-name">
-                  {isAuthenticated() && user?.full_name ? user.full_name : 'Гость'}
+          <div className="mobile-menu-header-row">
+            <button
+              type="button"
+              onClick={() => handleNavigate('/profile')}
+              className="mobile-menu-profile-block"
+            >
+              <div className="mobile-menu-profile-inner">
+                <div className="mobile-menu-profile-avatar" aria-hidden>
+                  {isAuthenticated() && user?.full_name
+                    ? (user.full_name.trim().charAt(0) || 'П').toUpperCase()
+                    : 'Г'}
                 </div>
-                <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
+                <div className="mobile-menu-profile-text">
+                  <div className="mobile-menu-profile-name">
+                    {isAuthenticated() && user?.full_name ? user.full_name : 'Гость'}
+                  </div>
+                  <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="mobile-menu-close"
+              aria-label="Закрыть меню"
+            >
+              <ArrowLeft size={22} strokeWidth={1.8} />
+            </button>
+          </div>
+          <div className="mobile-menu-separator" aria-hidden />
           {!isAuthenticated() && (
             <div className="mobile-menu-cta-wrap">
               <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
