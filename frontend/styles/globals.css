@@ -497,20 +497,38 @@ textarea:focus {
 }
 
 /* Header: лого 30px, gap 6px, текст жирнее, выравнивание */
+.header .logo,
+.header .logo .header-logo-img {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
 .header .logo {
+  display: flex;
   gap: 6px;
   align-items: center;
+  padding: 0;
   opacity: 0;
   transform: translateY(-4px);
   animation: logoIntro 0.5s ease forwards;
+}
+.header .logo:active,
+.header .logo:focus,
+.locus-home-link:active,
+.locus-home-link:focus {
+  background: transparent !important;
+  outline: none;
 }
 .header .logo .header-logo-img {
   width: 30px;
   height: 30px;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 0 0 rgba(124, 58, 237, 0));
-  animation: logoPulse 5s ease-in-out infinite, logoGlow 4s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  animation: logoSoftPulse 4s ease-in-out infinite;
   transition: transform 0.2s ease;
 }
 .header .logo .header-logo-text {
@@ -527,13 +545,10 @@ textarea:focus {
     transform: translateY(-0.5px);
   }
 }
-@keyframes logoPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-}
-@keyframes logoGlow {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(124, 58, 237, 0)); }
-  50% { filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.35)); }
+@keyframes logoSoftPulse {
+  0% { transform: translateZ(0) scale(1); opacity: 1; }
+  50% { transform: translateZ(0) scale(1.03); opacity: 0.96; }
+  100% { transform: translateZ(0) scale(1); opacity: 1; }
 }
 
 /* Логотип → главная: клик, hover, нажатие */
@@ -549,8 +564,8 @@ textarea:focus {
 }
 @media (hover: hover) {
   .header .logo:hover .header-logo-img {
-    animation: logoGlow 4s ease-in-out infinite;
-    transform: scale(1.06);
+    animation: none;
+    transform: translateZ(0) scale(1.06);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -561,7 +576,6 @@ textarea:focus {
   }
   .header .logo .header-logo-img {
     animation: none;
-    filter: none;
   }
 }
 @media (min-width: 768px) {
