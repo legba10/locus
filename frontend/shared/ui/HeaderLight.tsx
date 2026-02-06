@@ -75,9 +75,9 @@ export function HeaderLight() {
     )}>
       <div className="header mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between h-14">
-          <Link href="/" className="logo locus-home-link flex items-center gap-2 shrink-0">
+          <Link href="/" className="logo locus-home-link flex items-center shrink-0">
             <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
-            <span className="header-logo-text font-semibold text-[#1A1A1A]">LOCUS</span>
+            <span className="header-logo-text text-[#1A1A1A]">LOCUS</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 h-full">
