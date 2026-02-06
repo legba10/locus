@@ -427,6 +427,23 @@ textarea:focus {
   pointer-events: auto;
 }
 
+/* Бургер-меню: контейнер и пункты по ТЗ (выравнивание вправо, divider) */
+.menu {
+  padding: 20px;
+}
+.menu .menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.menu .menu-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--locus-divider, #ECECEC);
+}
+.menu .menu-item:last-child {
+  border-bottom: none;
+}
+
 @media (min-width: 768px) {
   .mobile-menu,
   .mobile-menu-overlay {

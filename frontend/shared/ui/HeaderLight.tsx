@@ -19,10 +19,12 @@ function LogoutIcon() { return <svg className="w-5 h-5 flex-shrink-0 text-[#E14C
 function NavItem({ icon, label, onClick }: { icon: 'search' | 'heart' | 'message' | 'user' | 'credit' | 'help'; label: string; onClick: () => void }) {
   const Icon = icon === 'search' ? SearchIcon : icon === 'heart' ? HeartIcon : icon === 'message' ? MessageIcon : icon === 'user' ? UserIcon : icon === 'credit' ? CreditIcon : HelpIcon
   return (
-    <button type="button" onClick={onClick} className="burger-panel-btn w-full min-h-[48px] h-12 px-4 py-3 rounded-[12px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2]">
-      <Icon />
-      <span>{label}</span>
-    </button>
+    <li className="menu-item">
+      <button type="button" onClick={onClick} className="burger-panel-btn menu-item-btn w-full min-h-[48px] py-3.5 text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex justify-end items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:opacity-60">
+        <span>{label}</span>
+        <Icon />
+      </button>
+    </li>
   )
 }
 
@@ -41,7 +43,6 @@ export function HeaderLight() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const touchStartXRef = useRef<number | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) => pathname === path
@@ -58,28 +59,7 @@ export function HeaderLight() {
   useEffect(() => {
     if (!isMenuOpen) return
     document.body.classList.add('body-scroll-lock')
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartXRef.current = e.touches[0].clientX
-    }
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (touchStartXRef.current === null) return
-      const endX = e.changedTouches[0].clientX
-      const deltaX = endX - touchStartXRef.current
-      if (deltaX > 50) setIsMenuOpen(false)
-      touchStartXRef.current = null
-    }
-    const el = menuRef.current
-    if (el) {
-      el.addEventListener('touchstart', handleTouchStart, { passive: true })
-      el.addEventListener('touchend', handleTouchEnd, { passive: true })
-    }
-    return () => {
-      document.body.classList.remove('body-scroll-lock')
-      if (el) {
-        el.removeEventListener('touchstart', handleTouchStart)
-        el.removeEventListener('touchend', handleTouchEnd)
-      }
-    }
+    return () => { document.body.classList.remove('body-scroll-lock') }
   }, [isMenuOpen])
 
   const handleLogout = async () => {
@@ -175,47 +155,48 @@ export function HeaderLight() {
           </button>
         </div>
       </div>
-      <div className={cn('mobile-menu-overlay', isMenuOpen && 'open')} aria-hidden="true" />
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Закрыть меню"
+        className={cn('mobile-menu-overlay', isMenuOpen && 'open')}
+        onClick={() => setIsMenuOpen(false)}
+        onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
+      />
       <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
-        {/* ЖЁСТКОЕ ТЗ: панель с шапкой «Меню» + ✕, блоки-кнопки с иконками, одна «Войти / Зарегистрироваться» */}
         <div className="flex flex-col h-full bg-[#FFFFFF]">
-          {/* Верхняя часть: заголовок + кнопка закрыть */}
-          <div className="flex items-center justify-between px-4 py-4 border-b border-[#ECECEC] shrink-0">
+          <div className="shrink-0 px-5 pt-5 pb-2 border-b border-[#ECECEC]">
             <span className="text-[17px] font-semibold text-[#1A1A1A]">Меню</span>
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-center w-10 h-10 rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
-              aria-label="Закрыть"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          <div className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
               <>
-                <button type="button" onClick={() => handleNavigate('/auth/login')} className="burger-panel-btn w-full min-h-[48px] h-12 px-4 py-3 rounded-[14px] text-[15px] font-semibold text-white bg-[#7B4AE2] hover:opacity-90 flex items-center justify-center transition-opacity">
+                <button type="button" onClick={() => handleNavigate('/auth/login')} className="burger-panel-btn w-full min-h-[48px] h-12 py-3 px-4 rounded-[14px] text-[15px] font-semibold text-white bg-[#7B4AE2] hover:opacity-90 flex items-center justify-center transition-opacity">
                   Войти / Зарегистрироваться
                 </button>
-                <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+                <ul className="menu-list">
+                  <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                  <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                  <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                  <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                  <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+                </ul>
               </>
             ) : (
-              <>
+              <ul className="menu-list">
                 <NavItem icon="user" label="Профиль" onClick={() => handleNavigate('/profile')} />
                 <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
                 <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
                 <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
                 <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
                 <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
-                <button type="button" onClick={handleLogout} className="burger-panel-btn burger-panel-btn--logout w-full min-h-[48px] h-12 px-4 py-3 rounded-[12px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
-                  <LogoutIcon />
-                  Выйти
-                </button>
-              </>
+                <li className="menu-item">
+                  <button type="button" onClick={handleLogout} className="burger-panel-btn burger-panel-btn--logout menu-item-btn w-full min-h-[48px] py-3.5 text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex justify-end items-center gap-3 transition-colors">
+                    <span>Выйти</span>
+                    <LogoutIcon />
+                  </button>
+                </li>
+              </ul>
             )}
           </div>
         </div>
