@@ -4,14 +4,14 @@ import { useEffect, useState, useRef } from 'react'
 
 const BASE = 'Найдите жильё,'
 const PHRASES = [
-  ' которое подходит вам',
+  ' под ваш бюджет.',
+  ' которое подходит вам.',
   ' быстрее с AI',
-  ' под ваш бюджет',
 ]
 
-const TYPE_MS = 55
-const ERASE_MS = 35
-const PAUSE_AFTER_FULL_MS = 1400
+const TYPE_MS = 60
+const ERASE_MS = 50
+const PAUSE_AFTER_FULL_MS = 1600
 const PAUSE_AFTER_ERASE_MS = 300
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -35,7 +35,7 @@ export function HeroTitle() {
           await delay(TYPE_MS)
         }
 
-        // 2. Pause 1200ms after full string
+        // 2. Pause after full phrase
         await delay(PAUSE_AFTER_FULL_MS)
         if (cancelled) return
 

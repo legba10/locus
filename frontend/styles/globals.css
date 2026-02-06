@@ -164,8 +164,8 @@ select option {
 }
 
 @keyframes hero-cursor-blink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* Force light mode */
@@ -743,24 +743,42 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Выйти: после «Помощь», выше AI кнопки */
+/* Выйти: под «Помощь», отдельный action-блок */
 .mobile-menu-logout-wrap {
-  margin-top: auto;
-  margin-bottom: 120px;
-  padding: 14px 20px 24px;
+  margin-top: 18px;
+  padding: 0 20px 28px;
+}
+.mobile-menu-logout-wrap .menu-list {
+  gap: 0;
 }
 .menu .menu-item-btn--logout {
-  color: #ff4d4f;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  border-radius: 12px;
+  padding-left: 4px;
+  padding-right: 12px;
+  color: #ef4444;
+  background: transparent;
+  transition: background 0.15s ease;
 }
+.menu .menu-item-btn--logout .menu-icon-wrap,
 .menu .menu-item-btn--logout .menu-icon-wrap svg,
 .menu .menu-item-btn--logout svg {
-  color: #ff4d4f;
+  color: #ef4444;
+  stroke: #ef4444;
+  opacity: 0.9;
 }
 .menu .menu-item-btn--logout:hover {
-  background: rgba(255, 77, 79, 0.08);
+  background: rgba(239, 68, 68, 0.08);
 }
 .menu .menu-item-btn--logout:hover svg {
-  color: #ff4d4f;
+  color: #ef4444;
+  opacity: 1;
+}
+.menu .menu-item-btn--logout:active {
+  background: rgba(239, 68, 68, 0.12);
 }
 
 @media (min-width: 768px) {
