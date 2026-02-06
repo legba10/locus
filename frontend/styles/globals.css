@@ -433,7 +433,7 @@ textarea:focus {
   overflow: hidden !important;
 }
 
-/* Overlay: затемнение фона, выше CTA */
+/* Overlay: затемнение фона */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
@@ -441,7 +441,7 @@ textarea:focus {
   height: 100vh;
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(3px);
-  z-index: 9998;
+  z-index: 40;
   opacity: 0;
   transition: opacity 200ms ease-out;
   pointer-events: none;
@@ -451,24 +451,24 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Drawer: белый контейнер слева, выше CTA */
+/* Drawer: белый контейнер слева, не перекрывает AI кнопку */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 86%;
-  max-width: 380px;
+  width: 86vw;
+  max-width: 340px;
   background: #ffffff;
   border-top-right-radius: 28px;
   border-bottom-right-radius: 28px;
   box-shadow: 10px 0 40px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
+  z-index: 50;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 280ms ease-out;
+  transition: transform 0.25s ease-out;
   pointer-events: none;
 }
 .drawer.mobile-menu.open {
@@ -480,9 +480,10 @@ textarea:focus {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  padding-bottom: 140px;
 }
 
-/* Стрелка закрытия: только одна, справа в шапке */
+/* Стрелка закрытия: ОДНА, внутри контейнера, справа в header */
 .mobile-menu-close {
   position: absolute;
   top: 18px;
@@ -505,14 +506,14 @@ textarea:focus {
   color: #000;
 }
 .mobile-menu-close svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   stroke-width: 1.8;
 }
 
-/* Шапка меню: контейнер профиля (компактно) */
+/* Шапка меню: аватар + имя */
 .mobile-menu-profile-block {
-  padding: 16px 20px 12px;
+  padding: 20px 20px 12px;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
@@ -525,13 +526,13 @@ textarea:focus {
   gap: 12px;
 }
 .mobile-menu-profile-avatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, #7b61ff 0%, #9f7bff 100%);
   color: #fff;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -644,7 +645,7 @@ textarea:focus {
   }
 }
 
-/* Бургер: 32×32, 3 полоски → X анимация (200ms ease) */
+/* Бургер: 32×32, только 3 полоски, без трансформации в X/стрелку */
 .burger {
   width: 32px;
   height: 32px;
@@ -653,6 +654,7 @@ textarea:focus {
   justify-content: center;
   flex-direction: column;
   gap: 0;
+  z-index: 50;
 }
 .burger span {
   display: block;
@@ -661,29 +663,19 @@ textarea:focus {
   background: var(--locus-primary, #7B4AE2);
   margin: 4px 0;
   border-radius: 2px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-.burger.open span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
-}
-.burger.open span:nth-child(2) {
-  opacity: 0;
-}
-.burger.open span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
 }
 
 /* Основные пункты меню */
 .mobile-menu-nav {
   margin-top: 8px;
-  padding: 16px 20px;
+  padding: 20px;
   flex: 1;
   overflow-y: auto;
 }
 .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 .menu .menu-item {
   list-style: none;
@@ -691,7 +683,7 @@ textarea:focus {
 .menu .menu-item-btn {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
   height: 48px;
   border-radius: 12px;
   padding: 0 12px;
@@ -723,7 +715,7 @@ textarea:focus {
   color: #7b61ff;
 }
 
-/* Кнопка Войти (только для гостя) */
+/* Кнопка Войти (только для гостя, под header) */
 .mobile-menu-cta-wrap {
   padding: 0 20px;
 }
@@ -751,10 +743,11 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Нижний блок: Выйти (над safe-area) */
+/* Выйти: после «Помощь», выше AI кнопки */
 .mobile-menu-logout-wrap {
   margin-top: auto;
-  padding: 14px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: 120px;
+  padding: 14px 20px 24px;
 }
 .menu .menu-item-btn--logout {
   color: #ff4d4f;

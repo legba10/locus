@@ -127,7 +127,7 @@ export function HeaderLight() {
 
           <button
             type="button"
-            className={cn('burger md:hidden relative z-[1000] w-8 h-8 p-0 bg-transparent border-0 cursor-pointer flex items-center justify-center', isMenuOpen && 'open')}
+            className="burger md:hidden relative z-50 w-8 h-8 p-0 bg-transparent border-0 cursor-pointer flex items-center justify-center"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
@@ -153,7 +153,7 @@ export function HeaderLight() {
             className="mobile-menu-close"
             aria-label="Закрыть меню"
           >
-            <ArrowLeft size={22} strokeWidth={1.8} />
+            <ArrowLeft size={20} strokeWidth={1.8} />
           </button>
           <button
             type="button"
