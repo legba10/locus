@@ -19,9 +19,9 @@ function NavItem({ icon, label, onClick }: { icon: 'search' | 'heart' | 'message
   const Icon = icon === 'search' ? SearchIcon : icon === 'heart' ? HeartIcon : icon === 'message' ? MessageIcon : icon === 'user' ? UserIcon : icon === 'credit' ? CreditIcon : HelpIcon
   return (
     <li className="menu-item">
-      <button type="button" onClick={onClick} className="burger-panel-btn menu-item-btn w-full min-h-[48px] py-3.5 text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex justify-end items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:opacity-60">
-        <span>{label}</span>
+      <button type="button" onClick={onClick} className="menu-item-btn w-full h-[52px] px-4 rounded-[12px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] flex items-center gap-3 transition-colors [&>svg]:hover:text-[#7B4AE2] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:opacity-60">
         <Icon />
+        <span>{label}</span>
       </button>
     </li>
   )
@@ -80,13 +80,13 @@ export function HeaderLight() {
       'border-b border-gray-100/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
     )}>
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="header mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between h-14">
-          <div className="locus-logo flex items-center shrink-0">
-            <img src="/logo-locus-header.png" alt="LOCUS" />
+          <div className="logo flex items-center gap-2 shrink-0">
+            <img src="/logo-locus-icon.png" alt="" className="header-logo-img" />
+            <span className="header-logo-text font-bold text-[#1A1A1A]">LOCUS</span>
           </div>
 
-          {/* Navigation — выровнено по центру */}
           <nav className="hidden md:flex items-center gap-6 h-full">
             {desktopNav.map((item) => (
               <Link
@@ -134,7 +134,7 @@ export function HeaderLight() {
 
           <button
             type="button"
-            className="burger-btn md:hidden inline-flex flex-col items-center justify-center relative z-[1000] min-w-[44px] min-h-[44px] w-11 h-11 p-0 bg-transparent border-0 cursor-pointer"
+            className="burger md:hidden inline-flex flex-col items-center justify-center relative z-[1000] min-w-[44px] min-h-[44px] w-11 h-11 p-0 bg-transparent border-0 cursor-pointer"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
@@ -153,14 +153,25 @@ export function HeaderLight() {
         onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
       />
       <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
-        <div className="flex flex-col h-full bg-[#FFFFFF]">
-          <div className="menu-logo shrink-0">
-            <img src="/logo-locus.png" alt="LOCUS" />
+        <div className="mobile-menu-inner flex flex-col h-full bg-[#fff]">
+          <div className="menu-header flex items-center justify-between shrink-0 px-4 py-4 border-b border-[#ECECEC]">
+            <div className="logo flex items-center gap-2">
+              <img src="/logo-locus-icon.png" alt="" className="menu-header-logo-img" />
+              <span className="menu-header-logo-text font-bold text-[#1A1A1A]">LOCUS</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="menu-close w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
+              aria-label="Закрыть"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
           </div>
           <div className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
               <>
-                <button type="button" onClick={() => handleNavigate('/auth/login')} className="burger-panel-btn w-full min-h-[48px] h-12 py-3 px-4 rounded-[14px] text-[15px] font-semibold text-white bg-[#7B4AE2] hover:opacity-90 flex items-center justify-center transition-opacity">
+                <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta w-full h-[52px] rounded-[14px] text-[15px] font-semibold text-white flex items-center justify-center transition-opacity">
                   Войти / Зарегистрироваться
                 </button>
                 <ul className="menu-list">
@@ -168,24 +179,26 @@ export function HeaderLight() {
                   <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
                   <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
                   <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                  <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+                  <NavItem icon="help" label="Помощь" onClick={() => handleNavigate('/help')} />
                 </ul>
               </>
             ) : (
-              <ul className="menu-list">
-                <NavItem icon="user" label="Профиль" onClick={() => handleNavigate('/profile')} />
-                <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-                <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
-                <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
-                <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-                <NavItem icon="help" label="Помощь / Блог" onClick={() => handleNavigate('/help')} />
+              <>
+                <ul className="menu-list">
+                  <NavItem icon="search" label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+                  <NavItem icon="heart" label="Избранное" onClick={() => handleNavigate('/favorites')} />
+                  <NavItem icon="message" label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                  <NavItem icon="user" label="Профиль" onClick={() => handleNavigate('/profile')} />
+                  <NavItem icon="credit" label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+                  <NavItem icon="help" label="Помощь" onClick={() => handleNavigate('/help')} />
+                </ul>
                 <li className="menu-item">
-                  <button type="button" onClick={handleLogout} className="burger-panel-btn burger-panel-btn--logout menu-item-btn w-full min-h-[48px] py-3.5 text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex justify-end items-center gap-3 transition-colors">
-                    <span>Выйти</span>
+                  <button type="button" onClick={handleLogout} className="menu-item-btn menu-item-btn--logout w-full h-[52px] px-4 rounded-[12px] text-[15px] font-medium text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)] flex items-center gap-3 transition-colors">
                     <LogoutIcon />
+                    <span>Выйти</span>
                   </button>
                 </li>
-              </ul>
+              </>
             )}
           </div>
         </div>

@@ -408,72 +408,95 @@ textarea:focus {
   pointer-events: auto;
 }
 
+/* Панель бургер-меню: выезжает справа, 85% width, max 360px */
 .mobile-menu {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100vw;
+  right: 0;
+  width: 85%;
+  max-width: 360px;
   height: 100vh;
-  background: #ffffff;
+  background: #fff;
   z-index: 999;
   overflow-y: auto;
-  opacity: 0;
-  transition: opacity 180ms ease-out;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform 220ms ease-out;
   pointer-events: none;
 }
 
 .mobile-menu.open {
-  opacity: 1;
+  transform: translateX(0);
   pointer-events: auto;
 }
 
-/* Логотип в хедере — только img из /public */
-.locus-logo img {
-  height: 32px;
+/* Header: лого + LOCUS — desktop 28px / 18px, mobile 24px / 16px */
+.header .logo .header-logo-img {
+  height: 24px;
   width: auto;
   display: block;
 }
-
-/* Логотип в бургер-меню */
-.menu-logo {
-  padding: 20px 20px 10px;
+.header .logo .header-logo-text {
+  font-size: 16px;
 }
-.menu-logo img {
-  width: 140px;
-  height: auto;
+@media (min-width: 768px) {
+  .header .logo .header-logo-img {
+    height: 28px;
+  }
+  .header .logo .header-logo-text {
+    font-size: 18px;
+  }
+  .header .logo {
+    gap: 8px;
+  }
 }
 
-/* Логотип в hero (главная) */
-.hero-logo img {
-  width: 120px;
-  margin: 0 auto 20px;
+/* Верх меню: лого + LOCUS, справа X */
+.menu-header .menu-header-logo-img {
+  height: 28px;
+  width: auto;
   display: block;
 }
+.menu-header .menu-header-logo-text {
+  font-size: 18px;
+}
 
-/* Бургер: 3 фиолетовые полоски, без круга */
-.burger-btn span {
+/* Бургер: 3 полоски, фиолетовый из логотипа, 22×2px, gap 4px */
+.burger span {
   display: block;
-  width: 24px;
+  width: 22px;
   height: 2px;
   background: #7B4AE2;
-  margin: 5px 0;
+  margin: 4px 0;
 }
 
-/* Бургер-меню: контейнер и пункты по ТЗ (выравнивание вправо, divider) */
+/* Кнопка Войти / Зарегистрироваться: 52px, radius 14px, gradient */
+.menu-cta {
+  background: linear-gradient(135deg, #7B4AE2 0%, #9B6AE2 100%);
+  margin: 16px 20px 8px;
+}
+.menu-cta:hover {
+  opacity: 0.92;
+}
+
+/* Пункты меню: 52px, radius 12px, padding 16px, иконка слева, текст слева, hover светлый фиолетовый */
 .menu {
   padding: 20px;
 }
 .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 4px;
 }
 .menu .menu-item {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--locus-divider, #ECECEC);
+  list-style: none;
 }
-.menu .menu-item:last-child {
-  border-bottom: none;
+.menu .menu-item-btn {
+  padding: 0 16px;
+}
+.menu .menu-item-btn--logout {
+  margin-top: 8px;
+  color: #E14C4C;
 }
 
 @media (min-width: 768px) {
