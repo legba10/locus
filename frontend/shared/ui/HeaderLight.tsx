@@ -7,12 +7,12 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, User } from 'lucide-react'
 
-const menuIconWrap = 'flex shrink-0 text-[#7C8CA5] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
+const menuIconWrap = 'flex shrink-0 text-[#7C8CA5] opacity-75 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:stroke-[1.8]'
 
 function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <li className="menu-item">
-      <button type="button" onClick={onClick} className="menu-item-btn w-full h-12 rounded-[12px] px-[14px] text-[15px] font-medium text-[#1A1A1A] hover:bg-[var(--locus-accent-light)] hover:text-[var(--locus-primary)] flex items-center gap-3 transition-colors [&_.menu-icon-wrap]:hover:text-[var(--locus-primary)]">
+      <button type="button" onClick={onClick} className="menu-item-btn w-full h-12 rounded-[12px] py-3 px-4 text-[15px] font-medium text-[#1A1A1A] hover:bg-[var(--locus-accent-light)] hover:text-[var(--locus-primary)] flex items-center gap-3 transition-colors [&_.menu-icon-wrap]:hover:text-[var(--locus-primary)] [&_.menu-icon-wrap]:hover:opacity-100">
         <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
         <span>{label}</span>
       </button>
@@ -146,16 +146,12 @@ export function HeaderLight() {
         onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
       />
       <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
-        <div className="drawer-inner relative flex flex-col h-full">
-          <button
-            type="button"
-            className="drawer-close absolute top-3 right-3 z-[20] w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
-            onClick={() => setIsMenuOpen(false)}
-            aria-label="Закрыть"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-          </button>
-          <nav className="menu flex-1 overflow-y-auto pt-14">
+        <div className="drawer-inner flex flex-col h-full">
+          <div className="drawer-logo flex items-center gap-2 mt-1 mb-4 shrink-0">
+            <img src="/logo-locus-icon.png" alt="" className="drawer-logo-img" />
+            <span className="drawer-logo-text font-semibold text-[#1A1A1A]">LOCUS</span>
+          </div>
+          <nav className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
               <>
                 <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
