@@ -9,9 +9,9 @@ const PHRASES = [
   ' быстрее с AI',
 ]
 
-const TYPE_MS = 60
-const ERASE_MS = 50
-const PAUSE_AFTER_FULL_MS = 1600
+const TYPE_MS = 110
+const ERASE_MS = 70
+const PAUSE_AFTER_FULL_MS = 1200
 const PAUSE_AFTER_ERASE_MS = 300
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
