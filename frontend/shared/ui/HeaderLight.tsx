@@ -146,11 +146,19 @@ export function HeaderLight() {
         onKeyDown={(e) => e.key === 'Enter' && setIsMenuOpen(false)}
       />
       <div ref={menuRef} className={cn('drawer mobile-menu', isMenuOpen && 'open')}>
-        <div className="drawer-inner flex flex-col h-full">
-          <nav className="menu flex-1 overflow-y-auto">
+        <div className="drawer-inner relative flex flex-col h-full">
+          <button
+            type="button"
+            className="drawer-close absolute top-3 right-3 z-[20] w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:bg-[rgba(123,74,226,0.1)] hover:text-[#7B4AE2] transition-colors"
+            onClick={() => setIsMenuOpen(false)}
+            aria-label="Закрыть"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <nav className="menu flex-1 overflow-y-auto pt-14">
             {!isAuthenticated() ? (
               <>
-                <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta w-full h-[52px] rounded-[14px] text-[15px] font-semibold text-white flex items-center justify-center transition-opacity">
+                <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
                   Войти / Зарегистрироваться
                 </button>
                 <ul className="menu-list">

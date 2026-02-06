@@ -2,15 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react'
 
-const BASE = 'Найдите жильё'
+const BASE = 'Найдите жильё,'
 const PHRASES = [
-  ', которое подходит вам',
-  ' в пару кликов',
+  ' которое подходит вам',
+  ' быстрее с AI',
+  ' под ваш бюджет',
 ]
 
-const TYPE_MS = 35
-const ERASE_MS = 20
-const PAUSE_AFTER_FULL_MS = 1200
+const TYPE_MS = 45
+const ERASE_MS = 30
+const PAUSE_AFTER_FULL_MS = 1800
 const PAUSE_AFTER_ERASE_MS = 300
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
