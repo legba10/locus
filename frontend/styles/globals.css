@@ -441,7 +441,7 @@ textarea:focus {
   height: 100vh;
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(3px);
-  z-index: 40;
+  z-index: 998;
   opacity: 0;
   transition: opacity 200ms ease-out;
   pointer-events: none;
@@ -451,25 +451,27 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Drawer: белый контейнер слева, не перекрывает AI кнопку */
+/* Drawer: белый контейнер слева, выше AI-кнопки */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 86vw;
-  max-width: 340px;
+  width: 86%;
+  max-width: 380px;
   background: #ffffff;
-  border-top-right-radius: 28px;
-  border-bottom-right-radius: 28px;
-  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.1);
-  z-index: 50;
+  border-radius: 24px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 999;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.25s ease-out;
   pointer-events: none;
+  padding: 20px;
 }
 .drawer.mobile-menu.open {
   transform: translateX(0);
@@ -480,7 +482,7 @@ textarea:focus {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding-bottom: 140px;
+  padding-bottom: 100px;
 }
 
 /* Стрелка закрытия: ОДНА, внутри контейнера, справа в header */
@@ -645,24 +647,26 @@ textarea:focus {
   }
 }
 
-/* Бургер: 32×32, только 3 полоски, без трансформации в X/стрелку */
+/* Бургер: компактный, меньше логотипа, без трансформации */
 .burger {
-  width: 32px;
-  height: 32px;
+  width: 18px;
+  height: 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   flex-direction: column;
-  gap: 0;
+  gap: 4px;
+  margin-right: 12px;
   z-index: 50;
+  flex-shrink: 0;
 }
 .burger span {
   display: block;
   width: 18px;
   height: 2px;
   background: var(--locus-primary, #7B4AE2);
-  margin: 4px 0;
-  border-radius: 2px;
+  margin: 0;
+  border-radius: 1px;
 }
 
 /* Основные пункты меню */
@@ -743,10 +747,11 @@ textarea:focus {
   opacity: 0.92;
 }
 
-/* Выйти: под «Помощь», отдельный action-блок */
+/* Выйти: под «Помощь», красная, не перекрыта AI */
 .mobile-menu-logout-wrap {
-  margin-top: 18px;
-  padding: 0 20px 28px;
+  margin-top: 20px;
+  margin-bottom: 90px;
+  padding: 0;
 }
 .mobile-menu-logout-wrap .menu-list {
   gap: 0;
@@ -754,31 +759,32 @@ textarea:focus {
 .menu .menu-item-btn--logout {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   height: 48px;
   border-radius: 12px;
   padding-left: 4px;
   padding-right: 12px;
-  color: #ef4444;
+  color: #ff3b30;
+  font-weight: 500;
   background: transparent;
   transition: background 0.15s ease;
 }
 .menu .menu-item-btn--logout .menu-icon-wrap,
 .menu .menu-item-btn--logout .menu-icon-wrap svg,
 .menu .menu-item-btn--logout svg {
-  color: #ef4444;
-  stroke: #ef4444;
+  color: #ff3b30;
+  stroke: #ff3b30;
   opacity: 0.9;
 }
 .menu .menu-item-btn--logout:hover {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(255, 59, 48, 0.08);
 }
 .menu .menu-item-btn--logout:hover svg {
-  color: #ef4444;
+  color: #ff3b30;
   opacity: 1;
 }
 .menu .menu-item-btn--logout:active {
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(255, 59, 48, 0.12);
 }
 
 @media (min-width: 768px) {
