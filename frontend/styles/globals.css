@@ -138,10 +138,18 @@ select option {
   color: var(--locus-text-main);
 }
 
+/* Фиксированная высота, чтобы при смене текста блок не прыгал */
+.hero-title-fixed-height {
+  min-height: 1.2em;
+}
+
 @media (max-width: 768px) {
   .hero-title {
     font-size: 28px;
     padding: 0 20px;
+  }
+  .hero-title-fixed-height {
+    min-height: 2.5em;
   }
 }
 
@@ -152,7 +160,7 @@ select option {
   margin-left: 4px;
   vertical-align: text-bottom;
   background: var(--locus-primary);
-  animation: hero-cursor-blink 0.7s infinite;
+  animation: hero-cursor-blink 1s infinite;
 }
 
 @keyframes hero-cursor-blink {
