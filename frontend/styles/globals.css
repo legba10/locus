@@ -427,6 +427,38 @@ textarea:focus {
   pointer-events: auto;
 }
 
+/* Логотип в хедере — только img из /public */
+.locus-logo img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+/* Логотип в бургер-меню */
+.menu-logo {
+  padding: 20px 20px 10px;
+}
+.menu-logo img {
+  width: 140px;
+  height: auto;
+}
+
+/* Логотип в hero (главная) */
+.hero-logo img {
+  width: 120px;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+/* Бургер: 3 фиолетовые полоски, без круга */
+.burger-btn span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #7B4AE2;
+  margin: 5px 0;
+}
+
 /* Бургер-меню: контейнер и пункты по ТЗ (выравнивание вправо, divider) */
 .menu {
   padding: 20px;

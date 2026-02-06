@@ -165,6 +165,10 @@ export function HomePageV6() {
             Найдите жильё, которое подходит вам
           </h1>
 
+          <div className="hero-logo">
+            <img src="/logo-locus.png" alt="LOCUS" />
+          </div>
+
           {/* Subtitle — по ТЗ v4 */}
           <p className="text-[15px] md:text-[16px] text-[#6B7280] mb-10 max-w-lg mx-auto leading-relaxed">
             Тысячи объявлений с умным подбором

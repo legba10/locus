@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Logo } from './Logo'
 
 const iconClass = 'w-5 h-5 flex-shrink-0 text-[#4AA3E2]'
 function SearchIcon() { return <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> }
@@ -83,9 +82,8 @@ export function HeaderLight() {
     )}>
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between h-14">
-          {/* Logo — по ТЗ v3: без контейнера, baseline aligned */}
-          <div className="flex items-center">
-            <Logo variant="primary" size="md" />
+          <div className="locus-logo flex items-center shrink-0">
+            <img src="/logo-locus-header.png" alt="LOCUS" />
           </div>
 
           {/* Navigation — выровнено по центру */}
@@ -134,24 +132,15 @@ export function HeaderLight() {
             )}
           </div>
 
-          {/* Mobile Burger — ЖЁСТКОЕ ТЗ: 3 полоски, Primary, без круга, 24×24, справа */}
           <button
             type="button"
+            className="burger-btn md:hidden inline-flex flex-col items-center justify-center relative z-[1000] min-w-[44px] min-h-[44px] w-11 h-11 p-0 bg-transparent border-0 cursor-pointer"
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className={cn(
-              'md:hidden inline-flex items-center justify-center relative z-[1000]',
-              'min-w-[44px] min-h-[44px] w-11 h-11 p-0',
-              'bg-transparent',
-              'text-[#7B4AE2] hover:opacity-90 active:opacity-80',
-              'transition-opacity'
-            )}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <line x1="4" y1="7" x2="20" y2="7" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="17" x2="20" y2="17" />
-            </svg>
+            <span />
+            <span />
+            <span />
           </button>
         </div>
       </div>
@@ -165,8 +154,8 @@ export function HeaderLight() {
       />
       <div ref={menuRef} className={cn('mobile-menu', isMenuOpen && 'open')}>
         <div className="flex flex-col h-full bg-[#FFFFFF]">
-          <div className="shrink-0 px-5 pt-5 pb-2 border-b border-[#ECECEC]">
-            <span className="text-[17px] font-semibold text-[#1A1A1A]">Меню</span>
+          <div className="menu-logo shrink-0">
+            <img src="/logo-locus.png" alt="LOCUS" />
           </div>
           <div className="menu flex-1 overflow-y-auto">
             {!isAuthenticated() ? (
