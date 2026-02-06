@@ -12,3 +12,4 @@ Goal: Redesign `/tariffs` page UI/structure to match LOCUS product logic (seeker
 ### Notes
 - UI-only changes; preserve routing and pricing logic.
 - Ensure primary plan visual emphasis and accessibility basics.
+- Build note: keep `app/pricing/page.tsx` as Server Component; interactive UI lives in `PricingPageClient.tsx` to avoid `useSearchParams` prerender build errors on Vercel.
