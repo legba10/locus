@@ -69,14 +69,30 @@ export class TelegramWebhookController implements OnModuleInit {
       this.logger.error("TELEGRAM_BOT_TOKEN is not set");
       return;
     }
+    const explicitWebhookUrl = process.env.TELEGRAM_WEBHOOK_URL?.trim();
+    const shouldAutoSet =
+      process.env.TELEGRAM_SET_WEBHOOK === "true" &&
+      process.env.NODE_ENV === "production";
+
+    // Production safety: never touch webhook unless explicitly allowed/configured
+    if (!explicitWebhookUrl && !shouldAutoSet) {
+      this.logger.log("Telegram webhook auto-set skipped (set TELEGRAM_SET_WEBHOOK=true in production or TELEGRAM_WEBHOOK_URL explicitly)");
+      return;
+    }
+
     await this.setWebhook();
   }
 
   private async setWebhook() {
+    const explicitWebhookUrl = process.env.TELEGRAM_WEBHOOK_URL?.trim();
     const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN
       ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-      : process.env.BACKEND_URL || "https://locus-production-df4e.up.railway.app";
-    const webhookUrl = `${backendUrl}/api/telegram/webhook`;
+      : process.env.BACKEND_URL;
+    const webhookUrl = explicitWebhookUrl || (backendUrl ? `${backendUrl}/api/telegram/webhook` : "");
+    if (!webhookUrl) {
+      this.logger.warn("Telegram webhook URL not configured (missing TELEGRAM_WEBHOOK_URL or BACKEND_URL/RAILWAY_PUBLIC_DOMAIN)");
+      return;
+    }
     try {
       const response = await fetch(
         `https://api.telegram.org/bot${this.botToken}/setWebhook`,

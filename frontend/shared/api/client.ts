@@ -50,9 +50,7 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
   }
 
   const accessToken = getAccessToken();
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
-  }
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
   const response = await fetch(url, {
     credentials: "include",
@@ -60,7 +58,7 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
     headers,
   });
 
-  if (response.status === 401 && accessToken && !fullPath.includes("/auth/refresh")) {
+  if (response.status === 401 && !fullPath.includes("/auth/refresh")) {
     const refreshed = await tryRefreshToken();
     if (refreshed) {
       const retryHeaders: Record<string, string> = {
@@ -70,9 +68,7 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
         retryHeaders["Content-Type"] = "application/json";
       }
       const nextToken = getAccessToken();
-      if (nextToken) {
-        retryHeaders["Authorization"] = `Bearer ${nextToken}`;
-      }
+      if (nextToken) retryHeaders["Authorization"] = `Bearer ${nextToken}`;
       return fetch(url, {
         credentials: "include",
         ...options,
@@ -86,10 +82,6 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
 
 async function tryRefreshToken(): Promise<boolean> {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    clearTokens();
-    return false;
-  }
 
   try {
     const refreshUrl = getApiUrl("/api/auth/refresh");
@@ -97,21 +89,25 @@ async function tryRefreshToken(): Promise<boolean> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      // If refresh token exists in storage → legacy flow.
+      // If not → cookie-based session (httpOnly refresh cookie).
+      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
     });
 
     if (!res.ok) {
-      clearTokens();
+      if (refreshToken) clearTokens();
       return false;
     }
 
     const payload = (await res.json()) as { access_token?: string; refresh_token?: string };
-    if (payload.access_token && payload.refresh_token) {
+    // For legacy storage-based auth, keep local tokens updated.
+    if (refreshToken && payload.access_token && payload.refresh_token) {
       setTokens(payload.access_token, payload.refresh_token);
-      return true;
     }
+    // For cookie-based auth we rely on Set-Cookie from backend/proxy.
+    return true;
   } catch {
-    clearTokens();
+    if (refreshToken) clearTokens();
   }
 
   return false;

@@ -1,7 +1,9 @@
-import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException, Body } from "@nestjs/common";
+import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException, Body, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
+import type { Request, Response } from "express";
+import { clearAuthCookies, readRefreshTokenFromCookie, setAuthCookies } from "./auth-cookies";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -49,6 +51,8 @@ export class AuthController {
       email,
       phone: profile.phone ?? null,
       telegram_id: profile.telegram_id ?? null,
+      username: profile.username ?? null,
+      avatar_url: profile.avatar_url ?? null,
       full_name: profile.full_name ?? null,
       role,
       tariff,
@@ -58,13 +62,29 @@ export class AuthController {
   @Post("refresh")
   @ApiOperation({ summary: "Refresh Supabase access token using refresh_token." })
   @ApiResponse({ status: 200, description: "New access and refresh tokens" })
-  async refresh(@Body("refresh_token") refreshToken: string) {
-    if (!refreshToken) {
+  async refresh(
+    @Body("refresh_token") refreshToken: string | undefined,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const tokenFromCookie = readRefreshTokenFromCookie(req);
+    const token = refreshToken || tokenFromCookie;
+    if (!token) {
       throw new BadRequestException("Refresh token is required");
     }
 
-    const session = await this.supabaseAuth.refreshSession(refreshToken);
+    const session = await this.supabaseAuth.refreshSession(token);
+    // Keep cookie session in sync (Telegram + any cookie-based auth)
+    setAuthCookies(res, req, session);
     return session;
+  }
+
+  @Post("logout")
+  @ApiOperation({ summary: "Logout: clears auth cookies (cookie-based sessions)" })
+  @ApiResponse({ status: 200, description: "Logged out" })
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    clearAuthCookies(res, req);
+    return { ok: true };
   }
 
   @Post("login")

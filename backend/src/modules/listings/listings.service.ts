@@ -167,18 +167,22 @@ export class ListingsService {
     });
 
     if (dto.amenityKeys?.length) {
-      for (const key of dto.amenityKeys) {
-        const amenity = await this.prisma.amenity.upsert({
-          where: { key },
-          update: {},
-          create: { key, label: key },
-        });
-        await this.prisma.listingAmenity.upsert({
-          where: { listingId_amenityId: { listingId: listing.id, amenityId: amenity.id } },
-          update: {},
-          create: { listingId: listing.id, amenityId: amenity.id },
-        });
-      }
+      const keys = Array.from(
+        new Set(dto.amenityKeys.map((k) => k.trim()).filter(Boolean))
+      );
+      const amenities = await Promise.all(
+        keys.map((key) =>
+          this.prisma.amenity.upsert({
+            where: { key },
+            update: {},
+            create: { key, label: key },
+          })
+        )
+      );
+      await this.prisma.listingAmenity.createMany({
+        data: amenities.map((a) => ({ listingId: listing.id, amenityId: a.id })),
+        skipDuplicates: true,
+      });
     }
 
     // Default availability: next 90 days available
@@ -219,16 +223,22 @@ export class ListingsService {
     if (dto.amenityKeys) {
       // Replace amenities set (simple MVP behavior)
       await this.prisma.listingAmenity.deleteMany({ where: { listingId: id } });
-      for (const key of dto.amenityKeys) {
-        const amenity = await this.prisma.amenity.upsert({
-          where: { key },
-          update: {},
-          create: { key, label: key },
-        });
-        await this.prisma.listingAmenity.create({
-          data: { listingId: id, amenityId: amenity.id },
-        });
-      }
+      const keys = Array.from(
+        new Set(dto.amenityKeys.map((k) => k.trim()).filter(Boolean))
+      );
+      const amenities = await Promise.all(
+        keys.map((key) =>
+          this.prisma.amenity.upsert({
+            where: { key },
+            update: {},
+            create: { key, label: key },
+          })
+        )
+      );
+      await this.prisma.listingAmenity.createMany({
+        data: amenities.map((a) => ({ listingId: id, amenityId: a.id })),
+        skipDuplicates: true,
+      });
     }
 
     // Recompute AI signals after update

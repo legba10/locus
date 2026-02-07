@@ -4,7 +4,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { AiSearchRequestDto } from "../dto/ai-search.dto";
 import { parseIntent } from "./text-intent";
 
-type SearchResultItem = {
+export type AiSearchResultItem = {
   listingId: string;
   title: string;
   city: string;
@@ -15,11 +15,19 @@ type SearchResultItem = {
   riskFlags: string[];
 };
 
+export type AiSearchResponse = {
+  intent: ReturnType<typeof parseIntent>;
+  results: AiSearchResultItem[];
+  explanation: { text: string; bullets: string[] };
+  alternatives: Array<{ query: string; reason: string }>;
+  risks: Array<{ listingId: string; flag: string }>;
+};
+
 @Injectable()
 export class AiSearchService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async search(dto: AiSearchRequestDto) {
+  async search(dto: AiSearchRequestDto): Promise<AiSearchResponse> {
     const intent = parseIntent(dto.query, { city: dto.context?.city });
     const q = dto.query.toLowerCase();
 
@@ -36,7 +44,7 @@ export class AiSearchService {
       },
     });
 
-    const scored: SearchResultItem[] = listings.map((p) => {
+    const scored: AiSearchResultItem[] = listings.map((p) => {
       let score = 0;
       const reasons: string[] = [];
       const riskFlags: string[] = [];

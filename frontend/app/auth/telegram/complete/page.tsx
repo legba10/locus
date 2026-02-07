@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
 import { useAuthStore } from "@/domains/auth";
-import { setTokens } from "@/shared/auth/token-storage";
 
 function CompleteContent() {
   const router = useRouter();
@@ -25,8 +24,9 @@ function CompleteContent() {
       try {
         const res = await pollTelegramLoginStatus(token);
 
-        if (res?.access_token && res?.refresh_token) {
-          setTokens(res.access_token, res.refresh_token);
+        // Tokens are now stored in httpOnly cookies by backend/proxy.
+        // We only need to refresh profile and redirect.
+        if (res?.access_token || res?.refresh_token || res?.user) {
           try {
             const ok = await refresh();
             if (!ok) throw new Error("refresh failed");
@@ -48,6 +48,8 @@ function CompleteContent() {
           setMessage("Сессия не найдена. Начните вход с сайта.");
         } else if (res?.status === "not_confirmed") {
           setMessage("Вход не подтверждён. Вернитесь в бота и подтвердите.");
+        } else if (res?.status === "timeout") {
+          setMessage("Сервер долго отвечает (7 сек). Проверьте связь и нажмите «Повторить».");
         } else {
           setMessage("Вход не завершён. Отправьте номер и подтвердите политику в боте.");
         }
@@ -58,7 +60,7 @@ function CompleteContent() {
     }
 
     completeAuth();
-  }, [token]);
+  }, [token, refresh, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-white to-gray-50">
@@ -79,12 +81,29 @@ function CompleteContent() {
           <>
             <div className="text-5xl mb-4">❌</div>
             <p className="text-gray-700 mb-6">{message}</p>
-            <a
-              href="/auth/login"
-              className="inline-block px-6 py-3 rounded-xl bg-violet-600 text-white font-medium hover:bg-violet-500"
-            >
-              Вернуться к входу
-            </a>
+            <div className="flex flex-col gap-3 items-center">
+              {token && (
+                <button
+                  type="button"
+                  className="inline-block px-6 py-3 rounded-xl bg-violet-600 text-white font-medium hover:bg-violet-500"
+                  onClick={() => {
+                    setStatus("loading");
+                    setMessage("Повторяем попытку...");
+                    // Re-run by simulating effect re-entry:
+                    // easiest is full reload keeping token in URL
+                    window.location.reload();
+                  }}
+                >
+                  Повторить
+                </button>
+              )}
+              <a
+                href="/auth/login"
+                className="inline-block px-6 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 font-medium hover:bg-gray-50"
+              >
+                Вернуться к входу
+              </a>
+            </div>
           </>
         )}
       </div>

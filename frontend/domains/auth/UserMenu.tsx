@@ -72,6 +72,16 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-3">
+      <div className="h-9 w-9 overflow-hidden rounded-full border border-border bg-white/10 flex items-center justify-center">
+        {user.avatar_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.avatar_url} alt={displayName} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-xs font-semibold text-text">
+            {(displayName?.[0] ?? "U").toUpperCase()}
+          </span>
+        )}
+      </div>
       <div className="text-right">
         <p className="text-sm font-medium">{displayName}</p>
         <p className="text-xs text-text-dim">

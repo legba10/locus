@@ -26,11 +26,12 @@ interface StatusResponse {
     role: string;
     tariff: string;
   };
-  status?: string;
+  status?: "expired" | "not_found" | "not_confirmed" | "timeout" | string;
 }
 
 const POLL_INTERVAL = 1500; // 1.5 sec
 const MAX_POLL_TIME = 5 * 60 * 1000; // 5 min
+const REQUEST_TIMEOUT_MS = 7000; // 7 sec per request (UX requirement)
 
 function getBotName(): string {
   return (process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || "Locusnext_bot").replace("@", "");
@@ -78,10 +79,19 @@ export async function pollTelegramLoginStatus(
 
   while (Date.now() - startTime < MAX_POLL_TIME) {
     try {
-      const res = await apiFetchRaw("/auth/telegram/complete", {
-        method: "POST",
-        body: JSON.stringify({ token: loginToken }),
-      });
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+      let res: Response;
+      try {
+        res = await apiFetchRaw("/auth/telegram/complete", {
+          method: "POST",
+          body: JSON.stringify({ token: loginToken }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(t);
+      }
 
       const text = await res.text();
       const payload = text ? (JSON.parse(text) as StatusResponse | { message?: string }) : {};
@@ -106,7 +116,11 @@ export async function pollTelegramLoginStatus(
       await sleep(POLL_INTERVAL);
     } catch (error) {
       console.error("Poll error:", error);
-      await sleep(POLL_INTERVAL);
+      // Timeout/network issues: stop polling and let UI show Retry
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return { status: "timeout" };
+      }
+      return { status: "timeout" };
     }
   }
 

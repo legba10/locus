@@ -8,6 +8,7 @@
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "start:prod": "node node_modules/prisma/build/index.js migrate deploy && node dist/main.js",
+    "loadtest": "node scripts/loadtest.js",
     "db:seed": "npx ts-node prisma/seed.ts",
     "db:seed-test": "npx ts-node scripts/seed-test-listings.ts"
   },
@@ -21,8 +22,8 @@
     "@nestjs/event-emitter": "^2.1.0",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/swagger": "^8.1.1",
+    "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^5.22.0",
-    "prisma": "^5.22.0",
     "@supabase/supabase-js": "^2.93.2",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
@@ -31,6 +32,7 @@
     "dotenv": "^16.4.7",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
@@ -43,6 +45,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/node": "^20.10.6",
     "@types/swagger-ui-express": "^4.1.8",
+    "autocannon": "^8.0.0",
     "eslint": "^8.56.0",
     "ts-node": "^10.9.2"
   }

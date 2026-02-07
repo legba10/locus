@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from "class-validator";
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class SearchQueryDto {
   @ApiPropertyOptional({ example: "Moscow" })
@@ -60,6 +60,21 @@ export class SearchQueryDto {
   @IsOptional()
   @IsIn(["0", "1"])
   ai?: "0" | "1";
+
+  @ApiPropertyOptional({ description: "Page number (1-based)", example: 1, default: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({ description: "Page size (max 50)", example: 20, default: 50 })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
 }
 
 // POST body for advanced search

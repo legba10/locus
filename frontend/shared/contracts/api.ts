@@ -108,6 +108,8 @@ export interface UserContract {
   email?: string;
   phone: string | null;
   telegram_id: string | null;
+  username?: string | null;
+  avatar_url?: string | null;
   full_name: string | null;
   role: AppRole;
   tariff: UserTariff;

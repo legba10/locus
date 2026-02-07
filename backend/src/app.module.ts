@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { HealthModule } from "./modules/health/health.module";
 import { PrismaModule } from "./modules/prisma/prisma.module";
 import { AiOrchestratorModule } from "./modules/ai-orchestrator/ai-orchestrator.module";
@@ -31,6 +33,13 @@ const isProduction = process.env.NODE_ENV === "production";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        // Global baseline (can be overridden per-controller with @Throttle / @SkipThrottle)
+        ttl: Number(process.env.RATE_LIMIT_TTL_MS ?? 60_000),
+        limit: Number(process.env.RATE_LIMIT_PER_TTL ?? 2000),
+      },
+    ]),
     EventEmitterModule.forRoot({
       wildcard: true,
       delimiter: ".",
@@ -66,6 +75,12 @@ const isProduction = process.env.NODE_ENV === "production";
     // Telegram Bot
     TelegramModule,
     ...(isProduction ? [] : [DebugModule]),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

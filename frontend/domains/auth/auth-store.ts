@@ -51,6 +51,8 @@ function userFromBackend(response: MeResponse, sessionEmail?: string | null): St
     email: payload.email ?? sessionEmail ?? "",
     phone: payload.phone ?? null,
     telegram_id: payload.telegram_id ?? null,
+    username: payload.username ?? null,
+    avatar_url: payload.avatar_url ?? null,
     full_name: payload.full_name ?? null,
     role: getPrimaryRole(roles),
     roles,
@@ -182,6 +184,12 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           /* ignore */
         }
+        try {
+          // Clear cookie-based sessions (Telegram)
+          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } catch {
+          /* ignore */
+        }
         const prevUser = get().user;
         clearTokens();
         set({ user: null, accessToken: null });
@@ -190,20 +198,21 @@ export const useAuthStore = create<AuthState>()(
 
       refresh: async () => {
         try {
-          const token = getAccessToken();
-          if (!token) {
-            set({ user: null, accessToken: null });
-            return false;
-          }
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse);
           const nextToken = getAccessToken();
           set({
             user: meUser,
-            accessToken: nextToken ?? token,
+            accessToken: nextToken ?? null,
           });
           return true;
-        } catch {
+        } catch (e) {
+          if (e instanceof AuthApiError && e.status === 401) {
+            // Not authenticated — do not show a scary error
+            clearTokens();
+            set({ user: null, accessToken: null, error: null });
+            return false;
+          }
           clearTokens();
           set({ user: null, accessToken: null, error: "Ошибка авторизации" });
           return false;
@@ -217,12 +226,6 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          const token = getAccessToken();
-          if (!token) {
-            set({ user: null, accessToken: null, isLoading: false, isInitialized: true });
-            return;
-          }
-          
           // Timeout for fetchMe (3s max)
           const mePromise = fetchMe();
           const meTimeout = new Promise<never>((_, reject) =>
@@ -235,19 +238,22 @@ export const useAuthStore = create<AuthState>()(
 
           set({
             user: meUser,
-            accessToken: nextToken ?? token,
+            accessToken: nextToken ?? null,
             isLoading: false,
             isInitialized: true,
           });
         } catch (e) {
-          logger.error('Auth', 'initialize error', e);
           clearTokens();
+          const isUnauthed = e instanceof AuthApiError && e.status === 401;
+          if (!isUnauthed) {
+            logger.error("Auth", "initialize error", e);
+          }
           set({
             user: null,
             accessToken: null,
             isLoading: false,
             isInitialized: true,
-            error: "Ошибка авторизации",
+            error: isUnauthed ? null : "Ошибка авторизации",
           });
         }
       },

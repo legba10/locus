@@ -4,6 +4,24 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AiSearchService } from "../ai-orchestrator/services/ai-search.service";
 import { SearchQueryDto, SearchBodyDto } from "./dto/search-query.dto";
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label = "timeout"): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(label)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
+
+type AiResult = Awaited<ReturnType<AiSearchService["search"]>>;
+
 @Injectable()
 export class SearchService {
   constructor(
@@ -12,34 +30,45 @@ export class SearchService {
   ) {}
 
   async search(dto: SearchQueryDto) {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 50;
+    const take = Math.min(Math.max(limit, 1), 50);
+    const skip = (page - 1) * take;
+
     const amenityKeys =
       dto.amenities?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
 
     if (dto.ai === "1" && dto.q) {
-      const ai = await this.aiSearch.search({
-        query: dto.q,
-        context: dto.city ? { city: dto.city } : undefined,
-      });
+      const ai = await withTimeout<AiResult>(
+        this.aiSearch.search({
+          query: dto.q,
+          context: dto.city ? { city: dto.city } : undefined,
+        }),
+        5000,
+        "AI timeout"
+      ).catch(() => null);
 
-      const ids = ai.results.map((r) => r.listingId);
-      const listings = await this.prisma.listing.findMany({
-        where: { id: { in: ids }, status: ListingStatus.PUBLISHED, photos: { some: {} } },
-        include: {
-          photos: { orderBy: { sortOrder: "asc" }, take: 1 },
-          amenities: { include: { amenity: true } },
-          aiScores: true,
-          intelligence: true,
-        },
-      });
+      if (ai) {
+        const ids = ai.results.map((r) => r.listingId);
+        const listings = await this.prisma.listing.findMany({
+          where: { id: { in: ids }, status: ListingStatus.PUBLISHED, photos: { some: {} } },
+          include: {
+            photos: { orderBy: { sortOrder: "asc" }, take: 1 },
+            amenities: { include: { amenity: true } },
+            aiScores: true,
+            intelligence: true,
+          },
+        });
 
-      // preserve AI rank order
-      const byId = new Map(listings.map((l) => [l.id, l]));
-      const items = ids.map((id) => byId.get(id)).filter(Boolean);
+        // preserve AI rank order
+        const byId = new Map(listings.map((l) => [l.id, l]));
+        const items = ids.map((id) => byId.get(id)).filter(Boolean);
 
-      return {
-        items,
-        ai,
-      };
+        return {
+          items,
+          ai,
+        };
+      }
     }
 
     const orderBy =
@@ -84,7 +113,8 @@ export class SearchService {
     const items = await this.prisma.listing.findMany({
       where,
       orderBy,
-      take: 50,
+      take,
+      skip,
       include: {
         photos: { orderBy: { sortOrder: "asc" }, take: 1 },
         amenities: { include: { amenity: true } },
@@ -177,13 +207,19 @@ export class SearchService {
     let aiExplanation: any = null;
     if (useAi && dto.query && dto.query.length > 3) {
       try {
-        const aiResult = await this.aiSearch.search({
-          query: dto.query,
-          context: dto.city ? { city: dto.city } : undefined,
-        });
+        const aiResult = await withTimeout<AiResult>(
+          this.aiSearch.search({
+            query: dto.query,
+            context: dto.city ? { city: dto.city } : undefined,
+          }),
+          5000,
+          "AI timeout"
+        );
         
         // Rerank items based on AI scores
-        const aiScores = new Map(aiResult.results.map(r => [r.listingId, r.score]));
+        const aiScores = new Map<string, number>(
+          aiResult.results.map((r) => [r.listingId, r.score] as const)
+        );
         items = items.sort((a, b) => {
           const scoreA = aiScores.get(a.id) ?? 0;
           const scoreB = aiScores.get(b.id) ?? 0;
@@ -193,7 +229,7 @@ export class SearchService {
         aiExplanation = {
           intent: aiResult.intent,
           explanation: aiResult.explanation,
-          topMatches: aiResult.results.slice(0, 3).map(r => ({
+          topMatches: aiResult.results.slice(0, 3).map((r) => ({
             listingId: r.listingId,
             score: r.score,
             reasons: r.reasons,

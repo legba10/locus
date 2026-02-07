@@ -4,16 +4,20 @@ import {
   Post,
   Query,
   Body,
+  Req,
+  Res,
   BadRequestException,
   ConflictException,
   Logger,
   InternalServerErrorException,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiQuery } from "@nestjs/swagger";
+import type { Request, Response } from "express";
 import { PrismaService } from "../prisma/prisma.service";
 import { SupabaseAuthService } from "./supabase-auth.service";
 import { randomUUID } from "crypto";
 import { supabase } from "../../shared/lib/supabase";
+import { setAuthCookies } from "./auth-cookies";
 
 const SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -124,7 +128,11 @@ export class AuthTelegramController {
 
   @Post("complete")
   @ApiOperation({ summary: "Complete Telegram login - exchanges token for Supabase session" })
-  async complete(@Body("token") token: string) {
+  async complete(
+    @Body("token") token: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
     if (!token) {
       throw new BadRequestException("Token is required");
     }
@@ -169,6 +177,7 @@ export class AuthTelegramController {
       if (!profile) {
         throw new ConflictException("USER_NOT_FOUND");
       }
+      setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -250,6 +259,7 @@ export class AuthTelegramController {
           if (!profile) {
             throw new InternalServerErrorException("PROFILE_NOT_FOUND");
           }
+          setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
           return {
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -311,6 +321,7 @@ export class AuthTelegramController {
       if (!profile) {
         throw new InternalServerErrorException("PROFILE_NOT_FOUND");
       }
+      setAuthCookies(res, req, { access_token: sessionData.session.access_token, refresh_token: sessionData.session.refresh_token });
       return {
         access_token: sessionData.session.access_token,
         refresh_token: sessionData.session.refresh_token,

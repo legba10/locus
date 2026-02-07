@@ -10,6 +10,10 @@ export type SupabaseProfile = {
   email: string | null;
   phone: string | null;
   telegram_id: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar_url?: string | null;
   full_name: string | null;
   role: "user" | "landlord";
   tariff: string | null;
@@ -52,14 +56,27 @@ export class SupabaseAuthService {
       return null;
     }
 
-    const profileData = {
+    const md = user.user_metadata ?? {};
+    const profileData: Record<string, unknown> = {
       id: user.id,
       email: user.email ?? null,
       phone: user.phone ?? null,
-      telegram_id: telegramId ?? (user.user_metadata?.telegram_id as string) ?? null,
-      full_name: (user.user_metadata?.full_name as string) ?? null,
+      telegram_id: telegramId ?? (md as any)?.telegram_id ?? null,
+      full_name: (md as any)?.full_name ?? null,
       // role is NOT set on upsert - it's managed by admin or defaults to 'user'
     };
+
+    const username = (md as any)?.username;
+    const firstName = (md as any)?.first_name;
+    const lastName = (md as any)?.last_name;
+    const avatarUrl = (md as any)?.photo_url ?? (md as any)?.avatar_url;
+
+    if (typeof username === "string" && username.length > 0) {
+      profileData.username = username.startsWith("@") ? username : `@${username}`;
+    }
+    if (typeof firstName === "string" && firstName.length > 0) profileData.first_name = firstName;
+    if (typeof lastName === "string" && lastName.length > 0) profileData.last_name = lastName;
+    if (typeof avatarUrl === "string" && avatarUrl.length > 0) profileData.avatar_url = avatarUrl;
 
     this.logger.debug(`Upserting profile for user ${user.id}`);
 
@@ -208,13 +225,24 @@ export class SupabaseAuthService {
 
     // Check existing by phone
     if (!supabaseUser) {
-      const { data: usersByPhone } = await supabase.auth.admin.listUsers();
-      const byPhone = usersByPhone?.users?.find((u) => u.phone === phone);
-      if (byPhone) {
-        supabaseUser = { id: byPhone.id, email: byPhone.email ?? null };
+      const { data: phoneProfile } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .eq("phone", phone)
+        .single();
+
+      if (phoneProfile?.id) {
+        const { data: userData } = await supabase.auth.admin.getUserById(phoneProfile.id);
+        if (userData?.user) {
+          supabaseUser = { id: userData.user.id, email: userData.user.email ?? phoneProfile.email ?? null };
+        } else {
+          // Fallback: still use profile id (profile references auth.users)
+          supabaseUser = { id: phoneProfile.id, email: phoneProfile.email ?? null };
+        }
+
         await supabase.from("profiles").upsert(
           {
-            id: byPhone.id,
+            id: phoneProfile.id,
             telegram_id: telegramId,
             full_name: fullName,
             phone,
@@ -235,16 +263,26 @@ export class SupabaseAuthService {
           telegram_id: telegramId,
           full_name: fullName,
           username: session.username,
+          first_name: session.firstName ?? null,
           auth_provider: "telegram",
         },
       });
 
       if (createError) {
         if (createError.message.includes("already exists")) {
-          const { data: list } = await supabase.auth.admin.listUsers();
-          const existing = list?.users?.find((u) => u.email === email || u.phone === phone);
-          if (existing) {
-            supabaseUser = { id: existing.id, email: existing.email ?? null };
+          const { data: existingProfileByEmail } = await supabase
+            .from("profiles")
+            .select("id, email")
+            .eq("email", email)
+            .single();
+          const { data: existingProfileByPhone } = await supabase
+            .from("profiles")
+            .select("id, email")
+            .eq("phone", phone)
+            .single();
+          const p = existingProfileByEmail ?? existingProfileByPhone;
+          if (p?.id) {
+            supabaseUser = { id: p.id, email: p.email ?? null };
           }
         }
         if (!supabaseUser) {

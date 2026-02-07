@@ -1,8 +1,10 @@
-import { Body, Controller, Post, Logger, BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import { Body, Controller, Post, Logger, BadRequestException, InternalServerErrorException, Req, Res } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { createHmac } from "crypto";
 import { supabase } from "../../shared/lib/supabase";
 import { SupabaseAuthService } from "./supabase-auth.service";
+import type { Request, Response } from "express";
+import { setAuthCookies } from "./auth-cookies";
 
 interface TelegramAuthData {
   id: number;
@@ -58,7 +60,11 @@ export class TelegramAuthController {
   @ApiOperation({ summary: "Authenticate via Telegram Login Widget" })
   @ApiResponse({ status: 200, description: "Authentication successful" })
   @ApiResponse({ status: 400, description: "Invalid Telegram data" })
-  async telegram(@Body() body: TelegramAuthData) {
+  async telegram(
+    @Body() body: TelegramAuthData,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
     this.logger.debug(`Telegram auth attempt: ${JSON.stringify(body)}`);
 
     if (!process.env.TELEGRAM_ENABLED || process.env.TELEGRAM_ENABLED !== "true") {
@@ -77,101 +83,101 @@ export class TelegramAuthController {
     const telegramId = String(body.id);
     const fullName = [body.first_name, body.last_name].filter(Boolean).join(" ") || `User ${telegramId}`;
     const email = `telegram_${telegramId}@locus.app`; // Synthetic email for Supabase
+    const username = body.username ? (body.username.startsWith("@") ? body.username : `@${body.username}`) : null;
 
     try {
-      // Try to sign in existing user
-      let session = null;
-      
-      // Check if user exists by looking up profile with telegram_id
+      // 1) Find existing user by telegram_id in profiles
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("id, email")
         .eq("telegram_id", telegramId)
         .single();
 
-      if (existingProfile) {
-        // User exists - sign in with admin API
-        const { data: signInData, error: signInError } = await supabase.auth.admin.getUserById(existingProfile.id);
-        
-        if (!signInError && signInData.user) {
-          // Generate session for existing user
-          const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-            type: "magiclink",
-            email: signInData.user.email ?? email,
-          });
-          
-          if (sessionError) {
-            this.logger.warn(`Failed to generate session: ${sessionError.message}`);
+      let userId: string | null = existingProfile?.id ?? null;
+      let userEmail: string = existingProfile?.email ?? email;
+
+      if (userId) {
+        const { data: userData } = await supabase.auth.admin.getUserById(userId);
+        if (userData?.user?.email) userEmail = userData.user.email;
+      }
+
+      // 2) Create user if not exists
+      if (!userId) {
+        const { data: createData, error: createError } = await supabase.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: {
+            telegram_id: telegramId,
+            full_name: fullName,
+            first_name: body.first_name ?? null,
+            last_name: body.last_name ?? null,
+            username,
+            photo_url: body.photo_url ?? null,
+            auth_provider: "telegram_widget",
+          },
+        });
+
+        if (createError) {
+          // Might already exist (rare race) — resolve by email
+          if (createError.message.includes("already exists")) {
+            const { data: profileByEmail } = await supabase
+              .from("profiles")
+              .select("id, email")
+              .eq("email", email)
+              .single();
+            if (profileByEmail?.id) {
+              userId = profileByEmail.id;
+              userEmail = profileByEmail.email ?? email;
+            }
           }
-          
-          // For now, return user info without session (frontend will use magic link)
-          const userInfo = await this.supabaseAuth.syncUser(
-            { id: existingProfile.id, email: signInData.user.email },
-            telegramId
-          );
-          
-          return {
-            ok: true,
-            user: userInfo,
-            message: "Telegram auth successful. Use magic link or password to complete sign in.",
-          };
+          if (!userId) {
+            this.logger.error(`Failed to create user: ${createError.message}`);
+            throw new InternalServerErrorException("Failed to create user");
+          }
+        } else if (createData?.user) {
+          userId = createData.user.id;
+          userEmail = createData.user.email ?? email;
         }
       }
 
-      // Create new user in Supabase Auth
-      const { data: createData, error: createError } = await supabase.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          telegram_id: telegramId,
-          full_name: fullName,
-          username: body.username,
-          photo_url: body.photo_url,
-        },
-      });
-
-      if (createError) {
-        // User might already exist with this email
-        if (createError.message.includes("already exists")) {
-          const { data: existingUser } = await supabase.auth.admin.listUsers();
-          const user = existingUser.users.find((u) => u.email === email);
-          
-          if (user) {
-            const userInfo = await this.supabaseAuth.syncUser(
-              { id: user.id, email: user.email },
-              telegramId
-            );
-            
-            return {
-              ok: true,
-              user: userInfo,
-              message: "Telegram user found",
-            };
-          }
-        }
-        
-        this.logger.error(`Failed to create user: ${createError.message}`);
+      if (!userId) {
         throw new InternalServerErrorException("Failed to create user");
       }
 
-      if (!createData.user) {
-        throw new InternalServerErrorException("Failed to create user");
-      }
-
-      // Sync profile
+      // 3) Ensure profile exists/updated
       const userInfo = await this.supabaseAuth.syncUser(
-        { 
-          id: createData.user.id, 
-          email: createData.user.email,
-          user_metadata: createData.user.user_metadata,
+        {
+          id: userId,
+          email: userEmail,
+          user_metadata: {
+            telegram_id: telegramId,
+            full_name: fullName,
+            first_name: body.first_name ?? null,
+            last_name: body.last_name ?? null,
+            username,
+            photo_url: body.photo_url ?? null,
+            auth_provider: "telegram_widget",
+          },
         },
         telegramId
       );
 
+      // 4) Create Supabase session and set cookies (login + registration)
+      const tokenHash = await this.supabaseAuth.generateMagicLinkToken(userEmail);
+      const { data: sessionData, error: sessionError } = await this.supabaseAuth.verifyOtpToken(tokenHash);
+      if (sessionError || !sessionData?.session) {
+        this.logger.error(`Verify OTP failed: ${sessionError?.message ?? "no session"}`);
+        throw new InternalServerErrorException("Failed to create session");
+      }
+
+      setAuthCookies(res, req, {
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+      });
+
       return {
         ok: true,
         user: userInfo,
-        message: "Telegram registration successful",
       };
     } catch (error) {
       this.logger.error(`Telegram auth error: ${error}`);

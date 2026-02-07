@@ -8,11 +8,22 @@ import { json, urlencoded } from "express";
 import { join } from "path";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./shared/filters/http-exception.filter";
+import { TimeoutInterceptor } from "./shared/interceptors/timeout.interceptor";
+import { RequestLoggingInterceptor } from "./shared/interceptors/request-logging.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Behind Railway/NGINX/Cloudflare: respect X-Forwarded-* for IP/rate-limit/cookies
+  if (process.env.TRUST_PROXY === "true" || process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+  }
+
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(
+    new RequestLoggingInterceptor(),
+    new TimeoutInterceptor(Number(process.env.REQUEST_TIMEOUT_MS ?? 30_000))
+  );
 
   // Increase body size limits for file uploads (50MB)
   app.use(json({ limit: "50mb" }));
@@ -41,14 +52,7 @@ async function bootstrap() {
     allowedHeaders: ["Content-Type", "Authorization"],
   });
 
-  // Request logging
-  app.use((req: any, _res: any, next: () => void) => {
-    const path = req.path || req.url;
-    const origin = req.get?.("origin") ?? req.headers?.origin ?? "-";
-    const hasAuth = !!req.headers?.authorization;
-    console.log(`[API] ${req.method} ${path} | origin: ${origin} | auth: ${hasAuth ? "yes" : "no"}`);
-    next();
-  });
+  // (request logging moved to interceptor with requestId + latency)
 
   // Global prefix: all routes under /api
   app.setGlobalPrefix("api");

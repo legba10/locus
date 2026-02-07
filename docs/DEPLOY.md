@@ -14,7 +14,7 @@
 2. New Project → Deploy from GitHub
 3. Root directory: `backend`
 4. Build: `npm install && npm run build`
-5. Start: `npm run start`
+5. Start: `npm run start:prod` (applies Prisma migrations before boot)
 
 ### Backend ENV (Railway)
 
@@ -33,8 +33,8 @@
 - `OPENAI_API_KEY=...`
 - `AI_ENABLED=true`
 
-Healthcheck: `GET https://locus-backend.up.railway.app/health`  
-API: `GET https://locus-backend.up.railway.app/api/v1/listings`
+Healthcheck: `GET https://locus-backend.up.railway.app/api/health`  
+API: `GET https://locus-backend.up.railway.app/api/listings`
 
 ---
 
