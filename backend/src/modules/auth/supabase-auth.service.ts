@@ -40,7 +40,10 @@ export class SupabaseAuthService {
    * We use admin listUsers with a hard cap to find user id by email.
    */
   async findAuthUserIdByEmail(email: string): Promise<string | null> {
-    if (!supabase) return null;
+    // IMPORTANT: don't rely on narrowing imported live binding (`supabase`).
+    // Assign to local const to satisfy TypeScript and avoid "possibly null" on Railway build.
+    const sb = supabase;
+    if (!sb) return null;
     const target = (email ?? "").toLowerCase().trim();
     if (!target) return null;
 
@@ -48,7 +51,7 @@ export class SupabaseAuthService {
     const perPage = 200;
     const maxPages = 5;
     for (let page = 1; page <= maxPages; page++) {
-      const { data, error } = await (supabase as any).auth.admin.listUsers({ page, perPage });
+      const { data, error } = await (sb as any).auth.admin.listUsers({ page, perPage });
       if (error || !data?.users) return null;
       const users: Array<{ id: string; email?: string | null }> = data.users;
       const found = users.find((u) => (u.email ?? "").toLowerCase() === target);
