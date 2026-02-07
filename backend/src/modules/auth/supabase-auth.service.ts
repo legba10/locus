@@ -105,24 +105,42 @@ export class SupabaseAuthService {
 
     this.logger.debug(`Upserting profile for user ${user.id}`);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(profileData, { 
-        onConflict: "id",
-        ignoreDuplicates: false 
-      })
-      .select()
-      .single();
+    const tryUpsert = async (payload: Record<string, unknown>) => {
+      return supabase
+        .from("profiles")
+        .upsert(payload, {
+          onConflict: "id",
+          ignoreDuplicates: false,
+        })
+        .select()
+        .single();
+    };
+
+    const { data, error } = await tryUpsert(profileData);
 
     if (error) {
-      this.logger.error(`Failed to upsert profile: ${error.message}`);
+      // Common production issue: optional columns not migrated (schema cache / missing column)
+      const msg = error.message ?? "";
+      const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
+      const missingCol = missingColMatch?.[1]?.toLowerCase();
+      const optionalCols = new Set(["username", "first_name", "last_name", "avatar_url"]);
+
+      if (missingCol && optionalCols.has(missingCol)) {
+        this.logger.warn(`Profile upsert failed due to missing column '${missingCol}'. Retrying without optional fields.`);
+        const minimal: Record<string, unknown> = {
+          id: user.id,
+          email: user.email ?? null,
+          phone: user.phone ?? null,
+          telegram_id: telegramId ?? (md as any)?.telegram_id ?? null,
+          full_name: (md as any)?.full_name ?? null,
+        };
+        const retry = await tryUpsert(minimal);
+        if (!retry.error && retry.data) return retry.data as SupabaseProfile;
+      }
+
+      this.logger.error(`Failed to upsert profile: ${msg}`);
       // If upsert failed, try to fetch existing profile
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      
+      const { data: existing } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       return existing as SupabaseProfile | null;
     }
 

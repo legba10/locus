@@ -90,10 +90,14 @@ async function bootstrap() {
   console.log(`📡 Telegram: ${process.env.TELEGRAM_ENABLED === "true" ? "enabled" : "disabled"}`);
 
   // Verify required env vars
-  const required = ["PORT", "DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
+  // NOTE: Railway may use SUPABASE_SERVICE_KEY - treat it as equivalent.
+  const required = ["PORT", "DATABASE_URL", "SUPABASE_URL"];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
     console.error("❌ Missing env vars:", missing.join(", "));
+  }
+  if (!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE)) {
+    console.error("❌ Missing Supabase service role key env (SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY)");
   }
 }
 

@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
-import { TelegramLoginWidget } from '@/shared/telegram/TelegramLoginWidget'
 
 /**
  * LoginPage — Страница входа
@@ -175,20 +174,21 @@ export default function PageClient() {
                     <span className="px-2 bg-white/[0.75] text-[#6B7280]">или</span>
                   </div>
                 </div>
-                <TelegramLoginWidget className="w-full flex justify-center" redirectTo="/profile" />
-
                 <button
                   type="button"
                   onClick={() => handleTelegramLogin()}
                   className={cn(
                     'w-full py-3 rounded-[14px]',
-                    'border border-gray-200 bg-white text-[#1C1F26] font-semibold text-[15px]',
-                    'hover:bg-gray-50 transition-colors',
+                    'bg-[#2AABEE] text-white font-semibold text-[15px]',
+                    'hover:bg-[#229ED9] active:bg-[#1f8fc2] transition-colors',
                     'flex items-center justify-center gap-2'
                   )}
                 >
-                  Продолжить через бота Telegram
+                  Войти через Telegram
                 </button>
+                <p className="text-center text-[12px] text-[#6B7280]">
+                  Хотите <span className="font-medium text-[#1C1F26]">сдать жильё бесплатно</span>? После входа выберите «Сдаю жильё» и разместите 1 объявление на FREE.
+                </p>
               </>
             )}
           </div>

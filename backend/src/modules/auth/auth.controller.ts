@@ -44,15 +44,22 @@ export class AuthController {
       };
     },
   ) {
-    const profile = await this.supabaseAuth.getProfile(req.user.id);
+    // Prefer profile synced by guard; fallback to fetch; never hard-fail login if profile row is missing.
+    let profile = (req.user.profile as any) ?? null;
     if (!profile) {
-      throw new InternalServerErrorException("PROFILE_NOT_FOUND");
+      profile = await this.supabaseAuth.getProfile(req.user.id);
+    }
+    if (!profile) {
+      // Attempt to create minimal profile (requires service-role key); ignore errors.
+      profile = await this.supabaseAuth
+        .upsertProfile({ id: req.user.id, email: req.user.email ?? null, phone: req.user.phone ?? null, user_metadata: null })
+        .catch(() => null);
     }
 
-    const rawProfileRole = profile.role ?? null;
+    const rawProfileRole = profile?.role ?? null;
     const role = ((rawProfileRole ?? "user") as string).toLowerCase() === "landlord" ? "landlord" : "user";
-    const tariff = (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
-    const email = profile.email ?? req.user.email ?? null;
+    const tariff = ((profile?.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro");
+    const email = profile?.email ?? req.user.email ?? null;
 
     // Ensure Neon user exists and keep plan/limit in sync (compat with legacy tariff)
     await this.neonUser.ensureUserExists(req.user.id, email);
@@ -67,17 +74,17 @@ export class AuthController {
     });
 
     return {
-      id: profile.id,
+      id: profile?.id ?? req.user.id,
       email,
-      phone: profile.phone ?? null,
-      telegram_id: profile.telegram_id ?? null,
-      username: profile.username ?? null,
-      avatar_url: profile.avatar_url ?? null,
-      full_name: profile.full_name ?? null,
+      phone: profile?.phone ?? req.user.phone ?? null,
+      telegram_id: profile?.telegram_id ?? null,
+      username: (profile as any)?.username ?? null,
+      avatar_url: (profile as any)?.avatar_url ?? null,
+      full_name: profile?.full_name ?? null,
       role,
       profile_role_raw: rawProfileRole,
       needsRoleSelection:
-        Boolean(profile.telegram_id) &&
+        Boolean(profile?.telegram_id) &&
         (!rawProfileRole || rawProfileRole.toLowerCase() === "user"),
       tariff,
       plan: userRow.plan,
