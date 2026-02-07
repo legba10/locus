@@ -35,6 +35,30 @@ export class SupabaseAuthService {
   private readonly logger = new Logger(SupabaseAuthService.name);
 
   /**
+   * Recovery helper (rare):
+   * If auth user exists but `public.profiles` row is missing, our normal lookup by profiles fails.
+   * We use admin listUsers with a hard cap to find user id by email.
+   */
+  async findAuthUserIdByEmail(email: string): Promise<string | null> {
+    if (!supabase) return null;
+    const target = (email ?? "").toLowerCase().trim();
+    if (!target) return null;
+
+    // Hard cap: 5 pages × 200 = 1000 users scanned max (only on error path).
+    const perPage = 200;
+    const maxPages = 5;
+    for (let page = 1; page <= maxPages; page++) {
+      const { data, error } = await (supabase as any).auth.admin.listUsers({ page, perPage });
+      if (error || !data?.users) return null;
+      const users: Array<{ id: string; email?: string | null }> = data.users;
+      const found = users.find((u) => (u.email ?? "").toLowerCase() === target);
+      if (found?.id) return found.id;
+      if (users.length < perPage) break; // no more pages
+    }
+    return null;
+  }
+
+  /**
    * Map Supabase profile.role to business role
    */
   private mapToBusinessRole(profileRole: string | null): BusinessRole {
@@ -285,6 +309,29 @@ export class SupabaseAuthService {
           const p = existingProfileByEmail ?? existingProfileByPhone;
           if (p?.id) {
             supabaseUser = { id: p.id, email: p.email ?? null };
+          }
+
+          // Recovery: auth.user exists but profiles row is missing
+          if (!supabaseUser) {
+            const recoveredId = await this.findAuthUserIdByEmail(email);
+            if (recoveredId) {
+              supabaseUser = { id: recoveredId, email };
+              await this.upsertProfile(
+                {
+                  id: recoveredId,
+                  email,
+                  phone,
+                  user_metadata: {
+                    telegram_id: telegramId,
+                    full_name: fullName,
+                    username: session.username,
+                    first_name: session.firstName ?? null,
+                    auth_provider: "telegram_recover",
+                  },
+                },
+                telegramId
+              );
+            }
           }
         }
         if (!supabaseUser) {

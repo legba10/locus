@@ -129,6 +129,15 @@ export class TelegramAuthController {
               userId = profileByEmail.id;
               userEmail = profileByEmail.email ?? email;
             }
+
+            // Recovery: auth.user exists but profiles row is missing
+            if (!userId) {
+              const recoveredId = await this.supabaseAuth.findAuthUserIdByEmail(email);
+              if (recoveredId) {
+                userId = recoveredId;
+                userEmail = email;
+              }
+            }
           }
           if (!userId) {
             this.logger.error(`Failed to create user: ${createError.message}`);
