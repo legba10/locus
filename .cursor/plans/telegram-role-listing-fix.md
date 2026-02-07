@@ -13,4 +13,5 @@ Status:
 - Profile role patch endpoint: DONE
 - Role selection modal: DONE
 - Header/menu/profile CTA: DONE
+- Recovery: if auth.user exists but profiles row missing: DONE (cd21c5aa)
 
