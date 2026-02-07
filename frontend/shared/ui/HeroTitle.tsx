@@ -2,22 +2,21 @@
 
 import { useEffect, useState, useRef } from 'react'
 
-const BASE = 'Найдите жильё,'
-const PHRASES = [
-  ' под ваш бюджет.',
-  ' которое подходит вам.',
-  ' быстрее с AI',
-]
+const BASE_LINE = 'Найдите жильё,'
+const PHRASES = ['под ваш бюджет', 'которое подходит вам', 'быстрее с AI']
 
-const TYPE_MS = 110
-const ERASE_MS = 70
-const PAUSE_AFTER_FULL_MS = 1200
-const PAUSE_AFTER_ERASE_MS = 300
+// Per spec:
+// typing: 55ms, delete: 35ms, pause: 1600ms
+const TYPE_MS = 55
+const ERASE_MS = 35
+const PAUSE_AFTER_FULL_MS = 1600
+const PAUSE_AFTER_ERASE_MS = 200
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export function HeroTitle() {
-  const [displayed, setDisplayed] = useState(BASE)
+  // We keep the first line static and animate only the second line
+  const [secondLine, setSecondLine] = useState('')
   const phraseIndexRef = useRef(0)
 
   useEffect(() => {
@@ -26,12 +25,11 @@ export function HeroTitle() {
     const run = async () => {
       while (!cancelled) {
         const phrase = PHRASES[phraseIndexRef.current]
-        const fullText = BASE + phrase
 
-        // 1. Type phrase (base already shown)
-        for (let i = 1; i <= phrase.length; i++) {
+        // 1. Type phrase
+        for (let i = 1; i <= phrase.length; i += 1) {
           if (cancelled) return
-          setDisplayed(BASE + phrase.slice(0, i))
+          setSecondLine(phrase.slice(0, i))
           await delay(TYPE_MS)
         }
 
@@ -39,10 +37,10 @@ export function HeroTitle() {
         await delay(PAUSE_AFTER_FULL_MS)
         if (cancelled) return
 
-        // 3. Erase back to BASE
-        for (let i = phrase.length - 1; i >= 0; i--) {
+        // 3. Erase back to empty second line
+        for (let i = phrase.length - 1; i >= 0; i -= 1) {
           if (cancelled) return
-          setDisplayed(BASE + phrase.slice(0, i))
+          setSecondLine(phrase.slice(0, i))
           await delay(ERASE_MS)
         }
 
@@ -62,8 +60,12 @@ export function HeroTitle() {
 
   return (
     <h1 className="hero-title hero-title-fixed-height">
-      {displayed}
-      <span className="hero-title-cursor" aria-hidden />
+      <span>{BASE_LINE}</span>
+      <br />
+      <span>
+        {secondLine}
+        <span className="hero-title-cursor" aria-hidden />
+      </span>
     </h1>
   )
 }
