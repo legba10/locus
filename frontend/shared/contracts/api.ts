@@ -113,6 +113,18 @@ export interface UserContract {
   avatar_url?: string | null;
   full_name: string | null;
   role: AppRole;
+  /**
+   * Raw role stored in Supabase `public.profiles.role`.
+   * For Telegram onboarding we use:
+   * - "user" (default) => role not selected yet
+   * - "renter" => selected "Ищу жильё" (maps to business role "user")
+   * - "landlord" => selected "Сдаю жильё"
+   */
+  profile_role_raw?: string | null;
+  /**
+   * True for Telegram users who still have default role ("user") and must pick renter/landlord.
+   */
+  needsRoleSelection?: boolean;
   tariff: UserTariff;
   plan?: UserPlan;
   listingLimit?: number;

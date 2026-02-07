@@ -58,8 +58,8 @@ export function UserMenu() {
   const displayName = user.full_name || user.email || "Пользователь";
   const isLandlord = user.role === "landlord" || (user.roles ? user.roles.includes("landlord") : false);
   const tariff = user.tariff ?? "free";
-  const isPaidTariff = tariff === "landlord_basic" || tariff === "landlord_pro";
-  const canAccessOwner = isLandlord && isPaidTariff;
+  // FREE landlords must still access owner dashboard (1 listing limit enforced on backend)
+  const canAccessOwner = isLandlord;
 
   const roleBadge = isLandlord ? "Арендодатель" : "Пользователь";
   const tariffBadge =
@@ -96,6 +96,14 @@ export function UserMenu() {
         >
           Профиль
         </Link>
+        {isLandlord && (
+          <Link
+            href="/owner/dashboard?tab=add"
+            className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand/90"
+          >
+            Разместить
+          </Link>
+        )}
         {canAccessOwner && (
           <Link
             href="/owner/dashboard"

@@ -49,7 +49,8 @@ export class AuthController {
       throw new InternalServerErrorException("PROFILE_NOT_FOUND");
     }
 
-    const role = (profile.role ?? "user") as "user" | "landlord";
+    const rawProfileRole = profile.role ?? null;
+    const role = ((rawProfileRole ?? "user") as string).toLowerCase() === "landlord" ? "landlord" : "user";
     const tariff = (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
     const email = profile.email ?? req.user.email ?? null;
 
@@ -74,6 +75,10 @@ export class AuthController {
       avatar_url: profile.avatar_url ?? null,
       full_name: profile.full_name ?? null,
       role,
+      profile_role_raw: rawProfileRole,
+      needsRoleSelection:
+        Boolean(profile.telegram_id) &&
+        (!rawProfileRole || rawProfileRole.toLowerCase() === "user"),
       tariff,
       plan: userRow.plan,
       listingLimit: userRow.listingLimit,

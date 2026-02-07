@@ -57,6 +57,10 @@ function userFromBackend(response: MeResponse, sessionEmail?: string | null): St
     role: getPrimaryRole(roles),
     roles,
     tariff: payload.tariff ?? "free",
+    plan: payload.plan,
+    listingLimit: payload.listingLimit,
+    needsRoleSelection: payload.needsRoleSelection,
+    profile_role_raw: payload.profile_role_raw ?? null,
   };
 }
 

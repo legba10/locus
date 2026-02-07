@@ -15,7 +15,7 @@ export type SupabaseProfile = {
   last_name?: string | null;
   avatar_url?: string | null;
   full_name: string | null;
-  role: "user" | "landlord";
+  role: string | null;
   tariff: string | null;
   verification_status: "pending" | "verified" | null;
   created_at: string;
@@ -42,6 +42,7 @@ export class SupabaseAuthService {
     const role = profileRole.toLowerCase();
 
     if (role === "landlord") return "landlord";
+    if (role === "renter") return "user";
     if (role === "admin") return "landlord";
     return "user";
   }
@@ -132,7 +133,7 @@ export class SupabaseAuthService {
    */
   async updateProfile(
     userId: string,
-    patch: { full_name?: string | null; phone?: string | null; telegram_id?: string | null }
+    patch: { full_name?: string | null; phone?: string | null; telegram_id?: string | null; role?: string | null }
   ): Promise<SupabaseProfile | null> {
     if (!supabase) {
       this.logger.error("Supabase client not configured");
@@ -143,6 +144,7 @@ export class SupabaseAuthService {
     if (patch.full_name !== undefined) payload.full_name = patch.full_name;
     if (patch.phone !== undefined) payload.phone = patch.phone;
     if (patch.telegram_id !== undefined) payload.telegram_id = patch.telegram_id;
+    if (patch.role !== undefined) payload.role = patch.role;
 
     const { data, error } = await supabase
       .from("profiles")

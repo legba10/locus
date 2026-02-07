@@ -25,6 +25,7 @@ export default function ProfilePage() {
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
+  const canCreateListing = user?.role === 'landlord'
 
   useEffect(() => {
     setFormData({
@@ -159,14 +160,24 @@ export default function ProfilePage() {
               </span>
             </div>
             <p className="text-[14px] text-[#6B7280] mb-4">
-              Управляйте тарифом, чтобы открыть размещение объявлений и аналитику для арендодателей.
+              На FREE вы можете разместить 1 объявление. Для большего лимита и расширенной аналитики можно выбрать PRO/AGENCY.
             </p>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
-            >
-              Посмотреть тарифы
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {canCreateListing && (
+                <Link
+                  href="/owner/dashboard?tab=add"
+                  className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
+                >
+                  Разместить объявление
+                </Link>
+              )}
+              <Link
+                href="/pricing"
+                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
+              >
+                Посмотреть тарифы
+              </Link>
+            </div>
           </section>
 
           <section className={cn(

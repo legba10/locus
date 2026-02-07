@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsIn, IsOptional, IsString } from "class-validator";
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: "Иван Иванов" })
@@ -16,4 +16,9 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiPropertyOptional({ example: "landlord", description: "Onboarding role selection: renter | landlord" })
+  @IsOptional()
+  @IsIn(["renter", "landlord"])
+  role?: "renter" | "landlord";
 }

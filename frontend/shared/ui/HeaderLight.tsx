@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle } from 'lucide-react'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -36,6 +36,7 @@ export function HeaderLight() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const canCreateListing = isAuthenticated() && user?.role === 'landlord'
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -100,6 +101,18 @@ export function HeaderLight() {
 
           {/* Auth — ТЗ: одна кнопка Войти/Зарегистрироваться; Выйти = Danger */}
           <div className="hidden md:flex items-center gap-3">
+            {canCreateListing && (
+              <Link
+                href="/owner/dashboard?tab=add"
+                className={cn(
+                  'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
+                  'bg-violet-50 text-violet-700 border border-violet-100',
+                  'hover:bg-violet-100 transition-colors'
+                )}
+              >
+                Разместить объявление
+              </Link>
+            )}
             {isAuthenticated() ? (
               <button
                 onClick={logout}
@@ -187,6 +200,13 @@ export function HeaderLight() {
           <nav className="mobile-menu-nav menu">
             <ul className="menu-list">
               <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+              {canCreateListing && (
+                <NavItem
+                  icon={<PlusCircle size={22} strokeWidth={1.8} />}
+                  label="Разместить объявление"
+                  onClick={() => handleNavigate('/owner/dashboard?tab=add')}
+                />
+              )}
               <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
               <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
               <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />

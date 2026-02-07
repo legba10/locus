@@ -15,14 +15,16 @@ export class ProfileController {
   async update(@Req() req: any, @Body() dto: UpdateProfileDto) {
     const fullName = dto.full_name ?? dto.name ?? undefined;
     const phone = dto.phone ?? undefined;
+    const role = dto.role ?? undefined;
 
-    if (fullName === undefined && phone === undefined) {
+    if (fullName === undefined && phone === undefined && role === undefined) {
       throw new BadRequestException("No profile fields provided");
     }
 
     const profile = await this.supabaseAuth.updateProfile(req.user.id, {
       full_name: fullName,
       phone,
+      role,
     });
 
     return { profile };
