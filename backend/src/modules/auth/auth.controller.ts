@@ -4,11 +4,18 @@ import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
 import type { Request, Response } from "express";
 import { clearAuthCookies, readRefreshTokenFromCookie, setAuthCookies } from "./auth-cookies";
+import { PrismaService } from "../prisma/prisma.service";
+import { NeonUserService } from "../users/neon-user.service";
+import { planFromLegacyTariff } from "./plan";
 
 @ApiTags("auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly supabaseAuth: SupabaseAuthService) {}
+  constructor(
+    private readonly supabaseAuth: SupabaseAuthService,
+    private readonly prisma: PrismaService,
+    private readonly neonUser: NeonUserService
+  ) {}
 
   @Get("me")
   @UseGuards(SupabaseAuthGuard)
@@ -46,6 +53,18 @@ export class AuthController {
     const tariff = (profile.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro";
     const email = profile.email ?? req.user.email ?? null;
 
+    // Ensure Neon user exists and keep plan/limit in sync (compat with legacy tariff)
+    await this.neonUser.ensureUserExists(req.user.id, email);
+    const derived = planFromLegacyTariff(tariff);
+    const userRow = await this.prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        plan: derived.plan,
+        listingLimit: derived.listingLimit,
+      },
+      select: { plan: true, listingLimit: true },
+    });
+
     return {
       id: profile.id,
       email,
@@ -56,6 +75,8 @@ export class AuthController {
       full_name: profile.full_name ?? null,
       role,
       tariff,
+      plan: userRow.plan,
+      listingLimit: userRow.listingLimit,
     };
   }
 

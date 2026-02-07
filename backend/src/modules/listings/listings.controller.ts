@@ -5,9 +5,7 @@ import { Response } from "express";
 import { randomUUID } from "crypto";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { TariffGuard } from "../auth/guards/tariff.guard";
 import { RequireLandlord } from "../auth/decorators/require-landlord.decorator";
-import { RequireTariff } from "../auth/decorators/require-tariff.decorator";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { ListingsService } from "./listings.service";
@@ -43,9 +41,8 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Get("my")
   @ApiOperation({ summary: "Get listings for current landlord" })
   async getMine(@Req() req: any) {
@@ -68,48 +65,43 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() dto: CreateListingDto) {
     // Pass user ID (Supabase) and email for Neon FK relationship
-    const listing = await this.listings.create(req.user.id, dto, req.user.email);
+    const listing = await this.listings.create(req.user.id, dto, req.user.email, req.user.profile?.tariff);
     return { listing };
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Patch(":id")
   async update(@Req() req: any, @Param("id") id: string, @Body() dto: UpdateListingDto) {
     return { item: await this.listings.update(req.user.id, id, dto) };
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Delete(":id")
   async remove(@Req() req: any, @Param("id") id: string) {
     return await this.listings.delete(req.user.id, id);
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/publish")
   async publish(@Req() req: any, @Param("id") id: string) {
     return { item: await this.listings.publish(req.user.id, id) };
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/unpublish")
   async unpublish(@Req() req: any, @Param("id") id: string) {
     return { item: await this.listings.unpublish(req.user.id, id) };
@@ -126,9 +118,8 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Post(":id/photos")
   @ApiOperation({ summary: "Upload a photo for a listing" })
   @ApiConsumes("multipart/form-data")
@@ -172,9 +163,8 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Delete(":id/photos/:photoId")
   @ApiOperation({ summary: "Delete a photo from a listing" })
   async deletePhoto(@Req() req: any, @Param("photoId") photoId: string) {
@@ -182,9 +172,8 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(SupabaseAuthGuard, RolesGuard, TariffGuard)
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
   @RequireLandlord()
-  @RequireTariff("landlord_basic", "landlord_pro")
   @Patch(":id/photos/:photoId/order")
   @ApiOperation({ summary: "Update photo sort order" })
   async updatePhotoOrder(

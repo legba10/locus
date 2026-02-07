@@ -95,6 +95,7 @@ export interface Booking {
 // ——— User / Auth (совместимо с backend /auth/me)
 export type AppRole = "user" | "landlord";
 export type UserTariff = "free" | "landlord_basic" | "landlord_pro";
+export type UserPlan = "FREE" | "PRO" | "AGENCY";
 export interface UserProfile {
   full_name?: string | null;
   phone?: string | null;
@@ -113,6 +114,8 @@ export interface UserContract {
   full_name: string | null;
   role: AppRole;
   tariff: UserTariff;
+  plan?: UserPlan;
+  listingLimit?: number;
   supabaseId?: string;
   roles?: AppRole[];
 }

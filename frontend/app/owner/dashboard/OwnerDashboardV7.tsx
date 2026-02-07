@@ -11,6 +11,10 @@ import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { CityInput } from '@/shared/components/CityInput'
+import { UpgradeModal } from '@/components/upgradeModal/UpgradeModal'
+import type { UserPlan } from '@/shared/contracts/api'
+import { PlanBadge } from '@/components/planBadge/PlanBadge'
+import { LockedFeatureCard } from '@/components/paywall/LockedFeatureCard'
 
 type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' | 'profile'
 
@@ -30,10 +34,14 @@ export function OwnerDashboardV7() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
   const [editingListing, setEditingListing] = useState<any | null>(null)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [upgradeReason, setUpgradeReason] = useState<"limit" | "analytics" | "ai" | "general">("general")
   const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.tariff ?? 'free'
-  const isPaidTariff = tariff === 'landlord_basic' || tariff === 'landlord_pro'
-  const canUsePaid = isLandlord && isPaidTariff
+
+  const plan: UserPlan = (user?.plan as UserPlan | undefined) ?? (tariff === 'landlord_pro' ? 'AGENCY' : tariff === 'landlord_basic' ? 'PRO' : 'FREE')
+  const listingLimit = user?.listingLimit ?? (plan === 'AGENCY' ? 10 : plan === 'PRO' ? 5 : 1)
+  const isFreePlan = plan === 'FREE'
 
   useEffect(() => {
     const tab = searchParams.get('tab') as DashboardTab | null
@@ -77,15 +85,19 @@ export function OwnerDashboardV7() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {!isPaidTariff && (
+        {isFreePlan && (
           <div className="mb-6 rounded-[16px] border border-violet-100 bg-violet-50 px-5 py-4 text-[14px] text-violet-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <span>Для размещения объявлений нужен тариф Landlord.</span>
-            <Link
-              href="/pricing?reason=host"
+            <div className="flex items-center gap-3">
+              <PlanBadge plan={plan} />
+              <span>Ваш тариф: {plan}. Лимит объявлений: {listingLimit}.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setUpgradeReason("general"); setUpgradeOpen(true); }}
               className="inline-flex items-center justify-center px-4 py-2 rounded-[10px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500"
             >
-              Перейти к тарифам
-            </Link>
+              Улучшить тариф
+            </button>
           </div>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -113,7 +125,7 @@ export function OwnerDashboardV7() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                  ), requiresPaid: true },
+                  ) },
                   { id: 'bookings' as DashboardTab, label: 'Бронирования', icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -128,29 +140,41 @@ export function OwnerDashboardV7() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                  ), requiresPaid: true },
+                  ), lockable: true },
                   { id: 'profile' as DashboardTab, label: 'Профиль', icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   )},
-                ].filter((tab) => (tab as { requiresPaid?: boolean }).requiresPaid ? canUsePaid : true).map(tab => (
+                ].map(tab => {
+                  const isLocked = tab.id === "analytics" && isFreePlan;
+                  return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      if (isLocked) {
+                        setUpgradeReason(tab.id === 'analytics' ? "analytics" : "general");
+                        setUpgradeOpen(true);
+                        return;
+                      }
+                      setActiveTab(tab.id)
+                    }}
                     className={cn(
                       'w-full text-left px-4 py-3 rounded-[12px]',
                       'text-[14px] font-medium transition-all',
                       'flex items-center gap-2',
                       activeTab === tab.id
                         ? 'bg-violet-600 text-white'
-                        : 'text-[#6B7280] hover:bg-gray-100'
+                        : 'text-[#6B7280] hover:bg-gray-100',
+                      isLocked && 'opacity-80'
                     )}
                   >
                     {tab.icon}
                     {tab.label}
+                    {isLocked && <span className="ml-auto text-[12px] font-semibold">🔒 PRO</span>}
                   </button>
-                ))}
+                  )
+                })}
               </nav>
             </div>
           </aside>
@@ -169,10 +193,12 @@ export function OwnerDashboardV7() {
                   setEditingListing(listing)
                   setActiveTab('add')
                 }}
-                canCreate={canUsePaid}
+                plan={plan}
+                listingLimit={listingLimit}
+                onUpgrade={(reason) => { setUpgradeReason(reason); setUpgradeOpen(true); }}
               />
             )}
-            {activeTab === 'add' && (canUsePaid ? (
+            {activeTab === 'add' && (
               <AddListingTab
                 onSuccess={() => {
                   setEditingListing(null)
@@ -183,17 +209,32 @@ export function OwnerDashboardV7() {
                   setActiveTab('listings')
                 }}
                 initialListing={editingListing}
+                onLimitReached={() => { setUpgradeReason("limit"); setUpgradeOpen(true); }}
               />
-            ) : (
-              <PaidFeatureNotice />
-            ))}
+            )}
             {activeTab === 'bookings' && <BookingsTab />}
             {activeTab === 'messages' && <MessagesTab />}
-            {activeTab === 'analytics' && (canUsePaid ? <AnalyticsTab /> : <PaidFeatureNotice />)}
+            {activeTab === 'analytics' && (
+              isFreePlan ? (
+                <LockedFeatureCard
+                  title="Подробная аналитика"
+                  description="Графики просмотров, источники трафика и статистика по дням доступны на PRO."
+                  ctaHref="/pricing?reason=analytics"
+                />
+              ) : (
+                <AnalyticsTab />
+              )
+            )}
             {activeTab === 'profile' && <ProfileTab />}
           </div>
         </div>
       </div>
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        currentPlan={plan}
+        reason={upgradeReason}
+      />
     </div>
   )
 }
@@ -204,11 +245,15 @@ export function OwnerDashboardV7() {
 function MyListingsTab({
   onAdd,
   onEdit,
-  canCreate,
+  plan,
+  listingLimit,
+  onUpgrade,
 }: {
   onAdd: () => void;
   onEdit: (listing: any) => void;
-  canCreate: boolean;
+  plan: UserPlan;
+  listingLimit: number;
+  onUpgrade: (reason: "limit" | "analytics" | "ai" | "general") => void;
 }) {
   const queryClient = useQueryClient()
   const { data, isLoading } = useFetch<{ items: any[] }>(
@@ -217,6 +262,8 @@ function MyListingsTab({
   )
 
   const listings = data?.items || []
+  const used = listings.length
+  const canCreate = used < listingLimit
 
   return (
     <div className="space-y-6">
@@ -224,16 +271,34 @@ function MyListingsTab({
         <h1 className="text-[24px] font-bold text-[#1C1F26]">Мои объявления</h1>
         <button
           type="button"
-          onClick={canCreate ? onAdd : undefined}
-          disabled={!canCreate}
+          onClick={canCreate ? onAdd : () => onUpgrade("limit")}
           className={cn(
             'px-5 py-2.5 rounded-[14px]',
-            canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+            canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
             'font-semibold text-[14px] transition-colors'
           )}
         >
-          + Добавить объявление
+          {canCreate ? '+ Добавить объявление' : '➕ Добавить объявление 🔒'}
         </button>
+      </div>
+
+      <div className="flex items-center justify-between rounded-[16px] border border-gray-100/80 bg-white px-5 py-4 shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center gap-3">
+          <PlanBadge plan={plan} />
+          <div className="text-[13px] text-[#6B7280]">
+            Использовано <span className="font-semibold text-[#1C1F26]">{used}</span> из{" "}
+            <span className="font-semibold text-[#1C1F26]">{listingLimit}</span> объявлений
+          </div>
+        </div>
+        {plan === "FREE" && (
+          <button
+            type="button"
+            onClick={() => onUpgrade("general")}
+            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
+          >
+            Улучшить тариф
+          </button>
+        )}
       </div>
 
       {!canCreate && (
@@ -243,14 +308,15 @@ function MyListingsTab({
           'shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
         )}>
           <p className="text-[14px] text-[#6B7280] mb-3">
-            Размещение доступно только на платном тарифе.
+            У вас бесплатный тариф. Вы уже разместили {used} объявление.
           </p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
+          <button
+            type="button"
+            onClick={() => onUpgrade("limit")}
+            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
           >
-            Посмотреть тарифы
-          </Link>
+            Перейти на тариф
+          </button>
         </div>
       )}
 
@@ -355,7 +421,13 @@ function MyListingsTab({
                       <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <span className="text-[13px] text-[#6B7280]">{listing.bookings?.length || 0} бронирований</span>
+                      <span className="text-[13px] text-[#6B7280]">{listing.bookingsCount ?? listing.bookings?.length ?? 0} бронирований</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-[13px] text-[#6B7280]">{listing.favoritesCount ?? 0} в избранном</span>
                     </div>
                     {listing.aiScore && (
                       <div className="flex items-center gap-1.5">
@@ -366,6 +438,37 @@ function MyListingsTab({
                       </div>
                     )}
                   </div>
+
+                  {plan === "FREE" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                      <div className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold text-[13px] text-[#1C1F26]">📊 Подробная аналитика</div>
+                          <button
+                            type="button"
+                            onClick={() => onUpgrade("analytics")}
+                            className="text-[12px] font-semibold text-violet-700 hover:text-violet-800"
+                          >
+                            🔒 PRO
+                          </button>
+                        </div>
+                        <div className="mt-1 text-[12px] text-[#6B7280]">Графики, источники трафика, статистика по дням</div>
+                      </div>
+                      <div className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold text-[13px] text-[#1C1F26]">🤖 AI‑анализ цены</div>
+                          <button
+                            type="button"
+                            onClick={() => onUpgrade("ai")}
+                            className="text-[12px] font-semibold text-violet-700 hover:text-violet-800"
+                          >
+                            🔒 PRO
+                          </button>
+                        </div>
+                        <div className="mt-1 text-[12px] text-[#6B7280]">Рекомендации цены и рисков по объявлению</div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Статус и действия */}
                   <div className="flex items-center gap-3">
@@ -435,10 +538,12 @@ function AddListingTab({
   onSuccess,
   onCancel,
   initialListing,
+  onLimitReached,
 }: {
   onSuccess?: () => void;
   onCancel?: () => void;
   initialListing?: any | null;
+  onLimitReached?: () => void;
 }) {
   const queryClient = useQueryClient()
   const isEdit = Boolean(initialListing?.id)
@@ -659,10 +764,15 @@ function AddListingTab({
       if (onSuccess) {
         onSuccess()
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Ошибка при сохранении объявления'
-      setError(message)
+    } catch (err: any) {
+      if (err?.code === "LIMIT_REACHED") {
+        onLimitReached?.()
+        setError(err?.message ?? 'Лимит объявлений исчерпан')
+      } else {
+        const message =
+          err instanceof Error ? err.message : 'Ошибка при сохранении объявления'
+        setError(message)
+      }
       // eslint-disable-next-line no-console
       console.error('Create listing error:', err)
     } finally {
@@ -1070,6 +1180,10 @@ function ProfileTab() {
   const tariff = user?.tariff ?? 'free'
   const tariffLabel =
     tariff === 'landlord_basic' ? 'Basic' : tariff === 'landlord_pro' ? 'Pro' : 'Free'
+  const plan: UserPlan = (user?.plan as UserPlan | undefined) ?? (tariff === 'landlord_pro' ? 'AGENCY' : tariff === 'landlord_basic' ? 'PRO' : 'FREE')
+  const listingLimit = user?.listingLimit ?? (plan === 'AGENCY' ? 10 : plan === 'PRO' ? 5 : 1)
+  const { data: mine } = useFetch<{ items: any[] }>(['owner-listings-profile'], '/api/listings/my')
+  const used = mine?.items?.length ?? 0
   const [formData, setFormData] = useState({
     fullName: user?.full_name || '',
     email: user?.email || '',
@@ -1115,6 +1229,30 @@ function ProfileTab() {
   return (
     <div className="space-y-6">
       <h1 className="text-[24px] font-bold text-[#1C1F26]">Профиль</h1>
+      <div className="rounded-[18px] border border-gray-100/80 bg-white p-6 shadow-[0_6px_24px_rgba(0,0,0,0.08)]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <PlanBadge plan={plan} />
+              <div className="text-[14px] font-bold text-[#1C1F26]">Ваш тариф: {plan}</div>
+            </div>
+            <div className="mt-1 text-[13px] text-[#6B7280]">
+              {used} из {listingLimit} объявлений использовано
+            </div>
+            <div className="mt-2 text-[13px] text-[#6B7280]">
+              Перейти на PRO: до 5 объявлений • аналитика • продвижение
+            </div>
+          </div>
+          {plan === "FREE" && (
+            <Link
+              href="/pricing?reason=profile_upsell"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
+            >
+              Улучшить тариф
+            </Link>
+          )}
+        </div>
+      </div>
       <div className={cn(
         'bg-white rounded-[18px] p-6',
         'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',

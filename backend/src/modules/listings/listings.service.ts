@@ -8,6 +8,7 @@ import { AiPricingService } from "../ai-orchestrator/services/ai-pricing.service
 import { AiQualityService } from "../ai-orchestrator/services/ai-quality.service";
 import { AiRiskService } from "../ai-orchestrator/services/ai-risk.service";
 import { ListingsPhotosService } from "./listings-photos.service";
+import { planFromLegacyTariff } from "../auth/plan";
 
 // Helper to convert DTO JSON fields to Prisma-compatible InputJsonValue
 function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
@@ -59,12 +60,22 @@ export class ListingsService {
       where: { ownerId },
       orderBy: { createdAt: "desc" },
       include: {
-        photos: { orderBy: { sortOrder: "asc" } },
-        amenities: { include: { amenity: true } },
+        photos: { orderBy: { sortOrder: "asc" }, take: 1 },
         aiScores: true,
+        _count: {
+          select: {
+            bookings: true,
+            favoritedBy: true,
+          },
+        },
       },
     });
-    return { items, total: items.length };
+    const enriched = items.map((x: any) => ({
+      ...x,
+      bookingsCount: x?._count?.bookings ?? 0,
+      favoritesCount: x?._count?.favoritedBy ?? 0,
+    }));
+    return { items: enriched, total: enriched.length };
   }
 
   async getById(id: string, view?: { sessionId?: string; userId?: string }) {
@@ -132,10 +143,40 @@ export class ListingsService {
     ]);
   }
 
-  async create(ownerId: string, dto: CreateListingDto, email?: string) {
+  async create(ownerId: string, dto: CreateListingDto, email?: string, legacyTariff?: string | null) {
     // Ensure Neon User exists for FK (ownerId = Supabase ID)
     await this.neonUser.ensureUserExists(ownerId, email);
     this.logger.debug(`Creating listing for owner: ${ownerId}`);
+
+    // Sync plan/limit from legacy tariff (compat) before enforcing limits
+    if (legacyTariff != null) {
+      const derived = planFromLegacyTariff(legacyTariff);
+      await this.prisma.user.update({
+        where: { id: ownerId },
+        data: { plan: derived.plan, listingLimit: derived.listingLimit },
+      }).catch(() => undefined);
+    }
+
+    const userRow = await this.prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { plan: true, listingLimit: true },
+    });
+    const limit = userRow?.listingLimit ?? 1;
+    const used = await this.prisma.listing.count({
+      where: {
+        ownerId,
+        status: { not: ListingStatus.ARCHIVED },
+      },
+    });
+    if (used >= limit) {
+      throw new ForbiddenException({
+        code: "LIMIT_REACHED",
+        message: "Лимит объявлений на вашем тарифе исчерпан",
+        plan: userRow?.plan ?? "FREE",
+        used,
+        limit,
+      });
+    }
 
     const listing = await this.prisma.listing.create({
       data: {

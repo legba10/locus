@@ -128,16 +128,24 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
     }
     
     let serverMsg: string | undefined;
+    let serverCode: string | undefined;
+    let serverPayload: any = undefined;
     try {
       const json = text ? JSON.parse(text) : {};
+      serverPayload = json;
       serverMsg = json.message ?? json.error;
+      serverCode = json.code;
     } catch {
       serverMsg = text || undefined;
     }
     
     const msg = getApiErrorMessage(res.status, serverMsg);
     console.error("[API] Error:", path, res.status, msg);
-    throw new Error(msg);
+    const err: any = new Error(msg);
+    err.status = res.status;
+    if (serverCode) err.code = serverCode;
+    if (serverPayload) err.payload = serverPayload;
+    throw err;
   }
 
   const contentType = res.headers.get("content-type");

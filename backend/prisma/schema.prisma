@@ -23,6 +23,12 @@ enum UserRoleEnum {
   ADMIN
 }
 
+enum UserPlan {
+  FREE
+  PRO
+  AGENCY
+}
+
 model User {
   id           String      @id @default(uuid())
   email        String?     @unique
@@ -36,6 +42,11 @@ model User {
   supabaseId   String?     @unique
   /// Упрощённая прикладная роль (для быстрого доступа)
   appRole      UserRoleEnum @default(USER)
+
+  /// Tariff plan for business logic (listing limits, analytics gates, etc.)
+  plan         UserPlan     @default(FREE)
+  /// Denormalized limit for faster checks (keep in sync with plan)
+  listingLimit Int          @default(1)
 
   profile      Profile?
   roles        UserRole[]

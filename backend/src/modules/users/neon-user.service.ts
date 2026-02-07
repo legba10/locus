@@ -43,6 +43,7 @@ export class NeonUserService {
           id: supabaseId, // Use Supabase ID as Neon ID
           supabaseId,
           email: email ?? null,
+          // default plan = FREE, default listingLimit = 1 (schema defaults)
         },
         select: { id: true },
       });
