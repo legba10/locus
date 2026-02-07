@@ -4,11 +4,14 @@ import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
+import { useQueryClient } from '@tanstack/react-query'
 import { formatPrice } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
 import { BookingButton } from './BookingButton'
 import { scoring, marketPriceCompare, type Listing, type UserParams } from '@/domains/ai/ai-engine'
 import { ListingCardLight } from './ListingCardLight'
+import { ReviewForm } from '@/domains/reviews/ReviewForm'
+import { metricLabelByKey } from '@/shared/reviews/metricsPool'
 
 interface ListingPageV7Props {
   id: string
@@ -101,6 +104,7 @@ interface ListingResponse {
  * 9. Похожие предложения
  */
 export function ListingPageV7({ id }: ListingPageV7Props) {
+  const queryClient = useQueryClient()
   const [activeImage, setActiveImage] = useState(0)
   const [isGalleryOpen, setIsGalleryOpen] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
@@ -126,6 +130,16 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   const { data: similarData } = useFetch<{ items: any[] }>(
     ['similar-listings', id],
     `/api/listings?limit=4&city=${(data?.listing ?? data?.item)?.city || ''}`
+  )
+
+  const { data: reviewAggData, isLoading: isAggLoading } = useFetch<{ items: Array<{ metricKey: string; avgValue: number; count: number }> }>(
+    ['listing-review-metrics', id],
+    `/api/reviews/listing/${encodeURIComponent(id)}/metrics`
+  )
+
+  const { data: reviewsData, isLoading: isReviewsLoading } = useFetch<{ items: Array<{ id: string; rating: number; text?: string | null; createdAt: string }> }>(
+    ['listing-reviews', id],
+    `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`
   )
 
   if (isLoading) {
@@ -656,9 +670,66 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
               </div>
             )}
           </div>
-          
-          <div className="rounded-[12px] bg-gray-50 p-4 text-[14px] text-[#6B7280]">
-            Отзывы появятся после первых бронирований.
+
+          {/* Aggregates */}
+          <div className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
+            <div className="text-[14px] font-semibold text-[#1C1F26]">Метрики по отзывам</div>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(reviewAggData?.items ?? []).slice(0, 6).map((m) => (
+                <div key={m.metricKey} className="rounded-[14px] border border-gray-100 bg-white px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[13px] font-semibold text-[#1C1F26]">{metricLabelByKey(m.metricKey)}</div>
+                    <div className="text-[13px] font-extrabold text-violet-700">{Math.round(m.avgValue)}</div>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full bg-violet-600" style={{ width: `${Math.max(0, Math.min(100, m.avgValue))}%` }} />
+                  </div>
+                  <div className="mt-1 text-[12px] text-[#6B7280]">{m.count} оценок</div>
+                </div>
+              ))}
+              {!isAggLoading && (reviewAggData?.items?.length ?? 0) === 0 && (
+                <div className="sm:col-span-2 lg:col-span-3 text-[13px] text-[#6B7280]">
+                  Пока нет метрик — оставьте первый отзыв.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Reviews list */}
+          <div className="mt-4 space-y-3">
+            {(reviewsData?.items ?? []).map((r) => (
+              <div key={r.id} className="rounded-[16px] border border-gray-100/80 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-500">★</span>
+                    <span className="text-[14px] font-semibold text-[#1C1F26]">{r.rating}/5</span>
+                  </div>
+                  <span className="text-[12px] text-[#9CA3AF]">
+                    {new Date(r.createdAt).toLocaleDateString("ru-RU")}
+                  </span>
+                </div>
+                {r.text && (
+                  <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>
+                )}
+              </div>
+            ))}
+            {!isReviewsLoading && (reviewsData?.items?.length ?? 0) === 0 && (
+              <div className="rounded-[12px] bg-gray-50 p-4 text-[14px] text-[#6B7280]">
+                Отзывов пока нет. Будьте первым.
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <ReviewForm
+              listingId={id}
+              onSubmitted={async () => {
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] }),
+                  queryClient.invalidateQueries({ queryKey: ['listing-review-metrics', id] }),
+                ])
+              }}
+            />
           </div>
         </div>
 

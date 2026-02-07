@@ -244,6 +244,7 @@ model Listing {
 
   bookings     Booking[]
   reviews      Review[]
+  metricAggs   ListingMetricAgg[]
 
   aiScores     AiListingScore?
   aiEmbeddings AiEmbedding[] @relation("ListingEmbeddings")
@@ -415,9 +416,41 @@ model Review {
 
   createdAt DateTime @default(now())
 
+  metrics   ReviewMetric[]
+
+  @@unique([listingId, authorId])
   @@index([listingId, createdAt])
   @@index([authorId])
   @@index([authorId, createdAt])
+}
+
+model ReviewMetric {
+  id        String   @id @default(uuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  metricKey String
+  value     Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, metricKey])
+  @@index([reviewId])
+  @@index([metricKey])
+}
+
+model ListingMetricAgg {
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  metricKey String
+  avgValue  Float   @default(0)
+  count     Int     @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@id([listingId, metricKey])
+  @@index([listingId])
+  @@index([metricKey])
 }
 
 // =========================
