@@ -6,7 +6,7 @@ Goal: After Telegram login user has profile, plan FREE, and can create 1 listing
 - [x] Backend: allow setting role via `PATCH /api/profile` (`role: renter|landlord`)
 - [x] Frontend: role selection modal for Telegram users when `needsRoleSelection`
 - [x] Frontend: show “Разместить объявление” in header if `user.role === landlord`
-- [ ] Build + commit + push
+- [x] Build + commit + push
 
 Status:
 - Backend `me` contract updated + `/me` alias: DONE
