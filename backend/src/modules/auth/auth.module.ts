@@ -1,6 +1,7 @@
 import { Global, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "../prisma/prisma.module";
+import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
 import { TelegramAuthController } from "./telegram.controller";
 import { AuthTelegramController } from "./auth-telegram.controller";
@@ -20,7 +21,7 @@ import { SupabaseAuthService } from "./supabase-auth.service";
  */
 @Global()
 @Module({
-  imports: [ConfigModule, PrismaModule],
+  imports: [ConfigModule, PrismaModule, UsersModule],
   controllers: [AuthController, TelegramAuthController, AuthTelegramController],
   providers: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
   exports: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
