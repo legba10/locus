@@ -5,5 +5,5 @@
 - [x] Backend: ensure Supabase admin client uses service role key (avoid RLS violations)
 - [x] Frontend: remove extra Telegram button; keep bot button styled blue
 - [x] Frontend: add clear “Сдать жильё бесплатно (1 объявление)” entry point
-- [ ] Commit, push
+- [x] Commit, push
 
