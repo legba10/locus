@@ -108,6 +108,6 @@
 | 2 | Чат: модели, API, /messages, /chat/:id, кнопка «Написать» | done |
 | 3 | Уведомления: колокольчик, список, звук; админ-пуш | done (пуш в админке) |
 | 4 | Модерация: /admin/moderation | done |
-| 5 | Платежи: ЮKassa test, webhook | pending |
-| 6 | Админ: Dashboard, Users, Moderation, Bookings, Push, Chats | pending |
-| 7 | Страница объявления: владелец, рейтинг, кнопки, галерея | pending |
+| 5 | Платежи: ЮKassa test, webhook | pending (следующий этап) |
+| 6 | Админ: Dashboard, Users, Moderation, Bookings, Push, Chats | done |
+| 7 | Страница объявления: владелец, рейтинг, кнопки, галерея | done (ListingPageV2) |

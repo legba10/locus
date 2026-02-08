@@ -42,22 +42,25 @@ export class MeController {
     const listingUsed = Number((defaults as any)?.listing_used ?? (profile as any)?.listing_used ?? 0);
     const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? tariff ?? "free");
 
-    const isAdmin =
-      Boolean((profile as any)?.is_admin) ||
-      Boolean((defaults as any)?.is_admin) ||
-      (await this.supabaseAuth.ensureAdminFlag({
-        id: req.user.id,
-        telegram_id: profile?.telegram_id ?? null,
-        is_admin: (profile as any)?.is_admin ?? null,
-      }).catch(() => false));
-
     const derived = planFromLegacyTariff(planRaw);
     const userRow = await this.prisma.user.update({
       where: { id: req.user.id },
       data: { plan: derived.plan, listingLimit: listingLimit || derived.listingLimit },
-      select: { plan: true, listingLimit: true },
+      select: { plan: true, listingLimit: true, appRole: true },
     });
 
+    const profileAdmin =
+      Boolean((profile as any)?.is_admin) ||
+      Boolean((defaults as any)?.is_admin) ||
+      (await this.supabaseAuth.ensureAdminFlag({
+        id: req.user.id,
+        email: email ?? undefined,
+        telegram_id: profile?.telegram_id ?? null,
+        is_admin: (profile as any)?.is_admin ?? null,
+      }).catch(() => false));
+
+    const isAdmin =
+      userRow.appRole === "ADMIN" || userRow.appRole === "ROOT" || profileAdmin;
     const roleOut = isAdmin ? "admin" : role;
     const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
 

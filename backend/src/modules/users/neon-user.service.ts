@@ -1,5 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { ROOT_ADMIN_EMAIL } from "../auth/constants";
+import { UserRoleEnum } from "@prisma/client";
 
 /**
  * NeonUserService — manages minimal User records in Neon for FK purposes
@@ -7,6 +9,7 @@ import { PrismaService } from "../prisma/prisma.service";
  * Architecture:
  * - Auth/Profiles/Roles: Supabase (source of truth)
  * - Neon User: Minimal record ONLY for FK relationships (listings, bookings)
+ * - ROOT ADMIN: email === ROOT_ADMIN_EMAIL always gets appRole ADMIN (hardcoded in backend)
  * 
  * This service ensures a Neon User exists when needed, using
  * Supabase user ID as the Neon User ID for consistency.
@@ -20,26 +23,27 @@ export class NeonUserService {
   /**
    * Ensure a minimal User record exists in Neon for FK purposes.
    * Uses Supabase user ID as the Neon User ID.
-   * 
+   * Root admin (legba086@mail.ru) always gets appRole ADMIN and cannot lose it.
+   *
    * @param supabaseId - Supabase auth.uid()
-   * @param email - User's email (optional, for reference)
+   * @param email - User's email (optional, for reference; used for root admin rule)
    */
   async ensureUserExists(supabaseId: string, email?: string | null): Promise<string> {
-    // SINGLE RULE: Neon User.id == Supabase auth.uid()
-    // Keep a mirrored UUID column for audits/joins.
+    const isRoot = email != null && email.trim().toLowerCase() === ROOT_ADMIN_EMAIL.trim().toLowerCase();
     const upserted = await this.prisma.user.upsert({
       where: { id: supabaseId },
       update: {
         supabaseId,
         supabaseUuid: supabaseId,
-        ...(email ? { email } : {}),
+        ...(email != null ? { email } : {}),
+        ...(isRoot ? { appRole: UserRoleEnum.ADMIN } : {}),
       },
       create: {
         id: supabaseId,
         supabaseId,
         supabaseUuid: supabaseId,
         email: email ?? null,
-        // default plan = FREE, default listingLimit = 1 (schema defaults)
+        appRole: isRoot ? UserRoleEnum.ADMIN : UserRoleEnum.USER,
       },
       select: { id: true },
     }).catch(async (error: any) => {

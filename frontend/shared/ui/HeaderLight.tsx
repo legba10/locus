@@ -6,6 +6,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle, Shield } from 'lucide-react'
+import { NotificationsBell } from './NotificationsBell'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -106,7 +107,8 @@ export function HeaderLight() {
           </nav>
 
           {/* Auth — ТЗ: одна кнопка Войти/Зарегистрироваться; Выйти = Danger */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
+            {authed && <NotificationsBell />}
             {canCreateListing && (
               <Link
                 href={createHref}

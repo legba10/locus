@@ -502,17 +502,25 @@ function MyListingsTab({
 
                 {/* Статус + кнопки — сетка 3 колонки, без скачков */}
                 <div className="flex flex-col gap-2">
+                  {listing.status === 'REJECTED' && (listing.moderationComment || listing.moderation_comment) && (
+                    <div className="rounded-[12px] bg-red-50 border border-red-100 p-3">
+                      <p className="text-[12px] font-semibold text-red-800 mb-0.5">Причина отклонения</p>
+                      <p className="text-[13px] text-red-700">{(listing.moderationComment ?? listing.moderation_comment) || '—'}</p>
+                    </div>
+                  )}
                   <span
                     className={cn(
                       'inline-flex w-fit px-3 py-1 rounded-lg text-[12px] font-medium',
                       listing.status === 'PUBLISHED'
                         ? 'bg-emerald-100 text-emerald-700'
-                        : listing.status === 'PENDING'
+                        : listing.status === 'PENDING_REVIEW' || listing.status === 'PENDING'
                           ? 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-100 text-gray-600'
+                          : listing.status === 'REJECTED'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-gray-100 text-gray-600'
                     )}
                   >
-                    {listing.status === 'PUBLISHED' ? 'Опубликовано' : listing.status === 'PENDING' ? 'На модерации' : 'Скрыто'}
+                    {listing.status === 'PUBLISHED' ? 'Опубликовано' : (listing.status === 'PENDING_REVIEW' || listing.status === 'PENDING') ? 'На модерации' : listing.status === 'REJECTED' ? 'Отклонено' : 'Скрыто'}
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <Link
@@ -524,9 +532,12 @@ function MyListingsTab({
                     <button
                       type="button"
                       onClick={() => onEdit(listing)}
-                      className="px-3 py-2 rounded-[12px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500 transition-colors"
+                      className={cn(
+                        'px-3 py-2 rounded-[12px] text-[13px] font-medium transition-colors',
+                        listing.status === 'REJECTED' ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-violet-600 text-white hover:bg-violet-500'
+                      )}
                     >
-                      Редактировать
+                      {listing.status === 'REJECTED' ? 'Исправить' : 'Редактировать'}
                     </button>
                     <button
                       type="button"

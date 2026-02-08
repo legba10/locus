@@ -24,7 +24,7 @@ export class ChatsService {
         listingId_guestId: { listingId, guestId: userId },
       },
       include: {
-        listing: { select: { id: true, title: true, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+        listing: { include: { photos: { take: 1, orderBy: { sortOrder: "asc" } } } },
         host: { include: { profile: true } },
         guest: { include: { profile: true } },
         messages: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -39,7 +39,7 @@ export class ChatsService {
         guestId: userId,
       },
       include: {
-        listing: { select: { id: true, title: true, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+        listing: { include: { photos: { take: 1, orderBy: { sortOrder: "asc" } } } },
         host: { include: { profile: true } },
         guest: { include: { profile: true } },
         messages: true,
@@ -55,7 +55,7 @@ export class ChatsService {
       orderBy: { updatedAt: "desc" },
       take: limit,
       include: {
-        listing: { select: { id: true, title: true, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+        listing: { include: { photos: { take: 1, orderBy: { sortOrder: "asc" } } } },
         host: { include: { profile: true } },
         guest: { include: { profile: true } },
         messages: { orderBy: { createdAt: "desc" }, take: 1 },

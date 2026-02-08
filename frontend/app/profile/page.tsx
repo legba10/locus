@@ -18,7 +18,10 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState(false)
   const [toast, setToast] = useState(false)
   const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
-  const roleLabel = 'Пользователь'
+  const roleLabel =
+    (user as any)?.role === 'admin' ? 'Администратор'
+    : (user as any)?.role === 'landlord' ? 'Арендодатель'
+    : 'Пользователь'
   const tariffLabel =
     user?.tariff === 'landlord_basic'
       ? 'Landlord Basic'

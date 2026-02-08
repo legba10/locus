@@ -127,6 +127,37 @@ export class AdminService {
   }
 
   /**
+   * Get all bookings (admin)
+   */
+  async getBookings(limit = 50) {
+    return this.prisma.booking.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        listing: { select: { id: true, title: true } },
+        guest: { select: { id: true, email: true } },
+        host: { select: { id: true, email: true } },
+      },
+    });
+  }
+
+  /**
+   * Get all conversations (admin) for support
+   */
+  async getConversations(limit = 50) {
+    return this.prisma.conversation.findMany({
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+      include: {
+        listing: { select: { id: true, title: true } },
+        host: { select: { id: true, email: true } },
+        guest: { select: { id: true, email: true } },
+        _count: { select: { messages: true } },
+      },
+    });
+  }
+
+  /**
    * Get all users
    */
   async getAllUsers(limit = 50) {

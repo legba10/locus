@@ -79,6 +79,18 @@ export class AdminController {
     return this.adminService.getAllUsers(limit ? parseInt(limit, 10) : 50);
   }
 
+  @Get('bookings')
+  @ApiOperation({ summary: 'Get all bookings (admin only)' })
+  async getBookings(@Req() req: any, @Query('limit') limit?: string) {
+    return this.adminService.getBookings(limit ? parseInt(limit, 10) : 50);
+  }
+
+  @Get('chats')
+  @ApiOperation({ summary: 'Get all conversations (admin only)' })
+  async getChats(@Req() req: any, @Query('limit') limit?: string) {
+    return this.adminService.getConversations(limit ? parseInt(limit, 10) : 50);
+  }
+
   @Post('push')
   @ApiOperation({ summary: 'Send notification to all users (admin push)' })
   @ApiBody({ schema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' }, link: { type: 'string' } }, required: ['title'] } })

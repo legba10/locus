@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch } from '@/shared/utils/apiFetch'
 
-type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'push' | 'settings'
+type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'chats' | 'settings'
 
 interface AdminStats {
   users: { total: number }
@@ -38,10 +38,11 @@ interface AdminListing {
 export function AdminDashboardV2() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams?.get('tab') as AdminTab | null
-  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && ['dashboard', 'users', 'listings', 'moderation', 'push', 'settings'].includes(tabFromUrl) ? tabFromUrl : 'dashboard')
+  const tabIds: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
+  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && tabIds.includes(tabFromUrl) ? tabFromUrl : 'dashboard')
 
   useEffect(() => {
-    if (tabFromUrl && tabFromUrl !== activeTab && ['dashboard', 'users', 'listings', 'moderation', 'push', 'settings'].includes(tabFromUrl)) {
+    if (tabFromUrl && tabFromUrl !== activeTab && tabIds.includes(tabFromUrl)) {
       setActiveTab(tabFromUrl)
     }
   }, [tabFromUrl])
@@ -51,7 +52,9 @@ export function AdminDashboardV2() {
     { id: 'users' as AdminTab, label: 'Пользователи', icon: <UsersIcon /> },
     { id: 'listings' as AdminTab, label: 'Объявления', icon: <ListingsIcon /> },
     { id: 'moderation' as AdminTab, label: 'Модерация', icon: <ModerationIcon /> },
+    { id: 'bookings' as AdminTab, label: 'Брони', icon: <BookingsIcon /> },
     { id: 'push' as AdminTab, label: 'Уведомления', icon: <PushIcon /> },
+    { id: 'chats' as AdminTab, label: 'Чаты', icon: <ChatsIcon /> },
     { id: 'settings' as AdminTab, label: 'Настройки', icon: <SettingsIcon /> },
   ]
 
@@ -90,7 +93,9 @@ export function AdminDashboardV2() {
             {activeTab === 'users' && <UsersTab />}
             {activeTab === 'listings' && <ListingsTab />}
             {activeTab === 'moderation' && <ModerationTab />}
+            {activeTab === 'bookings' && <BookingsTab />}
             {activeTab === 'push' && <PushTab />}
+            {activeTab === 'chats' && <ChatsTab />}
             {activeTab === 'settings' && <SettingsTab />}
           </div>
         </div>
@@ -439,6 +444,113 @@ function ModerationTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// БРОНИ — список бронирований
+// ═══════════════════════════════════════════════════════════════
+interface AdminBooking {
+  id: string
+  listingId: string
+  guestId: string
+  hostId: string
+  checkIn: string
+  checkOut: string
+  totalPrice: number
+  status: string
+  createdAt: string
+  listing?: { id: string; title: string }
+  guest?: { id: string; email: string | null }
+  host?: { id: string; email: string | null }
+}
+
+function BookingsTab() {
+  const [list, setList] = useState<AdminBooking[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    apiFetch<AdminBooking[]>('/admin/bookings')
+      .then((data) => setList(Array.isArray(data) ? data : []))
+      .catch(() => setList([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div className="py-8 text-[#6B7280]">Загрузка...</div>
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-[20px] font-bold text-[#1C1F26]">Брони ({list.length})</h2>
+      {list.length === 0 ? (
+        <p className="text-[#6B7280]">Пока нет бронирований.</p>
+      ) : (
+        <div className="space-y-2">
+          {list.map((b) => (
+            <div key={b.id} className="p-4 rounded-[14px] bg-gray-50 border border-gray-100">
+              <p className="font-medium text-[#1C1F26]">{b.listing?.title ?? b.listingId}</p>
+              <p className="text-[13px] text-[#6B7280]">
+                Гость: {b.guest?.email ?? b.guestId} • Хост: {b.host?.email ?? b.hostId}
+              </p>
+              <p className="text-[12px] text-[#6B7280]">
+                {new Date(b.checkIn).toLocaleDateString('ru')} – {new Date(b.checkOut).toLocaleDateString('ru')} • {formatPrice(b.totalPrice)} • {b.status}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ЧАТЫ — список диалогов для модератора
+// ═══════════════════════════════════════════════════════════════
+interface AdminChat {
+  id: string
+  listingId: string
+  hostId: string
+  guestId: string
+  updatedAt: string
+  listing?: { id: string; title: string }
+  host?: { id: string; email: string | null }
+  guest?: { id: string; email: string | null }
+  _count?: { messages: number }
+}
+
+function ChatsTab() {
+  const [list, setList] = useState<AdminChat[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    apiFetch<AdminChat[]>('/admin/chats')
+      .then((data) => setList(Array.isArray(data) ? data : []))
+      .catch(() => setList([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div className="py-8 text-[#6B7280]">Загрузка...</div>
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-[20px] font-bold text-[#1C1F26]">Чаты ({list.length})</h2>
+      {list.length === 0 ? (
+        <p className="text-[#6B7280]">Пока нет диалогов.</p>
+      ) : (
+        <div className="space-y-2">
+          {list.map((c) => (
+            <div key={c.id} className="p-4 rounded-[14px] bg-gray-50 border border-gray-100">
+              <p className="font-medium text-[#1C1F26]">{c.listing?.title ?? c.listingId}</p>
+              <p className="text-[13px] text-[#6B7280]">
+                Хост: {c.host?.email ?? c.hostId} • Гость: {c.guest?.email ?? c.guestId}
+              </p>
+              <p className="text-[12px] text-[#6B7280]">
+                Обновлён: {new Date(c.updatedAt).toLocaleString('ru')} • Сообщений: {c._count?.messages ?? 0}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // НАСТРОЙКИ
 // ═══════════════════════════════════════════════════════════════
 function SettingsTab() {
@@ -602,10 +714,26 @@ function ModerationIcon() {
   )
 }
 
+function BookingsIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
 function PushIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  )
+}
+
+function ChatsIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
     </svg>
   )
 }

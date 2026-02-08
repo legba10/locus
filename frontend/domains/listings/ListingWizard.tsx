@@ -8,7 +8,7 @@ import { CityInput } from "@/shared/components/CityInput";
 import { useAuthStore } from "@/domains/auth";
 import { useQueryClient } from "@tanstack/react-query";
 
-type WizardStep = 0 | 1 | 2 | 3 | 4 | 5;
+type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 type ExistingPhoto = { id: string; url: string };
 
@@ -19,50 +19,49 @@ type NewPhoto = {
 };
 
 type WizardData = {
-  // Photos
   newPhotos: NewPhoto[];
   existingPhotos: ExistingPhoto[];
+  coverPhotoIndex: number; // index in combined list (new then existing)
 
-  // Main
   title: string;
   description: string;
   type: "apartment" | "room" | "house" | "studio";
   city: string;
+  addressLine: string;
 
-  // Details
   rooms: string;
   area: string;
   floor: string;
   totalFloors: string;
 
-  // Amenities
   amenityKeys: string[];
 
-  // Price
   price: string;
   deposit: string;
   negotiable: boolean;
 };
 
-const AMENITIES: Array<{ key: string; label: string }> = [
-  { key: "wifi", label: "Wi‑Fi" },
-  { key: "washer", label: "Стиралка" },
-  { key: "air_conditioner", label: "Кондиционер" },
-  { key: "balcony", label: "Балкон" },
-  { key: "parking", label: "Парковка" },
-  { key: "elevator", label: "Лифт" },
-  { key: "furniture", label: "Мебель" },
-  { key: "pets_allowed", label: "Животные" },
+// Удобства по категориям (чипы, как в ТЗ)
+const AMENITIES_BY_CATEGORY: Array<{ category: string; items: Array<{ key: string; label: string }> }> = [
+  { category: "Кухня", items: [{ key: "stove", label: "Плита" }, { key: "microwave", label: "Микроволновка" }, { key: "dishwasher", label: "Посудомойка" }, { key: "fridge", label: "Холодильник" }] },
+  { category: "Техника", items: [{ key: "washer", label: "Стиральная машина" }, { key: "tv", label: "ТВ" }, { key: "air_conditioner", label: "Кондиционер" }] },
+  { category: "Интернет и связь", items: [{ key: "wifi", label: "Wi‑Fi" }] },
+  { category: "Комфорт", items: [{ key: "balcony", label: "Балкон" }, { key: "elevator", label: "Лифт" }, { key: "parking", label: "Парковка" }, { key: "furniture", label: "Мебель" }] },
+  { category: "Правила", items: [{ key: "pets_allowed", label: "Животные" }] },
 ];
+
+const AMENITIES_FLAT = AMENITIES_BY_CATEGORY.flatMap((c) => c.items);
 
 function defaultData(): WizardData {
   return {
     newPhotos: [],
     existingPhotos: [],
+    coverPhotoIndex: 0,
     title: "",
     description: "",
     type: "apartment",
     city: "",
+    addressLine: "",
     rooms: "",
     area: "",
     floor: "",
@@ -82,34 +81,30 @@ function uuid(): string {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function stepLabel(step: WizardStep): string {
-  switch (step) {
-    case 0:
-      return "Фото";
-    case 1:
-      return "Основное";
-    case 2:
-      return "Характеристики";
-    case 3:
-      return "Удобства";
-    case 4:
-      return "Цена";
-    case 5:
-      return "Превью";
+function stepLabel(step: WizardStep, isEdit: boolean): string {
+  if (isEdit) {
+    const labels: Record<number, string> = { 1: "Фото", 2: "Город и цена", 3: "Основное", 4: "Удобства", 5: "Описание", 6: "Цена", 7: "Превью" };
+    return labels[step] ?? "";
   }
+  const labels: Record<number, string> = { 0: "Старт", 1: "Фото", 2: "Город и цена", 3: "Основное", 4: "Удобства", 5: "Описание", 6: "Цена", 7: "Превью" };
+  return labels[step] ?? "";
 }
 
-function validateStep(step: WizardStep, d: WizardData): string | null {
-  if (step === 0) {
-    const count = d.newPhotos.length + d.existingPhotos.length;
-    if (count === 0) return "Добавьте хотя бы одно фото";
-  }
+function validateStep(step: WizardStep, d: WizardData, isEdit: boolean): string | null {
+  const photoCount = d.newPhotos.length + d.existingPhotos.length;
   if (step === 1) {
+    if (photoCount < 5) return "Добавьте минимум 5 фото (комната и санузел обязательны)";
+  }
+  if (step === 2) {
+    if (!d.city.trim()) return "Выберите город";
+    const p = Number(d.price);
+    if (!d.price.trim() || Number.isNaN(p) || p <= 0) return "Укажите цену";
+  }
+  if (step === 5) {
     if (!d.title.trim()) return "Введите название";
     if (!d.description.trim()) return "Добавьте описание";
-    if (!d.city.trim()) return "Выберите город";
   }
-  if (step === 4) {
+  if (step === 6) {
     const p = Number(d.price);
     if (!d.price.trim() || Number.isNaN(p) || p <= 0) return "Укажите цену";
   }
@@ -151,11 +146,11 @@ export function ListingWizard({
     }
   }, [step]);
 
-  // Autosave (text-only fields) to localStorage
+  // Autosave каждые 1–2 сек (Create Listing v3)
   const saveTimer = useRef<number | null>(null);
   useEffect(() => {
     if (!userId) return;
-    if (isEdit) return; // no autosave for edit
+    if (isEdit) return;
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
       try {
@@ -164,6 +159,7 @@ export function ListingWizard({
           description: data.description,
           type: data.type,
           city: data.city,
+          addressLine: data.addressLine,
           rooms: data.rooms,
           area: data.area,
           floor: data.floor,
@@ -172,17 +168,18 @@ export function ListingWizard({
           price: data.price,
           deposit: data.deposit,
           negotiable: data.negotiable,
+          coverPhotoIndex: data.coverPhotoIndex,
         };
         window.localStorage.setItem(draftKey(userId), JSON.stringify(payload));
       } catch {
         /* ignore */
       }
-    }, 450);
+    }, 1500);
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, isEdit, data.title, data.description, data.type, data.city, data.rooms, data.area, data.floor, data.totalFloors, data.amenityKeys, data.price, data.deposit, data.negotiable]);
+  }, [userId, isEdit, data.title, data.description, data.type, data.city, data.addressLine, data.rooms, data.area, data.floor, data.totalFloors, data.amenityKeys, data.price, data.deposit, data.negotiable, data.coverPhotoIndex]);
 
   // Load draft on first open (create only)
   useEffect(() => {
@@ -198,6 +195,7 @@ export function ListingWizard({
         description: parsed.description ?? prev.description,
         type: (parsed.type as any) ?? prev.type,
         city: parsed.city ?? prev.city,
+        addressLine: parsed.addressLine ?? prev.addressLine,
         rooms: parsed.rooms ?? prev.rooms,
         area: parsed.area ?? prev.area,
         floor: parsed.floor ?? prev.floor,
@@ -206,6 +204,7 @@ export function ListingWizard({
         price: parsed.price ?? prev.price,
         deposit: parsed.deposit ?? prev.deposit,
         negotiable: typeof parsed.negotiable === "boolean" ? parsed.negotiable : prev.negotiable,
+        coverPhotoIndex: typeof parsed.coverPhotoIndex === "number" ? parsed.coverPhotoIndex : prev.coverPhotoIndex,
       }));
     } catch {
       /* ignore */
@@ -223,16 +222,18 @@ export function ListingWizard({
       return;
     }
     const houseRules = initialListing.houseRules || {};
-    setStep(0);
+    setStep(1); // edit: start at Photos
     setError(null);
     setData({
       newPhotos: [],
       existingPhotos: Array.isArray(initialListing.photos)
         ? initialListing.photos.map((p: any) => ({ id: p.id, url: p.url }))
         : [],
+      coverPhotoIndex: 0,
       title: initialListing.title ?? "",
       description: initialListing.description ?? "",
       city: initialListing.city ?? "",
+      addressLine: initialListing.addressLine ?? "",
       price: String(initialListing.basePrice ?? ""),
       rooms: String(initialListing.bedrooms ?? ""),
       area: String(houseRules.area ?? ""),
@@ -260,8 +261,10 @@ export function ListingWizard({
     };
   }, [data.newPhotos]);
 
-  const progressPct = useMemo(() => Math.round(((step + 1) / 6) * 100), [step]);
-  const stepError = validateStep(step, data);
+  const totalSteps = isEdit ? 7 : 8;
+  const currentStepIndex = isEdit ? step : step + 1;
+  const progressPct = useMemo(() => Math.round((currentStepIndex / totalSteps) * 100), [currentStepIndex, totalSteps]);
+  const stepError = validateStep(step, data, isEdit);
 
   const limit = user?.listingLimit ?? 1;
   const used = user?.listingUsed ?? 0;
@@ -303,12 +306,13 @@ export function ListingWizard({
     if (isSubmitting) return;
     setError(null);
 
-    // Final validation (all steps)
-    const step0 = validateStep(0, data);
-    const step1 = validateStep(1, data);
-    const step4 = validateStep(4, data);
-    if (step0 || step1 || step4) {
-      setError(step0 || step1 || step4);
+    // Final validation (photos, quick, description, price)
+    const v1 = validateStep(1, data, isEdit);
+    const v2 = validateStep(2, data, isEdit);
+    const v5 = validateStep(5, data, isEdit);
+    const v6 = validateStep(6, data, isEdit);
+    if (v1 || v2 || v5 || v6) {
+      setError(v1 || v2 || v5 || v6);
       return;
     }
 
@@ -323,6 +327,7 @@ export function ListingWizard({
         title: data.title.trim(),
         description: data.description.trim(),
         city: data.city.trim(),
+        addressLine: data.addressLine.trim() || undefined,
         basePrice: Number(data.price),
         currency: "RUB",
         capacityGuests: 2,
@@ -365,9 +370,8 @@ export function ListingWizard({
         await apiFetch(`/listings/${encodeURIComponent(String(listingId))}/photos`, { method: "POST", body: form });
       }
 
-      if (!isEdit) {
-        await apiFetch(`/listings/${encodeURIComponent(String(listingId))}/publish`, { method: "POST" });
-      }
+      // Create Listing v3: не вызываем publish — объявление уходит на модерацию (PENDING_REVIEW)
+      // if (!isEdit) { await apiFetch(.../publish...); }
 
       // Clear draft after success
       if (userId && !isEdit) {
@@ -399,18 +403,18 @@ export function ListingWizard({
   }
 
   function next() {
-    const e = validateStep(step, data);
+    const e = validateStep(step, data, isEdit);
     if (e) {
       setError(e);
       return;
     }
     setError(null);
-    setStep((s) => (Math.min(5, (s + 1) as WizardStep) as WizardStep));
+    setStep((s) => (Math.min(7, s + 1) as WizardStep));
   }
 
   function back() {
     setError(null);
-    setStep((s) => (Math.max(0, (s - 1) as WizardStep) as WizardStep));
+    setStep((s) => (Math.max(isEdit ? 1 : 0, s - 1) as WizardStep));
   }
 
   return (
@@ -419,7 +423,7 @@ export function ListingWizard({
         <div>
           <h1 className="text-[24px] font-bold text-[#1C1F26]">{isEdit ? "Редактировать объявление" : "Добавить объявление"}</h1>
           <p className="mt-1 text-[13px] text-[#6B7280]">
-            Шаг {step + 1}/6 • {stepLabel(step)}
+            Шаг {currentStepIndex}/{totalSteps} • {stepLabel(step, isEdit)}
           </p>
         </div>
         {onCancel && (
@@ -445,18 +449,93 @@ export function ListingWizard({
           "border border-gray-100/80"
         )}
       >
-        {step === 0 && (
-          <PhotoStep
+        {/* Шаг 0: Старт (только при создании) */}
+        {step === 0 && !isEdit && (
+          <StartStep onQuickPhotos={() => setStep(1)} onFromScratch={() => setStep(1)} />
+        )}
+
+        {step === 1 && (
+          <PhotoStepGrid
             newPhotos={data.newPhotos}
             existingPhotos={data.existingPhotos}
+            coverPhotoIndex={data.coverPhotoIndex}
             onAddFiles={addFiles}
             onRemoveNew={(id) => setData((p) => ({ ...p, newPhotos: p.newPhotos.filter((x) => x.id !== id) }))}
             onRemoveExisting={removeExistingPhoto}
             onReorder={reorderNew}
+            onSetCover={(idx) => setData((p) => ({ ...p, coverPhotoIndex: idx }))}
           />
         )}
 
-        {step === 1 && (
+        {step === 2 && (
+          <div className="space-y-5">
+            <Field label="Город">
+              <CityInput value={data.city} onChange={(v: string) => setData((p) => ({ ...p, city: v }))} />
+            </Field>
+            <Field label="Тип жилья">
+              <div className="flex flex-wrap gap-2">
+                {(["apartment", "room", "house", "studio"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setData((p) => ({ ...p, type: t }))}
+                    className={cn(
+                      "rounded-[14px] border px-4 py-2.5 text-[13px] font-semibold transition-colors",
+                      data.type === t ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
+                    )}
+                  >
+                    {humanType(t)}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Field label="Цена (₽/мес)">
+              <input
+                value={data.price}
+                onChange={(e) => setData((p) => ({ ...p, price: e.target.value }))}
+                className={inputCls}
+                inputMode="numeric"
+                placeholder="30000"
+              />
+            </Field>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <Field label="Адрес (необязательно)">
+              <input
+                value={data.addressLine}
+                onChange={(e) => setData((p) => ({ ...p, addressLine: e.target.value }))}
+                className={inputCls}
+                placeholder="Улица, дом"
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Комнаты">
+                <input value={data.rooms} onChange={(e) => setData((p) => ({ ...p, rooms: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="2" />
+              </Field>
+              <Field label="Площадь (м²)">
+                <input value={data.area} onChange={(e) => setData((p) => ({ ...p, area: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="50" />
+              </Field>
+              <Field label="Этаж">
+                <input value={data.floor} onChange={(e) => setData((p) => ({ ...p, floor: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="7" />
+              </Field>
+              <Field label="Этажность">
+                <input value={data.totalFloors} onChange={(e) => setData((p) => ({ ...p, totalFloors: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="16" />
+              </Field>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <AmenitiesStepChips
+            amenityKeys={data.amenityKeys}
+            onChange={(amenityKeys) => setData((p) => ({ ...p, amenityKeys }))}
+          />
+        )}
+
+        {step === 5 && (
           <div className="space-y-5">
             <Field label="Название">
               <input
@@ -474,72 +553,14 @@ export function ListingWizard({
                 placeholder="Опишите жильё: ремонт, техника, рядом метро, условия…"
               />
             </Field>
-            <Field label="Тип жилья">
-              <select
-                value={data.type}
-                onChange={(e) => setData((p) => ({ ...p, type: e.target.value as any }))}
-                className={inputCls}
-              >
-                <option value="apartment">Квартира</option>
-                <option value="room">Комната</option>
-                <option value="house">Дом</option>
-                <option value="studio">Студия</option>
-              </select>
-            </Field>
-            <Field label="Город">
-              <CityInput value={data.city} onChange={(v: string) => setData((p) => ({ ...p, city: v }))} />
-            </Field>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Комнаты">
-              <input value={data.rooms} onChange={(e) => setData((p) => ({ ...p, rooms: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="2" />
-            </Field>
-            <Field label="Площадь (м²)">
-              <input value={data.area} onChange={(e) => setData((p) => ({ ...p, area: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="50" />
-            </Field>
-            <Field label="Этаж">
-              <input value={data.floor} onChange={(e) => setData((p) => ({ ...p, floor: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="7" />
-            </Field>
-            <Field label="Этажность">
-              <input value={data.totalFloors} onChange={(e) => setData((p) => ({ ...p, totalFloors: e.target.value }))} className={inputCls} inputMode="numeric" placeholder="16" />
-            </Field>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-3">
-            <div className="text-[13px] font-medium text-[#6B7280]">Выберите удобства</div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {AMENITIES.map((a) => {
-                const checked = data.amenityKeys.includes(a.key);
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() =>
-                      setData((p) => ({
-                        ...p,
-                        amenityKeys: checked ? p.amenityKeys.filter((x) => x !== a.key) : [...p.amenityKeys, a.key],
-                      }))
-                    }
-                    className={cn(
-                      "rounded-[14px] border px-3 py-3 text-[13px] font-semibold text-left transition-colors",
-                      checked ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
-                    )}
-                    aria-pressed={checked}
-                  >
-                    {a.label}
-                  </button>
-                );
-              })}
+            <div className="rounded-[14px] border border-violet-100 bg-violet-50/70 p-4">
+              <div className="text-[13px] font-semibold text-violet-700">AI‑описание</div>
+              <div className="mt-1 text-[12px] text-[#6B7280]">Позже здесь можно будет сгенерировать описание одним кликом.</div>
             </div>
           </div>
         )}
 
-        {step === 4 && (
+        {step === 6 && (
           <div className="space-y-5">
             <Field label="Цена (₽/мес)">
               <input
@@ -577,16 +598,26 @@ export function ListingWizard({
             </div>
             <div className="rounded-[14px] border border-violet-100 bg-violet-50/70 p-4">
               <div className="text-[13px] font-semibold text-violet-700">AI‑совет</div>
-              <div className="mt-1 text-[12px] text-[#6B7280]">
-                После публикации мы покажем динамическую рекомендацию по цене и кнопку «применить цену».
-              </div>
+              <div className="mt-1 text-[12px] text-[#6B7280]">После одобрения покажем рекомендацию по цене.</div>
             </div>
           </div>
         )}
 
-        {step === 5 && (
+        {step === 7 && (
           <div className="space-y-4">
-            <div className="text-[14px] font-semibold text-[#1C1F26]">Проверьте данные</div>
+            <div className="text-[14px] font-semibold text-[#1C1F26]">Готово к публикации</div>
+            {(data.newPhotos.length + data.existingPhotos.length) < 5 && (
+              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Добавьте минимум 5 фото для лучшего отклика.</div>
+            )}
+            {!data.title.trim() && (
+              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Заполните название.</div>
+            )}
+            {!data.description.trim() && (
+              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Добавьте описание.</div>
+            )}
+            {(!data.price.trim() || Number.isNaN(Number(data.price)) || Number(data.price) <= 0) && (
+              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Укажите цену.</div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <PreviewItem label="Название" value={data.title || "—"} />
               <PreviewItem label="Город" value={data.city || "—"} />
@@ -601,14 +632,14 @@ export function ListingWizard({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {data.amenityKeys.slice(0, 10).map((k) => (
                     <span key={k} className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-[12px] text-[#4B5563]">
-                      {k.replace(/_/g, " ")}
+                      {AMENITIES_FLAT.find((a) => a.key === k)?.label ?? k.replace(/_/g, " ")}
                     </span>
                   ))}
                 </div>
               </div>
             )}
             <div className="rounded-[14px] bg-gray-50 p-4 text-[13px] text-[#6B7280]">
-              Публикация займёт несколько секунд — загрузим фото и включим объявление.
+              После нажатия объявление отправится на проверку. Публикация — после одобрения модератором.
             </div>
           </div>
         )}
@@ -627,16 +658,16 @@ export function ListingWizard({
           <button
             type="button"
             onClick={back}
-            disabled={step === 0 || isSubmitting}
+            disabled={step === 0 || (isEdit && step === 1) || isSubmitting}
             className={cn(
               "px-4 py-2 rounded-[14px] text-[14px] font-semibold border",
-              step === 0 || isSubmitting ? "border-gray-200 text-gray-400" : "border-gray-200 text-[#1C1F26] hover:bg-gray-50"
+              (step === 0 || (isEdit && step === 1) || isSubmitting) ? "border-gray-200 text-gray-400" : "border-gray-200 text-[#1C1F26] hover:bg-gray-50"
             )}
           >
             Назад
           </button>
           <div className="flex-1" />
-          {step < 5 ? (
+          {step < 7 ? (
             <button
               type="button"
               onClick={next}
@@ -658,7 +689,7 @@ export function ListingWizard({
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
             >
-              {isSubmitting ? "Публикуем…" : isEdit ? "Сохранить" : "Опубликовать"}
+              {isSubmitting ? "Отправляем…" : isEdit ? "Сохранить" : "Отправить на проверку"}
             </button>
           )}
         </div>
@@ -695,23 +726,73 @@ function humanType(t: WizardData["type"]) {
   return "Квартира";
 }
 
-const PhotoStep = ({
+// Create Listing v3: стартовый экран
+function StartStep({ onQuickPhotos, onFromScratch }: { onQuickPhotos: () => void; onFromScratch: () => void }) {
+  return (
+    <div className="py-4">
+      <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-6">Добавить объявление</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={onQuickPhotos}
+          className={cn(
+            "rounded-[18px] border-2 border-dashed border-gray-200 bg-gray-50/80 p-8 text-center transition-colors",
+            "hover:border-violet-300 hover:bg-violet-50/50 hover:border-solid"
+          )}
+        >
+          <span className="text-[32px] mb-3 block">📷</span>
+          <span className="text-[15px] font-semibold text-[#1C1F26]">Быстро добавить фото</span>
+          <p className="mt-2 text-[13px] text-[#6B7280]">Загрузите фото — остальное подскажем</p>
+        </button>
+        <button
+          type="button"
+          onClick={onFromScratch}
+          className={cn(
+            "rounded-[18px] border-2 border-dashed border-gray-200 bg-gray-50/80 p-8 text-center transition-colors",
+            "hover:border-violet-300 hover:bg-violet-50/50 hover:border-solid"
+          )}
+        >
+          <span className="text-[32px] mb-3 block">✍️</span>
+          <span className="text-[15px] font-semibold text-[#1C1F26]">Создать с нуля</span>
+          <p className="mt-2 text-[13px] text-[#6B7280]">Заполним по шагам</p>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Create Listing v3: фото — сетка мини-карточек [ + ] [ + ] …
+const SLOT_SIZE = 88;
+const GRID_COLS = 3;
+
+function PhotoStepGrid({
   newPhotos,
   existingPhotos,
+  coverPhotoIndex,
   onAddFiles,
   onRemoveNew,
   onRemoveExisting,
   onReorder,
+  onSetCover,
 }: {
   newPhotos: NewPhoto[];
   existingPhotos: ExistingPhoto[];
+  coverPhotoIndex: number;
   onAddFiles: (files: File[]) => void;
   onRemoveNew: (id: string) => void;
   onRemoveExisting: (id: string) => void | Promise<void>;
   onReorder: (from: number, to: number) => void;
-}) => {
+  onSetCover: (index: number) => void;
+}) {
   const [dragActive, setDragActive] = useState(false);
   const dragFrom = useRef<number | null>(null);
+  const total = newPhotos.length + existingPhotos.length;
+  const combined = useMemo(() => {
+    const arr: Array<{ type: "new"; id: string; url: string; idx: number } | { type: "existing"; id: string; url: string; idx: number }> = [];
+    newPhotos.forEach((p, i) => arr.push({ type: "new", id: p.id, url: p.previewUrl, idx: i }));
+    existingPhotos.forEach((p, i) => arr.push({ type: "existing", id: p.id, url: p.url, idx: i }));
+    return arr;
+  }, [newPhotos, existingPhotos]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -719,118 +800,142 @@ const PhotoStep = ({
     if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
     if (e.type === "dragleave") setDragActive(false);
   };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    const files = Array.from(e.dataTransfer.files ?? []);
+    const files = Array.from(e.dataTransfer.files ?? []).filter((f) => f.type.startsWith("image/"));
     if (files.length) onAddFiles(files);
   };
 
-  const total = newPhotos.length + existingPhotos.length;
+  const slots = Math.max(6, Math.min(12, total + 3));
+  const placeholders = Array.from({ length: Math.max(0, slots - total) }, (_, i) => i);
 
   return (
     <div className="space-y-4">
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-[13px] font-medium text-[#6B7280]">Фотографии</div>
-          <div className="text-[12px] text-[#94A3B8]">{total}/10</div>
-        </div>
-
-        <div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          className={cn(
-            "border-2 border-dashed rounded-[16px] px-6 py-6 text-center transition-colors",
-            "min-h-[160px] flex items-center justify-center",
-            dragActive ? "border-violet-400 bg-violet-50" : "border-gray-300 bg-gray-50"
-          )}
-        >
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => {
-              const files = e.target.files ? Array.from(e.target.files) : [];
-              if (files.length) onAddFiles(files);
-            }}
-            className="hidden"
-            id="photo-upload-wizard"
-          />
-          <label htmlFor="photo-upload-wizard" className="cursor-pointer select-none">
-            <div className="mx-auto mb-2 h-10 w-10 rounded-[14px] bg-white border border-gray-200 flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/photo.svg" alt="" className="h-5 w-5 opacity-70" onError={(e) => ((e.currentTarget.style.display = "none"))} />
-              <span className="text-gray-400 text-[18px] leading-none">+</span>
-            </div>
-            <div className="text-[14px] font-semibold text-[#1C1F26]">Перетащите фото или выберите файлы</div>
-            <div className="mt-1 text-[12px] text-[#6B7280]">Лучше 5–10 фото, чтобы объявление выглядело живо</div>
-          </label>
-        </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-medium text-[#6B7280]">Фото (минимум 5: комната и санузел)</span>
+        <span className="text-[12px] text-[#94A3B8]">{total}/12</span>
       </div>
-
-      {existingPhotos.length > 0 && (
-        <div>
-          <div className="text-[12px] text-[#6B7280] mb-2">Текущие фото</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {existingPhotos.map((p) => (
-              <div key={p.id} className="relative aspect-square rounded-[14px] overflow-hidden bg-gray-100">
-                <Image src={p.url} alt="" fill className="object-cover" />
-                <button
-                  type="button"
-                  onClick={() => void onRemoveExisting(p.id)}
-                  className="absolute top-2 right-2 rounded-full bg-black/55 text-white w-7 h-7 flex items-center justify-center hover:bg-black/65"
-                  aria-label="Удалить фото"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {newPhotos.length > 0 && (
-        <div>
-          <div className="text-[12px] text-[#6B7280] mb-2">Новые фото (можно перетаскивать для порядка)</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {newPhotos.map((p, idx) => (
-              <div
-                key={p.id}
-                className="relative aspect-square rounded-[14px] overflow-hidden bg-gray-100"
-                draggable
-                onDragStart={() => (dragFrom.current = idx)}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                }}
-                onDrop={() => {
-                  const from = dragFrom.current;
-                  dragFrom.current = null;
-                  if (from == null || from === idx) return;
-                  onReorder(from, idx);
-                }}
+      <div
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        className={cn(
+          "grid gap-2 rounded-[16px] p-2 transition-colors",
+          `grid-cols-${GRID_COLS}`,
+          dragActive && "bg-violet-50"
+        )}
+        style={{ gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))` }}
+      >
+        {combined.map((item, globalIdx) => (
+          <div
+            key={item.type + item.id}
+            className="relative aspect-square rounded-[12px] overflow-hidden bg-gray-100 border border-gray-200"
+            draggable
+            onDragStart={() => (dragFrom.current = globalIdx)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => {
+              const from = dragFrom.current;
+              dragFrom.current = null;
+              if (from == null || from === globalIdx) return;
+              if (from < newPhotos.length && globalIdx < newPhotos.length) onReorder(from, globalIdx);
+            }}
+          >
+            <Image src={item.url} alt="" fill className="object-cover" sizes={`${SLOT_SIZE}px`} />
+            <button
+              type="button"
+              onClick={() => (item.type === "new" ? onRemoveNew(item.id) : void onRemoveExisting(item.id))}
+              className="absolute top-1 right-1 rounded-full bg-black/55 text-white w-6 h-6 flex items-center justify-center hover:bg-black/65 text-[14px] leading-none"
+              aria-label="Удалить"
+            >
+              ×
+            </button>
+            {coverPhotoIndex === globalIdx && (
+              <div className="absolute bottom-1 left-1 rounded bg-violet-600 text-white px-1.5 py-0.5 text-[10px] font-medium">Обложка</div>
+            )}
+            {coverPhotoIndex !== globalIdx && (
+              <button
+                type="button"
+                onClick={() => onSetCover(globalIdx)}
+                className="absolute bottom-1 left-1 rounded bg-black/45 text-white px-1.5 py-0.5 text-[10px] hover:bg-black/55"
               >
-                <Image src={p.previewUrl} alt="" fill className="object-cover" />
+                Сделать обложкой
+              </button>
+            )}
+          </div>
+        ))}
+        {placeholders.map((i) => (
+          <label
+            key={`ph-${i}`}
+            htmlFor="photo-upload-wizard-grid"
+            className={cn(
+              "aspect-square rounded-[12px] border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors",
+              dragActive ? "border-violet-400 bg-violet-50" : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+            )}
+          >
+            <span className="text-[24px] text-gray-400">+</span>
+          </label>
+        ))}
+      </div>
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        id="photo-upload-wizard-grid"
+        className="hidden"
+        onChange={(e) => {
+          const files = e.target.files ? Array.from(e.target.files) : [];
+          if (files.length) onAddFiles(files);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+// Create Listing v3: удобства по категориям, чипы + «Показать всё»
+function AmenitiesStepChips({ amenityKeys, onChange }: { amenityKeys: string[]; onChange: (keys: string[]) => void }) {
+  const [showAll, setShowAll] = useState(false);
+  const toggle = (key: string) => {
+    if (amenityKeys.includes(key)) onChange(amenityKeys.filter((k) => k !== key));
+    else onChange([...amenityKeys, key]);
+  };
+  const categories = showAll ? AMENITIES_BY_CATEGORY : AMENITIES_BY_CATEGORY.slice(0, 3);
+  return (
+    <div className="space-y-4">
+      <div className="text-[13px] font-medium text-[#6B7280]">Удобства — выберите чипами</div>
+      {categories.map(({ category, items }) => (
+        <div key={category}>
+          <div className="text-[12px] text-[#94A3B8] mb-2">{category}</div>
+          <div className="flex flex-wrap gap-2">
+            {items.map((a) => {
+              const checked = amenityKeys.includes(a.key);
+              return (
                 <button
+                  key={a.key}
                   type="button"
-                  onClick={() => onRemoveNew(p.id)}
-                  className="absolute top-2 right-2 rounded-full bg-black/55 text-white w-7 h-7 flex items-center justify-center hover:bg-black/65"
-                  aria-label="Удалить фото"
+                  onClick={() => toggle(a.key)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
+                    checked ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
+                  )}
+                  aria-pressed={checked}
                 >
-                  ×
+                  {a.label}
                 </button>
-                <div className="absolute bottom-2 left-2 rounded-full bg-black/55 text-white px-2 py-0.5 text-[11px]">
-                  {idx + 1}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      ))}
+      {!showAll && AMENITIES_BY_CATEGORY.length > 3 && (
+        <button type="button" onClick={() => setShowAll(true)} className="text-[13px] font-semibold text-violet-600 hover:text-violet-700">
+          Показать всё
+        </button>
       )}
     </div>
   );
-};
+}
 

@@ -1,13 +1,14 @@
 import { Module } from "@nestjs/common";
 import { AiOrchestratorModule } from "../ai-orchestrator/ai-orchestrator.module";
 import { AuthModule } from "../auth/auth.module";
+import { NotificationsModule } from "../notifications/notifications.module";
 import { UsersModule } from "../users/users.module";
 import { ListingsController } from "./listings.controller";
-import { ListingsService } from "./listings.service";
 import { ListingsPhotosService } from "./listings-photos.service";
+import { ListingsService } from "./listings.service";
 
 @Module({
-  imports: [AiOrchestratorModule, AuthModule, UsersModule],
+  imports: [AiOrchestratorModule, AuthModule, UsersModule, NotificationsModule],
   controllers: [ListingsController],
   providers: [ListingsService, ListingsPhotosService],
   exports: [ListingsService, ListingsPhotosService],

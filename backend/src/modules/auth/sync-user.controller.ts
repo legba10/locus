@@ -34,13 +34,7 @@ export class SyncUserController {
     const listingLimit = Number((defaults as any)?.listing_limit ?? (profile as any)?.listing_limit ?? 1);
     const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? (profile as any)?.tariff ?? "free");
 
-    const isAdmin = await this.supabaseAuth.ensureAdminFlag({
-      id: userId,
-      telegram_id: profile?.telegram_id ?? null,
-      is_admin: (profile as any)?.is_admin ?? null,
-    }).catch(() => false);
-
-    // Ensure Neon user
+    // Ensure Neon user first (sets appRole ADMIN for root email)
     await this.neonUser.ensureUserExists(userId, email);
     const derived = planFromLegacyTariff(planRaw);
     await this.prisma.user.update({
@@ -50,6 +44,18 @@ export class SyncUserController {
         listingLimit: listingLimit || derived.listingLimit,
       },
     }).catch(() => undefined);
+
+    const neonUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { appRole: true },
+    });
+    const profileAdmin = await this.supabaseAuth.ensureAdminFlag({
+      id: userId,
+      email: email ?? undefined,
+      telegram_id: profile?.telegram_id ?? null,
+      is_admin: (profile as any)?.is_admin ?? null,
+    }).catch(() => false);
+    const isAdmin = neonUser?.appRole === "ADMIN" || profileAdmin;
 
     return { ok: true, id: userId, isAdmin };
   }

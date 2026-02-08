@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { supabase } from "../../shared/lib/supabase";
+import { ROOT_ADMIN_EMAIL } from "./constants";
 
 /**
  * Supabase Profile — stored in Supabase public.profiles table
@@ -38,7 +39,28 @@ type BusinessRole = "user" | "landlord";
 export class SupabaseAuthService {
   private readonly logger = new Logger(SupabaseAuthService.name);
 
-  async ensureAdminFlag(profile: { id: string; telegram_id?: string | null; is_admin?: boolean | null }) {
+  async ensureAdminFlag(profile: {
+    id: string;
+    email?: string | null;
+    telegram_id?: string | null;
+    is_admin?: boolean | null;
+  }): Promise<boolean> {
+    const rootEmail = (profile.email ?? "").trim().toLowerCase();
+    if (rootEmail === ROOT_ADMIN_EMAIL.trim().toLowerCase()) {
+      const sb = supabase;
+      if (sb) {
+        try {
+          await sb
+            .from("profiles")
+            .upsert({ id: profile.id, is_admin: true }, { onConflict: "id" })
+            .select("id, is_admin")
+            .single();
+        } catch {
+          // ignore
+        }
+      }
+      return true;
+    }
     const adminTelegram = process.env.ADMIN_TELEGRAM_ID?.trim();
     if (!adminTelegram) return false;
     const isAdmin = String(profile.telegram_id ?? "") === adminTelegram;
@@ -47,7 +69,6 @@ export class SupabaseAuthService {
     const sb = supabase;
     if (!sb) return true;
 
-    // Best-effort: mark admin flag in profile for UI
     try {
       await sb
         .from("profiles")

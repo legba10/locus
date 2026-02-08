@@ -1,25 +1,17 @@
 'use client'
 
-import { ListingPageV7 } from './ListingPageV7'
+import { ListingPageV2 } from './ListingPageV2'
 
 interface ListingPageLightProps {
   id: string
 }
 
 /**
- * ListingPageLight — Детальная страница объявления
- * 
- * Использует расширенную версию ListingPageV7 с 9 блоками:
- * 1. Галерея (без текстов на фото, только badges)
- * 2. Основная информация
- * 3. CTA-блок (справа)
- * 4. AI-анализ (отдельный блок)
- * 5. Описание жилья
- * 6. Удобства
- * 7. Карта
- * 8. Отзывы
- * 9. Похожие предложения
+ * ListingPageLight — Детальная страница объявления (v2)
+ *
+ * Структура: Галерея → Основная информация → Цена+CTA → Владелец → Удобства → Описание → Карта → Бронирование → Отзывы.
+ * Mobile: sticky bottom bar. Отзывы — пошаговые метрики.
  */
 export function ListingPageLight({ id }: ListingPageLightProps) {
-  return <ListingPageV7 id={id} />
+  return <ListingPageV2 id={id} />
 }

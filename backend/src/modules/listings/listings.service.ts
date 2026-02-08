@@ -8,7 +8,9 @@ import { AiPricingService } from "../ai-orchestrator/services/ai-pricing.service
 import { AiQualityService } from "../ai-orchestrator/services/ai-quality.service";
 import { AiRiskService } from "../ai-orchestrator/services/ai-risk.service";
 import { ListingsPhotosService } from "./listings-photos.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { SupabaseAuthService } from "../auth/supabase-auth.service";
+import { NotificationType } from "../notifications/notifications.service";
 
 // Helper to convert DTO JSON fields to Prisma-compatible InputJsonValue
 function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
@@ -32,6 +34,7 @@ export class ListingsService {
     private readonly aiPricing: AiPricingService,
     private readonly aiRisk: AiRiskService,
     private readonly photosService: ListingsPhotosService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async getAll(params: { city?: string; limit?: number } = {}) {
@@ -94,14 +97,29 @@ export class ListingsService {
       },
     });
     if (!listing) throw new NotFoundException("Listing not found");
-    
+
     if (view?.sessionId) {
       this.trackView(id, view.sessionId, view.userId).catch((err) =>
         this.logger.warn(`Failed to track view for ${id}: ${err}`)
       );
     }
-    
-    return listing;
+
+    const listingWithRelations = listing as typeof listing & { owner: any; reviews: { rating: number }[] };
+    const owner = listingWithRelations.owner;
+    const reviews = listingWithRelations.reviews || [];
+    const avgRating =
+      reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
+
+    return {
+      ...listingWithRelations,
+      owner: {
+        id: owner.id,
+        name: owner.profile?.name ?? owner.email ?? "Владелец",
+        avatar: owner.profile?.avatarUrl ?? null,
+        rating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
+        listingsCount: 0,
+      },
+    };
   }
 
   private async trackView(listingId: string, sessionId: string, userId?: string | null) {
@@ -208,7 +226,7 @@ export class ListingsService {
         bathrooms: dto.bathrooms ?? 1,
         type: (dto.type as ListingType | undefined) ?? ListingType.APARTMENT,
         houseRules: toJsonValue(dto.houseRules),
-        status: ListingStatus.DRAFT,
+        status: ListingStatus.PENDING_REVIEW,
         photos: dto.photos?.length
           ? {
               create: dto.photos.map((p) => ({
@@ -255,6 +273,10 @@ export class ListingsService {
       this.aiRisk.risk({ listingId: listing.id }),
     ]);
 
+    this.notifications
+      .createForAdmins(NotificationType.NEW_LISTING_PENDING, "Новое объявление на модерацию", dto.title || listing.id)
+      .catch((err) => this.logger.warn(`Failed to notify admins: ${err?.message}`));
+
     return this.getById(listing.id);
   }
 
@@ -263,15 +285,16 @@ export class ListingsService {
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
 
-    // Extract only Listing model fields (exclude amenityKeys which is handled separately)
     const { amenityKeys: _, ...listingFields } = dto;
+    const data: any = { ...listingFields, houseRules: toJsonValue(dto.houseRules) };
+    if (listing.status === ListingStatus.REJECTED) {
+      data.status = ListingStatus.PENDING_REVIEW;
+      data.moderationComment = null;
+    }
 
     await this.prisma.listing.update({
       where: { id },
-      data: {
-        ...listingFields,
-        houseRules: toJsonValue(dto.houseRules),
-      },
+      data,
     });
 
     if (dto.amenityKeys) {
