@@ -256,6 +256,35 @@ export function amenityLabel(key: string | undefined | null): string {
   return AMENITIES_MAP[k] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+/** Извлекает ключи удобств из ответа API (string[] или Array<{amenity: {key?}}>) для логики/ai-engine. */
+export function amenityKeysFromApi(amenities: unknown): string[] {
+  if (!Array.isArray(amenities)) return []
+  return amenities
+    .map((x: unknown) => (typeof x === 'string' ? x : (x as { amenity?: { key?: string } })?.amenity?.key))
+    .filter((k): k is string => typeof k === 'string' && k !== '')
+}
+
+/**
+ * Приводит сырой ответ API (string[] или Array<{listingId, amenityId, amenity}>) к массиву русских подписей.
+ * Использовать перед рендером, чтобы не передавать в React объекты (React error #31).
+ */
+export function amenitiesToLabels(amenities: unknown): string[] {
+  if (!Array.isArray(amenities)) return []
+  const out: string[] = []
+  for (const x of amenities) {
+    if (typeof x === 'string') {
+      const label = amenityLabel(x)
+      if (label) out.push(label)
+    } else if (x && typeof x === 'object' && 'amenity' in x) {
+      const a = (x as { amenity?: { key?: string; label?: string } }).amenity
+      const key = a?.key ?? a?.label
+      const label = key ? amenityLabel(key) : (a?.label ?? '')
+      if (label) out.push(label)
+    }
+  }
+  return out
+}
+
 // ═══════════════════════════════════════════════════════════════
 // ТИПЫ
 // ═══════════════════════════════════════════════════════════════

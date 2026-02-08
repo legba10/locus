@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatPrice } from '@/core/i18n/ru'
+import { formatPrice, amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
 import { BookingButton } from './BookingButton'
 import { scoring, marketPriceCompare, type Listing, type UserParams } from '@/domains/ai/ai-engine'
@@ -186,7 +186,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   const coverPhoto = photos[0]?.url
   const hasPhotos = photos.length > 0
   
-  // AI данные через ai-engine
+  // AI данные через ai-engine (ожидает ключи удобств string[])
   const listingData: Listing = {
     id: item.id,
     city: item.city,
@@ -196,7 +196,7 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
     area: item.area,
     views: item.views,
     rating: item.rating,
-    amenities: item.amenities,
+    amenities: amenityKeysFromApi(item.amenities),
     description: item.description,
   }
   
@@ -210,8 +210,8 @@ export function ListingPageV7({ id }: ListingPageV7Props) {
   const floor = item.floor ?? null
   const totalFloors = item.totalFloors ?? null
   
-  // Удобства
-  const amenities = item.amenities || []
+  // Удобства: API может вернуть string[] или Array<{listingId, amenityId, amenity}> — нормализуем в строки для рендера
+  const amenities = amenitiesToLabels(item.amenities)
   
   // Views: show only if present
   const viewsValue = (item as { views?: number; viewsCount?: number }).viewsCount ?? item.views
