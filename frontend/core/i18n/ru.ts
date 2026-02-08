@@ -227,6 +227,36 @@ export const RU = {
 } as const
 
 // ═══════════════════════════════════════════════════════════════
+// УДОБСТВА (ключ API → русский текст для карточек и списков)
+// Никогда не выводить raw key в UI.
+// ═══════════════════════════════════════════════════════════════
+export const AMENITIES_MAP: Record<string, string> = {
+  wifi: 'Wi-Fi',
+  washer: 'Стиральная машина',
+  balcony: 'Балкон',
+  parking: 'Парковка',
+  air_conditioner: 'Кондиционер',
+  airconditioner: 'Кондиционер',
+  kitchen: 'Кухня',
+  tv: 'ТВ',
+  elevator: 'Лифт',
+  dishwasher: 'Посудомоечная машина',
+  dryer: 'Сушка',
+  heating: 'Отопление',
+  gym: 'Спортзал',
+  pool: 'Бассейн',
+  pets: 'Можно с питомцами',
+  smoking: 'Можно курить',
+}
+
+/** Нормализует ключ удобства (API) и возвращает русскую подпись. */
+export function amenityLabel(key: string | undefined | null): string {
+  if (key == null || key === '') return ''
+  const k = String(key).toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_')
+  return AMENITIES_MAP[k] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ТИПЫ
 // ═══════════════════════════════════════════════════════════════
 
