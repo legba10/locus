@@ -17,6 +17,11 @@ export class UpdateProfileDto {
   @IsString()
   phone?: string;
 
+  @ApiPropertyOptional({ example: "https://cdn.../avatar.webp", description: "Avatar URL (optional)" })
+  @IsOptional()
+  @IsString()
+  avatar_url?: string;
+
   @ApiPropertyOptional({ example: "landlord", description: "Onboarding role selection: renter | landlord" })
   @IsOptional()
   @IsIn(["renter", "landlord"])

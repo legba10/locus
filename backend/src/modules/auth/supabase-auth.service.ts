@@ -288,7 +288,7 @@ export class SupabaseAuthService {
    */
   async updateProfile(
     userId: string,
-    patch: { full_name?: string | null; phone?: string | null; telegram_id?: string | null; role?: string | null }
+    patch: { full_name?: string | null; phone?: string | null; telegram_id?: string | null; role?: string | null; avatar_url?: string | null }
   ): Promise<SupabaseProfile | null> {
     if (!supabase) {
       this.logger.error("Supabase client not configured");
@@ -300,6 +300,7 @@ export class SupabaseAuthService {
     if (patch.phone !== undefined) payload.phone = patch.phone;
     if (patch.telegram_id !== undefined) payload.telegram_id = patch.telegram_id;
     if (patch.role !== undefined) payload.role = patch.role;
+    if (patch.avatar_url !== undefined) payload.avatar_url = patch.avatar_url;
 
     const { data, error } = await supabase
       .from("profiles")

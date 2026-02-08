@@ -204,6 +204,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refresh: async () => {
+        const prevUser = get().user;
         try {
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse);
@@ -220,8 +221,8 @@ export const useAuthStore = create<AuthState>()(
             set({ user: null, accessToken: null, error: null });
             return false;
           }
-          clearTokens();
-          set({ user: null, accessToken: null, error: "Ошибка авторизации" });
+          // Network/backend error: keep previous user to avoid "guest" flicker.
+          set({ user: prevUser ?? null, error: "Временная ошибка синхронизации профиля" });
           return false;
         }
       },
@@ -230,13 +231,14 @@ export const useAuthStore = create<AuthState>()(
         if (get().isInitialized) {
           return;
         }
+        const prevUser = get().user;
         set({ isLoading: true, error: null });
         
         try {
-          // Timeout for fetchMe (3s max)
+          // Timeout for fetchMe (7s max)
           const mePromise = fetchMe();
           const meTimeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("fetchMe timeout")), 3000)
+            setTimeout(() => reject(new Error("fetchMe timeout")), 7000)
           );
 
           const backendResponse = await Promise.race([mePromise, meTimeout]);
@@ -250,18 +252,21 @@ export const useAuthStore = create<AuthState>()(
             isInitialized: true,
           });
         } catch (e) {
-          clearTokens();
           const isUnauthed = e instanceof AuthApiError && e.status === 401;
           if (!isUnauthed) {
             logger.error("Auth", "initialize error", e);
           }
           set({
-            user: null,
-            accessToken: null,
+            // Only clear user on explicit 401. Otherwise keep persisted user to prevent "guest".
+            user: isUnauthed ? null : prevUser ?? null,
+            accessToken: isUnauthed ? null : get().accessToken,
             isLoading: false,
             isInitialized: true,
-            error: isUnauthed ? null : "Ошибка авторизации",
+            error: isUnauthed ? null : null,
           });
+          if (isUnauthed) {
+            clearTokens();
+          }
         }
       },
 

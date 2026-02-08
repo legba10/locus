@@ -16,8 +16,9 @@ export class ProfileController {
     const fullName = dto.full_name ?? dto.name ?? undefined;
     const phone = dto.phone ?? undefined;
     const role = dto.role ?? undefined;
+    const avatarUrl = dto.avatar_url ?? undefined;
 
-    if (fullName === undefined && phone === undefined && role === undefined) {
+    if (fullName === undefined && phone === undefined && role === undefined && avatarUrl === undefined) {
       throw new BadRequestException("No profile fields provided");
     }
 
@@ -25,6 +26,7 @@ export class ProfileController {
       full_name: fullName,
       phone,
       role,
+      avatar_url: avatarUrl,
     });
 
     return { profile };

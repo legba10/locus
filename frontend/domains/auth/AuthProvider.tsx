@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
+import { apiFetchRaw } from "@/shared/api/client";
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -16,8 +17,11 @@ import { logger } from "@/shared/utils/logger";
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((s) => s.initialize);
+  const user = useAuthStore((s) => s.user);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
   const initCalled = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const syncCalled = useRef(false);
 
   useEffect(() => {
     // Guard against multiple calls (strict mode, re-renders)
@@ -57,6 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       abortRef.current?.abort();
     };
   }, [initialize]);
+
+  // Sync user on each visit when session exists (best-effort, non-blocking).
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (!user) return;
+    if (syncCalled.current) return;
+    syncCalled.current = true;
+    apiFetchRaw("/sync-user", { method: "POST" }).catch(() => undefined);
+  }, [isInitialized, user]);
 
   // Always render children immediately - don't block on auth
   return <>{children}</>;

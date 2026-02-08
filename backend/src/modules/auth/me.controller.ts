@@ -63,18 +63,18 @@ export class MeController {
 
     return {
       id: req.user.id,
-      email,
+      email: email ?? "",
       role: roleOut,
       plan: userRow.plan,
       listingLimit: userRow.listingLimit,
       listingUsed,
       isAdmin,
       profileCompleted,
-      phone: profile?.phone ?? req.user.phone ?? null,
-      telegram_id: profile?.telegram_id ?? null,
-      username: (profile as any).username ?? null,
-      avatar_url: (profile as any).avatar_url ?? null,
-      full_name: profile?.full_name ?? null,
+      full_name: String(profile?.full_name ?? ""),
+      phone: String(profile?.phone ?? req.user.phone ?? ""),
+      telegram_id: String(profile?.telegram_id ?? ""),
+      avatar_url: String((profile as any)?.avatar_url ?? ""),
+      username: String((profile as any)?.username ?? ""),
     };
   }
 }
