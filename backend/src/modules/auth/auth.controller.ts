@@ -80,7 +80,7 @@ export class AuthController {
         is_admin: (profile as any)?.is_admin ?? null,
       }).catch(() => false));
 
-    // Ensure Neon user exists and keep plan/limit in sync
+    // Ensure Neon user exists (sets appRole ADMIN for root email) and keep plan/limit in sync
     await this.neonUser.ensureUserExists(req.user.id, email);
     const derived = planFromLegacyTariff(planRaw);
     const userRow = await this.prisma.user.update({
@@ -89,19 +89,23 @@ export class AuthController {
         plan: derived.plan,
         listingLimit: listingLimit || derived.listingLimit,
       },
-      select: { plan: true, listingLimit: true },
+      select: { plan: true, listingLimit: true, appRole: true },
     });
+
+    // Root/Admin: Neon appRole is source of truth for legba086@mail.ru (set in ensureUserExists)
+    const isAdminNeon = userRow.appRole === "ADMIN" || userRow.appRole === "ROOT";
+    const isAdminFinal = isAdmin || isAdminNeon;
 
     const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
 
     return {
       id: req.user.id,
       email: email ?? "",
-      role: isAdmin ? "admin" : role,
+      role: isAdminFinal ? "admin" : role,
       plan: userRow.plan,
       listingLimit: userRow.listingLimit,
       listingUsed,
-      isAdmin,
+      isAdmin: isAdminFinal,
       profileCompleted,
       // Extra fields for existing UI (profile page, avatar/menu)
       full_name: String(profile?.full_name ?? ""),
