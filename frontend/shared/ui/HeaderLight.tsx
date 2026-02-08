@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle, Shield } from 'lucide-react'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -41,6 +41,7 @@ export function HeaderLight() {
   const used = user?.listingUsed ?? 0
   const canCreateListing = authed
   const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
+  const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -49,7 +50,8 @@ export function HeaderLight() {
     { label: 'Сообщения', href: '/messages' },
     { label: 'Профиль', href: '/profile' },
     { label: 'Тарифы', href: '/pricing' },
-  ]), [])
+    ...(isAdmin ? [{ label: 'Админ', href: '/admin' }] : []),
+  ]), [isAdmin])
 
   void pathname
 
@@ -214,6 +216,9 @@ export function HeaderLight() {
               <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
               <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
               <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+              {isAdmin && (
+                <NavItem icon={<Shield size={22} strokeWidth={1.8} />} label="Админ" onClick={() => handleNavigate('/admin')} />
+              )}
               <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
             </ul>
           </nav>

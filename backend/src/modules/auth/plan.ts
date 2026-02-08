@@ -6,10 +6,10 @@ export function planFromLegacyTariff(tariff: string | null | undefined): { plan:
   const t = (tariff ?? "free").toLowerCase();
   // Final business logic:
   // - FREE: 1 listing
-  // - landlord_basic: 10 listings
-  // - landlord_pro: unlimited (represented as a very large limit)
+  // - PRO: 50 listings
+  // - MAX: unlimited (represented as a very large limit)
   if (t === "landlord_pro") return { plan: "AGENCY", listingLimit: 1_000_000 };
-  if (t === "landlord_basic") return { plan: "PRO", listingLimit: 10 };
+  if (t === "landlord_basic") return { plan: "PRO", listingLimit: 50 };
   return { plan: "FREE", listingLimit: 1 };
 }
 

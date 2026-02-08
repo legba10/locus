@@ -4,6 +4,7 @@ import { PrismaModule } from "../prisma/prisma.module";
 import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
 import { MeController } from "./me.controller";
+import { SyncUserController } from "./sync-user.controller";
 import { TelegramAuthController } from "./telegram.controller";
 import { AuthTelegramController } from "./auth-telegram.controller";
 import { RolesGuard } from "./guards/roles.guard";
@@ -24,7 +25,7 @@ import { AuthSessionsService } from "./auth-sessions.service";
 @Global()
 @Module({
   imports: [ConfigModule, PrismaModule, UsersModule],
-  controllers: [AuthController, MeController, TelegramAuthController, AuthTelegramController],
+  controllers: [AuthController, MeController, SyncUserController, TelegramAuthController, AuthTelegramController],
   providers: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
   exports: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
 })

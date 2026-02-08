@@ -19,6 +19,7 @@ export type SupabaseProfile = {
   plan?: string | null;          // free | landlord_basic | landlord_pro
   listing_limit?: number | null; // 1 for FREE
   listing_used?: number | null;  // increment after create listing
+  is_admin?: boolean | null;
   tariff: string | null;
   verification_status: "pending" | "verified" | null;
   created_at: string;
@@ -36,6 +37,28 @@ type BusinessRole = "user" | "landlord";
 @Injectable()
 export class SupabaseAuthService {
   private readonly logger = new Logger(SupabaseAuthService.name);
+
+  async ensureAdminFlag(profile: { id: string; telegram_id?: string | null; is_admin?: boolean | null }) {
+    const adminTelegram = process.env.ADMIN_TELEGRAM_ID?.trim();
+    if (!adminTelegram) return false;
+    const isAdmin = String(profile.telegram_id ?? "") === adminTelegram;
+    if (!isAdmin) return false;
+
+    const sb = supabase;
+    if (!sb) return true;
+
+    // Best-effort: mark admin flag in profile for UI
+    try {
+      await sb
+        .from("profiles")
+        .upsert({ id: profile.id, is_admin: true }, { onConflict: "id" })
+        .select("id, is_admin")
+        .single();
+    } catch {
+      // ignore
+    }
+    return true;
+  }
 
   async ensureListingDefaults(userId: string) {
     const sb = supabase;

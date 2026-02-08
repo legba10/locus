@@ -93,7 +93,7 @@ export interface Booking {
 }
 
 // ——— User / Auth (совместимо с backend /auth/me)
-export type AppRole = "user" | "landlord";
+export type AppRole = "user" | "landlord" | "admin";
 export type UserTariff = "free" | "landlord_basic" | "landlord_pro";
 export type UserPlan = "FREE" | "PRO" | "AGENCY";
 export interface UserProfile {
@@ -107,12 +107,12 @@ export interface UserProfile {
 export interface UserContract {
   id: string;
   email?: string;
-  phone: string | null;
-  telegram_id: string | null;
-  username?: string | null;
-  avatar_url?: string | null;
-  full_name: string | null;
-  role: AppRole;
+  role: AppRole | "admin";
+  plan?: UserPlan;
+  listingLimit?: number;
+  listingUsed?: number;
+  isAdmin?: boolean;
+  profileCompleted?: boolean;
   /**
    * Raw role stored in Supabase `public.profiles.role`.
    * For Telegram onboarding we use:
@@ -125,12 +125,15 @@ export interface UserContract {
    * True for Telegram users who still have default role ("user") and must pick renter/landlord.
    */
   needsRoleSelection?: boolean;
-  tariff: UserTariff;
-  plan?: UserPlan;
-  listingLimit?: number;
-  listingUsed?: number;
+  // Legacy fields (still used in parts of UI)
+  phone?: string | null;
+  telegram_id?: string | null;
+  username?: string | null;
+  avatar_url?: string | null;
+  full_name?: string | null;
+  tariff?: UserTariff;
   supabaseId?: string;
-  roles?: AppRole[];
+  roles?: Array<AppRole | "admin">;
 }
 
 // ——— API responses

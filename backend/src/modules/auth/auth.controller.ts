@@ -71,6 +71,15 @@ export class AuthController {
     const listingUsed = Number((defaults as any)?.listing_used ?? (profile as any)?.listing_used ?? 0);
     const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? tariff ?? "free");
 
+    const isAdmin =
+      Boolean((profile as any)?.is_admin) ||
+      Boolean((defaults as any)?.is_admin) ||
+      (await this.supabaseAuth.ensureAdminFlag({
+        id: req.user.id,
+        telegram_id: profile?.telegram_id ?? null,
+        is_admin: (profile as any)?.is_admin ?? null,
+      }).catch(() => false));
+
     // Ensure Neon user exists and keep plan/limit in sync
     await this.neonUser.ensureUserExists(req.user.id, email);
     const derived = planFromLegacyTariff(planRaw);
@@ -83,21 +92,23 @@ export class AuthController {
       select: { plan: true, listingLimit: true },
     });
 
+    const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
+
     return {
-      id: profile?.id ?? req.user.id,
+      id: req.user.id,
       email,
+      role: isAdmin ? "admin" : role,
+      plan: userRow.plan,
+      listingLimit: userRow.listingLimit,
+      listingUsed,
+      isAdmin,
+      profileCompleted,
+      // Extra fields for existing UI (profile page, avatar/menu)
       phone: profile?.phone ?? req.user.phone ?? null,
       telegram_id: profile?.telegram_id ?? null,
       username: (profile as any)?.username ?? null,
       avatar_url: (profile as any)?.avatar_url ?? null,
       full_name: profile?.full_name ?? null,
-      role,
-      profile_role_raw: rawProfileRole,
-      needsRoleSelection: false,
-      tariff: (tariff ?? "free") as any,
-      plan: userRow.plan,
-      listingLimit: userRow.listingLimit,
-      listingUsed,
     };
   }
 

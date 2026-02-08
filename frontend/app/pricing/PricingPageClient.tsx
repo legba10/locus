@@ -114,27 +114,27 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
     if (userType === 'landlord') {
       return [
         {
-          id: 'basic',
-          title: 'BASIC',
+          id: 'pro',
+          title: 'PRO',
           price: '990 ₽/мес',
-          description: 'Для собственников: до 10 объявлений.',
+          description: 'До 50 объявлений.',
           features: [
-            { text: 'До 10 объявлений', icon: 'check' },
+            { text: 'До 50 объявлений', icon: 'check' },
             { text: 'Сообщения', icon: 'check' },
             { text: 'Управление', icon: 'check' },
           ],
-          ctaLabel: 'Начать',
+          ctaLabel: 'Подключить',
           href: '/pricing#cta',
           theme: 'light',
         },
         {
-          id: 'pro',
-          title: 'PRO',
+          id: 'max',
+          title: 'MAX',
           price: '1990 ₽/мес',
-          description: 'Для активной сдачи: безлимит объявлений.',
+          description: 'Безлимит объявлений + максимальный приоритет.',
           features: [
             { text: 'Безлимит объявлений', icon: 'spark' },
-            { text: 'Всё из Basic', icon: 'check' },
+            { text: 'Всё из PRO', icon: 'check' },
             { text: 'Приоритет', icon: 'check' },
             { text: 'Аналитика', icon: 'check' },
             { text: 'AI рекомендации', icon: 'spark' },

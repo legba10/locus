@@ -40,6 +40,8 @@ model User {
 
   /// ID пользователя в Supabase Auth
   supabaseId   String?     @unique
+  /// Strict supabase uid mirror (UUID) for audits & joins
+  supabaseUuid String?     @unique @db.Uuid @map("supabase_id")
   /// Упрощённая прикладная роль (для быстрого доступа)
   appRole      UserRoleEnum @default(USER)
 

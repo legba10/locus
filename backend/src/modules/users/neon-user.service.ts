@@ -25,46 +25,34 @@ export class NeonUserService {
    * @param email - User's email (optional, for reference)
    */
   async ensureUserExists(supabaseId: string, email?: string | null): Promise<string> {
-    // First, try to find by supabaseId
-    const existing = await this.prisma.user.findUnique({
-      where: { supabaseId },
+    // SINGLE RULE: Neon User.id == Supabase auth.uid()
+    // Keep a mirrored UUID column for audits/joins.
+    const upserted = await this.prisma.user.upsert({
+      where: { id: supabaseId },
+      update: {
+        supabaseId,
+        supabaseUuid: supabaseId,
+        ...(email ? { email } : {}),
+      },
+      create: {
+        id: supabaseId,
+        supabaseId,
+        supabaseUuid: supabaseId,
+        email: email ?? null,
+        // default plan = FREE, default listingLimit = 1 (schema defaults)
+      },
       select: { id: true },
+    }).catch(async (error: any) => {
+      // Handle rare race / legacy rows
+      if (error.code === "P2002") {
+        const found = await this.prisma.user.findUnique({ where: { id: supabaseId }, select: { id: true } });
+        if (found) return found;
+      }
+      this.logger.error(`Failed to upsert Neon user: ${error.message}`);
+      throw error;
     });
 
-    if (existing) {
-      return existing.id;
-    }
-
-    // Create minimal User record with supabaseId as ID
-    // This ensures Neon User ID = Supabase User ID
-    try {
-      const created = await this.prisma.user.create({
-        data: {
-          id: supabaseId, // Use Supabase ID as Neon ID
-          supabaseId,
-          email: email ?? null,
-          // default plan = FREE, default listingLimit = 1 (schema defaults)
-        },
-        select: { id: true },
-      });
-      
-      this.logger.debug(`Created Neon user for Supabase ID: ${supabaseId}`);
-      return created.id;
-    } catch (error: any) {
-      // Handle race condition - user might have been created by another request
-      if (error.code === "P2002") {
-        const found = await this.prisma.user.findUnique({
-          where: { supabaseId },
-          select: { id: true },
-        });
-        if (found) {
-          return found.id;
-        }
-      }
-      
-      this.logger.error(`Failed to create Neon user: ${error.message}`);
-      throw error;
-    }
+    return upserted.id;
   }
 
   /**
@@ -73,7 +61,7 @@ export class NeonUserService {
    */
   async getNeonUserId(supabaseId: string): Promise<string | null> {
     const user = await this.prisma.user.findUnique({
-      where: { supabaseId },
+      where: { id: supabaseId },
       select: { id: true },
     });
     return user?.id ?? null;

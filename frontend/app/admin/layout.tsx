@@ -12,7 +12,7 @@ import { ProtectedRoute } from "@/domains/auth";
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute roles={["landlord"]}>
+    <ProtectedRoute roles={["admin"]}>
       <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
         {children}
       </div>
