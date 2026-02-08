@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
+import { useAuthStore } from '@/domains/auth'
 
 type PlanFeature = {
   text: string
@@ -104,6 +105,10 @@ const PlanCardItem = ({ plan }: { plan: PlanCard }) => {
 
 export function PricingPageClient({ reason }: { reason?: string | null }) {
   const [userType, setUserType] = useState<'seeker' | 'landlord'>('seeker')
+  const { user, isAuthenticated } = useAuthStore()
+  const limit = user?.listingLimit ?? 1
+  const used = user?.listingUsed ?? 0
+  const freeCreateHref = isAuthenticated() && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
 
   const plans = useMemo<PlanCard[]>(() => {
     if (userType === 'landlord') {
@@ -112,9 +117,9 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
           id: 'basic',
           title: 'BASIC',
           price: '990 ₽/мес',
-          description: 'Для собственников, которые только начинают.',
+          description: 'Для собственников: до 10 объявлений.',
           features: [
-            { text: 'Размещение объявлений', icon: 'check' },
+            { text: 'До 10 объявлений', icon: 'check' },
             { text: 'Сообщения', icon: 'check' },
             { text: 'Управление', icon: 'check' },
           ],
@@ -126,8 +131,9 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
           id: 'pro',
           title: 'PRO',
           price: '1990 ₽/мес',
-          description: 'Оптимальный набор для бизнеса.',
+          description: 'Для активной сдачи: безлимит объявлений.',
           features: [
+            { text: 'Безлимит объявлений', icon: 'spark' },
             { text: 'Всё из Basic', icon: 'check' },
             { text: 'Приоритет', icon: 'check' },
             { text: 'Аналитика', icon: 'check' },
@@ -138,21 +144,6 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
           badge: 'Рекомендуем',
           highlight: true,
           theme: 'primary',
-        },
-        {
-          id: 'max',
-          title: 'MAX',
-          price: '3990 ₽/мес',
-          description: 'Максимальный охват и продвижение.',
-          features: [
-            { text: 'Всё из Pro', icon: 'check' },
-            { text: 'Топ выдача', icon: 'check' },
-            { text: 'Продвижение', icon: 'check' },
-            { text: 'Статистика', icon: 'check' },
-          ],
-          ctaLabel: 'Начать',
-          href: '/pricing#cta',
-          theme: 'light',
         },
       ]
     }
@@ -245,7 +236,7 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
                 </div>
               </div>
               <Link
-                href="/owner/dashboard?tab=add"
+                href={freeCreateHref}
                 className="inline-flex items-center justify-center rounded-[14px] bg-violet-600 px-5 py-3 text-[14px] font-semibold text-white hover:bg-violet-500"
               >
                 Разместить бесплатно
@@ -258,7 +249,7 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
           className={cn(
             'grid gap-6',
             userType === 'landlord'
-              ? 'grid-cols-1 md:grid-cols-3'
+              ? 'grid-cols-1 md:grid-cols-2 md:max-w-5xl md:mx-auto'
               : 'grid-cols-1 md:grid-cols-2 md:max-w-4xl md:mx-auto'
           )}
         >

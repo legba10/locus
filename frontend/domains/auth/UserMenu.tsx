@@ -56,12 +56,12 @@ export function UserMenu() {
   }
 
   const displayName = user.full_name || user.email || "Пользователь";
-  const isLandlord = user.role === "landlord" || (user.roles ? user.roles.includes("landlord") : false);
   const tariff = user.tariff ?? "free";
-  // FREE landlords must still access owner dashboard (1 listing limit enforced on backend)
-  const canAccessOwner = isLandlord;
+  const limit = (user as any).listingLimit ?? 1;
+  const used = (user as any).listingUsed ?? 0;
+  const createHref = used >= limit ? "/pricing?reason=limit" : "/owner/dashboard?tab=add";
 
-  const roleBadge = isLandlord ? "Арендодатель" : "Пользователь";
+  const roleBadge = "Пользователь";
   const tariffBadge =
     tariff === "landlord_basic" ? "Basic" : tariff === "landlord_pro" ? "Pro" : "Free";
 
@@ -96,22 +96,12 @@ export function UserMenu() {
         >
           Профиль
         </Link>
-        {isLandlord && (
-          <Link
-            href="/owner/dashboard?tab=add"
-            className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand/90"
-          >
-            Разместить
-          </Link>
-        )}
-        {canAccessOwner && (
-          <Link
-            href="/owner/dashboard"
-            className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
-          >
-            Кабинет
-          </Link>
-        )}
+        <Link
+          href={createHref}
+          className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand/90"
+        >
+          Разместить
+        </Link>
         <button
           onClick={handleLogout}
           className="rounded-lg border border-border bg-white/5 px-2 py-1 text-xs hover:bg-white/10"

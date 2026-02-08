@@ -128,6 +128,7 @@ export interface UserContract {
   tariff: UserTariff;
   plan?: UserPlan;
   listingLimit?: number;
+  listingUsed?: number;
   supabaseId?: string;
   roles?: AppRole[];
 }

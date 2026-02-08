@@ -187,7 +187,7 @@ export default function PageClient() {
                   Войти через Telegram
                 </button>
                 <p className="text-center text-[12px] text-[#6B7280]">
-                  Хотите <span className="font-medium text-[#1C1F26]">сдать жильё бесплатно</span>? После входа выберите «Сдаю жильё» и разместите 1 объявление на FREE.
+                  Хотите <span className="font-medium text-[#1C1F26]">сдать жильё бесплатно</span>? После входа вы сможете разместить 1 объявление на FREE.
                 </p>
               </>
             )}

@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
-import { RoleSelectModal } from "@/components/roleSelectModal/RoleSelectModal";
-import { useRouter } from "next/navigation";
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -18,13 +16,8 @@ import { useRouter } from "next/navigation";
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((s) => s.initialize);
-  const refresh = useAuthStore((s) => s.refresh);
-  const user = useAuthStore((s) => s.user);
-  const isInitialized = useAuthStore((s) => s.isInitialized);
   const initCalled = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     // Guard against multiple calls (strict mode, re-renders)
@@ -65,28 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [initialize]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (!user) return;
-    if (!user.telegram_id) return;
-    if (!user.needsRoleSelection) return;
-    setRoleModalOpen(true);
-  }, [isInitialized, user]);
-
   // Always render children immediately - don't block on auth
-  return (
-    <>
-      {children}
-      <RoleSelectModal
-        open={roleModalOpen}
-        onClose={() => setRoleModalOpen(false)}
-        onSelected={async (role) => {
-          await refresh();
-          if (role === "landlord") {
-            router.push("/owner/dashboard?tab=add");
-          }
-        }}
-      />
-    </>
-  );
+  return <>{children}</>;
 }

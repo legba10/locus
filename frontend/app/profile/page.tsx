@@ -18,14 +18,17 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState(false)
   const [toast, setToast] = useState(false)
   const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
-  const roleLabel = user?.role === 'landlord' ? 'Арендодатель' : 'Пользователь'
+  const roleLabel = 'Пользователь'
   const tariffLabel =
     user?.tariff === 'landlord_basic'
       ? 'Landlord Basic'
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
-  const canCreateListing = user?.role === 'landlord'
+  const listingLimit = user?.listingLimit ?? 1
+  const listingUsed = (user as any)?.listingUsed ?? 0
+  const canCreateListing = true
+  const createHref = listingUsed >= listingLimit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
 
   useEffect(() => {
     setFormData({
@@ -158,6 +161,9 @@ export default function ProfilePage() {
               <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-violet-100 text-violet-700">
                 Текущий тариф: {tariffLabel}
               </span>
+              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-gray-50 text-gray-700">
+                Доступно: {listingLimit} • Использовано: {listingUsed}
+              </span>
             </div>
             <p className="text-[14px] text-[#6B7280] mb-4">
               На FREE вы можете разместить 1 объявление. Для большего лимита и расширенной аналитики можно выбрать PRO/AGENCY.
@@ -165,7 +171,7 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row gap-3">
               {canCreateListing && (
                 <Link
-                  href="/owner/dashboard?tab=add"
+                  href={createHref}
                   className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
                 >
                   Разместить объявление

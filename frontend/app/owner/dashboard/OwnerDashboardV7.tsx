@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
@@ -31,17 +31,19 @@ type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' |
  */
 export function OwnerDashboardV7() {
   const { user, isAuthenticated } = useAuthStore()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('listings')
   const [editingListing, setEditingListing] = useState<any | null>(null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [upgradeReason, setUpgradeReason] = useState<"limit" | "analytics" | "ai" | "general">("general")
-  const isLandlord = user?.role === 'landlord' || (user?.roles?.includes('landlord') ?? false)
   const tariff = user?.tariff ?? 'free'
 
   const plan: UserPlan = (user?.plan as UserPlan | undefined) ?? (tariff === 'landlord_pro' ? 'AGENCY' : tariff === 'landlord_basic' ? 'PRO' : 'FREE')
-  const listingLimit = user?.listingLimit ?? (plan === 'AGENCY' ? 10 : plan === 'PRO' ? 5 : 1)
+  const listingLimit = user?.listingLimit ?? 1
+  const listingUsed = (user as any)?.listingUsed ?? 0
   const isFreePlan = plan === 'FREE'
+  const canCreate = listingUsed < listingLimit
 
   useEffect(() => {
     const tab = searchParams.get('tab') as DashboardTab | null
@@ -63,25 +65,6 @@ export function OwnerDashboardV7() {
     )
   }
 
-  if (!isLandlord) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-        <div className="text-center max-w-md px-6">
-          <h2 className="text-[22px] font-bold text-[#1C1F26] mb-3">Доступ только для арендодателей</h2>
-          <p className="text-[14px] text-[#6B7280] mb-6">
-            Размещение объявлений доступно на тарифах Landlord. Выберите подходящий тариф, чтобы начать.
-          </p>
-          <Link
-            href="/pricing?reason=host"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-[12px] bg-violet-600 text-white text-[14px] font-medium hover:bg-violet-500"
-          >
-            Перейти к тарифам
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -89,7 +72,7 @@ export function OwnerDashboardV7() {
           <div className="mb-6 rounded-[16px] border border-violet-100 bg-violet-50 px-5 py-4 text-[14px] text-violet-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
               <PlanBadge plan={plan} />
-              <span>Ваш тариф: {plan}. Лимит объявлений: {listingLimit}.</span>
+              <span>Ваш тариф: {plan}. Доступно: {listingLimit} • Использовано: {listingUsed}.</span>
             </div>
             <button
               type="button"
@@ -209,7 +192,7 @@ export function OwnerDashboardV7() {
                   setActiveTab('listings')
                 }}
                 initialListing={editingListing}
-                onLimitReached={() => { setUpgradeReason("limit"); setUpgradeOpen(true); }}
+                onLimitReached={() => { router.push("/pricing?reason=limit"); }}
               />
             )}
             {activeTab === 'bookings' && <BookingsTab />}

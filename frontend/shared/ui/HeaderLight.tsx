@@ -36,7 +36,11 @@ export function HeaderLight() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const canCreateListing = isAuthenticated() && user?.role === 'landlord'
+  const authed = isAuthenticated()
+  const limit = user?.listingLimit ?? 1
+  const used = user?.listingUsed ?? 0
+  const canCreateListing = authed
+  const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -103,7 +107,7 @@ export function HeaderLight() {
           <div className="hidden md:flex items-center gap-3">
             {canCreateListing && (
               <Link
-                href="/owner/dashboard?tab=add"
+                href={createHref}
                 className={cn(
                   'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
                   'bg-violet-50 text-violet-700 border border-violet-100',
@@ -204,7 +208,7 @@ export function HeaderLight() {
                 <NavItem
                   icon={<PlusCircle size={22} strokeWidth={1.8} />}
                   label="Разместить объявление"
-                  onClick={() => handleNavigate('/owner/dashboard?tab=add')}
+                  onClick={() => handleNavigate(createHref)}
                 />
               )}
               <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />

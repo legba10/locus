@@ -16,6 +16,9 @@ export type SupabaseProfile = {
   avatar_url?: string | null;
   full_name: string | null;
   role: string | null;
+  plan?: string | null;          // free | landlord_basic | landlord_pro
+  listing_limit?: number | null; // 1 for FREE
+  listing_used?: number | null;  // increment after create listing
   tariff: string | null;
   verification_status: "pending" | "verified" | null;
   created_at: string;
@@ -33,6 +36,88 @@ type BusinessRole = "user" | "landlord";
 @Injectable()
 export class SupabaseAuthService {
   private readonly logger = new Logger(SupabaseAuthService.name);
+
+  async ensureListingDefaults(userId: string) {
+    const sb = supabase;
+    if (!sb) return null;
+    const { data: p, error } = await sb
+      .from("profiles")
+      .select("id, plan, listing_limit, listing_used")
+      .eq("id", userId)
+      .single();
+    if (error) {
+      // Columns might not exist yet in Supabase - keep backend resilient.
+      return null;
+    }
+    const plan = (p as any)?.plan ?? null;
+    const listingLimit = (p as any)?.listing_limit;
+    const listingUsed = (p as any)?.listing_used;
+
+    // If columns do not exist yet in Supabase, do nothing.
+    if (p && (listingLimit == null || listingUsed == null || plan == null)) {
+      const payload: any = { id: userId };
+      if (plan == null) payload.plan = "free";
+      if (listingLimit == null) payload.listing_limit = 1;
+      if (listingUsed == null) payload.listing_used = 0;
+      try {
+        await sb.from("profiles").upsert(payload, { onConflict: "id" }).select().single();
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      const { data: out } = await sb
+        .from("profiles")
+        .select("id, plan, listing_limit, listing_used")
+        .eq("id", userId)
+        .single();
+      return out as any;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Atomically reserve one listing slot by incrementing `listing_used` with optimistic concurrency.
+   * Returns { usedBefore, usedAfter, limit } on success.
+   */
+  async reserveListingSlot(userId: string): Promise<{ usedBefore: number; usedAfter: number; limit: number } | null> {
+    const sb = supabase;
+    if (!sb) return null;
+
+    // Ensure defaults exist
+    await this.ensureListingDefaults(userId).catch(() => null);
+
+    for (let i = 0; i < 3; i++) {
+      const { data: p, error } = await sb
+        .from("profiles")
+        .select("listing_limit, listing_used")
+        .eq("id", userId)
+        .single();
+      if (error || !p) return null;
+
+      const limit = Number((p as any).listing_limit ?? 1);
+      const usedBefore = Number((p as any).listing_used ?? 0);
+      if (usedBefore >= limit) {
+        return { usedBefore, usedAfter: usedBefore, limit };
+      }
+
+      const usedAfter = usedBefore + 1;
+      const { data: updated, error: updErr } = await sb
+        .from("profiles")
+        .update({ listing_used: usedAfter })
+        .eq("id", userId)
+        .eq("listing_used", usedBefore)
+        .select("listing_limit, listing_used")
+        .single();
+
+      if (!updErr && updated) {
+        return { usedBefore, usedAfter, limit };
+      }
+    }
+
+    return null;
+  }
 
   /**
    * Recovery helper (rare):

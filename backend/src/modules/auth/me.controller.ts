@@ -33,14 +33,19 @@ export class MeController {
 
     const rawProfileRole = profile?.role ?? null;
     const role = ((rawProfileRole ?? "user") as string).toLowerCase() === "landlord" ? "landlord" : "user";
-    const tariff = ((profile?.tariff ?? "free") as "free" | "landlord_basic" | "landlord_pro");
+    const tariff = ((profile?.tariff ?? (profile as any)?.plan ?? "free") as "free" | "landlord_basic" | "landlord_pro");
     const email = profile?.email ?? req.user.email ?? null;
 
     await this.neonUser.ensureUserExists(req.user.id, email);
-    const derived = planFromLegacyTariff(tariff);
+    const defaults = await this.supabaseAuth.ensureListingDefaults(req.user.id).catch(() => null);
+    const listingLimit = Number((defaults as any)?.listing_limit ?? (profile as any)?.listing_limit ?? 1);
+    const listingUsed = Number((defaults as any)?.listing_used ?? (profile as any)?.listing_used ?? 0);
+    const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? tariff ?? "free");
+
+    const derived = planFromLegacyTariff(planRaw);
     const userRow = await this.prisma.user.update({
       where: { id: req.user.id },
-      data: { plan: derived.plan, listingLimit: derived.listingLimit },
+      data: { plan: derived.plan, listingLimit: listingLimit || derived.listingLimit },
       select: { plan: true, listingLimit: true },
     });
 
@@ -54,12 +59,11 @@ export class MeController {
       full_name: profile?.full_name ?? null,
       role,
       profile_role_raw: rawProfileRole,
-      needsRoleSelection:
-        Boolean(profile?.telegram_id) &&
-        (!rawProfileRole || rawProfileRole.toLowerCase() === "user"),
-      tariff,
+      needsRoleSelection: false,
+      tariff: (tariff ?? "free") as any,
       plan: userRow.plan,
       listingLimit: userRow.listingLimit,
+      listingUsed,
     };
   }
 }
