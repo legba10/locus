@@ -1,36 +1,35 @@
 import { Controller, Get, Post, Param, Query, UseGuards, Req, ForbiddenException, Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { ListingStatus } from '@prisma/client';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ListingStatus, UserRoleEnum } from '@prisma/client';
+import { ModerationGuard } from '../auth/guards/moderation.guard';
+import { ROOT_ADMIN_EMAIL } from '../auth/constants';
 import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard';
 import { AdminService } from './admin.service';
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(SupabaseAuthGuard, ModerationGuard)
 @ApiBearerAuth()
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  /**
-   * Check if user is admin
-   */
-  private checkAdmin(req: any) {
-    if (req.user?.role !== 'admin') {
-      throw new ForbiddenException('Admin access required');
+  /** Only root admin (legba086@mail.ru) can set roles. */
+  private ensureRootAdmin(req: any) {
+    const email = (req.user?.email ?? '').trim().toLowerCase();
+    if (email !== ROOT_ADMIN_EMAIL.trim().toLowerCase()) {
+      throw new ForbiddenException('Only root admin can set roles');
     }
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard stats (admin only)' })
   async getStats(@Req() req: any) {
-    this.checkAdmin(req);
     return this.adminService.getStats();
   }
 
   @Get('listings/pending')
   @ApiOperation({ summary: 'Get listings pending moderation (admin only)' })
   async getPendingListings(@Req() req: any, @Query('limit') limit?: string) {
-    this.checkAdmin(req);
     return this.adminService.getPendingListings(limit ? parseInt(limit, 10) : 50);
   }
 
@@ -43,7 +42,6 @@ export class AdminController {
     @Query('status') status?: ListingStatus,
     @Query('limit') limit?: string,
   ) {
-    this.checkAdmin(req);
     return this.adminService.getAllListings({
       status,
       limit: limit ? parseInt(limit, 10) : 50,
@@ -51,29 +49,26 @@ export class AdminController {
   }
 
   @Post('listings/:id/approve')
-  @ApiOperation({ summary: 'Approve a listing (admin only)' })
+  @ApiOperation({ summary: 'Approve a listing (admin/manager)' })
   async approveListing(@Req() req: any, @Param('id') id: string) {
-    this.checkAdmin(req);
-    const listing = await this.adminService.approveListing(id);
+    const listing = await this.adminService.approveListing(id, req.user.id);
     return { ok: true, listing };
   }
 
   @Post('listings/:id/reject')
-  @ApiOperation({ summary: 'Reject a listing (admin only)' })
+  @ApiOperation({ summary: 'Reject a listing (admin/manager)' })
   async rejectListing(
     @Req() req: any,
     @Param('id') id: string,
     @Body('reason') reason?: string,
   ) {
-    this.checkAdmin(req);
-    const listing = await this.adminService.rejectListing(id, reason);
+    const listing = await this.adminService.rejectListing(id, req.user.id, reason);
     return { ok: true, listing };
   }
 
   @Post('listings/:id/block')
   @ApiOperation({ summary: 'Block a listing (admin only)' })
   async blockListing(@Req() req: any, @Param('id') id: string) {
-    this.checkAdmin(req);
     const listing = await this.adminService.blockListing(id);
     return { ok: true, listing };
   }
@@ -81,7 +76,35 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'Get all users (admin only)' })
   async getAllUsers(@Req() req: any, @Query('limit') limit?: string) {
-    this.checkAdmin(req);
     return this.adminService.getAllUsers(limit ? parseInt(limit, 10) : 50);
+  }
+
+  @Post('push')
+  @ApiOperation({ summary: 'Send notification to all users (admin push)' })
+  @ApiBody({ schema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' }, link: { type: 'string' } }, required: ['title'] } })
+  async pushToAll(@Req() req: any, @Body('title') title: string, @Body('body') body?: string, @Body('link') link?: string) {
+    const text = [body, link ? `Ссылка: ${link}` : ''].filter(Boolean).join('\n');
+    return this.adminService.pushToAll(title || 'Уведомление', text || undefined);
+  }
+
+  @Post('set-role')
+  @ApiOperation({ summary: 'Set user role (root admin only). Role: admin | manager | moderator | user' })
+  @ApiBody({ schema: { type: 'object', properties: { userId: { type: 'string' }, role: { type: 'string', enum: ['admin', 'manager', 'moderator', 'user'] } }, required: ['userId', 'role'] } })
+  async setRole(@Req() req: any, @Body('userId') userId: string, @Body('role') role: string) {
+    this.ensureRootAdmin(req);
+    if (!userId || !role) {
+      throw new ForbiddenException('userId and role are required');
+    }
+    const r = role.toLowerCase();
+    if (r === 'root') {
+      throw new ForbiddenException('Cannot assign ROOT via API');
+    }
+    const appRole =
+      r === 'admin' ? UserRoleEnum.ADMIN
+      : r === 'manager' ? UserRoleEnum.MANAGER
+      : r === 'moderator' ? UserRoleEnum.MODERATOR
+      : UserRoleEnum.USER;
+    await this.adminService.setUserRole(userId, appRole);
+    return { ok: true, userId, role: appRole };
   }
 }

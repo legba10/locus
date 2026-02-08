@@ -20,7 +20,10 @@ enum UserStatus {
 
 enum UserRoleEnum {
   USER
-  ADMIN
+  MODERATOR   // чат поддержки, помощь в редактировании объявлений
+  MANAGER     // approve/reject объявлений
+  ADMIN       // роли, модерация, пуш, аналитика
+  ROOT        // legba086@mail.ru, нельзя понизить (проверка по email в коде)
 }
 
 enum UserPlan {
@@ -55,6 +58,7 @@ model User {
   refreshTokens RefreshToken[]
 
   listings      Listing[]    @relation("ListingOwner")
+  listingsModerated Listing[] @relation("ListingModerator")
   bookingsAsGuest Booking[]  @relation("BookingGuest")
   bookingsAsHost  Booking[]  @relation("BookingHost")
 
@@ -65,6 +69,11 @@ model User {
 
   reviewsAuthored Review[] @relation("ReviewAuthor")
   favorites       Favorite[]
+  notifications   Notification[]
+
+  conversationsAsHost  Conversation[] @relation("ConversationHost")
+  conversationsAsGuest Conversation[] @relation("ConversationGuest")
+  messagesSent         Message[]
 }
 
 model Profile {
@@ -238,6 +247,11 @@ model Listing {
   houseRules   Json?
 
   status       ListingStatus  @default(DRAFT)
+  /// Причина отклонения (при status = REJECTED)
+  moderationComment String?
+  /// Кто одобрил/отклонил (User id)
+  moderatedById     String?
+  moderatedBy        User?     @relation("ListingModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
   viewsCount   Int            @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -266,6 +280,8 @@ model Listing {
 
   // Views
   views        ListingView[]
+
+  conversations Conversation[]
 
   @@index([ownerId])
   @@index([status])
@@ -317,6 +333,43 @@ model Booking {
   @@index([guestId, createdAt])
   @@index([status, createdAt])
   @@index([hostId, status])
+}
+
+// =========================
+// Chat 1-1 (LOCUS Core V1)
+// =========================
+model Conversation {
+  id         String   @id @default(uuid())
+  listingId  String
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  hostId     String   // владелец объявления
+  host       User     @relation("ConversationHost", fields: [hostId], references: [id], onDelete: Cascade)
+  guestId    String   // покупатель / кто написал
+  guest      User     @relation("ConversationGuest", fields: [guestId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  messages   Message[]
+
+  @@unique([listingId, guestId])
+  @@index([hostId])
+  @@index([guestId])
+  @@index([updatedAt])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text           String
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
 }
 
 model ListingPhoto {
@@ -655,6 +708,24 @@ model Favorite {
   @@unique([userId, listingId])
   @@index([userId])
   @@index([listingId])
+  @@index([userId, createdAt])
+}
+
+// =========================
+// Notifications
+// =========================
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // NEW_LISTING_PENDING, LISTING_APPROVED, LISTING_REJECTED, NEW_BOOKING, NEW_MESSAGE, BOOKING_CONFIRMED
+  title     String
+  body      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
   @@index([userId, createdAt])
 }
 

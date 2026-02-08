@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch } from '@/shared/utils/apiFetch'
 
-type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'settings'
+type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'push' | 'settings'
 
 interface AdminStats {
   users: { total: number }
@@ -35,13 +36,22 @@ interface AdminListing {
 }
 
 export function AdminDashboardV2() {
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams?.get('tab') as AdminTab | null
+  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && ['dashboard', 'users', 'listings', 'moderation', 'push', 'settings'].includes(tabFromUrl) ? tabFromUrl : 'dashboard')
+
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab && ['dashboard', 'users', 'listings', 'moderation', 'push', 'settings'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabFromUrl])
 
   const tabs = [
     { id: 'dashboard' as AdminTab, label: 'Дашборд', icon: <DashboardIcon /> },
     { id: 'users' as AdminTab, label: 'Пользователи', icon: <UsersIcon /> },
     { id: 'listings' as AdminTab, label: 'Объявления', icon: <ListingsIcon /> },
     { id: 'moderation' as AdminTab, label: 'Модерация', icon: <ModerationIcon /> },
+    { id: 'push' as AdminTab, label: 'Уведомления', icon: <PushIcon /> },
     { id: 'settings' as AdminTab, label: 'Настройки', icon: <SettingsIcon /> },
   ]
 
@@ -80,6 +90,7 @@ export function AdminDashboardV2() {
             {activeTab === 'users' && <UsersTab />}
             {activeTab === 'listings' && <ListingsTab />}
             {activeTab === 'moderation' && <ModerationTab />}
+            {activeTab === 'push' && <PushTab />}
             {activeTab === 'settings' && <SettingsTab />}
           </div>
         </div>
@@ -145,16 +156,17 @@ function StatCard({ title, value, color }: { title: string; value: number; color
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ПОЛЬЗОВАТЕЛИ — Real API data with actions
+// ПОЛЬЗОВАТЕЛИ — Real API data with actions (set role — root only)
 // ═══════════════════════════════════════════════════════════════
 function UsersTab() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [settingRole, setSettingRole] = useState<string | null>(null)
 
   const fetchUsers = useCallback(async () => {
     try {
       const data = await apiFetch<AdminUser[]>('/admin/users')
-      setUsers(data || [])
+      setUsers(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Failed to fetch users:', err)
     } finally {
@@ -163,6 +175,21 @@ function UsersTab() {
   }, [])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const handleSetRole = async (userId: string, role: 'admin' | 'manager' | 'user') => {
+    setSettingRole(userId)
+    try {
+      await apiFetch('/admin/set-role', {
+        method: 'POST',
+        body: JSON.stringify({ userId, role }),
+      })
+      fetchUsers()
+    } catch (err) {
+      console.error('Failed to set role:', err)
+    } finally {
+      setSettingRole(null)
+    }
+  }
 
   if (loading) return <div className="text-center py-8 text-[#6B7280]">Загрузка...</div>
 
@@ -178,18 +205,28 @@ function UsersTab() {
               <div className="flex-1">
                 <p className="font-medium text-[#1C1F26]">{user.email || 'Без email'}</p>
                 <p className="text-[13px] text-[#6B7280]">
-                  {user.appRole === 'ADMIN' ? 'Администратор' : 'Пользователь'} • 
-                  {user._count?.listings || 0} объявлений • 
+                  {user.appRole === 'ADMIN' ? 'Администратор' : 'Пользователь'} •
+                  {user._count?.listings ?? 0} объявлений •
                   {new Date(user.createdAt).toLocaleDateString('ru')}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
-                  {user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован'}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', (user as any).status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
+                  {(user as any).status === 'ACTIVE' ? 'Активен' : 'Заблокирован'}
                 </span>
-                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.appRole === 'ADMIN' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-700')}>
-                  {user.appRole}
+                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.appRole === 'ADMIN' ? 'bg-violet-100 text-violet-700' : user.appRole === 'MANAGER' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700')}>
+                  {user.appRole === 'ADMIN' ? 'Админ' : user.appRole === 'MANAGER' ? 'Менеджер' : 'Пользователь'}
                 </span>
+                <select
+                  value={user.appRole === 'ADMIN' ? 'admin' : user.appRole === 'MANAGER' ? 'manager' : 'user'}
+                  onChange={(e) => handleSetRole(user.id, e.target.value as 'admin' | 'manager' | 'user')}
+                  disabled={settingRole === user.id}
+                  className="rounded-lg px-2 py-1 text-[12px] border border-gray-300 bg-white"
+                >
+                  <option value="user">Пользователь</option>
+                  <option value="manager">Менеджер</option>
+                  <option value="admin">Админ</option>
+                </select>
               </div>
             </div>
           ))}
@@ -223,7 +260,12 @@ function ListingsTab() {
 
   const handleAction = async (id: string, action: 'approve' | 'reject' | 'block') => {
     try {
-      await apiFetch(`/admin/listings/${id}/${action}`, { method: 'POST' })
+      if (action === 'reject') {
+        const reason = window.prompt('Причина отклонения (будет показана автору):') ?? ''
+        await apiFetch(`/admin/listings/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+      } else {
+        await apiFetch(`/admin/listings/${id}/${action}`, { method: 'POST' })
+      }
       fetchListings()
     } catch (err) {
       console.error(`Failed to ${action} listing:`, err)
@@ -265,6 +307,7 @@ function ListingsTab() {
           <option value="DRAFT">Черновики</option>
           <option value="PENDING_REVIEW">На модерации</option>
           <option value="PUBLISHED">Опубликовано</option>
+          <option value="REJECTED">Отклонённые</option>
           <option value="BLOCKED">Заблокировано</option>
         </select>
       </div>
@@ -334,7 +377,12 @@ function ModerationTab() {
 
   const handleAction = async (id: string, action: 'approve' | 'reject') => {
     try {
-      await apiFetch(`/admin/listings/${id}/${action}`, { method: 'POST' })
+      if (action === 'reject') {
+        const reason = window.prompt('Причина отклонения (будет показана автору):') ?? ''
+        await apiFetch(`/admin/listings/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+      } else {
+        await apiFetch(`/admin/listings/${id}/approve`, { method: 'POST' })
+      }
       fetchPending()
     } catch (err) {
       console.error(`Failed to ${action} listing:`, err)
@@ -431,6 +479,95 @@ function SettingsTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PUSH — отправка уведомлений всем пользователям
+// ═══════════════════════════════════════════════════════════════
+function PushTab() {
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [link, setLink] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<{ sent?: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSend = async () => {
+    if (!title.trim()) {
+      setError('Введите текст уведомления')
+      return
+    }
+    setError(null)
+    setResult(null)
+    setLoading(true)
+    try {
+      const res = await apiFetch<{ sent: number }>('/admin/push', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: title.trim(),
+          body: body.trim() || undefined,
+          link: link.trim() || undefined,
+        }),
+      })
+      setResult(res ?? { sent: 0 })
+      setTitle('')
+      setBody('')
+      setLink('')
+    } catch (e: any) {
+      setError(e?.message ?? 'Ошибка отправки')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-[18px] font-bold text-[#1C1F26]">Уведомления</h2>
+      <p className="text-[14px] text-[#6B7280]">Отправка уведомления всем пользователям (отобразится в колокольчике в шапке).</p>
+      <div className="max-w-md space-y-4">
+        <div>
+          <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Текст (заголовок) *</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Заголовок уведомления"
+            className="w-full rounded-[14px] px-4 py-3 border border-gray-200 bg-white text-[14px]"
+          />
+        </div>
+        <div>
+          <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Описание (необязательно)</label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Дополнительный текст"
+            rows={3}
+            className="w-full rounded-[14px] px-4 py-3 border border-gray-200 bg-white text-[14px] resize-none"
+          />
+        </div>
+        <div>
+          <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Ссылка (необязательно)</label>
+          <input
+            type="url"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-[14px] px-4 py-3 border border-gray-200 bg-white text-[14px]"
+          />
+        </div>
+        {error && <p className="text-[13px] text-red-600">{error}</p>}
+        {result != null && <p className="text-[13px] text-green-600">Отправлено пользователям: {result.sent ?? 0}</p>}
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={loading}
+          className="px-5 py-2.5 rounded-[14px] bg-violet-600 text-white font-semibold text-[14px] hover:bg-violet-500 disabled:opacity-70"
+        >
+          {loading ? 'Отправка…' : 'Отправить всем'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ICONS
 // ═══════════════════════════════════════════════════════════════
 function DashboardIcon() {
@@ -461,6 +598,14 @@ function ModerationIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  )
+}
+
+function PushIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
     </svg>
   )
 }

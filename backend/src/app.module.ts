@@ -24,6 +24,8 @@ import { AiCoreModule } from "./modules/ai-core/ai-core.module";
 import { InsightsModule } from "./modules/insights/insights.module";
 import { DecisionModule } from "./modules/decision/decision.module";
 import { AdminModule } from "./modules/admin/admin.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { ChatsModule } from "./modules/chats/chats.module";
 import { TelegramModule } from "./modules/telegram/telegram.module";
 import { DebugModule } from "./debug/debug.module";
 import { ProfileModule } from "./modules/profile/profile.module";
@@ -74,6 +76,8 @@ const isProduction = process.env.NODE_ENV === "production";
     SystemModule,
     // Admin
     AdminModule,
+    NotificationsModule,
+    ChatsModule,
     // Telegram Bot
     TelegramModule,
     ...(isProduction ? [] : [DebugModule]),

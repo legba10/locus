@@ -1,10 +1,15 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { ListingStatus } from '@prisma/client';
+import { ListingStatus, UserRoleEnum } from '@prisma/client';
+import { ROOT_ADMIN_EMAIL } from '../auth/constants';
+import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * Get dashboard stats
@@ -65,27 +70,47 @@ export class AdminService {
   /**
    * Approve a listing (move from PENDING_REVIEW to PUBLISHED)
    */
-  async approveListing(listingId: string) {
+  async approveListing(listingId: string, adminId: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException('Listing not found');
-    
-    return this.prisma.listing.update({
+
+    const updated = await this.prisma.listing.update({
       where: { id: listingId },
-      data: { status: ListingStatus.PUBLISHED },
+      data: {
+        status: ListingStatus.PUBLISHED,
+        moderatedById: adminId,
+        moderationComment: null,
+      },
     });
+
+    this.notifications
+      .create(listing.ownerId, NotificationType.LISTING_APPROVED, 'Объявление опубликовано', null)
+      .catch(() => {});
+
+    return updated;
   }
 
   /**
    * Reject a listing (move from PENDING_REVIEW to REJECTED)
    */
-  async rejectListing(listingId: string, reason?: string) {
+  async rejectListing(listingId: string, adminId: string, reason?: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException('Listing not found');
-    
-    return this.prisma.listing.update({
+
+    const updated = await this.prisma.listing.update({
       where: { id: listingId },
-      data: { status: ListingStatus.REJECTED },
+      data: {
+        status: ListingStatus.REJECTED,
+        moderatedById: adminId,
+        moderationComment: reason ?? null,
+      },
     });
+
+    this.notifications
+      .create(listing.ownerId, NotificationType.LISTING_REJECTED, 'Объявление отклонено', reason ?? undefined)
+      .catch(() => {});
+
+    return updated;
   }
 
   /**
@@ -113,5 +138,32 @@ export class AdminService {
         _count: { select: { listings: true, bookingsAsGuest: true } },
       },
     });
+  }
+
+  /**
+   * Отправить уведомление всем пользователям (админ-пуш).
+   */
+  async pushToAll(title: string, body?: string) {
+    return this.notifications.createForAllUsers('ADMIN_PUSH', title, body ?? null);
+  }
+
+  /**
+   * Set user appRole (root admin only). Root cannot be demoted. Manager cannot change roles (only root can call this).
+   */
+  async setUserRole(userId: string, appRole: UserRoleEnum) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    const isRootUser = (user.email ?? '').trim().toLowerCase() === ROOT_ADMIN_EMAIL.trim().toLowerCase();
+    if (isRootUser) {
+      throw new ForbiddenException('Root admin role cannot be changed');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { appRole },
+    });
+    return { userId, appRole };
   }
 }
