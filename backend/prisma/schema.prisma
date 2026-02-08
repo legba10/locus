@@ -178,10 +178,13 @@ model RefreshToken {
   createdAt DateTime @default(now())
   revokedAt DateTime?
 
+  /// Device/session identifier (for multi-device sessions)
+  device    String?
   userAgent String?
   ip        String?
 
   @@index([userId])
+  @@index([userId, device])
   @@index([token])
   @@index([expiresAt])
 }

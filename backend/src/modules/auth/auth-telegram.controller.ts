@@ -18,6 +18,8 @@ import { SupabaseAuthService } from "./supabase-auth.service";
 import { randomUUID } from "crypto";
 import { supabase } from "../../shared/lib/supabase";
 import { setAuthCookies } from "./auth-cookies";
+import { NeonUserService } from "../users/neon-user.service";
+import { AuthSessionsService } from "./auth-sessions.service";
 
 const SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -28,7 +30,9 @@ export class AuthTelegramController {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly supabaseAuth: SupabaseAuthService
+    private readonly supabaseAuth: SupabaseAuthService,
+    private readonly neonUser: NeonUserService,
+    private readonly sessions: AuthSessionsService
   ) {}
 
   private async isSessionValid(accessToken: string | null | undefined): Promise<boolean> {
@@ -178,6 +182,8 @@ export class AuthTelegramController {
         throw new ConflictException("USER_NOT_FOUND");
       }
       setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
+      await this.neonUser.ensureUserExists(loginToken.userId, profile.email ?? null).catch(() => undefined);
+      await this.sessions.storeRefreshSession(loginToken.userId, refreshToken, req).catch(() => undefined);
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -260,6 +266,8 @@ export class AuthTelegramController {
             throw new InternalServerErrorException("PROFILE_NOT_FOUND");
           }
           setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
+          await this.neonUser.ensureUserExists(user.id, profile.email ?? null).catch(() => undefined);
+          await this.sessions.storeRefreshSession(user.id, refreshToken, req).catch(() => undefined);
           return {
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -322,6 +330,8 @@ export class AuthTelegramController {
         throw new InternalServerErrorException("PROFILE_NOT_FOUND");
       }
       setAuthCookies(res, req, { access_token: sessionData.session.access_token, refresh_token: sessionData.session.refresh_token });
+      await this.neonUser.ensureUserExists(user.id, profile.email ?? null).catch(() => undefined);
+      await this.sessions.storeRefreshSession(user.id, sessionData.session.refresh_token, req).catch(() => undefined);
       return {
         access_token: sessionData.session.access_token,
         refresh_token: sessionData.session.refresh_token,

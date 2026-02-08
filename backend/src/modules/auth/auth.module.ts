@@ -10,6 +10,7 @@ import { RolesGuard } from "./guards/roles.guard";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
 import { TariffGuard } from "./guards/tariff.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
+import { AuthSessionsService } from "./auth-sessions.service";
 
 /**
  * AuthModule — handles authentication via Supabase
@@ -24,7 +25,7 @@ import { SupabaseAuthService } from "./supabase-auth.service";
 @Module({
   imports: [ConfigModule, PrismaModule, UsersModule],
   controllers: [AuthController, MeController, TelegramAuthController, AuthTelegramController],
-  providers: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
-  exports: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService],
+  providers: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
+  exports: [RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
 })
 export class AuthModule {}

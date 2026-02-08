@@ -79,7 +79,9 @@ export class SupabaseAuthService {
    * Called after every successful auth
    */
   async upsertProfile(user: SupabaseAuthUser, telegramId?: string): Promise<SupabaseProfile | null> {
-    if (!supabase) {
+    // IMPORTANT: don't rely on narrowing imported live binding (`supabase`).
+    const sb = supabase;
+    if (!sb) {
       this.logger.error("Supabase client not configured");
       return null;
     }
@@ -109,7 +111,7 @@ export class SupabaseAuthService {
     this.logger.debug(`Upserting profile for user ${user.id}`);
 
     const tryUpsert = async (payload: Record<string, unknown>) => {
-      return supabase
+      return sb
         .from("profiles")
         .upsert(payload, {
           onConflict: "id",
@@ -143,7 +145,7 @@ export class SupabaseAuthService {
 
       this.logger.error(`Failed to upsert profile: ${msg}`);
       // If upsert failed, try to fetch existing profile
-      const { data: existing } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data: existing } = await sb.from("profiles").select("*").eq("id", user.id).single();
       return existing as SupabaseProfile | null;
     }
 

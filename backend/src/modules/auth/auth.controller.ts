@@ -7,6 +7,8 @@ import { clearAuthCookies, readRefreshTokenFromCookie, setAuthCookies } from "./
 import { PrismaService } from "../prisma/prisma.service";
 import { NeonUserService } from "../users/neon-user.service";
 import { planFromLegacyTariff } from "./plan";
+import { AuthSessionsService } from "./auth-sessions.service";
+import { supabase } from "../../shared/lib/supabase";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -14,7 +16,8 @@ export class AuthController {
   constructor(
     private readonly supabaseAuth: SupabaseAuthService,
     private readonly prisma: PrismaService,
-    private readonly neonUser: NeonUserService
+    private readonly neonUser: NeonUserService,
+    private readonly sessions: AuthSessionsService
   ) {}
 
   @Get("me")
@@ -109,6 +112,20 @@ export class AuthController {
     const session = await this.supabaseAuth.refreshSession(token);
     // Keep cookie session in sync (Telegram + any cookie-based auth)
     setAuthCookies(res, req, session);
+
+    // Multi-device sessions: store/rotate refresh token for current device without deleting other devices.
+    try {
+      const sb = supabase;
+      if (sb) {
+        const { data } = await sb.auth.getUser(session.access_token);
+        const userId = data?.user?.id;
+        if (userId) {
+          await this.sessions.rotateRefreshSession(userId, token, session.refresh_token, req);
+        }
+      }
+    } catch {
+      // ignore session store issues
+    }
     return session;
   }
 
@@ -116,6 +133,10 @@ export class AuthController {
   @ApiOperation({ summary: "Logout: clears auth cookies (cookie-based sessions)" })
   @ApiResponse({ status: 200, description: "Logged out" })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const rt = readRefreshTokenFromCookie(req);
+    if (rt) {
+      await this.sessions.revokeByToken(rt);
+    }
     clearAuthCookies(res, req);
     return { ok: true };
   }

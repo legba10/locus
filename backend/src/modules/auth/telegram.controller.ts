@@ -5,6 +5,8 @@ import { supabase } from "../../shared/lib/supabase";
 import { SupabaseAuthService } from "./supabase-auth.service";
 import type { Request, Response } from "express";
 import { setAuthCookies } from "./auth-cookies";
+import { NeonUserService } from "../users/neon-user.service";
+import { AuthSessionsService } from "./auth-sessions.service";
 
 interface TelegramAuthData {
   id: number;
@@ -21,7 +23,11 @@ interface TelegramAuthData {
 export class TelegramAuthController {
   private readonly logger = new Logger(TelegramAuthController.name);
 
-  constructor(private readonly supabaseAuth: SupabaseAuthService) {}
+  constructor(
+    private readonly supabaseAuth: SupabaseAuthService,
+    private readonly neonUser: NeonUserService,
+    private readonly sessions: AuthSessionsService
+  ) {}
 
   /**
    * Verify Telegram login widget data
@@ -183,6 +189,10 @@ export class TelegramAuthController {
         access_token: sessionData.session.access_token,
         refresh_token: sessionData.session.refresh_token,
       });
+
+      // Ensure Neon user exists (FKs) and store refresh session for multi-device.
+      await this.neonUser.ensureUserExists(userId, userEmail).catch(() => undefined);
+      await this.sessions.storeRefreshSession(userId, sessionData.session.refresh_token, req).catch(() => undefined);
 
       return {
         ok: true,
