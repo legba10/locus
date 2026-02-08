@@ -10,11 +10,11 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
-import { CityInput } from '@/shared/components/CityInput'
 import { UpgradeModal } from '@/components/upgradeModal/UpgradeModal'
 import type { UserPlan } from '@/shared/contracts/api'
 import { PlanBadge } from '@/components/planBadge/PlanBadge'
 import { LockedFeatureCard } from '@/components/paywall/LockedFeatureCard'
+import { ListingWizard } from '@/domains/listings/ListingWizard'
 
 type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' | 'profile'
 
@@ -68,21 +68,6 @@ export function OwnerDashboardV7() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {isFreePlan && (
-          <div className="mb-6 rounded-[16px] border border-violet-100 bg-violet-50 px-5 py-4 text-[14px] text-violet-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <PlanBadge plan={plan} />
-              <span>Ваш тариф: {plan}. Доступно: {listingLimit} • Использовано: {listingUsed}.</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => { setUpgradeReason("general"); setUpgradeOpen(true); }}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-[10px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500"
-            >
-              Улучшить тариф
-            </button>
-          </div>
-        )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ═══════════════════════════════════════════════════════════════
               SIDEBAR
@@ -252,17 +237,19 @@ function MyListingsTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-[24px] font-bold text-[#1C1F26]">Мои объявления</h1>
-        <button
-          type="button"
-          onClick={canCreate ? onAdd : () => onUpgrade("limit")}
-          className={cn(
-            'px-5 py-2.5 rounded-[14px]',
-            canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-            'font-semibold text-[14px] transition-colors'
-          )}
-        >
-          {canCreate ? '+ Добавить объявление' : '➕ Добавить объявление 🔒'}
-        </button>
+        {!isLoading && listings.length > 0 && (
+          <button
+            type="button"
+            onClick={canCreate ? onAdd : () => onUpgrade("limit")}
+            className={cn(
+              'px-5 py-2.5 rounded-[14px]',
+              canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              'font-semibold text-[14px] transition-colors'
+            )}
+          >
+            {canCreate ? '+ Добавить объявление' : '➕ Добавить объявление 🔒'}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between rounded-[16px] border border-gray-100/80 bg-white px-5 py-4 shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
@@ -390,6 +377,30 @@ function MyListingsTab({
                   <p className="text-[14px] text-[#6B7280] mb-3">
                     {listing.city} • {formatPrice(listing.basePrice || listing.pricePerNight, 'month')}
                   </p>
+
+                  {Array.isArray(listing.amenities) && listing.amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {listing.amenities
+                        .map((x: any) => x?.amenity?.key ?? x?.amenity?.label)
+                        .filter(Boolean)
+                        .slice(0, 6)
+                        .map((key: string) => (
+                          <span
+                            key={key}
+                            className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-[12px] text-[#4B5563]"
+                          >
+                            {String(key)
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                        ))}
+                      {listing.amenities.length > 6 && (
+                        <span className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-[12px] text-[#6B7280]">
+                          +{listing.amenities.length - 6}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   
                   {/* Метрики */}
                   <div className="flex items-center gap-6 mb-3">
@@ -422,36 +433,83 @@ function MyListingsTab({
                     )}
                   </div>
 
-                  {plan === "FREE" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <div className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="font-semibold text-[13px] text-[#1C1F26]">📊 Подробная аналитика</div>
+                  {(() => {
+                    const intel = (listing as any)?.intelligence as any | null | undefined;
+                    const recommendedPrice: number | null =
+                      typeof intel?.recommendedPrice === "number" ? intel.recommendedPrice : null;
+                    const diffPct: number | null =
+                      typeof intel?.priceDeltaPercent === "number" ? intel.priceDeltaPercent : null;
+                    const position: string | null = typeof intel?.marketPosition === "string" ? intel.marketPosition : null;
+
+                    if (!recommendedPrice) {
+                      if (plan !== "FREE") return null;
+                      return (
+                        <div className="mb-3 rounded-[14px] border border-gray-100 bg-gray-50 px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-[13px] font-semibold text-[#1C1F26]">🤖 AI‑совет по цене</div>
+                              <div className="mt-0.5 text-[12px] text-[#6B7280]">Доступен на PRO: рекомендация цены + «применить»</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => onUpgrade("ai")}
+                              className="shrink-0 inline-flex items-center justify-center px-3 py-2 rounded-[12px] text-[12px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
+                            >
+                              🔒 PRO
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const direction =
+                      position === "below_market"
+                        ? "ниже рынка"
+                        : position === "above_market"
+                        ? "выше рынка"
+                        : "в рынке";
+                    const diffText =
+                      diffPct != null && Number.isFinite(diffPct) ? `${Math.abs(diffPct).toFixed(0)}% ${direction}` : direction;
+
+                    const apply = async () => {
+                      if (plan === "FREE") {
+                        onUpgrade("ai");
+                        return;
+                      }
+                      await apiFetchJson(`/listings/${encodeURIComponent(String(listing.id))}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ basePrice: recommendedPrice }),
+                      });
+                      await queryClient.invalidateQueries({ queryKey: ["owner-listings"] });
+                    };
+
+                    return (
+                      <div className="mb-3 rounded-[14px] border border-violet-100 bg-violet-50/70 px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-[13px] font-semibold text-violet-800">
+                              AI: цена {diffText}
+                            </div>
+                            <div className="mt-0.5 text-[12px] text-[#6B7280]">
+                              Рекомендуем <span className="font-semibold text-[#1C1F26]">{recommendedPrice.toLocaleString("ru-RU")} ₽</span>
+                            </div>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => onUpgrade("analytics")}
-                            className="text-[12px] font-semibold text-violet-700 hover:text-violet-800"
+                            onClick={() => void apply()}
+                            className={cn(
+                              "shrink-0 inline-flex items-center justify-center px-3 py-2 rounded-[12px] text-[12px] font-semibold",
+                              plan === "FREE"
+                                ? "bg-white text-violet-700 border border-violet-200 hover:bg-violet-50"
+                                : "bg-violet-600 text-white hover:bg-violet-500"
+                            )}
                           >
-                            🔒 PRO
+                            {plan === "FREE" ? "🔒 Применить" : "Применить"}
                           </button>
                         </div>
-                        <div className="mt-1 text-[12px] text-[#6B7280]">Графики, источники трафика, статистика по дням</div>
                       </div>
-                      <div className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="font-semibold text-[13px] text-[#1C1F26]">🤖 AI‑анализ цены</div>
-                          <button
-                            type="button"
-                            onClick={() => onUpgrade("ai")}
-                            className="text-[12px] font-semibold text-violet-700 hover:text-violet-800"
-                          >
-                            🔒 PRO
-                          </button>
-                        </div>
-                        <div className="mt-1 text-[12px] text-[#6B7280]">Рекомендации цены и рисков по объявлению</div>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Статус и действия */}
                   <div className="flex items-center gap-3">
@@ -528,542 +586,13 @@ function AddListingTab({
   initialListing?: any | null;
   onLimitReached?: () => void;
 }) {
-  const queryClient = useQueryClient()
-  const isEdit = Boolean(initialListing?.id)
-
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    city: '',
-    price: '',
-    rooms: '',
-    area: '',
-    floor: '',
-    totalFloors: '',
-    type: 'apartment',
-  })
-  const [photos, setPhotos] = useState<File[]>([])
-  const [existingPhotos, setExistingPhotos] = useState<Array<{ id: string; url: string }>>([])
-  const [dragActive, setDragActive] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!initialListing) {
-      setFormData({
-        title: '',
-        description: '',
-        city: '',
-        price: '',
-        rooms: '',
-        area: '',
-        floor: '',
-        totalFloors: '',
-        type: 'apartment',
-      })
-      setPhotos([])
-      setExistingPhotos([])
-      return
-    }
-
-    const houseRules = initialListing.houseRules || {}
-    setFormData({
-      title: initialListing.title ?? '',
-      description: initialListing.description ?? '',
-      city: initialListing.city ?? '',
-      price: String(initialListing.basePrice ?? ''),
-      rooms: String(initialListing.bedrooms ?? ''),
-      area: String(houseRules.area ?? ''),
-      floor: String(houseRules.floor ?? ''),
-      totalFloors: String(houseRules.totalFloors ?? ''),
-      type: houseRules.type ?? initialListing.type ?? 'apartment',
-    })
-    setPhotos([])
-    setExistingPhotos(
-      Array.isArray(initialListing.photos)
-        ? initialListing.photos.map((p: any) => ({ id: p.id, url: p.url }))
-        : []
-    )
-  }, [initialListing])
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const newFiles = Array.from(e.dataTransfer.files)
-      setPhotos(prev => [...prev, ...newFiles].slice(0, 10))
-    }
-  }
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files)
-      setPhotos(prev => [...prev, ...newFiles].slice(0, 10))
-    }
-  }
-
-  const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const removeExistingPhoto = async (photoId: string) => {
-    if (!initialListing?.id) return
-    await apiFetch(`/listings/${encodeURIComponent(initialListing.id)}/photos/${encodeURIComponent(photoId)}`, {
-      method: 'DELETE',
-    })
-    setExistingPhotos(prev => prev.filter((p) => p.id !== photoId))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (isSubmitting) return
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const title = formData.title.trim()
-      const description = formData.description.trim()
-      const city = formData.city.trim()
-      const price = Number(formData.price)
-      const rooms = Number(formData.rooms || '0')
-      const area = Number(formData.area || '0')
-      const floor = Number(formData.floor || '0')
-      const totalFloors = Number(formData.totalFloors || '0')
-
-      if (!title || !description || !city || !price || Number.isNaN(price)) {
-        setError('Заполните название, описание, город и цену')
-        setIsSubmitting(false)
-        return
-      }
-
-      if (photos.length + existingPhotos.length === 0) {
-        setError('Добавьте хотя бы одно фото')
-        setIsSubmitting(false)
-        return
-      }
-
-      const listingType = formData.type ? formData.type.toUpperCase() : 'APARTMENT'
-      const payload: any = {
-        title,
-        description,
-        city,
-        basePrice: price,
-        capacityGuests: 2,
-        bedrooms: rooms || 1,
-        bathrooms: 1,
-        type: listingType,
-        houseRules: {},
-      }
-
-      if (area) {
-        payload.houseRules = {
-          ...(payload.houseRules || {}),
-          area,
-          floor,
-          totalFloors,
-          type: formData.type,
-        }
-      }
-
-      let listingId = initialListing?.id as string | undefined
-      if (isEdit) {
-        await apiFetchJson(`/listings/${encodeURIComponent(listingId)}`, {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-        })
-      } else {
-        const createData = await apiFetchJson<{ item?: { id: string }; id?: string; listingId?: string }>(
-          '/listings',
-          {
-            method: 'POST',
-            body: JSON.stringify(payload),
-          },
-        )
-
-        listingId =
-          createData?.listing?.id ?? createData?.item?.id ?? createData?.id ?? createData?.listingId
-
-        if (!listingId) {
-          throw new Error('Сервер не вернул ID нового объявления')
-        }
-      }
-
-      // 2) Загружаем новые фото через /api/listings/{id}/photos
-      for (let i = 0; i < photos.length; i++) {
-        const file = photos[i]
-        const form = new FormData()
-        form.append('file', file)
-        form.append('sortOrder', String(i))
-
-        await apiFetch(
-          `/listings/${encodeURIComponent(listingId)}/photos`,
-          {
-            method: 'POST',
-            body: form,
-          },
-        )
-      }
-
-      // 3) Публикуем объявление (только для создания)
-      if (!isEdit) {
-        await apiFetch(
-          `/listings/${encodeURIComponent(listingId)}/publish`,
-          { method: 'POST' },
-        )
-      }
-
-      // 4) Обновляем список объявлений без перезагрузки
-      await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
-
-      // 5) Сбрасываем форму
-      setFormData({
-        title: '',
-        description: '',
-        city: '',
-        price: '',
-        rooms: '',
-        area: '',
-        floor: '',
-        totalFloors: '',
-        type: 'apartment',
-      })
-      setPhotos([])
-      setExistingPhotos([])
-
-      // 6) Автоматически переключаемся на вкладку "Мои объявления"
-      if (onSuccess) {
-        onSuccess()
-      }
-    } catch (err: any) {
-      if (err?.code === "LIMIT_REACHED") {
-        onLimitReached?.()
-        setError(err?.message ?? 'Лимит объявлений исчерпан')
-      } else {
-        const message =
-          err instanceof Error ? err.message : 'Ошибка при сохранении объявления'
-        setError(message)
-      }
-      // eslint-disable-next-line no-console
-      console.error('Create listing error:', err)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">
-        {isEdit ? 'Редактировать объявление' : 'Добавить объявление'}
-      </h1>
-
-      <div className={cn(
-        'bg-white rounded-[18px] p-6',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-        'border border-gray-100/80'
-      )}>
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* Фото (drag&drop) */}
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Фотографии</label>
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={cn(
-                'border-2 border-dashed rounded-[14px] p-8 text-center transition-colors',
-                dragActive ? 'border-violet-400 bg-violet-50' : 'border-gray-300 bg-gray-50'
-              )}
-            >
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileInput}
-                className="hidden"
-                id="photo-upload"
-              />
-              <label htmlFor="photo-upload" className="cursor-pointer">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-[14px] text-[#6B7280] mb-1">
-                  Перетащите фото сюда или <span className="text-violet-600">выберите файлы</span>
-                </p>
-                <p className="text-[12px] text-[#6B7280]">До 10 фотографий</p>
-              </label>
-            </div>
-            
-            {/* Текущие фото (edit) */}
-            {existingPhotos.length > 0 && (
-              <div className="mt-4">
-                <p className="text-[12px] text-[#6B7280] mb-2">Текущие фотографии</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {existingPhotos.map((photo) => (
-                    <div key={photo.id} className="relative aspect-square rounded-[12px] overflow-hidden bg-gray-100">
-                      <Image src={photo.url} alt="Existing photo" fill className="object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeExistingPhoto(photo.id)}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Превью новых фото */}
-            {photos.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4">
-                {photos.map((photo, i) => (
-                  <div key={i} className="relative aspect-square rounded-[12px] overflow-hidden bg-gray-100">
-                    <Image
-                      src={URL.createObjectURL(photo)}
-                      alt={`Photo ${i + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(i)}
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Название</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Квартира в центре"
-              className={cn(
-                'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-white/95',
-                'text-[#1C1F26] text-[14px]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-              )}
-            />
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Описание</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Опишите ваше жильё..."
-              rows={5}
-              className={cn(
-                'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-white/95',
-                'text-[#1C1F26] text-[14px]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                'resize-none'
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Город</label>
-              <CityInput
-                value={formData.city}
-                onChange={(value) => setFormData({ ...formData, city: value })}
-                placeholder="Выберите город"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Цена (₽/мес)</label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="30000"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Комнаты</label>
-              <input
-                type="number"
-                value={formData.rooms}
-                onChange={(e) => setFormData({ ...formData, rooms: e.target.value })}
-                placeholder="2"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Площадь (м²)</label>
-              <input
-                type="number"
-                value={formData.area}
-                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                placeholder="50"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Этаж</label>
-              <input
-                type="number"
-                value={formData.floor}
-                onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
-                placeholder="3"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Этажей в доме</label>
-              <input
-                type="number"
-                value={formData.totalFloors}
-                onChange={(e) => setFormData({ ...formData, totalFloors: e.target.value })}
-                placeholder="9"
-                className={cn(
-                  'w-full rounded-[14px] px-4 py-3',
-                  'border border-gray-200/60 bg-white/95',
-                  'text-[#1C1F26] text-[14px]',
-                  'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-                )}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Тип жилья</label>
-            <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className={cn(
-                'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-white/95',
-                'text-[#1C1F26] text-[14px]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-              )}
-            >
-              <option value="apartment">Квартира</option>
-              <option value="room">Комната</option>
-              <option value="house">Дом</option>
-              <option value="studio">Студия</option>
-            </select>
-          </div>
-
-          {/* AI-подсказки (mock) */}
-          <div className={cn(
-            'bg-violet-50/80 rounded-[14px] p-4',
-            'border border-violet-100'
-          )}>
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <span className="text-[13px] font-semibold text-violet-600">AI-подсказки</span>
-            </div>
-            <ul className="space-y-1 text-[12px] text-[#6B7280]">
-              <li>• Добавьте минимум 5 фотографий для лучшего результата</li>
-              <li>• Подробное описание увеличивает просмотры на 30%</li>
-              <li>• Цена в диапазоне 25,000-35,000₽ имеет высокий спрос</li>
-            </ul>
-          </div>
-
-          {error && (
-            <p className="text-[13px] text-red-600">
-              {error}
-            </p>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={cn(
-                'w-full py-3 rounded-[14px]',
-                'bg-violet-600 text-white font-semibold text-[15px]',
-                'hover:bg-violet-500 transition-colors',
-                'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
-                isSubmitting && 'opacity-70 cursor-not-allowed'
-              )}
-            >
-              {isSubmitting ? (isEdit ? 'Сохранение...' : 'Создание...') : (isEdit ? 'Сохранить' : 'Создать объявление')}
-            </button>
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className={cn(
-                  'w-full py-3 rounded-[14px]',
-                  'border border-gray-200 text-[#1C1F26] text-[15px] font-semibold',
-                  'hover:bg-gray-50 transition-colors'
-                )}
-              >
-                Отмена
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-    </div>
+    <ListingWizard
+      onSuccess={onSuccess}
+      onCancel={onCancel}
+      initialListing={initialListing}
+      onLimitReached={onLimitReached}
+    />
   )
 }
 

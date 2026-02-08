@@ -62,7 +62,9 @@ export class ListingsService {
       orderBy: { createdAt: "desc" },
       include: {
         photos: { orderBy: { sortOrder: "asc" }, take: 1 },
+        amenities: { include: { amenity: true } },
         aiScores: true,
+        intelligence: true,
         _count: {
           select: {
             bookings: true,
