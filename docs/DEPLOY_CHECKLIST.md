@@ -4,6 +4,33 @@
 
 ---
 
+## Если изменения НЕ отображаются на сайте
+
+Сделать по порядку:
+
+1. **Ветка деплоя = main**  
+   Vercel → Project → Settings → Git → **Production Branch** должен быть `main`. Если указана `dev`, прод не обновится.
+
+2. **Redeploy без кеша**  
+   Vercel → Deployments → у последнего деплоя меню (⋯) → **Redeploy** → включить **Clear cache and redeploy** → Redeploy.
+
+3. **Supabase подключен**  
+   В Vercel Environment Variables должны быть:  
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.  
+   Backend (Railway) при необходимости: `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`.
+
+4. **Таблицы Supabase созданы**  
+   В Supabase SQL Editor проверить: `SELECT * FROM profiles LIMIT 1;`  
+   Если таблицы нет — применить миграции (Supabase Dashboard → SQL или `supabase db push`).
+
+5. **Миграции Neon применены**  
+   Локально: `cd backend && npx prisma migrate deploy && npx prisma generate`.  
+   На Railway в build/deploy должен быть шаг `prisma migrate deploy` или миграции применены вручную.
+
+После этого новые поля, роли и админ-панель должны отображаться.
+
+---
+
 ## Ответы на главные вопросы
 
 | Вопрос | Ответ |

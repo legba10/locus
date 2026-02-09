@@ -36,13 +36,13 @@ export function ListingHeader({
 
   return (
     <div className={cn(
-      'bg-white rounded-[18px] p-6',
-      'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80'
+      'bg-white rounded-2xl p-4 md:p-6',
+      'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
     )}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <div>
-          <h1 className="text-[22px] md:text-[26px] font-bold text-[#1C1F26] mb-1">{title}</h1>
-          <p className="text-[15px] text-[#6B7280]">{city}</p>
+          <h1 className="text-[20px] md:text-[24px] font-bold text-[#1C1F26] leading-tight mb-1">{title}</h1>
+          <p className="text-[14px] text-[#6B7280]">{city}</p>
         </div>
         <div className="flex flex-col justify-center md:items-end">
           {hasRating && (

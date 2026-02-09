@@ -500,6 +500,13 @@ function MyListingsTab({
                   )
                 })()}
 
+                {/* Баннер: на модерации */}
+                {(listing.status === 'PENDING_REVIEW' || listing.status === 'PENDING') && (
+                  <div className="rounded-[12px] bg-amber-50 border border-amber-200 p-3">
+                    <p className="text-[13px] font-medium text-amber-800">На модерации</p>
+                    <p className="text-[12px] text-amber-700 mt-0.5">Обычно проверка занимает до 24 часов. После одобрения объявление появится в каталоге.</p>
+                  </div>
+                )}
                 {/* Статус + кнопки — сетка 3 колонки, без скачков */}
                 <div className="flex flex-col gap-2">
                   {listing.status === 'REJECTED' && (listing.moderationComment || listing.moderation_comment) && (

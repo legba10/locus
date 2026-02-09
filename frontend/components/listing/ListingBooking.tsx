@@ -23,8 +23,8 @@ export function ListingBooking({ listingId, pricePerNight, onConfirm }: ListingB
   return (
     <div
       className={cn(
-        'bg-white rounded-[18px] p-6',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80'
+        'bg-white rounded-2xl p-4 md:p-6',
+        'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
       )}
     >
       <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Бронирование</h2>

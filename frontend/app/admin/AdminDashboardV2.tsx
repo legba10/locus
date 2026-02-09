@@ -12,7 +12,14 @@ type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' |
 interface AdminStats {
   users: { total: number }
   listings: { total: number; pending: number; published: number }
-  bookings: { total: number }
+  bookings: { total: number; confirmed?: number; canceled?: number }
+  economy?: {
+    gmv: number
+    revenue: number
+    totalViews: number
+    conversion: number
+    messagesCount: number
+  }
 }
 
 interface AdminUser {
@@ -27,12 +34,14 @@ interface AdminUser {
 interface AdminListing {
   id: string
   title: string
+  description?: string
   status: string
   city: string
   basePrice: number
   createdAt: string
   owner: { id: string; email: string | null }
   photos: { url: string }[]
+  amenities?: unknown[]
 }
 
 export function AdminDashboardV2() {
@@ -66,9 +75,14 @@ export function AdminDashboardV2() {
             <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">Панель администратора</h1>
             <p className="text-[14px] text-[#6B7280]">Управление платформой LOCUS</p>
           </div>
-          <Link href="/" className="px-4 py-2 rounded-[14px] bg-gray-100 text-[#1C1F26] text-[14px] font-medium hover:bg-gray-200">
-            ← На главную
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/admin/ai" className="px-4 py-2 rounded-[14px] bg-violet-100 text-violet-700 text-[14px] font-medium hover:bg-violet-200">
+              AI
+            </Link>
+            <Link href="/" className="px-4 py-2 rounded-[14px] bg-gray-100 text-[#1C1F26] text-[14px] font-medium hover:bg-gray-200">
+              ← На главную
+            </Link>
+          </div>
         </div>
 
         <div className={cn('bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-6', 'border border-white/60', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)]')}>
@@ -130,32 +144,70 @@ function DashboardTab() {
   if (error) return <div className="text-center py-8 text-red-500">Ошибка: {error}</div>
   if (!stats) return null
 
+  const econ = stats.economy
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard title="Пользователей" value={stats.users.total} color="blue" />
-      <StatCard title="Всего объявлений" value={stats.listings.total} color="emerald" />
-      <StatCard title="На модерации" value={stats.listings.pending} color="amber" />
-      <StatCard title="Опубликовано" value={stats.listings.published} color="violet" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+        <StatCard title="Пользователей" value={stats.users.total} color="blue" />
+        <StatCard title="Объявления" value={stats.listings.total} color="emerald" />
+        <StatCard title="На модерации" value={stats.listings.pending} color="amber" />
+        <StatCard title="Опубликовано" value={stats.listings.published} color="violet" />
+        <StatCard title="Брони" value={stats.bookings.total} color="blue" />
+        <StatCard title="Отмены" value={stats.bookings.canceled ?? 0} color="red" />
+        {econ && (
+          <>
+            <StatCard title="Доход (оплаты)" value={econ.revenue} color="emerald" format="price" />
+            <StatCard title="GMV" value={econ.gmv} color="violet" format="price" />
+            <StatCard title="Просмотры" value={econ.totalViews} color="blue" />
+            <StatCard title="Конверсия %" value={econ.conversion} color="emerald" format="percent" />
+            <StatCard title="Сообщения" value={econ.messagesCount} color="violet" />
+          </>
+        )}
+      </div>
+
+      {econ && (
+        <div className={cn('rounded-[18px] border border-gray-200 overflow-hidden', 'bg-white/[0.75]')}>
+          <h3 className="text-[16px] font-semibold text-[#1C1F26] p-4 border-b border-gray-100">Юнит-экономика</h3>
+          <table className="w-full text-[14px]">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                <th className="p-3 font-medium text-[#6B7280]">Метрика</th>
+                <th className="p-3 font-medium text-[#6B7280]">Формула / значение</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-gray-100"><td className="p-3">CAC</td><td className="p-3 text-[#6B7280]">расходы / клиенты (—)</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">LTV</td><td className="p-3 text-[#6B7280]">доход с клиента (—)</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Конверсия</td><td className="p-3">{econ.totalViews ? (econ.conversion).toFixed(2) + '%' : '—'}</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Доход</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(econ.gmv)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
 
-function StatCard({ title, value, color }: { title: string; value: number; color: string }) {
+function StatCard({ title, value, color, format }: { title: string; value: number; color: string; format?: 'price' | 'percent' }) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-600',
     emerald: 'bg-emerald-100 text-emerald-600',
     amber: 'bg-amber-100 text-amber-600',
     violet: 'bg-violet-100 text-violet-600',
+    red: 'bg-red-100 text-red-600',
   }
+  const display = format === 'price' ? formatPrice(value) : format === 'percent' ? value.toFixed(1) + '%' : value.toLocaleString()
   return (
-    <div className={cn('bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-5', 'border border-white/60', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)]')}>
-      <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center mb-3', colors[color])}>
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <div className={cn('bg-white/[0.75] backdrop-blur-[22px] rounded-[18px] p-4', 'border border-white/60', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)]')}>
+      <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center mb-2', colors[color] ?? 'bg-gray-100 text-gray-600')}>
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
         </svg>
       </div>
-      <p className="text-[28px] font-bold text-[#1C1F26]">{value.toLocaleString()}</p>
-      <p className="text-[13px] text-[#6B7280] mt-1">{title}</p>
+      <p className="text-[20px] sm:text-[24px] font-bold text-[#1C1F26] truncate" title={String(display)}>{display}</p>
+      <p className="text-[12px] text-[#6B7280] mt-0.5">{title}</p>
     </div>
   )
 }
@@ -180,6 +232,10 @@ function UsersTab() {
   }, [])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const ROOT_ADMIN_EMAIL = 'legba086@mail.ru'
+  const isRootUser = (u: AdminUser) =>
+    (u.email ?? '').trim().toLowerCase() === ROOT_ADMIN_EMAIL.trim().toLowerCase()
 
   const handleSetRole = async (userId: string, role: 'admin' | 'manager' | 'user') => {
     setSettingRole(userId)
@@ -225,8 +281,9 @@ function UsersTab() {
                 <select
                   value={user.appRole === 'ADMIN' ? 'admin' : user.appRole === 'MANAGER' ? 'manager' : 'user'}
                   onChange={(e) => handleSetRole(user.id, e.target.value as 'admin' | 'manager' | 'user')}
-                  disabled={settingRole === user.id}
-                  className="rounded-lg px-2 py-1 text-[12px] border border-gray-300 bg-white"
+                  disabled={settingRole === user.id || isRootUser(user)}
+                  title={isRootUser(user) ? 'Роль root нельзя изменить' : undefined}
+                  className="rounded-lg px-2 py-1 text-[12px] border border-gray-300 bg-white disabled:opacity-60"
                 >
                   <option value="user">Пользователь</option>
                   <option value="manager">Менеджер</option>
@@ -412,28 +469,39 @@ function ModerationTab() {
       ) : (
         <div className="space-y-3">
           {listings.map(listing => (
-            <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="font-medium text-[#1C1F26] mb-1">{listing.title}</p>
-                  <p className="text-[13px] text-[#6B7280] mb-2">
-                    {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.email || 'Неизвестно'}
-                  </p>
-                  <p className="text-[12px] text-amber-700">
-                    Создано: {new Date(listing.createdAt).toLocaleString('ru')}
-                  </p>
+            <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200 flex flex-col sm:flex-row gap-4">
+              {listing.photos?.[0]?.url && (
+                <div className="w-full sm:w-24 h-24 rounded-[12px] overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img src={listing.photos[0].url} alt={listing.title} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/listings/${listing.id}`} className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500">
-                    Просмотр
-                  </Link>
-                  <button onClick={() => handleAction(listing.id, 'approve')} className="px-4 py-2 rounded-[12px] bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500">
-                    Одобрить
-                  </button>
-                  <button onClick={() => handleAction(listing.id, 'reject')} className="px-4 py-2 rounded-[12px] bg-red-600 text-white text-[13px] font-medium hover:bg-red-500">
-                    Отклонить
-                  </button>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[#1C1F26] mb-1">{listing.title}</p>
+                {listing.description && (
+                  <p className="text-[12px] text-[#6B7280] line-clamp-2 mb-2">{listing.description}</p>
+                )}
+                <p className="text-[13px] text-[#6B7280] mb-1">
+                  {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.email || 'Неизвестно'}
+                </p>
+                <p className="text-[12px] text-amber-700">
+                  Создано: {new Date(listing.createdAt).toLocaleString('ru')}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <span className="text-[11px] text-[#6B7280]">Чеклист: фото ✓</span>
+                  {listing.basePrice > 0 && <span className="text-[11px] text-[#6B7280]">цена ✓</span>}
+                  {(listing.amenities?.length ?? 0) > 0 && <span className="text-[11px] text-[#6B7280]">удобства ✓</span>}
                 </div>
+              </div>
+              <div className="flex flex-wrap gap-2 self-start sm:self-center">
+                <Link href={`/listings/${listing.id}`} className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500">
+                  Просмотр
+                </Link>
+                <button onClick={() => handleAction(listing.id, 'approve')} className="px-4 py-2 rounded-[12px] bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500">
+                  Одобрить
+                </button>
+                <button onClick={() => handleAction(listing.id, 'reject')} className="px-4 py-2 rounded-[12px] bg-red-600 text-white text-[13px] font-medium hover:bg-red-500">
+                  Отклонить
+                </button>
               </div>
             </div>
           ))}

@@ -4,6 +4,7 @@ import { PrismaService } from "../prisma/prisma.service";
 
 export const NotificationType = {
   NEW_LISTING_PENDING: "NEW_LISTING_PENDING",
+  LISTING_SUBMITTED: "LISTING_SUBMITTED",
   LISTING_APPROVED: "LISTING_APPROVED",
   LISTING_REJECTED: "LISTING_REJECTED",
   NEW_BOOKING: "NEW_BOOKING",

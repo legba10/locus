@@ -33,6 +33,13 @@ export class AdminController {
     return this.adminService.getPendingListings(limit ? parseInt(limit, 10) : 50);
   }
 
+  /** Alias for GET /admin/listings/pending (API contract: GET /admin/moderation) */
+  @Get('moderation')
+  @ApiOperation({ summary: 'Get moderation queue (same as listings/pending)' })
+  async getModeration(@Req() req: any, @Query('limit') limit?: string) {
+    return this.adminService.getPendingListings(limit ? parseInt(limit, 10) : 50);
+  }
+
   @Get('listings')
   @ApiOperation({ summary: 'Get all listings (admin only)' })
   @ApiQuery({ name: 'status', required: false, enum: ListingStatus })
@@ -58,6 +65,26 @@ export class AdminController {
   @Post('listings/:id/reject')
   @ApiOperation({ summary: 'Reject a listing (admin/manager)' })
   async rejectListing(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    const listing = await this.adminService.rejectListing(id, req.user.id, reason);
+    return { ok: true, listing };
+  }
+
+  /** Alias: POST /admin/moderation/:id/approve */
+  @Post('moderation/:id/approve')
+  @ApiOperation({ summary: 'Approve listing (moderation)' })
+  async moderationApprove(@Req() req: any, @Param('id') id: string) {
+    const listing = await this.adminService.approveListing(id, req.user.id);
+    return { ok: true, listing };
+  }
+
+  /** Alias: POST /admin/moderation/:id/reject */
+  @Post('moderation/:id/reject')
+  @ApiOperation({ summary: 'Reject listing (moderation)' })
+  async moderationReject(
     @Req() req: any,
     @Param('id') id: string,
     @Body('reason') reason?: string,

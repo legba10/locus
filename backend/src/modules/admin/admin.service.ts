@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { ListingStatus, UserRoleEnum } from '@prisma/client';
+import { BookingStatus, ListingStatus, UserRoleEnum } from '@prisma/client';
 import { ROOT_ADMIN_EMAIL } from '../auth/constants';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,7 +12,7 @@ export class AdminService {
   ) {}
 
   /**
-   * Get dashboard stats
+   * Get dashboard stats + economy (GMV, доход, конверсия, отмены, сообщения)
    */
   async getStats() {
     const [
@@ -21,18 +21,54 @@ export class AdminService {
       pendingListings,
       publishedListings,
       totalBookings,
+      confirmedBookings,
+      canceledBookings,
+      gmvResult,
+      totalViews,
+      messagesCount,
+      revenueResult,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.listing.count(),
       this.prisma.listing.count({ where: { status: ListingStatus.PENDING_REVIEW } }),
       this.prisma.listing.count({ where: { status: ListingStatus.PUBLISHED } }),
       this.prisma.booking.count(),
+      this.prisma.booking.count({ where: { status: BookingStatus.CONFIRMED } }),
+      this.prisma.booking.count({ where: { status: BookingStatus.CANCELED } }),
+      this.prisma.booking.aggregate({
+        where: { status: BookingStatus.CONFIRMED },
+        _sum: { totalPrice: true },
+      }),
+      this.prisma.listing.aggregate({
+        _sum: { viewsCount: true },
+      }),
+      this.prisma.message.count(),
+      (async () => {
+        try {
+          const r = await this.prisma.payment.aggregate({ where: { status: 'SUCCEEDED' }, _sum: { amount: true } });
+          return r._sum?.amount ?? 0;
+        } catch {
+          return 0;
+        }
+      })(),
     ]);
+
+    const gmv = gmvResult._sum?.totalPrice ?? 0;
+    const views = totalViews._sum?.viewsCount ?? 0;
+    const conversion = views > 0 ? (confirmedBookings / views) * 100 : 0;
+    const revenue = typeof revenueResult === 'number' ? revenueResult : 0;
 
     return {
       users: { total: totalUsers },
       listings: { total: totalListings, pending: pendingListings, published: publishedListings },
-      bookings: { total: totalBookings },
+      bookings: { total: totalBookings, confirmed: confirmedBookings, canceled: canceledBookings },
+      economy: {
+        gmv,
+        revenue,
+        totalViews: views,
+        conversion: Math.round(conversion * 100) / 100,
+        messagesCount,
+      },
     };
   }
 
@@ -46,7 +82,8 @@ export class AdminService {
       take: limit,
       include: {
         owner: { select: { id: true, email: true } },
-        photos: { take: 1, orderBy: { sortOrder: 'asc' } },
+        photos: { orderBy: { sortOrder: 'asc' }, take: 5 },
+        amenities: { include: { amenity: { select: { key: true } } } },
       },
     });
   }

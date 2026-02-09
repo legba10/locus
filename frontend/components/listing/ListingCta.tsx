@@ -28,15 +28,15 @@ export function ListingCta({
   return (
     <div
       className={cn(
-        'bg-white rounded-[18px] p-6',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80',
+        'bg-white rounded-2xl p-4 md:p-6',
+        'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100',
         sticky && 'lg:sticky lg:top-6'
       )}
     >
       <div className="mb-6">
         <div className="flex items-baseline gap-1">
           <span className="text-[28px] md:text-[32px] font-bold text-[#1C1F26]">
-            {formatPrice(price, 'month')}
+            {formatPrice(price, 'night')}
           </span>
         </div>
         {priceLabel && (

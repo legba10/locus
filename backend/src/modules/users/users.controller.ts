@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { RegisterDto } from "./dto/register.dto";
@@ -51,6 +51,14 @@ export class UsersController {
   @Patch("me")
   async updateMe(@Req() req: any, @Body() dto: UpdateProfileDto) {
     const profile = await this.users.updateMyProfile(req.user.id, dto);
+    return { profile };
+  }
+
+  /** Public profile for owner card → /user/:id (no auth). Must be after GET me. */
+  @Get(":id/public")
+  async getPublicProfile(@Param("id") id: string) {
+    const profile = await this.users.getPublicProfile(id);
+    if (!profile) return { profile: null };
     return { profile };
   }
 }

@@ -74,6 +74,7 @@ model User {
   conversationsAsHost  Conversation[] @relation("ConversationHost")
   conversationsAsGuest Conversation[] @relation("ConversationGuest")
   messagesSent         Message[]
+  payments             Payment[]
 }
 
 model Profile {
@@ -333,6 +334,22 @@ model Booking {
   @@index([guestId, createdAt])
   @@index([status, createdAt])
   @@index([hostId, status])
+}
+
+// Payments (test mode). Юнит-экономика: доход, GMV.
+model Payment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  amount    Int      // копейки или целые рубли
+  currency  String   @default("RUB")
+  status    String   // PENDING | SUCCEEDED | FAILED | REFUNDED
+  type      String   // BOOKING | SUBSCRIPTION | ...
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // =========================

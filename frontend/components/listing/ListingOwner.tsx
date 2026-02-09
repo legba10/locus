@@ -23,11 +23,11 @@ export function ListingOwner({ owner, onWrite, showRespondsFast = true }: Listin
   return (
     <div
       className={cn(
-        'bg-white rounded-[18px] p-6',
-        'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80'
+        'bg-white rounded-2xl p-4 md:p-6',
+        'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
       )}
     >
-      <h2 className="text-[18px] font-bold text-[#1C1F26] mb-4">Владелец</h2>
+      <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Владелец</h2>
       <div className="flex items-start gap-4">
         <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
           {owner.avatar ? (
@@ -56,10 +56,10 @@ export function ListingOwner({ owner, onWrite, showRespondsFast = true }: Listin
               Написать
             </button>
             <Link
-              href={`/profile/${owner.id}`}
+              href={`/user/${owner.id}`}
               className="px-4 py-2.5 rounded-[12px] border-2 border-gray-200 text-[#1C1F26] text-[14px] font-semibold hover:bg-gray-50"
             >
-              Посмотреть профиль
+              Профиль
             </Link>
           </div>
         </div>

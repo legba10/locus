@@ -110,11 +110,18 @@ export class ListingsService {
     const avgRating =
       reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
 
+    const rawEmail = owner.email ?? "";
+    const isTelegramPlaceholder =
+      /^telegram_\d+@/i.test(rawEmail) || rawEmail.endsWith("@locus.app");
+    const displayName =
+      (owner.profile?.name ?? "").trim() ||
+      (isTelegramPlaceholder ? "Гость" : rawEmail || "Владелец");
+
     return {
       ...listingWithRelations,
       owner: {
         id: owner.id,
-        name: owner.profile?.name ?? owner.email ?? "Владелец",
+        name: displayName,
         avatar: owner.profile?.avatarUrl ?? null,
         rating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
         listingsCount: 0,
@@ -328,6 +335,9 @@ export class ListingsService {
     return this.getById(id);
   }
 
+  /**
+   * Submit for moderation: listing goes to PENDING_REVIEW. Admin approves → PUBLISHED.
+   */
   async publish(ownerId: string, id: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
@@ -338,7 +348,20 @@ export class ListingsService {
       throw new ForbiddenException("Listing must have at least one photo before publish");
     }
 
-    await this.prisma.listing.update({ where: { id }, data: { status: ListingStatus.PUBLISHED } });
+    await this.prisma.listing.update({
+      where: { id },
+      data: { status: ListingStatus.PENDING_REVIEW, moderationComment: null },
+    });
+    this.notifications
+      .create(ownerId, NotificationType.LISTING_SUBMITTED, "Объявление отправлено на модерацию", null)
+      .catch(() => {});
+    this.notifications
+      .createForAdmins(
+        NotificationType.NEW_LISTING_PENDING,
+        "Новое объявление на модерации",
+        listing.title
+      )
+      .catch(() => {});
     return this.getById(id);
   }
 

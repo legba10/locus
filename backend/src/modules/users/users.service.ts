@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import bcrypt from "bcryptjs";
+import { ListingStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -57,6 +58,66 @@ export class UsersService {
       update: { ...patch },
       create: { userId, ...patch },
     });
+  }
+
+  /**
+   * Public profile for /user/:id (owner card link).
+   * Returns name, avatar, published listings, rating from reviews on owner's listings.
+   */
+  async getPublicProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        profile: { select: { name: true, avatarUrl: true } },
+      },
+    });
+    if (!user) return null;
+
+    const [listings, reviewsAgg] = await Promise.all([
+      this.prisma.listing.findMany({
+        where: { ownerId: userId, status: ListingStatus.PUBLISHED },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          title: true,
+          city: true,
+          basePrice: true,
+          photos: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+        },
+      }),
+      this.prisma.review.aggregate({
+        where: { listing: { ownerId: userId } },
+        _avg: { rating: true },
+        _count: true,
+      }),
+    ]);
+
+    const name = user.profile?.name ?? user.email ?? "Владелец";
+    const avatarUrl = user.profile?.avatarUrl ?? null;
+    const rating =
+      reviewsAgg._count > 0 && reviewsAgg._avg?.rating != null
+        ? Math.round(reviewsAgg._avg.rating * 10) / 10
+        : null;
+
+    return {
+      id: user.id,
+      name,
+      avatarUrl,
+      email: user.email,
+      listingsCount: listings.length,
+      rating,
+      reviewsCount: reviewsAgg._count,
+      listings: listings.map((l) => ({
+        id: l.id,
+        title: l.title,
+        city: l.city,
+        basePrice: l.basePrice,
+        imageUrl: l.photos[0]?.url ?? null,
+      })),
+    };
   }
 }
 

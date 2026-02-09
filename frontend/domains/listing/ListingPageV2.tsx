@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -103,7 +103,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const listingData: Listing = {
     id: item.id,
     city: item.city,
-    basePrice: item.pricePerNight,
+    basePrice: Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0),
     type: 'apartment',
     bedrooms: item.bedrooms,
     area: item.area,
@@ -115,7 +115,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const userParams: UserParams = {}
   const aiScore = scoring(listingData, userParams)
   const amenities = amenitiesToLabels(item.amenities)
-  const priceValue = Number(item.pricePerNight ?? 0)
+  const priceValue = Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0)
   const viewsValue = (item as any).viewsCount ?? item.views ?? 0
   const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Владелец', avatar: null, rating: null, listingsCount: 0 }
 
@@ -139,11 +139,29 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     document.getElementById('listing-booking')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  useEffect(() => {
+    if (!isGalleryOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setGalleryOpen(false)
+      } else if (photos.length > 1 && e.key === 'ArrowLeft') {
+        e.preventDefault()
+        setActiveImage((i) => (i - 1 + photos.length) % photos.length)
+      } else if (photos.length > 1 && e.key === 'ArrowRight') {
+        e.preventDefault()
+        setActiveImage((i) => (i + 1) % photos.length)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isGalleryOpen, photos.length])
+
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-        <div className="mb-6">
-          <Link href="/listings" className="text-[14px] text-[#6B7280] hover:text-[#1C1F26] inline-flex items-center gap-1.5">
+    <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}>
+      <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-6">
+          <Link href="/listings" className="text-[13px] text-[#6B7280] hover:text-violet-600 inline-flex items-center gap-1.5 font-medium">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -151,8 +169,9 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
+          {/* Основной контент: на мобильном — единственный столбец; CTA только в sticky-баре */}
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             <ListingGallery
               photos={photos}
               title={item.title}
@@ -171,17 +190,17 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               typeLabel="Квартира"
             />
             <ListingOwner owner={owner} onWrite={handleWrite} />
-            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Удобства</h2>
+            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
               {amenities.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     {(showAllAmenities ? amenities : amenities.slice(0, 8)).map((label, i) => (
-                      <div key={i} className="flex items-center gap-2 p-3 rounded-[12px] bg-gray-50 border border-gray-200">
-                        <svg className="w-5 h-5 text-violet-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div key={i} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-gray-50/80 border border-gray-100">
+                        <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-[14px] font-medium text-[#1C1F26]">{label}</span>
+                        <span className="text-[13px] font-medium text-[#1C1F26]">{label}</span>
                       </div>
                     ))}
                   </div>
@@ -196,8 +215,8 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               )}
             </div>
             {item.description && (
-              <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-                <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Описание</h2>
+<div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Описание</h2>
                 <p className={cn('text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')}>
                   {item.description}
                 </p>
@@ -206,11 +225,18 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 </button>
               </div>
             )}
-            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Расположение</h2>
-              {item.addressLine && <p className="text-[14px] text-[#6B7280] mb-4">{item.addressLine}</p>}
-              <div className="aspect-video rounded-[12px] bg-gray-100 overflow-hidden">
-                {item.lat && item.lng ? (
+            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Расположение</h2>
+              {item.addressLine ? (
+                <p className="text-[14px] text-[#6B7280]">{item.addressLine}</p>
+              ) : (
+                <p className="text-[13px] text-[#9CA3AF] flex items-center gap-2">
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Адрес доступен после бронирования
+                </p>
+              )}
+              {item.lat && item.lng && (
+                <div className="mt-3 h-40 md:h-52 rounded-xl overflow-hidden bg-gray-100">
                   <iframe
                     src={`https://yandex.ru/map-widget/v1/?ll=${item.lng},${item.lat}&z=15&pt=${item.lng},${item.lat}`}
                     width="100%"
@@ -218,17 +244,16 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                     style={{ border: 0 }}
                     allowFullScreen
                     loading="lazy"
+                    title="Карта"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[14px] text-gray-400">Адрес доступен после бронирования</div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <div id="listing-booking">
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} />
             </div>
-            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">
+            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">
                 Отзывы {(item as any).reviewCount ? `(${(item as any).reviewCount})` : ''}
               </h2>
               <div className="space-y-3 mb-6">
@@ -252,8 +277,9 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-6 space-y-6">
+          {/* Правая колонка с ценой и CTA — только на десктопе; на мобильном один sticky-бар без дублирования */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-6">
               <ListingCta
                 price={priceValue}
                 onWrite={handleWrite}
@@ -268,28 +294,34 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
         </div>
       </div>
 
-      {/* Mobile sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3 safe-area-pb">
-        <div className="flex gap-2 max-w-lg mx-auto">
+      {/* Мобильный CTA: один бар внизу, без дублирования кнопок в контенте */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-2 max-w-lg mx-auto">
+          {priceValue > 0 && (
+            <span className="hidden sm:inline text-[13px] font-semibold text-[#1C1F26] shrink-0">
+              от {priceValue.toLocaleString('ru-RU')} ₽
+            </span>
+          )}
           <button
             type="button"
             onClick={handleWrite}
             disabled={writeLoading}
-            className="flex-1 py-3 rounded-[14px] bg-violet-600 text-white font-semibold text-[14px] disabled:opacity-70"
+            className="flex-1 py-3 rounded-xl bg-violet-600 text-white font-semibold text-[14px] shadow-lg shadow-violet-600/25 disabled:opacity-70"
           >
             {writeLoading ? '…' : 'Написать'}
           </button>
           <button
             type="button"
             onClick={handleBook}
-            className="flex-1 py-3 rounded-[14px] border-2 border-violet-600 text-violet-600 font-semibold text-[14px]"
+            className="flex-1 py-3 rounded-xl border-2 border-violet-600 text-violet-600 font-semibold text-[14px] bg-white"
           >
             Забронировать
           </button>
           <button
             type="button"
             onClick={() => setIsFavorite((f) => !f)}
-            className="p-3 rounded-[14px] border-2 border-gray-200"
+            className="p-3 rounded-xl border-2 border-gray-200 bg-white shrink-0"
+            aria-label={isFavorite ? 'Убрать из избранного' : 'Сохранить'}
           >
             <svg className={cn('w-5 h-5', isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400')} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -299,16 +331,46 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
       </div>
 
       {isGalleryOpen && photos.length > 0 && (
-        <div className="fixed inset-0 z-[1000] bg-black/90 flex items-center justify-center">
-          <button type="button" onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white text-xl" aria-label="Закрыть">
+        <div
+          className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Галерея фото"
+        >
+          <button
+            type="button"
+            onClick={() => setGalleryOpen(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white text-xl font-light flex items-center justify-center"
+            aria-label="Закрыть"
+          >
             ×
           </button>
+          {photos.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveImage((i) => (i - 1 + photos.length) % photos.length)}
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"
+                aria-label="Предыдущее фото"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveImage((i) => (i + 1) % photos.length)}
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"
+                aria-label="Следующее фото"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </>
+          )}
           <Image
             src={photos[activeImage]?.url ?? ''}
-            alt={item.title}
+            alt={`${item.title} — фото ${activeImage + 1} из ${photos.length}`}
             width={1200}
             height={800}
-            className="max-h-[90vh] w-auto object-contain"
+            className="max-h-[85vh] w-auto object-contain px-12"
             unoptimized={(photos[activeImage]?.url ?? '').startsWith('http')}
           />
           {photos.length > 1 && (
@@ -318,7 +380,8 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                   key={i}
                   type="button"
                   onClick={() => setActiveImage(i)}
-                  className={cn('w-2.5 h-2.5 rounded-full transition-all', activeImage === i ? 'bg-white' : 'bg-white/40')}
+                  className={cn('w-2.5 h-2.5 rounded-full transition-all', activeImage === i ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/60')}
+                  aria-label={`Фото ${i + 1}`}
                 />
               ))}
             </div>
