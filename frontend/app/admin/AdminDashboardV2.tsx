@@ -16,10 +16,24 @@ interface AdminStats {
   economy?: {
     gmv: number
     revenue: number
+    commission?: number
+    averageOrder?: number
     totalViews: number
     conversion: number
     messagesCount: number
   }
+}
+
+interface ChartPoint {
+  date: string
+  value?: number
+  count?: number
+}
+
+interface AdminCharts {
+  revenue: ChartPoint[]
+  bookings: { date: string; count: number }[]
+  newUsers: { date: string; count: number }[]
 }
 
 interface AdminUser {
@@ -28,6 +42,7 @@ interface AdminUser {
   status: string
   appRole: string
   createdAt: string
+  profile?: { name?: string | null } | null
   _count: { listings: number; bookingsAsGuest: number }
 }
 
@@ -123,21 +138,26 @@ export function AdminDashboardV2() {
 // ═══════════════════════════════════════════════════════════════
 function DashboardTab() {
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [charts, setCharts] = useState<AdminCharts | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       try {
-        const data = await apiFetch<AdminStats>('/admin/stats')
-        setStats(data)
+        const [statsData, chartsData] = await Promise.all([
+          apiFetch<AdminStats>('/admin/stats'),
+          apiFetch<AdminCharts>('/admin/stats/charts?days=30').catch(() => null),
+        ])
+        setStats(statsData)
+        setCharts(chartsData)
       } catch (err) {
         setError(String(err))
       } finally {
         setLoading(false)
       }
     }
-    fetchStats()
+    fetchData()
   }, [])
 
   if (loading) return <div className="text-center py-8 text-[#6B7280]">Загрузка...</div>
@@ -157,14 +177,39 @@ function DashboardTab() {
         <StatCard title="Отмены" value={stats.bookings.canceled ?? 0} color="red" />
         {econ && (
           <>
-            <StatCard title="Доход (оплаты)" value={econ.revenue} color="emerald" format="price" />
+            <StatCard title="Выручка" value={econ.revenue} color="emerald" format="price" />
+            <StatCard title="Комиссия" value={econ.commission ?? econ.revenue} color="emerald" format="price" />
             <StatCard title="GMV" value={econ.gmv} color="violet" format="price" />
+            <StatCard title="Средний чек" value={econ.averageOrder ?? 0} color="violet" format="price" />
             <StatCard title="Просмотры" value={econ.totalViews} color="blue" />
             <StatCard title="Конверсия %" value={econ.conversion} color="emerald" format="percent" />
             <StatCard title="Сообщения" value={econ.messagesCount} color="violet" />
           </>
         )}
       </div>
+
+      {charts && (charts.revenue.length > 0 || charts.bookings.length > 0 || charts.newUsers.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {charts.revenue.length > 0 && (
+            <div className="rounded-[18px] border border-gray-200 bg-white p-4">
+              <h3 className="text-[14px] font-semibold text-[#1C1F26] mb-3">Доход по дням (30 дн.)</h3>
+              <SimpleBarChart data={charts.revenue.map((r) => r.value ?? 0)} max={Math.max(...charts.revenue.map((r) => r.value ?? 0), 1)} color="bg-emerald-500" />
+            </div>
+          )}
+          {charts.bookings.length > 0 && (
+            <div className="rounded-[18px] border border-gray-200 bg-white p-4">
+              <h3 className="text-[14px] font-semibold text-[#1C1F26] mb-3">Брони по дням (30 дн.)</h3>
+              <SimpleBarChart data={charts.bookings.map((b) => b.count)} max={Math.max(...charts.bookings.map((b) => b.count), 1)} color="bg-violet-500" />
+            </div>
+          )}
+          {charts.newUsers.length > 0 && (
+            <div className="rounded-[18px] border border-gray-200 bg-white p-4">
+              <h3 className="text-[14px] font-semibold text-[#1C1F26] mb-3">Новые пользователи (30 дн.)</h3>
+              <SimpleBarChart data={charts.newUsers.map((u) => u.count)} max={Math.max(...charts.newUsers.map((u) => u.count), 1)} color="bg-blue-500" />
+            </div>
+          )}
+        </div>
+      )}
 
       {econ && (
         <div className={cn('rounded-[18px] border border-gray-200 overflow-hidden', 'bg-white/[0.75]')}>
@@ -173,19 +218,32 @@ function DashboardTab() {
             <thead>
               <tr className="bg-gray-50 text-left">
                 <th className="p-3 font-medium text-[#6B7280]">Метрика</th>
-                <th className="p-3 font-medium text-[#6B7280]">Формула / значение</th>
+                <th className="p-3 font-medium text-[#6B7280]">Значение</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-gray-100"><td className="p-3">CAC</td><td className="p-3 text-[#6B7280]">расходы / клиенты (—)</td></tr>
-              <tr className="border-t border-gray-100"><td className="p-3">LTV</td><td className="p-3 text-[#6B7280]">доход с клиента (—)</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Total revenue</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Комиссия</td><td className="p-3 font-medium">{formatPrice(econ.commission ?? econ.revenue)}</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Средний чек</td><td className="p-3 font-medium">{econ.averageOrder ? formatPrice(econ.averageOrder) : '—'}</td></tr>
+              <tr className="border-t border-gray-100"><td className="p-3">Брони (подтверждённые)</td><td className="p-3">{stats.bookings.confirmed ?? 0}</td></tr>
               <tr className="border-t border-gray-100"><td className="p-3">Конверсия</td><td className="p-3">{econ.totalViews ? (econ.conversion).toFixed(2) + '%' : '—'}</td></tr>
-              <tr className="border-t border-gray-100"><td className="p-3">Доход</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
               <tr className="border-t border-gray-100"><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(econ.gmv)}</td></tr>
             </tbody>
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+function SimpleBarChart({ data, max, color }: { data: number[]; max: number; color: string }) {
+  return (
+    <div className="flex items-end gap-0.5 h-24">
+      {data.slice(-14).map((v, i) => (
+        <div key={i} className="flex-1 min-w-0 flex flex-col items-center">
+          <div className={cn('w-full rounded-t transition-all', color)} style={{ height: max > 0 ? `${Math.max(2, (v / max) * 100)}%` : '2px' }} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -252,6 +310,15 @@ function UsersTab() {
     }
   }
 
+  const handleBan = async (userId: string, ban: boolean) => {
+    try {
+      await apiFetch(`/admin/users/${userId}/${ban ? 'ban' : 'unban'}`, { method: 'POST' })
+      fetchUsers()
+    } catch (err) {
+      console.error('Failed to ban/unban:', err)
+    }
+  }
+
   if (loading) return <div className="text-center py-8 text-[#6B7280]">Загрузка...</div>
 
   return (
@@ -260,38 +327,60 @@ function UsersTab() {
       {users.length === 0 ? (
         <p className="text-[#6B7280]">Нет пользователей</p>
       ) : (
-        <div className="space-y-3">
-          {users.map(user => (
-            <div key={user.id} className="flex items-center justify-between p-4 rounded-[14px] bg-gray-50 border border-gray-200">
-              <div className="flex-1">
-                <p className="font-medium text-[#1C1F26]">{user.email || 'Без email'}</p>
-                <p className="text-[13px] text-[#6B7280]">
-                  {user.appRole === 'ADMIN' ? 'Администратор' : 'Пользователь'} •
-                  {user._count?.listings ?? 0} объявлений •
-                  {new Date(user.createdAt).toLocaleDateString('ru')}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', (user as any).status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
-                  {(user as any).status === 'ACTIVE' ? 'Активен' : 'Заблокирован'}
-                </span>
-                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.appRole === 'ADMIN' ? 'bg-violet-100 text-violet-700' : user.appRole === 'MANAGER' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700')}>
-                  {user.appRole === 'ADMIN' ? 'Админ' : user.appRole === 'MANAGER' ? 'Менеджер' : 'Пользователь'}
-                </span>
-                <select
-                  value={user.appRole === 'ADMIN' ? 'admin' : user.appRole === 'MANAGER' ? 'manager' : 'user'}
-                  onChange={(e) => handleSetRole(user.id, e.target.value as 'admin' | 'manager' | 'user')}
-                  disabled={settingRole === user.id || isRootUser(user)}
-                  title={isRootUser(user) ? 'Роль root нельзя изменить' : undefined}
-                  className="rounded-lg px-2 py-1 text-[12px] border border-gray-300 bg-white disabled:opacity-60"
-                >
-                  <option value="user">Пользователь</option>
-                  <option value="manager">Менеджер</option>
-                  <option value="admin">Админ</option>
-                </select>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-[18px] border border-gray-200 bg-white">
+          <table className="w-full text-[14px]">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                <th className="p-3 font-medium text-[#6B7280]">Имя</th>
+                <th className="p-3 font-medium text-[#6B7280]">Email</th>
+                <th className="p-3 font-medium text-[#6B7280]">Роль</th>
+                <th className="p-3 font-medium text-[#6B7280]">Объявлений</th>
+                <th className="p-3 font-medium text-[#6B7280]">Статус</th>
+                <th className="p-3 font-medium text-[#6B7280]">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} className="border-t border-gray-100 hover:bg-gray-50/50">
+                  <td className="p-3 font-medium text-[#1C1F26]">{(user.profile?.name ?? user.email ?? '—').trim() || '—'}</td>
+                  <td className="p-3 text-[#6B7280]">{user.email || '—'}</td>
+                  <td className="p-3">
+                    <select
+                      value={user.appRole === 'ADMIN' ? 'admin' : user.appRole === 'MANAGER' ? 'manager' : 'user'}
+                      onChange={(e) => handleSetRole(user.id, e.target.value as 'admin' | 'manager' | 'user')}
+                      disabled={settingRole === user.id || isRootUser(user)}
+                      title={isRootUser(user) ? 'Роль root нельзя изменить' : undefined}
+                      className="rounded-lg px-2 py-1 text-[12px] border border-gray-300 bg-white disabled:opacity-60"
+                    >
+                      <option value="user">Пользователь</option>
+                      <option value="manager">Менеджер</option>
+                      <option value="admin">Админ</option>
+                    </select>
+                  </td>
+                  <td className="p-3 text-[#6B7280]">{user._count?.listings ?? 0}</td>
+                  <td className="p-3">
+                    <span className={cn('px-2 py-0.5 rounded-lg text-[12px] font-medium', user.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
+                      {user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован'}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    {!isRootUser(user) && (
+                      <button
+                        type="button"
+                        onClick={() => handleBan(user.id, user.status === 'ACTIVE')}
+                        className={cn(
+                          'px-3 py-1 rounded-lg text-[12px] font-medium',
+                          user.status === 'ACTIVE' ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        )}
+                      >
+                        {user.status === 'ACTIVE' ? 'Бан' : 'Разбан'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -377,40 +466,80 @@ function ListingsTab() {
       {listings.length === 0 ? (
         <p className="text-[#6B7280]">Нет объявлений</p>
       ) : (
-        <div className="space-y-3">
-          {listings.map(listing => (
-            <div key={listing.id} className="flex items-center justify-between p-4 rounded-[14px] bg-gray-50 border border-gray-200">
-              <div className="flex-1">
-                <p className="font-medium text-[#1C1F26]">{listing.title}</p>
-                <p className="text-[13px] text-[#6B7280]">
-                  {listing.city} • {formatPrice(listing.basePrice)} • {listing.owner?.email || 'Неизвестно'}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', statusColors[listing.status] || 'bg-gray-100 text-gray-700')}>
-                  {statusLabels[listing.status] || listing.status}
-                </span>
-                <Link href={`/listings/${listing.id}`} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">
-                  Открыть
-                </Link>
-                {listing.status === 'PENDING_REVIEW' && (
-                  <>
-                    <button onClick={() => handleAction(listing.id, 'approve')} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-medium hover:bg-emerald-500">
-                      Одобрить
-                    </button>
-                    <button onClick={() => handleAction(listing.id, 'reject')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
-                      Отклонить
-                    </button>
-                  </>
-                )}
-                {listing.status === 'PUBLISHED' && (
-                  <button onClick={() => handleAction(listing.id, 'block')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
-                    Блок
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-[18px] border border-gray-200 bg-white">
+          <table className="w-full text-[14px]">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                <th className="p-3 font-medium text-[#6B7280] w-16">Фото</th>
+                <th className="p-3 font-medium text-[#6B7280]">Название</th>
+                <th className="p-3 font-medium text-[#6B7280]">Владелец</th>
+                <th className="p-3 font-medium text-[#6B7280]">Статус</th>
+                <th className="p-3 font-medium text-[#6B7280]">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listings.map((listing) => (
+                <tr key={listing.id} className="border-t border-gray-100 hover:bg-gray-50/50">
+                  <td className="p-2">
+                    {listing.photos?.[0]?.url ? (
+                      <img src={listing.photos[0].url} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-[10px] text-gray-400">Нет</div>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    <Link href={`/listings/${listing.id}`} className="font-medium text-[#1C1F26] hover:text-violet-600 line-clamp-2">
+                      {listing.title}
+                    </Link>
+                    <p className="text-[12px] text-[#6B7280]">{listing.city} · {formatPrice(listing.basePrice)}</p>
+                  </td>
+                  <td className="p-3 text-[#6B7280]">{listing.owner?.email ?? '—'}</td>
+                  <td className="p-3">
+                    <span className={cn('px-2 py-0.5 rounded-lg text-[12px] font-medium', statusColors[listing.status] || 'bg-gray-100 text-gray-700')}>
+                      {statusLabels[listing.status] || listing.status}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex flex-wrap gap-1">
+                      <Link href={`/listings/${listing.id}`} className="px-2 py-1 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">
+                        Открыть
+                      </Link>
+                      {listing.status === 'PENDING_REVIEW' && (
+                        <>
+                          <button type="button" onClick={() => handleAction(listing.id, 'approve')} className="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[12px] font-medium hover:bg-emerald-500">
+                            Одобрить
+                          </button>
+                          <button type="button" onClick={() => handleAction(listing.id, 'reject')} className="px-2 py-1 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
+                            Отклонить
+                          </button>
+                        </>
+                      )}
+                      {listing.status === 'PUBLISHED' && (
+                        <button type="button" onClick={() => handleAction(listing.id, 'block')} className="px-2 py-1 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
+                          Бан
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!window.confirm('Удалить объявление? Это действие необратимо.')) return
+                          try {
+                            await apiFetch(`/admin/listings/${listing.id}/delete`, { method: 'POST' })
+                            fetchListings()
+                          } catch (err) {
+                            console.error('Failed to delete listing:', err)
+                          }
+                        }}
+                        className="px-2 py-1 rounded-lg bg-gray-200 text-gray-700 text-[12px] font-medium hover:bg-gray-300"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

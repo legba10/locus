@@ -1,73 +1,114 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { apiFetch } from '@/shared/utils/apiFetch'
+import { formatPrice } from '@/core/i18n/ru'
+
+interface AdminStats {
+  users: { total: number }
+  listings: { total: number; pending: number; published: number }
+  bookings: { total: number; confirmed?: number; canceled?: number }
+  economy?: {
+    gmv: number
+    revenue: number
+    totalViews: number
+    conversion: number
+  }
+}
+
+interface AdminListing {
+  id: string
+  title: string
+  city: string
+  status: string
+  viewsCount?: number
+  owner?: { id: string; email: string | null }
+}
 
 export default function AdminAiPage() {
-  const [analyzing, setAnalyzing] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [listings, setListings] = useState<AdminListing[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAnalyze = async () => {
-    setAnalyzing(true)
-    setResult(null)
-    try {
+  useEffect(() => {
+    async function fetchData() {
       try {
-        await apiFetch('/admin/ai/analyze', { method: 'POST' })
-      } catch {
-        // Backend endpoint optional: show message anyway
+        const [statsData, listingsData] = await Promise.all([
+          apiFetch<AdminStats>('/admin/stats').catch(() => null),
+          apiFetch<AdminListing[]>('/admin/listings?limit=100').catch(() => []),
+        ])
+        setStats(statsData ?? null)
+        setListings(Array.isArray(listingsData) ? listingsData : [])
+      } finally {
+        setLoading(false)
       }
-      setResult('Анализ платформы запланирован. Разделы: анализ объявлений, подозрительные пользователи, рекомендации цен, аналитика спроса. Полная интеграция с AI — следующий этап.')
-    } finally {
-      setAnalyzing(false)
     }
-  }
+    fetchData()
+  }, [])
+
+  const popularListings = [...listings]
+    .filter((l) => (l as any).viewsCount != null)
+    .sort((a, b) => ((b as any).viewsCount ?? 0) - ((a as any).viewsCount ?? 0))
+    .slice(0, 5)
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">AI-помощник</h1>
-            <p className="text-[14px] text-[#6B7280]">Анализ объявлений, рекомендации цен, аналитика спроса</p>
+            <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">Помощник</h1>
+            <p className="text-[14px] text-[#6B7280]">Ответы на основе реальных данных платформы</p>
           </div>
           <Link href="/admin" className="px-4 py-2 rounded-[14px] bg-gray-100 text-[#1C1F26] text-[14px] font-medium hover:bg-gray-200">
             ← В админку
           </Link>
         </div>
 
-        <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            disabled={analyzing}
-            className={cn(
-              'w-full sm:w-auto px-6 py-3 rounded-[14px] font-semibold text-[14px]',
-              'bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-          >
-            {analyzing ? 'Анализируем...' : 'Проанализировать платформу'}
-          </button>
-          {result && <p className="mt-4 text-[14px] text-[#6B7280]">{result}</p>}
-        </div>
+        {loading ? (
+          <p className="text-[#6B7280]">Загрузка...</p>
+        ) : (
+          <div className="space-y-6">
+            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Сколько бронирований?</h2>
+              <p className="text-[15px] text-[#6B7280]">
+                Всего бронирований: <strong className="text-[#1C1F26]">{stats?.bookings?.total ?? 0}</strong>.
+                {stats?.bookings?.confirmed != null && (
+                  <> Подтверждённых: <strong className="text-[#1C1F26]">{stats.bookings.confirmed}</strong>.</>
+                )}
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <Section title="Анализ объявлений" desc="Качество описаний, фото, заполненность полей." />
-          <Section title="Подозрительные пользователи" desc="Паттерны поведения, дубли, спам." />
-          <Section title="Рекомендации цен" desc="Сравнение с рынком по городу и типу жилья." />
-          <Section title="Аналитика спроса" desc="Популярные направления, сезонность." />
-        </div>
+            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Сколько денег?</h2>
+              <p className="text-[15px] text-[#6B7280]">
+                Выручка платформы: <strong className="text-[#1C1F26]">{stats?.economy?.revenue != null ? formatPrice(stats.economy.revenue) : '—'}</strong>.
+                GMV (объём бронирований): <strong className="text-[#1C1F26]">{stats?.economy?.gmv != null ? formatPrice(stats.economy.gmv) : '—'}</strong>.
+              </p>
+            </div>
+
+            <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Какие объявления популярны?</h2>
+              {popularListings.length === 0 ? (
+                <p className="text-[15px] text-[#6B7280]">Нет данных о просмотрах или объявлениях.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {popularListings.map((l) => (
+                    <li key={l.id} className="flex items-center justify-between text-[14px]">
+                      <Link href={`/listings/${l.id}`} className="font-medium text-violet-600 hover:text-violet-700 line-clamp-1">
+                        {l.title}
+                      </Link>
+                      <span className="text-[#6B7280] shrink-0 ml-2">{(l as any).viewsCount ?? 0} просмотров</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function Section({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className={cn('bg-white rounded-[18px] p-5', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-      <h2 className="text-[18px] font-bold text-[#1C1F26] mb-2">{title}</h2>
-      <p className="text-[13px] text-[#6B7280]">{desc}</p>
-    </div>
-  )
-}

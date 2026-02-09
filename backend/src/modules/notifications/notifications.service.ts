@@ -33,7 +33,7 @@ export class NotificationsService {
     return created;
   }
 
-  /** Отправить уведомление всем пользователям (админ-пуш). */
+  /** Отправить уведомление всем пользователям (админ-пуш): in-app + опционально browser push. */
   async createForAllUsers(type: string, title: string, body?: string | null) {
     const users = await this.prisma.user.findMany({
       select: { id: true },
@@ -41,7 +41,70 @@ export class NotificationsService {
     const created = await Promise.all(
       users.map((u) => this.create(u.id, type, title, body))
     );
-    return { sent: created.length };
+    const browserSent = await this.sendBrowserPushToAll(title, body ?? undefined);
+    return { sent: created.length, browserPushSent: browserSent };
+  }
+
+  /** Сохранить подписку на браузерные push (Web Push). */
+  async registerPushSubscription(
+    userId: string,
+    subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+  ) {
+    const { endpoint, keys } = subscription;
+    await this.prisma.pushSubscription.upsert({
+      where: {
+        userId_endpoint: { userId, endpoint },
+      },
+      create: {
+        userId,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+      update: {
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+    });
+    return { ok: true };
+  }
+
+  /** Отправить browser push всем подписчикам (требует web-push и VAPID keys в env). */
+  async sendBrowserPushToAll(title: string, body?: string): Promise<number> {
+    const subs = await this.prisma.pushSubscription.findMany();
+    if (subs.length === 0) return 0;
+    let webPush: typeof import("web-push") | null = null;
+    try {
+      webPush = require("web-push");
+    } catch {
+      return 0;
+    }
+    const vapidPublic = process.env.VAPID_PUBLIC_KEY;
+    const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
+    if (!vapidPublic || !vapidPrivate) return 0;
+    try {
+      webPush.setVapidDetails("mailto:admin@locus.app", vapidPublic, vapidPrivate);
+    } catch {
+      return 0;
+    }
+    let sent = 0;
+    await Promise.all(
+      subs.map(async (s) => {
+        try {
+          await webPush!.sendNotification(
+            {
+              endpoint: s.endpoint,
+              keys: { p256dh: s.p256dh, auth: s.auth },
+            },
+            JSON.stringify({ title, body: body ?? "" }),
+          );
+          sent++;
+        } catch {
+          // Subscription may be invalid
+        }
+      }),
+    );
+    return sent;
   }
 
   async getForUser(userId: string, limit = 50) {

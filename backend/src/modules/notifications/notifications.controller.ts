@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Param, UseGuards, Req } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags, ApiOperation } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Param, UseGuards, Req } from "@nestjs/common";
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiBody } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { NotificationsService } from "./notifications.service";
 
@@ -9,6 +9,32 @@ import { NotificationsService } from "./notifications.service";
 @ApiBearerAuth()
 export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
+
+  @Post("push-subscribe")
+  @ApiOperation({ summary: "Register browser push subscription" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        subscription: {
+          type: "object",
+          properties: {
+            endpoint: { type: "string" },
+            keys: { type: "object", properties: { p256dh: { type: "string" }, auth: { type: "string" } } },
+          },
+        },
+      },
+      required: ["subscription"],
+    },
+  })
+  async pushSubscribe(@Req() req: any, @Body("subscription") subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
+    const userId = req.user?.id as string;
+    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+      return { ok: false, error: "Invalid subscription" };
+    }
+    await this.notifications.registerPushSubscription(userId, subscription);
+    return { ok: true };
+  }
 
   @Get()
   @ApiOperation({ summary: "Get current user notifications" })

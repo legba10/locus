@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --locus-space-1: 0.25rem;
+  --locus-space-2: 0.5rem;
+  --locus-space-4: 1rem;
+  --locus-space-6: 1.5rem;
+  --locus-color-primary: #7B4AE2;
+  --locus-color-text: #1C1F26;
+  --locus-color-text-muted: #6B7280;
+  --locus-radius-card: 1rem;
+  --locus-shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+}
+
 /**
  * LOCUS Global Styles
  * 

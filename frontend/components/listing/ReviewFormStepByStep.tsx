@@ -82,21 +82,26 @@ export function ReviewFormStepByStep({
       {step === 1 && (
         <div className="mt-5">
           <p className="text-[13px] font-semibold text-[#1C1F26] mb-2">Шаг 1. Оценка</p>
-          <div className="flex items-center gap-2">
+          <p className="text-[13px] text-[#6B7280] mb-3">Выберите оценку от 1 до 5</p>
+          <div className="flex flex-wrap gap-2">
             {[1, 2, 3, 4, 5].map((v) => (
               <button
                 key={v}
                 type="button"
-                onClick={() => { setRating(v); setStep(2) }}
+                onClick={() => {
+                  setRating(v)
+                  setStep(2)
+                }}
                 className={cn(
-                  'h-10 w-10 rounded-[12px] border text-[18px] font-bold transition-colors',
-                  v <= rating ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                  'px-5 py-2.5 rounded-[12px] border text-[15px] font-semibold transition-colors',
+                  rating === v
+                    ? 'border-violet-600 bg-violet-50 text-violet-700'
+                    : 'border-gray-200 bg-white text-[#6B7280] hover:bg-gray-50'
                 )}
               >
-                ★
+                {v}
               </button>
             ))}
-            <span className="ml-2 text-[14px] text-[#6B7280]">{rating}/5</span>
           </div>
           <button
             type="button"
@@ -122,7 +127,7 @@ export function ReviewFormStepByStep({
                 type="button"
                 onClick={() => handleNextMetric(v)}
                 className={cn(
-                  'px-4 py-2 rounded-[12px] border text-[14px] font-medium',
+                  'px-4 py-2 rounded-[12px] border text-[14px] font-medium transition-colors',
                   metrics[currentMetric.key] === v
                     ? 'border-violet-600 bg-violet-50 text-violet-700'
                     : 'border-gray-200 hover:bg-gray-50'
@@ -139,13 +144,6 @@ export function ReviewFormStepByStep({
               className="px-4 py-2 rounded-[12px] border border-gray-200 text-[14px]"
             >
               Назад
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNextMetric(metrics[currentMetric.key] ?? 75)}
-              className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
-            >
-              Дальше
             </button>
           </div>
         </div>

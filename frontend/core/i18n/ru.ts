@@ -202,6 +202,7 @@ export const RU = {
     per_night: '/ ночь',
     per_month: '/ мес',
     total: 'Итого',
+    on_request: 'По запросу',
     undefined: 'Цена уточняется',
   },
 
@@ -341,7 +342,7 @@ export function getVerdictText(score: number): string {
  * Форматировать цену
  */
 export function formatPrice(amount: number, period: 'night' | 'month' = 'month'): string {
-  if (amount === 0) return RU.price.undefined
+  if (amount === 0 || !Number.isFinite(amount)) return RU.price.on_request
   const formatted = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(amount)
   const suffix = period === 'night' ? RU.price.per_night : RU.price.per_month
   return `${formatted} ${RU.price.currency} ${suffix}`

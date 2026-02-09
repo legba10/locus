@@ -69,7 +69,8 @@ model User {
 
   reviewsAuthored Review[] @relation("ReviewAuthor")
   favorites       Favorite[]
-  notifications   Notification[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
 
   conversationsAsHost  Conversation[] @relation("ConversationHost")
   conversationsAsGuest Conversation[] @relation("ConversationGuest")
@@ -744,6 +745,19 @@ model Notification {
   @@index([userId])
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+  @@index([userId])
 }
 
 // =========================

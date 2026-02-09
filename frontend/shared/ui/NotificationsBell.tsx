@@ -2,15 +2,45 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
-import { apiFetch } from '@/shared/utils/apiFetch'
+import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
 
 const NOTIFY_SOUND = '/sounds/notify.mp3'
+const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
+
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4)
+  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(b64)
+  const out = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
+  return out
+}
+
+async function subscribeBrowserPush(): Promise<string | null> {
+  if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) return null
+  const perm = await Notification.requestPermission()
+  if (perm !== 'granted') return null
+  const reg = await navigator.serviceWorker.register('/sw.js')
+  await reg.update()
+  if (!VAPID_PUBLIC) return 'no_vapid'
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
+  })
+  const subscription = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
+  await apiFetchJson('/notifications/push-subscribe', {
+    method: 'POST',
+    body: JSON.stringify({ subscription: { endpoint: subscription.endpoint, keys: subscription.keys } }),
+  })
+  return null
+}
 
 export function NotificationsBell() {
   const [open, setOpen] = useState(false)
   const [list, setList] = useState<Array<{ id: string; type: string; title: string; body?: string | null; read: boolean; createdAt: string }>>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'ok' | 'denied' | 'no_vapid'>('idle')
   const prevCountRef = useRef<number>(0)
 
   const fetchCount = async () => {
@@ -125,6 +155,20 @@ export function NotificationsBell() {
                   </button>
                 ))
               )}
+            </div>
+            <div className="border-t border-gray-100 px-4 py-2">
+              <button
+                type="button"
+                disabled={pushStatus === 'loading' || !('Notification' in window)}
+                onClick={async () => {
+                  setPushStatus('loading')
+                  const err = await subscribeBrowserPush()
+                  setPushStatus(err === null ? 'ok' : err === 'no_vapid' ? 'no_vapid' : 'denied')
+                }}
+                className="text-[12px] text-violet-600 hover:text-violet-700 disabled:opacity-50"
+              >
+                {pushStatus === 'loading' ? '…' : pushStatus === 'ok' ? 'Браузерные уведомления включены' : pushStatus === 'no_vapid' ? 'Нужны VAPID ключи' : 'Включить уведомления в браузере'}
+              </button>
             </div>
           </div>
         </>

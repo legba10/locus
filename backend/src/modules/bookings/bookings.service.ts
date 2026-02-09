@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { BookingStatus, ListingStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { ChatsService } from "../chats/chats.service";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 
 function startOfDayUtc(d: Date) {
@@ -19,7 +20,10 @@ function enumerateNights(checkIn: Date, checkOut: Date): Date[] {
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chatsService: ChatsService,
+  ) {}
 
   async getByIdForUser(id: string, userId: string) {
     const booking = await this.prisma.booking.findUnique({
@@ -86,7 +90,7 @@ export class BookingsService {
       subtotal: totalPrice,
     };
 
-    return this.prisma.booking.create({
+    const booking = await this.prisma.booking.create({
       data: {
         listingId: listing.id,
         guestId,
@@ -101,6 +105,13 @@ export class BookingsService {
       },
       include: { listing: true },
     });
+
+    try {
+      const conv = await this.chatsService.findOrCreateByListing(guestId, listing.id);
+      return { booking, conversationId: conv.id };
+    } catch {
+      return { booking, conversationId: null };
+    }
   }
 
   async confirm(id: string, hostId: string) {

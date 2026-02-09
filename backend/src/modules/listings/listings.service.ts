@@ -117,6 +117,10 @@ export class ListingsService {
       (owner.profile?.name ?? "").trim() ||
       (isTelegramPlaceholder ? "Гость" : rawEmail || "Владелец");
 
+    const listingsCount = await this.prisma.listing.count({
+      where: { ownerId: owner.id },
+    });
+
     return {
       ...listingWithRelations,
       owner: {
@@ -124,7 +128,7 @@ export class ListingsService {
         name: displayName,
         avatar: owner.profile?.avatarUrl ?? null,
         rating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
-        listingsCount: 0,
+        listingsCount,
       },
     };
   }

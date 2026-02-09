@@ -27,6 +27,12 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
+  @Get('stats/charts')
+  @ApiOperation({ summary: 'Get dashboard charts data (admin only)' })
+  async getStatsCharts(@Req() req: any, @Query('days') days?: string) {
+    return this.adminService.getStatsCharts(days ? parseInt(days, 10) : 30);
+  }
+
   @Get('listings/pending')
   @ApiOperation({ summary: 'Get listings pending moderation (admin only)' })
   async getPendingListings(@Req() req: any, @Query('limit') limit?: string) {
@@ -100,6 +106,13 @@ export class AdminController {
     return { ok: true, listing };
   }
 
+  @Post('listings/:id/delete')
+  @ApiOperation({ summary: 'Delete a listing (admin only)' })
+  async deleteListing(@Req() req: any, @Param('id') id: string) {
+    await this.adminService.deleteListing(id);
+    return { ok: true, deleted: id };
+  }
+
   @Get('users')
   @ApiOperation({ summary: 'Get all users (admin only)' })
   async getAllUsers(@Req() req: any, @Query('limit') limit?: string) {
@@ -124,6 +137,20 @@ export class AdminController {
   async pushToAll(@Req() req: any, @Body('title') title: string, @Body('body') body?: string, @Body('link') link?: string) {
     const text = [body, link ? `Ссылка: ${link}` : ''].filter(Boolean).join('\n');
     return this.adminService.pushToAll(title || 'Уведомление', text || undefined);
+  }
+
+  @Post('users/:id/ban')
+  @ApiOperation({ summary: 'Ban user (admin only)' })
+  async banUser(@Req() req: any, @Param('id') id: string) {
+    await this.adminService.banUser(id);
+    return { ok: true, userId: id };
+  }
+
+  @Post('users/:id/unban')
+  @ApiOperation({ summary: 'Unban user (admin only)' })
+  async unbanUser(@Req() req: any, @Param('id') id: string) {
+    await this.adminService.unbanUser(id);
+    return { ok: true, userId: id };
   }
 
   @Post('set-role')

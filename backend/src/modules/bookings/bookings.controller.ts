@@ -19,7 +19,10 @@ export class BookingsController {
   @Roles("user")
   @Post()
   async create(@Req() req: any, @Body() dto: CreateBookingDto) {
-    return { item: await this.bookings.create(req.user.id, dto) };
+    const result = await this.bookings.create(req.user.id, dto);
+    const item = 'booking' in result ? result.booking : result;
+    const conversationId = 'conversationId' in result ? result.conversationId : null;
+    return { item, conversationId };
   }
 
   @ApiBearerAuth()

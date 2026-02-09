@@ -16,9 +16,11 @@ const SWIPE_THRESHOLD = 50
 export function ListingGallery({ photos, title, verified, onOpenFullscreen }: ListingGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [hoverThumbIndex, setHoverThumbIndex] = useState<number | null>(null)
   const hasPhotos = photos?.length > 0
   const count = photos?.length ?? 0
   const cover = photos?.[activeIndex]?.url || photos?.[0]?.url
+  const previewUrl = hoverThumbIndex != null && photos?.[hoverThumbIndex] ? photos[hoverThumbIndex].url : null
 
   const goPrev = useCallback(
     (e?: React.MouseEvent) => {
@@ -85,12 +87,15 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
         {hasPhotos && cover ? (
           <>
             <Image
-              src={cover}
-              alt={photos[activeIndex]?.alt ?? title}
+              src={previewUrl || cover}
+              alt={photos[hoverThumbIndex ?? activeIndex]?.alt ?? title}
               fill
-              className="object-cover touch-none"
+              className={cn(
+                'object-cover touch-none transition-opacity duration-200',
+                previewUrl ? 'opacity-100' : 'opacity-100'
+              )}
               priority
-              unoptimized={cover.startsWith('http')}
+              unoptimized={(previewUrl || cover).startsWith('http')}
               sizes="(max-width: 1024px) 100vw, 66vw"
               draggable={false}
             />
@@ -159,9 +164,12 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
         )}
       </div>
 
-      {/* Thumbnails — desktop */}
+      {/* Thumbnails — desktop with hover preview (main image switches to hovered thumb on hover) */}
       {hasPhotos && count > 1 && (
-        <div className="hidden sm:flex gap-2 p-3 overflow-x-auto border-t border-gray-100">
+        <div
+          className="hidden sm:flex gap-2 p-3 overflow-x-auto border-t border-gray-100"
+          onMouseLeave={() => setHoverThumbIndex(null)}
+        >
           {photos.map((p, i) => (
             <button
               key={i}
@@ -169,7 +177,9 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
               onClick={(e) => {
                 e.stopPropagation()
                 setActiveIndex(i)
+                setHoverThumbIndex(null)
               }}
+              onMouseEnter={() => setHoverThumbIndex(i)}
               className={cn(
                 'relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
                 activeIndex === i ? 'border-violet-500' : 'border-transparent hover:border-gray-300'

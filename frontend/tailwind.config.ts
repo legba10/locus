@@ -41,6 +41,23 @@ export default {
         'xl': '0.75rem',
         '2xl': '1rem',
         '3xl': '1.5rem',
+        'card': 'var(--locus-radius-card)',
+        'button': 'var(--locus-radius-button)',
+      },
+      spacing: {
+        'locus-1': 'var(--locus-space-1)',
+        'locus-2': 'var(--locus-space-2)',
+        'locus-3': 'var(--locus-space-3)',
+        'locus-4': 'var(--locus-space-4)',
+        'locus-6': 'var(--locus-space-6)',
+        'locus-8': 'var(--locus-space-8)',
+      },
+      fontFamily: {
+        sans: ['var(--locus-font-sans)', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        'locus-body': ['0.9375rem', { lineHeight: '1.5' }],
+        'locus-caption': ['0.8125rem', { lineHeight: '1.4' }],
       },
     },
   },

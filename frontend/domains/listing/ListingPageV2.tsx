@@ -139,6 +139,29 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     document.getElementById('listing-booking')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const handleBookingConfirm = async (data: { checkIn: Date; checkOut: Date; guests: number }) => {
+    if (!isAuthenticated()) {
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
+      return
+    }
+    try {
+      const res = await apiFetchJson<{ item?: unknown; conversationId?: string | null }>('/bookings', {
+        method: 'POST',
+        body: JSON.stringify({
+          listingId: item.id,
+          checkIn: data.checkIn.toISOString(),
+          checkOut: data.checkOut.toISOString(),
+          guestsCount: data.guests,
+        }),
+      })
+      if (res?.conversationId) {
+        router.push(`/chat/${res.conversationId}`)
+      }
+    } catch {
+      // Error shown by API or could set local state
+    }
+  }
+
   useEffect(() => {
     if (!isGalleryOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -249,8 +272,8 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 </div>
               )}
             </div>
-            <div id="listing-booking">
-              <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} />
+            <div id="listing-booking" className="lg:hidden">
+              <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
             <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">
@@ -277,9 +300,10 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             </div>
           </div>
 
-          {/* Правая колонка с ценой и CTA — только на десктопе; на мобильном один sticky-бар без дублирования */}
+          {/* Правая колонка: бронирование + цена и CTA — только на десктопе; на мобильном один sticky-бар без дублирования */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-6">
+            <div className="sticky top-6 space-y-4">
+              <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
               <ListingCta
                 price={priceValue}
                 onWrite={handleWrite}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
@@ -36,6 +36,16 @@ export default function ChatPage() {
   }>(['chat-meta', id], `/chats/${id}`, { enabled: !!id && isAuthenticated() })
   const myId = user?.id
 
+  const fetchMessages = useCallback(() => {
+    if (!id || !isAuthenticated()) return
+    apiFetchJson<{ messages: Message[]; hasMore: boolean }>(`/chats/${id}/messages`)
+      .then((res) => {
+        setMessages(res.messages ?? [])
+        setHasMore(res.hasMore ?? false)
+      })
+      .catch(() => setMessages([]))
+  }, [id, isAuthenticated])
+
   useEffect(() => {
     if (!id || !isAuthenticated()) return
     let cancelled = false
@@ -51,6 +61,12 @@ export default function ChatPage() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id, isAuthenticated])
+
+  useEffect(() => {
+    if (!id || !isAuthenticated()) return
+    const interval = setInterval(fetchMessages, 4000)
+    return () => clearInterval(interval)
+  }, [id, isAuthenticated, fetchMessages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

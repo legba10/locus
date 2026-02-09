@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { BookingStatus, ListingStatus, UserRoleEnum } from '@prisma/client';
+import { BookingStatus, ListingStatus, UserRoleEnum, UserStatus } from '@prisma/client';
 import { ROOT_ADMIN_EMAIL } from '../auth/constants';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -57,6 +57,8 @@ export class AdminService {
     const views = totalViews._sum?.viewsCount ?? 0;
     const conversion = views > 0 ? (confirmedBookings / views) * 100 : 0;
     const revenue = typeof revenueResult === 'number' ? revenueResult : 0;
+    const commission = revenue;
+    const averageOrder = confirmedBookings > 0 ? Math.round(gmv / confirmedBookings) : 0;
 
     return {
       users: { total: totalUsers },
@@ -65,10 +67,69 @@ export class AdminService {
       economy: {
         gmv,
         revenue,
+        commission,
+        averageOrder,
         totalViews: views,
         conversion: Math.round(conversion * 100) / 100,
         messagesCount,
       },
+    };
+  }
+
+  /**
+   * Time-series for dashboard charts (last 30 days): revenue, bookings count, new users count per day.
+   */
+  async getStatsCharts(days = 30) {
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+
+    const [payments, bookings, newUsers] = await Promise.all([
+      this.prisma.payment.findMany({
+        where: { status: 'SUCCEEDED', createdAt: { gte: from } },
+        select: { amount: true, createdAt: true },
+      }).catch(() => []),
+      this.prisma.booking.findMany({
+        where: { createdAt: { gte: from } },
+        select: { createdAt: true },
+      }).catch(() => []),
+      this.prisma.user.findMany({
+        where: { createdAt: { gte: from } },
+        select: { createdAt: true },
+      }).catch(() => []),
+    ]);
+
+    const toDayKey = (d: Date) => d.toISOString().slice(0, 10);
+    const revenueByDay: Record<string, number> = {};
+    const bookingsByDay: Record<string, number> = {};
+    const newUsersByDay: Record<string, number> = {};
+
+    for (let i = 0; i < days; i++) {
+      const d = new Date(from);
+      d.setDate(d.getDate() + i);
+      const key = toDayKey(d);
+      revenueByDay[key] = 0;
+      bookingsByDay[key] = 0;
+      newUsersByDay[key] = 0;
+    }
+
+    payments.forEach((p) => {
+      const key = toDayKey(p.createdAt);
+      if (revenueByDay[key] !== undefined) revenueByDay[key] += p.amount;
+    });
+    bookings.forEach((b) => {
+      const key = toDayKey(b.createdAt);
+      if (bookingsByDay[key] !== undefined) bookingsByDay[key] += 1;
+    });
+    newUsers.forEach((u) => {
+      const key = toDayKey(u.createdAt);
+      if (newUsersByDay[key] !== undefined) newUsersByDay[key] += 1;
+    });
+
+    return {
+      revenue: Object.entries(revenueByDay).sort((a, b) => a[0].localeCompare(b[0])).map(([date, value]) => ({ date, value })),
+      bookings: Object.entries(bookingsByDay).sort((a, b) => a[0].localeCompare(b[0])).map(([date, count]) => ({ date, count })),
+      newUsers: Object.entries(newUsersByDay).sort((a, b) => a[0].localeCompare(b[0])).map(([date, count]) => ({ date, count })),
     };
   }
 
@@ -233,5 +294,44 @@ export class AdminService {
       data: { appRole },
     });
     return { userId, appRole };
+  }
+
+  /**
+   * Ban user (set status BLOCKED). Root cannot be banned.
+   */
+  async banUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    const isRootUser = (user.email ?? '').trim().toLowerCase() === ROOT_ADMIN_EMAIL.trim().toLowerCase();
+    if (isRootUser) throw new ForbiddenException('Root admin cannot be banned');
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.BLOCKED },
+    });
+    return { userId, status: 'BLOCKED' };
+  }
+
+  /**
+   * Unban user (set status ACTIVE).
+   */
+  async unbanUser(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.ACTIVE },
+    });
+    return { userId, status: 'ACTIVE' };
+  }
+
+  /**
+   * Delete listing (admin only, any owner).
+   */
+  async deleteListing(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
+    if (!listing) throw new NotFoundException('Listing not found');
+    await this.prisma.listing.delete({ where: { id: listingId } });
+    return { deleted: listingId };
   }
 }

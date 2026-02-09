@@ -70,6 +70,7 @@ export class UsersService {
       select: {
         id: true,
         email: true,
+        createdAt: true,
         profile: { select: { name: true, avatarUrl: true } },
       },
     });
@@ -107,6 +108,7 @@ export class UsersService {
       name,
       avatarUrl,
       email: user.email,
+      createdAt: user.createdAt,
       listingsCount: listings.length,
       rating,
       reviewsCount: reviewsAgg._count,

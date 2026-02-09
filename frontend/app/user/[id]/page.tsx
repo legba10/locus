@@ -12,6 +12,7 @@ interface PublicProfile {
   name: string
   avatarUrl: string | null
   email: string | null
+  createdAt?: string
   listingsCount: number
   rating: number | null
   reviewsCount: number
@@ -102,6 +103,11 @@ export default function UserProfilePage() {
                 </p>
               )}
               <p className="text-[14px] text-[#6B7280]">{profile.listingsCount} объявлений</p>
+              {profile.createdAt && (
+                <p className="text-[13px] text-[#6B7280]">
+                  На LOCUS с {new Date(profile.createdAt).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                </p>
+              )}
               <p className="text-[13px] text-emerald-600 mt-1">Отвечает быстро</p>
             </div>
           </div>

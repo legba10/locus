@@ -1,0 +1,14 @@
+---
+description: Coordination for multi-agent work on LOCUS Production Spec
+alwaysApply: true
+---
+
+# Agent coordination
+
+When working on LOCUS Production Spec (plan locus_final_production_spec_v3):
+
+1. **Before starting:** read `.cursor/plans/AGENT_COORDINATION.md` and the relevant `stage-N-*.plan.md`.
+2. **Scope:** change only files in your assigned zone. Do not modify other agents' files.
+3. **After completion:** update the stage status in AGENT_COORDINATION.md (⬜ → ✅).
+
+If the user says "работай по этапу N" or "work on stage N", use `.cursor/plans/stage-N-*.plan.md` as the task list.
