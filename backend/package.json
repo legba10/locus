@@ -13,7 +13,7 @@
     "db:seed-test": "npx ts-node scripts/seed-test-listings.ts"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
