@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { useAuthStore } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
@@ -140,10 +140,10 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     )
   }
 
-  const photos = (item.images || item.photos || []).map((p: any) => ({ url: p.url, alt: p.alt ?? item.title }))
+  const photos = (item.images || item.photos || []).map((p: any) => ({ url: p?.url ?? '', alt: p?.alt ?? item?.title ?? '' }))
   const listingData: Listing = {
-    id: item.id,
-    city: item.city,
+    id: item.id ?? '',
+    city: item.city ?? '',
     basePrice: Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0),
     type: 'apartment',
     bedrooms: item.bedrooms,
@@ -155,15 +155,16 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   }
   const userParams: UserParams = {}
   const aiScore = scoring(listingData, userParams)
-  const amenities = amenitiesToLabels(item.amenities)
+  const amenities = amenitiesToLabels(item.amenities ?? undefined)
   const priceValue = Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0)
   const viewsValue = (item as any).viewsCount ?? item.views ?? 0
   const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Пользователь', avatar: null, rating: null, rating_avg: null, reviews_count: 0, listingsCount: 0 }
 
-  const { data: ownerPublicData } = useFetch<{ profile: PublicOwnerProfile } | undefined>(
-    owner.id ? ['user-public', owner.id] : null,
-    owner.id ? `/api/users/${encodeURIComponent(owner.id)}/public` : null
-  )
+  const { data: ownerPublicData } = useQuery({
+    queryKey: ['user-public', owner.id || ''],
+    queryFn: () => apiFetchJson<{ profile: PublicOwnerProfile }>(`/api/users/${encodeURIComponent(owner.id!)}/public`),
+    enabled: Boolean(owner.id),
+  })
 
   const handleWrite = async () => {
     if (!isAuthenticated()) {
@@ -230,13 +231,13 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
             <ListingGallery
               photos={photos}
-              title={item.title}
+              title={item.title ?? ''}
               verified={aiScore.score >= 70}
               onOpenFullscreen={photos.length > 0 ? () => setGalleryOpen(true) : undefined}
             />
             <ListingHeader
-              title={item.title}
-              city={item.city}
+              title={item.title ?? ''}
+              city={item.city ?? ''}
               rating={item.rating ?? null}
               reviewCount={(item as any).reviewCount ?? null}
               rooms={item.bedrooms ?? null}
@@ -483,7 +484,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
           )}
           <Image
             src={photos[activeImage]?.url ?? ''}
-            alt={`${item.title} — фото ${activeImage + 1} из ${photos.length}`}
+            alt={`${item.title ?? 'Объявление'} — фото ${activeImage + 1} из ${photos.length}`}
             width={1200}
             height={800}
             className="max-h-[85vh] w-auto object-contain px-12"

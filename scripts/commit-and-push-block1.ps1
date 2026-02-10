@@ -5,5 +5,5 @@ Set-Location (Split-Path -Parent $PSScriptRoot)
 
 git add -A
 git status
-git commit -m "fix: profile persistence + avatar upload + auth sync + listing crash"
+git commit -m "fix: listing page crash (useQuery enabled, null-guards for item/owner)"
 git push
