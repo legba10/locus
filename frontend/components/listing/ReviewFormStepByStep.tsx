@@ -38,7 +38,12 @@ export function ReviewFormStepByStep({
   const currentMetric = metricsDefs[metricIndex]
   const isLastMetric = metricIndex >= metricsDefs.length - 1
 
+  const vibrate = () => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+  }
+
   const handleNextMetric = (value: number) => {
+    vibrate()
     if (currentMetric) setMetrics((prev) => ({ ...prev, [currentMetric.key]: value }))
     if (isLastMetric) setStep(3)
     else setMetricIndex((i) => i + 1)
@@ -49,11 +54,14 @@ export function ReviewFormStepByStep({
     setSubmitting(true)
     setError(null)
     try {
+      const vals = Object.values(metrics)
+      const avgPercent = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+      const rating5 = Math.max(1, Math.min(5, Math.round(avgPercent / 20)))
       await apiFetchJson('/reviews', {
         method: 'POST',
         body: JSON.stringify({
           listingId,
-          rating,
+          rating: rating5,
           text: text.trim() || null,
           metrics: Object.entries(metrics).map(([metricKey, value]) => ({ metricKey, value })),
         }),
@@ -89,6 +97,7 @@ export function ReviewFormStepByStep({
                 key={v}
                 type="button"
                 onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
                   setRating(v)
                   setStep(2)
                 }}
@@ -151,6 +160,18 @@ export function ReviewFormStepByStep({
 
       {step === 3 && (
         <div className="mt-5">
+          {(() => {
+            const vals = Object.values(metrics)
+            const avgPercent = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+            const rating5 = avgPercent / 20
+            return (
+              <div className="mb-4 p-3 rounded-[12px] bg-violet-50 border border-violet-100">
+                <p className="text-[13px] text-[#1C1F26]">
+                  Ваш рейтинг: <strong>{avgPercent}%</strong> = <strong>{rating5.toFixed(1)}</strong>
+                </p>
+              </div>
+            )
+          })()}
           <p className="text-[13px] font-semibold text-[#1C1F26] mb-2">Шаг 3. Комментарий (необязательно)</p>
           <textarea
             value={text}
