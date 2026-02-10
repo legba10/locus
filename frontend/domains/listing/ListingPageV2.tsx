@@ -74,7 +74,7 @@ interface RatingSummary {
 export function ListingPageV2({ id }: ListingPageV2Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const [isFavorite, setIsFavorite] = useState(false)
   const [writeLoading, setWriteLoading] = useState(false)
   const [showAllAmenities, setShowAllAmenities] = useState(false)
@@ -334,58 +334,66 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             <div id="listing-booking" className="lg:hidden">
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
-            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-4">Отзывы</h2>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
-                  <div className="text-[26px] font-bold text-[#1C1F26]">
+            <div className={cn('bg-white rounded-2xl p-5 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-5">Отзывы</h2>
+              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 mb-6 items-start">
+                <div className="flex flex-col items-center md:items-start min-w-[100px]">
+                  <div className="text-3xl font-bold text-[#1C1F26]">
                     {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
                   </div>
+                  {ratingCount > 0 && (
+                    <div className="text-[13px] text-violet-600 font-medium mt-0.5">
+                      {Math.round((ratingAvg ?? 0) * 20)}%
+                    </div>
+                  )}
                   <p className="text-[13px] text-[#6B7280] mt-1">
-                    {ratingCount > 0 ? `на основе ${ratingCount} отзывов` : 'Отзывов пока нет'}
+                    {ratingCount > 0 ? `на основе ${ratingCount} ${ratingCount === 1 ? 'отзыва' : ratingCount >= 2 && ratingCount <= 4 ? 'отзыва' : 'отзывов'}` : 'Отзывов пока нет'}
                   </p>
                 </div>
                 {ratingCount > 0 && (
-                  <div className="flex-1 space-y-1">
+                  <div className="w-full space-y-2">
                     {[5, 4, 3, 2, 1].map((star) => {
                       const count = ratingDistribution[star] ?? 0
                       const pct = ratingCount > 0 ? Math.round((count / ratingCount) * 100) : 0
                       return (
-                        <div key={star} className="flex items-center gap-2">
-                          <span className="w-10 text-[12px] text-[#6B7280]">{star}★</span>
-                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div key={star} className="flex items-center gap-3">
+                          <span className="w-8 text-[13px] text-[#6B7280]">{star}★</span>
+                          <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden min-w-[80px]">
                             <div
-                              className="h-full bg-amber-400"
+                              className="h-full rounded-full bg-violet-400 transition-all"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="w-10 text-right text-[12px] text-[#6B7280]">{pct}%</span>
+                          <span className="w-10 text-right text-[13px] text-[#6B7280] tabular-nums">{pct}%</span>
                         </div>
                       )
                     })}
                   </div>
                 )}
               </div>
-              <div className="space-y-3 mb-6">
+              <div className="space-y-4 mb-6">
                 {(reviewsData?.items ?? []).map((r) => (
-                  <div key={r.id} className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-amber-500 font-semibold">★ {r.rating}/5</span>
+                  <div key={r.id} className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#1C1F26]">
+                        <span className="text-amber-500">★</span> {r.rating}/5
+                      </span>
                       <span className="text-[12px] text-[#9CA3AF]">
                         {new Date(r.createdAt).toLocaleDateString('ru-RU')}
                       </span>
                     </div>
                     {r.text && (
-                      <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>
+                      <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap leading-relaxed">{r.text}</p>
                     )}
                   </div>
                 ))}
                 {!isReviewsLoading && (reviewsData?.items?.length ?? 0) === 0 && (
-                  <p className="text-[14px] text-[#6B7280]">Отзывов пока нет. Будьте первым.</p>
+                  <p className="text-[14px] text-[#6B7280] py-2">Отзывов пока нет. Будьте первым.</p>
                 )}
               </div>
               <ReviewFormStepByStep
                 listingId={id}
+                userAlreadyReviewed={(reviewsData?.items ?? []).some((r: any) => r.authorId === user?.id)}
                 onSubmitted={() => {
                   queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
                   queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })

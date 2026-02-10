@@ -68,7 +68,7 @@ export default function ProfilePage() {
     setError(null)
     setSuccess(false)
     try {
-      await apiFetchJson('/profile', {
+      const res = await apiFetchJson<{ name?: string; phone?: string; avatar?: string | null }>('/profile', {
         method: 'PATCH',
         body: JSON.stringify({
           full_name: name.trim() || null,
@@ -76,6 +76,8 @@ export default function ProfilePage() {
         }),
       })
       await refresh()
+      if (res?.name !== undefined) setName(res.name)
+      if (res?.phone !== undefined) setPhone(res.phone)
       setSuccess(true)
       setToast(true)
     } catch (err) {
@@ -99,7 +101,13 @@ export default function ProfilePage() {
       if (token) headers['Authorization'] = `Bearer ${token}`
       const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include', headers })
       if (!res.ok) throw new Error('Upload failed')
+      const json = await res.json().catch(() => ({}))
       await refresh()
+      if (json?.avatarUrl && typeof useAuthStore.getState === 'function') {
+        useAuthStore.setState((s) => ({
+          user: s.user ? { ...s.user, avatar_url: json.avatarUrl } : null,
+        }))
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Не удалось загрузить аватар'
       setError(msg)

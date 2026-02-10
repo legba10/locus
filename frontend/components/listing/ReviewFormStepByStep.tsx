@@ -11,9 +11,11 @@ const METRICS_TO_SHOW = 6
 export function ReviewFormStepByStep({
   listingId,
   onSubmitted,
+  userAlreadyReviewed = false,
 }: {
   listingId: string
   onSubmitted?: () => void
+  userAlreadyReviewed?: boolean
 }) {
   const metricsDefs = useMemo<ReviewMetricDefinition[]>(() => {
     const shuffled = [...METRICS_POOL]
@@ -73,6 +75,14 @@ export function ReviewFormStepByStep({
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (userAlreadyReviewed && !success) {
+    return (
+      <div className="rounded-[18px] border border-gray-100 bg-gray-50 p-6 text-center">
+        <p className="text-[15px] font-medium text-[#6B7280]">Вы уже оставили отзыв на это объявление.</p>
+      </div>
+    )
   }
 
   if (success) {
