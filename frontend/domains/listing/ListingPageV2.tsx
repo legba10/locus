@@ -245,7 +245,6 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               totalFloors={item.totalFloors ?? null}
               typeLabel="Квартира"
             />
-<<<<<<< HEAD
             <ListingOwner
               owner={{
                 id: owner.id,
@@ -321,11 +320,6 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
             <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
-<<<<<<< HEAD
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">
-                Отзывы {(item as any).reviewCount ? `(${(item as any).reviewCount})` : ''}
-              </h2>
-=======
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-4">Отзывы</h2>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <div>
@@ -357,17 +351,11 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                   </div>
                 )}
               </div>
->>>>>>> cleanup-safe
               <div className="space-y-3 mb-6">
                 {(reviewsData?.items ?? []).map((r) => (
                   <div key={r.id} className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-amber-500 font-semibold">★ {r.rating}/5</span>
-<<<<<<< HEAD
-                      <span className="text-[12px] text-[#9CA3AF]">{new Date(r.createdAt).toLocaleDateString('ru-RU')}</span>
-                    </div>
-                    {r.text && <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>}
-=======
                       <span className="text-[12px] text-[#9CA3AF]">
                         {new Date(r.createdAt).toLocaleDateString('ru-RU')}
                       </span>
@@ -375,7 +363,6 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                     {r.text && (
                       <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>
                     )}
->>>>>>> cleanup-safe
                   </div>
                 ))}
                 {!isReviewsLoading && (reviewsData?.items?.length ?? 0) === 0 && (
@@ -384,14 +371,10 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               </div>
               <ReviewFormStepByStep
                 listingId={id}
-<<<<<<< HEAD
-                onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })}
-=======
                 onSubmitted={() => {
                   queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
                   queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })
                 }}
->>>>>>> cleanup-safe
               />
             </div>
           </div>
