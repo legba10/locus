@@ -79,6 +79,7 @@ export class NotificationsService {
     } catch {
       return 0;
     }
+    if (!webPush) return 0;
     const vapidPublic = process.env.VAPID_PUBLIC_KEY;
     const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
     if (!vapidPublic || !vapidPrivate) return 0;
@@ -91,7 +92,7 @@ export class NotificationsService {
     await Promise.all(
       subs.map(async (s) => {
         try {
-          await webPush!.sendNotification(
+          await webPush.sendNotification(
             {
               endpoint: s.endpoint,
               keys: { p256dh: s.p256dh, auth: s.auth },
