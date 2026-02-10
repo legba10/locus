@@ -158,11 +158,11 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const amenities = amenitiesToLabels(item.amenities)
   const priceValue = Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0)
   const viewsValue = (item as any).viewsCount ?? item.views ?? 0
-  const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Владелец', avatar: null, rating: null, listingsCount: 0 }
+  const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Пользователь', avatar: null, rating: null, rating_avg: null, reviews_count: 0, listingsCount: 0 }
 
   const { data: ownerPublicData } = useFetch<{ profile: PublicOwnerProfile } | undefined>(
     owner.id ? ['user-public', owner.id] : null,
-    owner.id ? `/users/${encodeURIComponent(owner.id)}/public` : null
+    owner.id ? `/api/users/${encodeURIComponent(owner.id)}/public` : null
   )
 
   const handleWrite = async () => {
@@ -245,18 +245,31 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               totalFloors={item.totalFloors ?? null}
               typeLabel="Квартира"
             />
-            <ListingOwner
-              owner={{
-                id: owner.id,
-                name: ownerPublicData?.profile?.name ?? owner.name,
-                avatar: ownerPublicData?.profile?.avatar ?? owner.avatar,
-                rating: ownerPublicData?.profile?.rating_avg ?? owner.rating ?? null,
-                reviewsCount: ownerPublicData?.profile?.reviews_count ?? null,
-                listingsCount: owner.listingsCount ?? null,
-                lastSeen: ownerPublicData?.profile?.last_seen ?? null,
-              }}
-              onWrite={handleWrite}
-            />
+            {!owner.id ? (
+              <div className="bg-white rounded-2xl p-4 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100 animate-pulse">
+                <div className="h-5 w-24 bg-gray-200 rounded mb-3" />
+                <div className="flex gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gray-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 bg-gray-200 rounded" />
+                    <div className="h-3 w-24 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ListingOwner
+                owner={{
+                  id: owner.id,
+                  name: ownerPublicData?.profile?.name ?? owner.name,
+                  avatar: ownerPublicData?.profile?.avatar ?? owner.avatar,
+                  rating: ownerPublicData?.profile?.rating_avg ?? owner.rating ?? null,
+                  reviewsCount: ownerPublicData?.profile?.reviews_count ?? (owner as any).reviews_count ?? null,
+                  listingsCount: owner.listingsCount ?? null,
+                  lastSeen: ownerPublicData?.profile?.last_seen ?? null,
+                }}
+                onWrite={handleWrite}
+              />
+            )}
             <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
               {amenities.length > 0 ? (

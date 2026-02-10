@@ -109,13 +109,29 @@ export class ListingsService {
     const reviews = listingWithRelations.reviews || [];
     const avgRating =
       reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
+    const reviewsCount = reviews.length;
+
+    if (!owner) {
+      return {
+        ...listingWithRelations,
+        owner: {
+          id: "",
+          name: "Пользователь",
+          avatar: null,
+          rating: null,
+          rating_avg: null,
+          reviews_count: 0,
+          listingsCount: 0,
+        },
+      };
+    }
 
     const rawEmail = owner.email ?? "";
     const isTelegramPlaceholder =
       /^telegram_\d+@/i.test(rawEmail) || rawEmail.endsWith("@locus.app");
     const displayName =
       (owner.profile?.name ?? "").trim() ||
-      (isTelegramPlaceholder ? "Гость" : rawEmail || "Владелец");
+      (isTelegramPlaceholder ? "Гость" : rawEmail || "Пользователь");
 
     const listingsCount = await this.prisma.listing.count({
       where: { ownerId: owner.id },
@@ -128,6 +144,8 @@ export class ListingsService {
         name: displayName,
         avatar: owner.profile?.avatarUrl ?? null,
         rating: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
+        rating_avg: avgRating != null ? Math.round(avgRating * 10) / 10 : null,
+        reviews_count: reviewsCount,
         listingsCount,
       },
     };

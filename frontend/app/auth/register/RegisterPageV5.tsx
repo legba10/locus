@@ -10,18 +10,6 @@ import { CityInput } from '@/shared/components/CityInput'
 
 type UserRole = 'user' | 'landlord'
 
-interface RoleOption {
-  value: UserRole
-  label: string
-  description: string
-  icon: string
-}
-
-const ROLES: RoleOption[] = [
-  { value: 'user', label: 'Ищу жильё', description: 'Найти квартиру для аренды', icon: '🔍' },
-  { value: 'landlord', label: 'Сдаю жильё', description: 'Разместить объявление', icon: '🏠' },
-]
-
 /**
  * RegisterPageV5 — Улучшенная регистрация с 3 шагами
  * 
@@ -32,8 +20,8 @@ const ROLES: RoleOption[] = [
 export function RegisterPageV5() {
   const router = useRouter()
   const { register } = useAuthStore()
-  const [step, setStep] = useState<'role' | 'form' | 'confirm'>('role')
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null)
+  const [step, setStep] = useState<'role' | 'form' | 'confirm'>('form')
+  const [selectedRole, setSelectedRole] = useState<UserRole>('user')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,11 +31,6 @@ export function RegisterPageV5() {
   const [aiType, setAiType] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role)
-    setStep('form')
-  }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,64 +85,13 @@ export function RegisterPageV5() {
             <Logo variant="primary" size="md" />
           </div>
 
-          {/* Шаг 1: Выбор роли */}
-          {step === 'role' && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h1 className="text-[24px] font-bold text-[#1C1F26] mb-2">Кто вы?</h1>
-                <p className="text-[14px] text-[#6B7280]">Выберите тип аккаунта</p>
-              </div>
-
-              <div className="space-y-3">
-                {ROLES.map(role => (
-                  <button
-                    key={role.value}
-                    onClick={() => handleRoleSelect(role.value)}
-                    className={cn(
-                      'w-full p-4 rounded-[16px]',
-                      'border-2 border-gray-200 bg-white',
-                      'hover:border-violet-300 hover:bg-violet-50/50',
-                      'transition-all text-left',
-                      'shadow-sm hover:shadow-md'
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-violet-600">{role.icon}</div>
-                      <div>
-                        <div className="font-semibold text-[16px] text-[#1C1F26]">{role.label}</div>
-                        <div className="text-[13px] text-[#6B7280] mt-0.5">{role.description}</div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <p className="text-center text-[13px] text-[#6B7280]">
-                Уже есть аккаунт?{' '}
-                <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 font-medium">
-                  Войти
-                </Link>
-              </p>
-            </div>
-          )}
-
-          {/* Шаг 2: Форма регистрации */}
+          {/* Форма регистрации (экран выбора ролей убран по ТЗ) */}
           {step === 'form' && (
             <div className="space-y-6">
-              <button
-                onClick={() => setStep('role')}
-                className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors flex items-center gap-1"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Назад
-              </button>
-
               <div className="text-center">
-                <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Создать аккаунт</h1>
+                <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Регистрация</h1>
                 <p className="text-[13px] text-[#6B7280]">
-                  {selectedRole === 'user' ? 'Ищу жильё' : 'Сдаю жильё'}
+                  Через Email. Или войдите через Telegram на странице входа.
                 </p>
               </div>
 
@@ -256,6 +188,18 @@ export function RegisterPageV5() {
                   Продолжить
                 </button>
               </form>
+
+              <p className="text-center text-[13px] text-[#6B7280]">
+                Уже есть аккаунт?{' '}
+                <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 font-medium">
+                  Войти
+                </Link>
+              </p>
+              <p className="text-center text-[12px] text-[#6B7280] mt-1">
+                <Link href="/auth/login" className="text-[#2AABEE] hover:underline font-medium">
+                  Войти через Telegram
+                </Link>
+              </p>
             </div>
           )}
 

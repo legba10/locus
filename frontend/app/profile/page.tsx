@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuthStore } from '@/domains/auth'
@@ -9,11 +9,9 @@ import { cn } from '@/shared/utils/cn'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
-  const [formData, setFormData] = useState({
-    fullName: user?.full_name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-  })
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const initialSyncedRef = useRef<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -36,12 +34,13 @@ export default function ProfilePage() {
   const createHref = listingUsed >= listingLimit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
 
   useEffect(() => {
-    setFormData({
-      fullName: user?.full_name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-    })
-  }, [user])
+    if (!user?.id) return
+    if (initialSyncedRef.current !== user.id) {
+      initialSyncedRef.current = user.id
+      setName(user?.full_name || user?.username || '')
+      setPhone(user?.phone || '')
+    }
+  }, [user?.id, user?.full_name, user?.username, user?.phone])
 
   useEffect(() => {
     if (!toast) return
@@ -67,13 +66,12 @@ export default function ProfilePage() {
     setIsSaving(true)
     setError(null)
     setSuccess(false)
-
     try {
       await apiFetchJson('/profile', {
         method: 'PATCH',
         body: JSON.stringify({
-          full_name: formData.fullName.trim() || null,
-          phone: formData.phone.trim() || null,
+          full_name: name.trim() || null,
+          phone: phone.trim() || null,
         }),
       })
       await refresh()
@@ -93,12 +91,10 @@ export default function ProfilePage() {
     setAvatarUploading(true)
     setError(null)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      await fetch('/api/users/avatar', {
-        method: 'POST',
-        body: formData,
-      })
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include' })
+      if (!res.ok) throw new Error('Upload failed')
       await refresh()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Не удалось загрузить аватар'
@@ -130,13 +126,13 @@ export default function ProfilePage() {
                   <Image src={user.avatar_url} alt={user.full_name || 'Аватар'} fill className="object-cover" sizes="80px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                    {(user?.full_name || 'Г')[0]?.toUpperCase()}
+                    {(name || user?.full_name || user?.username || 'Г')[0]?.toUpperCase()}
                   </div>
                 )}
               </div>
               <div>
                 <p className="text-[16px] font-semibold text-[#1C1F26]">
-                  {user?.full_name || user?.username || 'Пользователь'}
+                  {name || user?.full_name || user?.username || 'Пользователь'}
                 </p>
                 <label className="mt-2 inline-flex items-center px-3 py-1.5 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
@@ -149,8 +145,8 @@ export default function ProfilePage() {
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
                 <input
                   type="text"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
                     'border border-gray-200/60 bg-white/95',
@@ -160,24 +156,11 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  disabled
-                  className={cn(
-                    'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-gray-50',
-                    'text-[#1C1F26] text-[14px]'
-                  )}
-                />
-              </div>
-              <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
                 <input
                   type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="+7 (999) 123-45-67"
                   readOnly={isTelegramPhone}
                   className={cn(
