@@ -10,16 +10,17 @@ type ChatItem = {
   id: string
   listingTitle?: string
   listingPhotoUrl?: string
-  host: { id: string; profile?: { name?: string | null } | null }
-  guest: { id: string; profile?: { name?: string | null } | null }
+  host: { id: string; profile?: { name?: string | null; avatarUrl?: string | null } | null }
+  guest: { id: string; profile?: { name?: string | null; avatarUrl?: string | null } | null }
   messages: Array<{ text: string; createdAt: string; senderId: string }>
   unreadCount?: number
   updatedAt: string
 }
 
 export default function MessagesPage() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const { data: chats, isLoading } = useFetch<ChatItem[]>(['chats'], '/chats', { enabled: isAuthenticated() })
+  const currentUserId = user?.id ?? ''
 
   if (!isAuthenticated()) {
     return (
@@ -48,7 +49,11 @@ export default function MessagesPage() {
           <div className="space-y-2">
             {chats.map((c) => {
               const last = c.messages?.[0]
-              const name = c.host?.profile?.name || c.guest?.profile?.name || 'Чат'
+              const isHost = c.host?.id === currentUserId
+              const other = isHost ? c.guest : c.host
+              const name = other?.profile?.name?.trim() || 'Пользователь'
+              const avatarUrl = other?.profile?.avatarUrl
+              const photoUrl = avatarUrl || c.listingPhotoUrl
               return (
                 <Link
                   key={c.id}
@@ -59,16 +64,19 @@ export default function MessagesPage() {
                   )}
                 >
                   <div className="relative w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                    {c.listingPhotoUrl ? (
-                      <Image src={c.listingPhotoUrl} alt="" fill className="object-cover" />
+                    {photoUrl ? (
+                      <Image src={photoUrl} alt="" fill className="object-cover" sizes="56px" />
                     ) : (
                       <span className="flex items-center justify-center w-full h-full text-[20px]">💬</span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-[#1C1F26] truncate">{c.listingTitle || name}</div>
+                    <div className="font-semibold text-[#1C1F26] truncate">{name}</div>
+                    {c.listingTitle && (
+                      <div className="text-[13px] text-[#6B7280] truncate">{c.listingTitle}</div>
+                    )}
                     {last && (
-                      <div className="text-[13px] text-[#6B7280] truncate">{last.text}</div>
+                      <div className="text-[13px] text-[#9CA3AF] truncate mt-0.5">{last.text}</div>
                     )}
                   </div>
                   {(c.unreadCount ?? 0) > 0 && (

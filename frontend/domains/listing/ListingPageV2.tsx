@@ -71,6 +71,27 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     items: Array<{ id: string; rating: number; text?: string | null; createdAt: string }>
   }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
 
+  const itemFromData = data?.listing ?? data?.item
+  const photosLength = (itemFromData?.images || itemFromData?.photos || []).length
+
+  useEffect(() => {
+    if (!isGalleryOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setGalleryOpen(false)
+      } else if (photosLength > 1 && e.key === 'ArrowLeft') {
+        e.preventDefault()
+        setActiveImage((i) => (i - 1 + photosLength) % photosLength)
+      } else if (photosLength > 1 && e.key === 'ArrowRight') {
+        e.preventDefault()
+        setActiveImage((i) => (i + 1) % photosLength)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isGalleryOpen, photosLength])
+
   if (isLoading) {
     return (
       <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
@@ -161,24 +182,6 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
       // Error shown by API or could set local state
     }
   }
-
-  useEffect(() => {
-    if (!isGalleryOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        setGalleryOpen(false)
-      } else if (photos.length > 1 && e.key === 'ArrowLeft') {
-        e.preventDefault()
-        setActiveImage((i) => (i - 1 + photos.length) % photos.length)
-      } else if (photos.length > 1 && e.key === 'ArrowRight') {
-        e.preventDefault()
-        setActiveImage((i) => (i + 1) % photos.length)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isGalleryOpen, photos.length])
 
   return (
     <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}>
