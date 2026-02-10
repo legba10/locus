@@ -42,26 +42,30 @@ type AuthState = {
 };
 
 function userFromBackend(response: MeResponse, sessionEmail?: string | null): StoredUser {
-  const payload = response;
+  const payload = response as any;
   const role = normalizeRole(payload.role);
   const roles = [role];
+  const profile = payload.profile;
+  const name = (profile?.name ?? payload.full_name ?? "").trim();
+  const avatar = profile?.avatar ?? payload.avatar_url ?? null;
+  const phone = profile?.phone ?? payload.phone ?? null;
   return {
     id: payload.id,
     supabaseId: payload.id,
     email: payload.email ?? sessionEmail ?? "",
-    phone: (payload as any).phone ?? null,
-    telegram_id: (payload as any).telegram_id ?? null,
-    username: (payload as any).username ?? null,
-    avatar_url: (payload as any).avatar_url ?? null,
-    full_name: (payload as any).full_name ?? null,
+    phone,
+    telegram_id: payload.telegram_id ?? null,
+    username: payload.username ?? null,
+    avatar_url: avatar,
+    full_name: name || null,
     role: getPrimaryRole(roles),
     roles,
-    tariff: (payload as any).tariff ?? "free",
+    tariff: payload.tariff ?? "free",
     plan: payload.plan,
     listingLimit: payload.listingLimit,
-    listingUsed: (payload as any).listingUsed,
-    isAdmin: (payload as any).isAdmin,
-    profileCompleted: (payload as any).profileCompleted,
+    listingUsed: payload.listingUsed,
+    isAdmin: payload.isAdmin,
+    profileCompleted: payload.profileCompleted,
     needsRoleSelection: payload.needsRoleSelection,
     profile_role_raw: payload.profile_role_raw ?? null,
   };
@@ -233,40 +237,64 @@ export const useAuthStore = create<AuthState>()(
         }
         const prevUser = get().user;
         set({ isLoading: true, error: null });
-        
-        try {
-          // Timeout for fetchMe (7s max)
+
+        const AUTH_TIMEOUT_MS = 5000;
+        const MAX_ATTEMPTS = 3;
+
+        const tryGetSession = async (): Promise<void> => {
+          try {
+            const { data } = await supabase.auth.getSession();
+            if (data?.session?.access_token && data?.session?.refresh_token) {
+              setTokens(data.session.access_token, data.session.refresh_token);
+            }
+          } catch {
+            /* ignore */
+          }
+        };
+
+        const runFetchMe = async (): Promise<MeResponse> => {
           const mePromise = fetchMe();
           const meTimeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("fetchMe timeout")), 7000)
+            setTimeout(() => reject(new Error("fetchMe timeout")), AUTH_TIMEOUT_MS)
           );
+          return Promise.race([mePromise, meTimeout]);
+        };
 
-          const backendResponse = await Promise.race([mePromise, meTimeout]);
-          const meUser = userFromBackend(backendResponse);
-          const nextToken = getAccessToken();
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          try {
+            await tryGetSession();
+            const backendResponse = await runFetchMe();
+            const meUser = userFromBackend(backendResponse);
+            const nextToken = getAccessToken();
+            set({
+              user: meUser,
+              accessToken: nextToken ?? null,
+              isLoading: false,
+              isInitialized: true,
+            });
+            return;
+          } catch (e) {
+            lastError = e;
+            if (attempt < MAX_ATTEMPTS) {
+              await new Promise((r) => setTimeout(r, 800));
+            }
+          }
+        }
 
-          set({
-            user: meUser,
-            accessToken: nextToken ?? null,
-            isLoading: false,
-            isInitialized: true,
-          });
-        } catch (e) {
-          const isUnauthed = e instanceof AuthApiError && e.status === 401;
-          if (!isUnauthed) {
-            logger.error("Auth", "initialize error", e);
-          }
-          set({
-            // Only clear user on explicit 401. Otherwise keep persisted user to prevent "guest".
-            user: isUnauthed ? null : prevUser ?? null,
-            accessToken: isUnauthed ? null : get().accessToken,
-            isLoading: false,
-            isInitialized: true,
-            error: isUnauthed ? null : null,
-          });
-          if (isUnauthed) {
-            clearTokens();
-          }
+        const isUnauthed = lastError instanceof AuthApiError && lastError.status === 401;
+        if (!isUnauthed) {
+          logger.error("Auth", "initialize error", lastError);
+        }
+        set({
+          user: isUnauthed ? null : prevUser ?? null,
+          accessToken: isUnauthed ? null : get().accessToken,
+          isLoading: false,
+          isInitialized: true,
+          error: isUnauthed ? null : null,
+        });
+        if (isUnauthed) {
+          clearTokens();
         }
       },
 

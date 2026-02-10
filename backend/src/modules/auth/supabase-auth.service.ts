@@ -216,9 +216,16 @@ export class SupabaseAuthService {
     }
 
     const md = user.user_metadata ?? {};
+    const isTelegram = Boolean(telegramId ?? (md as any)?.telegram_id);
+    const email =
+      user.email && user.email.trim()
+        ? user.email.trim()
+        : isTelegram
+          ? `telegram_${user.id}@locus.app`
+          : null;
     const profileData: Record<string, unknown> = {
       id: user.id,
-      email: user.email ?? null,
+      email,
       phone: user.phone ?? null,
       telegram_id: telegramId ?? (md as any)?.telegram_id ?? null,
       full_name: (md as any)?.full_name ?? null,

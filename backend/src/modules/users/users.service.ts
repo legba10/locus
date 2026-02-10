@@ -2,11 +2,15 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import bcrypt from "bcryptjs";
 import { ListingStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { SupabaseAuthService } from "../auth/supabase-auth.service";
 import { supabase } from "../../shared/lib/supabase";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly supabaseAuth: SupabaseAuthService
+  ) {}
 
   async getById(id: string) {
     const user = await this.prisma.user.findUnique({
@@ -143,6 +147,8 @@ export class UsersService {
       update: { avatarUrl },
       create: { userId, avatarUrl },
     });
+
+    await this.supabaseAuth.updateProfile(userId, { avatar_url: avatarUrl });
 
     return { avatarUrl: profile.avatarUrl };
   }

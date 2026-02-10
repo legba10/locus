@@ -5,5 +5,5 @@ Set-Location (Split-Path -Parent $PSScriptRoot)
 
 git add -A
 git status
-git commit -m "fix: profile + auth + listing stability; feat: percentage review system"
+git commit -m "fix: profile persistence + avatar upload + auth sync + listing crash"
 git push

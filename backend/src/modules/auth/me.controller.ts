@@ -63,6 +63,9 @@ export class MeController {
       userRow.appRole === "ADMIN" || userRow.appRole === "ROOT" || profileAdmin;
     const roleOut = isAdmin ? "admin" : role;
     const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
+    const name = String(profile?.full_name ?? "").trim();
+    const avatar = (profile as any)?.avatar_url ?? null;
+    const phoneOut = String(profile?.phone ?? req.user.phone ?? "");
 
     return {
       id: req.user.id,
@@ -73,10 +76,11 @@ export class MeController {
       listingUsed,
       isAdmin,
       profileCompleted,
-      full_name: String(profile?.full_name ?? ""),
-      phone: String(profile?.phone ?? req.user.phone ?? ""),
+      profile: { name, avatar, phone: phoneOut },
+      full_name: name,
+      phone: phoneOut,
       telegram_id: String(profile?.telegram_id ?? ""),
-      avatar_url: String((profile as any)?.avatar_url ?? ""),
+      avatar_url: avatar ?? "",
       username: String((profile as any)?.username ?? ""),
     };
   }

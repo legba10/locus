@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
+import { getAccessToken } from '@/shared/auth/token-storage'
 import { cn } from '@/shared/utils/cn'
 
 export default function ProfilePage() {
@@ -93,7 +94,10 @@ export default function ProfilePage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include' })
+      const token = getAccessToken()
+      const headers: HeadersInit = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include', headers })
       if (!res.ok) throw new Error('Upload failed')
       await refresh()
     } catch (err) {

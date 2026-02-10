@@ -29,6 +29,13 @@ export class ProfileController {
       avatar_url: avatarUrl,
     });
 
-    return { profile };
+    const email = profile?.email ?? req.user?.email ?? null;
+    return {
+      id: req.user.id,
+      name: (profile?.full_name ?? "").trim() || "",
+      avatar: (profile as any)?.avatar_url ?? null,
+      email: email ?? "",
+      phone: (profile?.phone ?? "").trim() || "",
+    };
   }
 }
