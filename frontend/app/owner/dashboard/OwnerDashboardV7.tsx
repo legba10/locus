@@ -762,7 +762,6 @@ function ProfileTab() {
   const used = mine?.items?.length ?? 0
   const [formData, setFormData] = useState({
     fullName: user?.full_name || '',
-    email: user?.email || '',
     phone: user?.phone || '',
   })
   const [isSaving, setIsSaving] = useState(false)
@@ -773,7 +772,6 @@ function ProfileTab() {
   useEffect(() => {
     setFormData({
       fullName: user?.full_name || '',
-      email: user?.email || '',
       phone: user?.phone || '',
     })
   }, [user])
@@ -846,19 +844,6 @@ function ProfileTab() {
                 'border border-gray-200/60 bg-white/95',
                 'text-[#1C1F26] text-[14px]',
                 'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
-              )}
-            />
-          </div>
-          <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              disabled
-              className={cn(
-                'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-gray-50',
-                'text-[#1C1F26] text-[14px]'
               )}
             />
           </div>
