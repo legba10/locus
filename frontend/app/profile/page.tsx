@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [toast, setToast] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
   const roleLabel =
     (user as any)?.role === 'admin' ? 'Администратор'
@@ -85,6 +87,27 @@ export default function ProfilePage() {
     }
   }
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      await fetch('/api/users/avatar', {
+        method: 'POST',
+        body: formData,
+      })
+      await refresh()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Не удалось загрузить аватар'
+      setError(msg)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
       {toast && (
@@ -101,6 +124,26 @@ export default function ProfilePage() {
             'border border-gray-100/80'
           )}>
             <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Личные данные</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                {user?.avatar_url ? (
+                  <Image src={user.avatar_url} alt={user.full_name || 'Аватар'} fill className="object-cover" sizes="80px" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                    {(user?.full_name || 'Г')[0]?.toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-[#1C1F26]">
+                  {user?.full_name || user?.username || 'Пользователь'}
+                </p>
+                <label className="mt-2 inline-flex items-center px-3 py-1.5 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50">
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                  {avatarUploading ? 'Загрузка…' : 'Сменить фото'}
+                </label>
+              </div>
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>

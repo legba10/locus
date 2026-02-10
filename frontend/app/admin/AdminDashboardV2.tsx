@@ -54,7 +54,7 @@ interface AdminListing {
   city: string
   basePrice: number
   createdAt: string
-  owner: { id: string; email: string | null }
+  owner: { id: string; email: string | null; profile?: { name?: string | null } | null }
   photos: { url: string }[]
   amenities?: unknown[]
 }
@@ -327,6 +327,7 @@ function UsersTab() {
       {users.length === 0 ? (
         <p className="text-[#6B7280]">Нет пользователей</p>
       ) : (
+<<<<<<< HEAD
         <div className="overflow-x-auto rounded-[18px] border border-gray-200 bg-white">
           <table className="w-full text-[14px]">
             <thead>
@@ -381,6 +382,29 @@ function UsersTab() {
               ))}
             </tbody>
           </table>
+=======
+        <div className="space-y-3">
+          {users.map(user => (
+            <div key={user.id} className="flex items-center justify-between p-4 rounded-[14px] bg-gray-50 border border-gray-200">
+              <div className="flex-1">
+                <p className="font-medium text-[#1C1F26]">{(user as any).profile?.name || user.email || 'Пользователь'}</p>
+                <p className="text-[13px] text-[#6B7280]">
+                  {user.appRole === 'ADMIN' ? 'Администратор' : 'Пользователь'} • 
+                  {user._count?.listings || 0} объявлений • 
+                  {new Date(user.createdAt).toLocaleDateString('ru')}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
+                  {user.status === 'ACTIVE' ? 'Активен' : 'Заблокирован'}
+                </span>
+                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', user.appRole === 'ADMIN' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-700')}>
+                  {user.appRole}
+                </span>
+              </div>
+            </div>
+          ))}
+>>>>>>> cleanup-safe
         </div>
       )}
     </div>
@@ -466,6 +490,7 @@ function ListingsTab() {
       {listings.length === 0 ? (
         <p className="text-[#6B7280]">Нет объявлений</p>
       ) : (
+<<<<<<< HEAD
         <div className="overflow-x-auto rounded-[18px] border border-gray-200 bg-white">
           <table className="w-full text-[14px]">
             <thead>
@@ -493,7 +518,7 @@ function ListingsTab() {
                     </Link>
                     <p className="text-[12px] text-[#6B7280]">{listing.city} · {formatPrice(listing.basePrice)}</p>
                   </td>
-                  <td className="p-3 text-[#6B7280]">{listing.owner?.email ?? '—'}</td>
+                  <td className="p-3 text-[#6B7280]">{listing.owner?.profile?.name || listing.owner?.email || '—'}</td>
                   <td className="p-3">
                     <span className={cn('px-2 py-0.5 rounded-lg text-[12px] font-medium', statusColors[listing.status] || 'bg-gray-100 text-gray-700')}>
                       {statusLabels[listing.status] || listing.status}
@@ -540,6 +565,42 @@ function ListingsTab() {
               ))}
             </tbody>
           </table>
+=======
+        <div className="space-y-3">
+          {listings.map(listing => (
+            <div key={listing.id} className="flex items-center justify-between p-4 rounded-[14px] bg-gray-50 border border-gray-200">
+              <div className="flex-1">
+                <p className="font-medium text-[#1C1F26]">{listing.title}</p>
+                <p className="text-[13px] text-[#6B7280]">
+                  {listing.city} • {formatPrice(listing.basePrice)} • {listing.owner?.profile?.name || listing.owner?.email || 'Неизвестно'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={cn('px-3 py-1 rounded-lg text-[12px] font-medium', statusColors[listing.status] || 'bg-gray-100 text-gray-700')}>
+                  {statusLabels[listing.status] || listing.status}
+                </span>
+                <Link href={`/listings/${listing.id}`} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">
+                  Открыть
+                </Link>
+                {listing.status === 'PENDING_REVIEW' && (
+                  <>
+                    <button onClick={() => handleAction(listing.id, 'approve')} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-medium hover:bg-emerald-500">
+                      Одобрить
+                    </button>
+                    <button onClick={() => handleAction(listing.id, 'reject')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
+                      Отклонить
+                    </button>
+                  </>
+                )}
+                {listing.status === 'PUBLISHED' && (
+                  <button onClick={() => handleAction(listing.id, 'block')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-medium hover:bg-red-500">
+                    Блок
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+>>>>>>> cleanup-safe
         </div>
       )}
     </div>
@@ -598,10 +659,23 @@ function ModerationTab() {
       ) : (
         <div className="space-y-3">
           {listings.map(listing => (
+<<<<<<< HEAD
             <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200 flex flex-col sm:flex-row gap-4">
               {listing.photos?.[0]?.url && (
                 <div className="w-full sm:w-24 h-24 rounded-[12px] overflow-hidden bg-gray-200 flex-shrink-0">
                   <img src={listing.photos[0].url} alt={listing.title} className="w-full h-full object-cover" />
+=======
+            <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="font-medium text-[#1C1F26] mb-1">{listing.title}</p>
+                  <p className="text-[13px] text-[#6B7280] mb-2">
+                  {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.profile?.name || listing.owner?.email || 'Неизвестно'}
+                  </p>
+                  <p className="text-[12px] text-amber-700">
+                    Создано: {new Date(listing.createdAt).toLocaleString('ru')}
+                  </p>
+>>>>>>> cleanup-safe
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -610,7 +684,7 @@ function ModerationTab() {
                   <p className="text-[12px] text-[#6B7280] line-clamp-2 mb-2">{listing.description}</p>
                 )}
                 <p className="text-[13px] text-[#6B7280] mb-1">
-                  {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.email || 'Неизвестно'}
+                  {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.profile?.name || listing.owner?.email || 'Неизвестно'}
                 </p>
                 <p className="text-[12px] text-amber-700">
                   Создано: {new Date(listing.createdAt).toLocaleString('ru')}

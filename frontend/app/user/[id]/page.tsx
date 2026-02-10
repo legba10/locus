@@ -10,12 +10,11 @@ import { formatPrice } from '@/core/i18n/ru'
 interface PublicProfile {
   id: string
   name: string
-  avatarUrl: string | null
-  email: string | null
-  createdAt?: string
+  avatar: string | null
+  created_at?: string
   listingsCount: number
-  rating: number | null
-  reviewsCount: number
+  rating_avg: number | null
+  reviews_count: number
   listings: Array<{
     id: string
     title: string
@@ -87,8 +86,8 @@ export default function UserProfilePage() {
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-              {profile.avatarUrl ? (
-                <Image src={profile.avatarUrl} alt={profile.name} fill className="object-cover" sizes="80px" />
+              {profile.avatar ? (
+                <Image src={profile.avatar} alt={profile.name} fill className="object-cover" sizes="80px" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
                   {profile.name.charAt(0).toUpperCase()}
@@ -97,15 +96,15 @@ export default function UserProfilePage() {
             </div>
             <div>
               <h1 className="text-[24px] font-bold text-[#1C1F26]">{profile.name}</h1>
-              {profile.rating != null && (
+              {profile.rating_avg != null && (
                 <p className="text-[14px] text-[#6B7280] mt-0.5">
-                  ★ {profile.rating.toFixed(1)} · {profile.reviewsCount} отзывов
+                  ★ {profile.rating_avg.toFixed(1)} · {profile.reviews_count} отзывов
                 </p>
               )}
               <p className="text-[14px] text-[#6B7280]">{profile.listingsCount} объявлений</p>
-              {profile.createdAt && (
+              {profile.created_at && (
                 <p className="text-[13px] text-[#6B7280]">
-                  На LOCUS с {new Date(profile.createdAt).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                  На LOCUS с {new Date(profile.created_at).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
                 </p>
               )}
               <p className="text-[13px] text-emerald-600 mt-1">Отвечает быстро</p>

@@ -36,5 +36,19 @@ export class ReviewsController {
     const items = await this.reviews.getListingReviews(listingId, limit ? Number(limit) : 10);
     return { ok: true, items };
   }
+
+  @Get("listing/:listingId/summary")
+  @ApiOperation({ summary: "Get rating summary (avg, count, distribution) for listing" })
+  async listingSummary(@Param("listingId") listingId: string) {
+    const summary = await this.reviews.getListingRatingSummary(listingId);
+    return { ok: true, summary };
+  }
+
+  @Get("user/:userId/summary")
+  @ApiOperation({ summary: "Get rating summary (avg, count, distribution) for host user" })
+  async userSummary(@Param("userId") userId: string) {
+    const summary = await this.reviews.getUserRatingSummary(userId);
+    return { ok: true, summary };
+  }
 }
 

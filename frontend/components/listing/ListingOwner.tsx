@@ -10,7 +10,9 @@ export interface ListingOwnerProps {
     name: string
     avatar: string | null
     rating?: number | null
-    listingsCount?: number
+    reviewsCount?: number | null
+    listingsCount?: number | null
+    lastSeen?: string | null
   }
   onWrite?: () => void
   showRespondsFast?: boolean
@@ -18,7 +20,28 @@ export interface ListingOwnerProps {
 
 export function ListingOwner({ owner, onWrite, showRespondsFast = true }: ListingOwnerProps) {
   const hasRating = owner.rating != null && Number.isFinite(owner.rating)
-  const count = owner.listingsCount ?? 0
+  const reviewsCount = owner.reviewsCount ?? null
+  const listingsCount = owner.listingsCount ?? 0
+
+  const reviewsLabel =
+    reviewsCount == null
+      ? ''
+      : reviewsCount === 1
+        ? '1 отзыв'
+        : reviewsCount >= 2 && reviewsCount <= 4
+          ? `${reviewsCount} отзыва`
+          : `${reviewsCount} отзывов`
+
+  const responseLabel = (() => {
+    if (!showRespondsFast) return null
+    if (owner.lastSeen) {
+      // simple heuristic: if lastSeen < 15 мин назад, считаем \"Онлайн\"
+      const last = new Date(owner.lastSeen).getTime()
+      const diffMin = (Date.now() - last) / 60000
+      if (!Number.isNaN(diffMin) && diffMin <= 15) return 'Онлайн'
+    }
+    return 'Отвечает быстро'
+  })()
 
   return (
     <div
@@ -43,10 +66,19 @@ export function ListingOwner({ owner, onWrite, showRespondsFast = true }: Listin
           {hasRating && (
             <div className="flex items-center gap-1 mt-0.5">
               <span className="text-[14px] font-medium text-[#1C1F26]">★ {owner.rating?.toFixed(1)}</span>
+              {reviewsLabel && (
+                <span className="text-[13px] text-[#6B7280]">({reviewsLabel})</span>
+              )}
             </div>
           )}
-          {count > 0 && <p className="text-[13px] text-[#6B7280] mt-0.5">{count} объявлений</p>}
-          {showRespondsFast && <p className="text-[13px] text-emerald-600 mt-1">Отвечает быстро</p>}
+          {listingsCount > 0 && (
+            <p className="text-[13px] text-[#6B7280] mt-0.5">
+              {listingsCount} объявлений
+            </p>
+          )}
+          {responseLabel && (
+            <p className="text-[13px] text-emerald-600 mt-1">{responseLabel}</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-4">
             <button
               type="button"

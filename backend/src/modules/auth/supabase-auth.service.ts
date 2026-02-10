@@ -230,8 +230,19 @@ export class SupabaseAuthService {
     const lastName = (md as any)?.last_name;
     const avatarUrl = (md as any)?.photo_url ?? (md as any)?.avatar_url;
 
+    let finalUsername: string | null = null;
     if (typeof username === "string" && username.length > 0) {
-      profileData.username = username.startsWith("@") ? username : `@${username}`;
+      finalUsername = username.startsWith("@") ? username : `@${username}`;
+    } else if (typeof firstName === "string" && firstName.length > 0) {
+      finalUsername = firstName;
+    } else {
+      // Fallback username, e.g. for pure Telegram/anonymous signups
+      finalUsername = `user_${user.id.slice(0, 6)}`;
+    }
+
+    profileData.username = finalUsername;
+    if (!profileData.full_name) {
+      profileData.full_name = finalUsername;
     }
     if (typeof firstName === "string" && firstName.length > 0) profileData.first_name = firstName;
     if (typeof lastName === "string" && lastName.length > 0) profileData.last_name = lastName;

@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import bcrypt from "bcryptjs";
 import { ListingStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { supabase } from "../../shared/lib/supabase";
 
 @Injectable()
 export class UsersService {
@@ -60,66 +61,90 @@ export class UsersService {
     });
   }
 
-  /**
-   * Public profile for /user/:id (owner card link).
-   * Returns name, avatar, published listings, rating from reviews on owner's listings.
-   */
+  /** Public profile view with aggregates for listings and reviews. */
   async getPublicProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        createdAt: true,
-        profile: { select: { name: true, avatarUrl: true } },
+      include: {
+        profile: true,
+        listings: {
+          where: { status: ListingStatus.PUBLISHED },
+          orderBy: { createdAt: "desc" },
+          include: { photos: { orderBy: { sortOrder: "asc" }, take: 1 } },
+        },
       },
     });
-    if (!user) return null;
+    if (!user) throw new NotFoundException("User not found");
 
-    const [listings, reviewsAgg] = await Promise.all([
-      this.prisma.listing.findMany({
-        where: { ownerId: userId, status: ListingStatus.PUBLISHED },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        select: {
-          id: true,
-          title: true,
-          city: true,
-          basePrice: true,
-          photos: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
-        },
-      }),
-      this.prisma.review.aggregate({
-        where: { listing: { ownerId: userId } },
-        _avg: { rating: true },
-        _count: true,
-      }),
-    ]);
+    const byRating = await this.prisma.review.groupBy({
+      where: { listing: { ownerId: userId } },
+      by: ["rating"],
+      _count: { _all: true },
+    });
 
-    const name = user.profile?.name ?? user.email ?? "Владелец";
-    const avatarUrl = user.profile?.avatarUrl ?? null;
-    const rating =
-      reviewsAgg._count > 0 && reviewsAgg._avg?.rating != null
-        ? Math.round(reviewsAgg._avg.rating * 10) / 10
+    const totalReviews = byRating.reduce((acc, row) => acc + row._count._all, 0);
+    const avgRating =
+      totalReviews > 0
+        ? byRating.reduce((sum, row) => sum + row.rating * row._count._all, 0) / totalReviews
         : null;
+
+    const listings = user.listings.map((l) => ({
+      id: l.id,
+      title: l.title,
+      city: l.city,
+      basePrice: l.basePrice,
+      imageUrl: l.photos[0]?.url ?? null,
+    }));
 
     return {
       id: user.id,
-      name,
-      avatarUrl,
-      email: user.email,
-      createdAt: user.createdAt,
+      name: user.profile?.name || "Пользователь",
+      avatar: user.profile?.avatarUrl ?? null,
+      rating_avg: avgRating,
+      reviews_count: totalReviews,
+      response_rate: null as number | null,
+      last_seen: null as string | null,
+      created_at: user.createdAt.toISOString(),
       listingsCount: listings.length,
-      rating,
-      reviewsCount: reviewsAgg._count,
-      listings: listings.map((l) => ({
-        id: l.id,
-        title: l.title,
-        city: l.city,
-        basePrice: l.basePrice,
-        imageUrl: l.photos[0]?.url ?? null,
-      })),
+      listings,
     };
+  }
+
+  /** Upload avatar to Supabase Storage and persist public URL in profile. */
+  async updateAvatar(userId: string, file: any) {
+    if (!file) {
+      throw new ConflictException("Avatar file is required");
+    }
+    await this.getById(userId);
+
+    if (!supabase) {
+      throw new ConflictException("Supabase storage is not configured");
+    }
+
+    const ext = (file.originalname.split(".").pop() || "jpg").toLowerCase();
+    const path = `avatars/${userId}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new ConflictException(`Failed to upload avatar: ${uploadError.message}`);
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    const avatarUrl = data.publicUrl;
+
+    const profile = await this.prisma.profile.upsert({
+      where: { userId },
+      update: { avatarUrl },
+      create: { userId, avatarUrl },
+    });
+
+    return { avatarUrl: profile.avatarUrl };
   }
 }
 

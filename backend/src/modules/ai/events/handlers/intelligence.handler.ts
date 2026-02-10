@@ -9,7 +9,7 @@ import {
   BookingCreatedEvent,
   BookingConfirmedEvent,
   ReviewAddedEvent,
-} from '../events.service';
+} from '../events.service.stub';
 
 /**
  * Intelligence Event Handler — обработка событий и пересчёт AI профилей.
@@ -40,8 +40,8 @@ export class IntelligenceEventHandler {
     this.logger.log(`Handling property updated: ${event.listingId}, changes: ${event.changes.join(', ')}`);
     try {
       // Пересчитать AI профиль при значимых изменениях
-      const significantChanges = ['title', 'description', 'basePrice', 'photos', 'amenities'];
-      const hasSignificantChanges = event.changes.some(c => significantChanges.includes(c));
+    const significantChanges = ['title', 'description', 'basePrice', 'photos', 'amenities'];
+    const hasSignificantChanges = event.changes.some((c: string) => significantChanges.includes(c));
       
       if (hasSignificantChanges) {
         await this.intelligence.calculateAndSave(event.listingId);

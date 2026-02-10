@@ -55,6 +55,22 @@ interface ListingResponse {
   item?: typeof ListingResponse.prototype.listing
 }
 
+interface PublicOwnerProfile {
+  id: string
+  name: string
+  avatar: string | null
+  rating_avg: number | null
+  reviews_count: number
+  response_rate: number | null
+  last_seen: string | null
+}
+
+interface RatingSummary {
+  avg: number | null
+  count: number
+  distribution: Record<number, number>
+}
+
 export function ListingPageV2({ id }: ListingPageV2Props) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -70,6 +86,10 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const { data: reviewsData, isLoading: isReviewsLoading } = useFetch<{
     items: Array<{ id: string; rating: number; text?: string | null; createdAt: string }>
   }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
+  const { data: ratingSummaryData } = useFetch<{ ok: boolean; summary: RatingSummary }>(
+    ['listing-rating-summary', id],
+    `/api/reviews/listing/${encodeURIComponent(id)}/summary`
+  )
 
   const itemFromData = data?.listing ?? data?.item
   const photosLength = (itemFromData?.images || itemFromData?.photos || []).length
@@ -140,6 +160,11 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const viewsValue = (item as any).viewsCount ?? item.views ?? 0
   const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Владелец', avatar: null, rating: null, listingsCount: 0 }
 
+  const { data: ownerPublicData } = useFetch<{ profile: PublicOwnerProfile } | undefined>(
+    owner.id ? ['user-public', owner.id] : null,
+    owner.id ? `/users/${encodeURIComponent(owner.id)}/public` : null
+  )
+
   const handleWrite = async () => {
     if (!isAuthenticated()) {
       router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
@@ -183,6 +208,11 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     }
   }
 
+  const ratingSummary = ratingSummaryData?.summary
+  const ratingAvg = ratingSummary?.avg ?? null
+  const ratingCount = ratingSummary?.count ?? 0
+  const ratingDistribution = ratingSummary?.distribution ?? {}
+
   return (
     <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}>
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
@@ -215,7 +245,19 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               totalFloors={item.totalFloors ?? null}
               typeLabel="Квартира"
             />
-            <ListingOwner owner={owner} onWrite={handleWrite} />
+<<<<<<< HEAD
+            <ListingOwner
+              owner={{
+                id: owner.id,
+                name: ownerPublicData?.profile?.name ?? owner.name,
+                avatar: ownerPublicData?.profile?.avatar ?? owner.avatar,
+                rating: ownerPublicData?.profile?.rating_avg ?? owner.rating ?? null,
+                reviewsCount: ownerPublicData?.profile?.reviews_count ?? null,
+                listingsCount: owner.listingsCount ?? null,
+                lastSeen: ownerPublicData?.profile?.last_seen ?? null,
+              }}
+              onWrite={handleWrite}
+            />
             <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
               {amenities.length > 0 ? (
@@ -279,17 +321,61 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
             <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+<<<<<<< HEAD
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">
                 Отзывы {(item as any).reviewCount ? `(${(item as any).reviewCount})` : ''}
               </h2>
+=======
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-4">Отзывы</h2>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div>
+                  <div className="text-[26px] font-bold text-[#1C1F26]">
+                    {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
+                  </div>
+                  <p className="text-[13px] text-[#6B7280] mt-1">
+                    {ratingCount > 0 ? `на основе ${ratingCount} отзывов` : 'Отзывов пока нет'}
+                  </p>
+                </div>
+                {ratingCount > 0 && (
+                  <div className="flex-1 space-y-1">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = ratingDistribution[star] ?? 0
+                      const pct = ratingCount > 0 ? Math.round((count / ratingCount) * 100) : 0
+                      return (
+                        <div key={star} className="flex items-center gap-2">
+                          <span className="w-10 text-[12px] text-[#6B7280]">{star}★</span>
+                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className="h-full bg-amber-400"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="w-10 text-right text-[12px] text-[#6B7280]">{pct}%</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+>>>>>>> cleanup-safe
               <div className="space-y-3 mb-6">
                 {(reviewsData?.items ?? []).map((r) => (
                   <div key={r.id} className="rounded-[14px] border border-gray-100 bg-gray-50 p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-amber-500 font-semibold">★ {r.rating}/5</span>
+<<<<<<< HEAD
                       <span className="text-[12px] text-[#9CA3AF]">{new Date(r.createdAt).toLocaleDateString('ru-RU')}</span>
                     </div>
                     {r.text && <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>}
+=======
+                      <span className="text-[12px] text-[#9CA3AF]">
+                        {new Date(r.createdAt).toLocaleDateString('ru-RU')}
+                      </span>
+                    </div>
+                    {r.text && (
+                      <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap">{r.text}</p>
+                    )}
+>>>>>>> cleanup-safe
                   </div>
                 ))}
                 {!isReviewsLoading && (reviewsData?.items?.length ?? 0) === 0 && (
@@ -298,7 +384,14 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               </div>
               <ReviewFormStepByStep
                 listingId={id}
+<<<<<<< HEAD
                 onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })}
+=======
+                onSubmitted={() => {
+                  queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
+                  queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })
+                }}
+>>>>>>> cleanup-safe
               />
             </div>
           </div>

@@ -55,7 +55,7 @@ export function UserMenu() {
     );
   }
 
-  const displayName = user.full_name || user.email || "Пользователь";
+  const displayName = user.full_name || user.username || "Пользователь";
   const tariff = user.tariff ?? "free";
   const limit = (user as any).listingLimit ?? 1;
   const used = (user as any).listingUsed ?? 0;

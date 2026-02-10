@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { EventsService } from './events.service';
+import { EventsService } from './events.service.stub';
 import { IntelligenceEventHandler } from './handlers/intelligence.handler';
 import { ProductIntelligenceModule } from '../product-intelligence/product-intelligence.module';
 
