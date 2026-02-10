@@ -323,7 +323,8 @@ export class SupabaseAuthService {
   }
 
   /**
-   * Update profile fields in Supabase
+   * Update profile fields in Supabase.
+   * Always includes email from existing profile so NOT NULL constraint is never violated.
    */
   async updateProfile(
     userId: string,
@@ -334,7 +335,11 @@ export class SupabaseAuthService {
       return null;
     }
 
-    const payload: Record<string, unknown> = { id: userId };
+    const existing = await this.getProfile(userId);
+    const payload: Record<string, unknown> = {
+      id: userId,
+      email: (existing as any)?.email ?? `user-${userId.slice(0, 8)}@locus.app`,
+    };
     if (patch.full_name !== undefined) payload.full_name = patch.full_name;
     if (patch.phone !== undefined) payload.phone = patch.phone;
     if (patch.telegram_id !== undefined) payload.telegram_id = patch.telegram_id;

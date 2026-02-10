@@ -5,5 +5,5 @@ Set-Location (Split-Path -Parent $PSScriptRoot)
 
 git add -A
 git status
-git commit -m "fix: profile save/avatar sync, reviews UI and 409 handling"
+git commit -m "fix: profile email NOT NULL, avatar 400 for missing file, reviews list visible, PATCH profile throws on fail"
 git push

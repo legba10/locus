@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import bcrypt from "bcryptjs";
 import { ListingStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
@@ -116,8 +116,8 @@ export class UsersService {
 
   /** Upload avatar to Supabase Storage and persist public URL in profile. */
   async updateAvatar(userId: string, file: any) {
-    if (!file) {
-      throw new ConflictException("Avatar file is required");
+    if (!file || !file.buffer) {
+      throw new BadRequestException("Avatar file is required");
     }
     await this.getById(userId);
 

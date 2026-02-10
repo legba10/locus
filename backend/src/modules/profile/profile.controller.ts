@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Patch, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, InternalServerErrorException, Patch, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { SupabaseAuthService } from "../auth/supabase-auth.service";
@@ -28,6 +28,10 @@ export class ProfileController {
       role,
       avatar_url: avatarUrl,
     });
+
+    if (!profile) {
+      throw new InternalServerErrorException("Failed to update profile");
+    }
 
     const email = profile?.email ?? req.user?.email ?? null;
     return {

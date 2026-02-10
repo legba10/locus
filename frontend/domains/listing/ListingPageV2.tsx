@@ -84,7 +84,8 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData, isLoading: isReviewsLoading } = useFetch<{
-    items: Array<{ id: string; rating: number; text?: string | null; createdAt: string }>
+    ok?: boolean
+    items?: Array<{ id: string; authorId?: string; rating: number; text?: string | null; createdAt: string }>
   }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
   const { data: ratingSummaryData } = useFetch<{ ok: boolean; summary: RatingSummary }>(
     ['listing-rating-summary', id],
@@ -372,28 +373,30 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 )}
               </div>
               <div className="space-y-4 mb-6">
-                {(reviewsData?.items ?? []).map((r) => (
+                {((reviewsData?.items ?? (reviewsData as any)?.data) ?? []).map((r: any) => (
                   <div key={r.id} className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#1C1F26]">
                         <span className="text-amber-500">★</span> {r.rating}/5
                       </span>
                       <span className="text-[12px] text-[#9CA3AF]">
-                        {new Date(r.createdAt).toLocaleDateString('ru-RU')}
+                        {r.createdAt ? new Date(r.createdAt).toLocaleDateString('ru-RU') : ''}
                       </span>
                     </div>
-                    {r.text && (
+                    {r.text ? (
                       <p className="mt-2 text-[14px] text-[#4B5563] whitespace-pre-wrap leading-relaxed">{r.text}</p>
+                    ) : (
+                      <p className="mt-2 text-[13px] text-[#9CA3AF] italic">Без комментария</p>
                     )}
                   </div>
                 ))}
-                {!isReviewsLoading && (reviewsData?.items?.length ?? 0) === 0 && (
+                {!isReviewsLoading && ((reviewsData?.items ?? (reviewsData as any)?.data)?.length ?? 0) === 0 && (
                   <p className="text-[14px] text-[#6B7280] py-2">Отзывов пока нет. Будьте первым.</p>
                 )}
               </div>
               <ReviewFormStepByStep
                 listingId={id}
-                userAlreadyReviewed={(reviewsData?.items ?? []).some((r: any) => r.authorId === user?.id)}
+                userAlreadyReviewed={((reviewsData?.items ?? (reviewsData as any)?.data) ?? []).some((r: any) => r.authorId === user?.id)}
                 onSubmitted={() => {
                   queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
                   queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })
