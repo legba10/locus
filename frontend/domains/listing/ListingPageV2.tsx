@@ -92,6 +92,13 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   )
 
   const itemFromData = data?.listing ?? data?.item
+  const ownerIdFromData = itemFromData?.owner?.id ?? (itemFromData as any)?.ownerId ?? ''
+  const { data: ownerPublicData } = useQuery({
+    queryKey: ['user-public', ownerIdFromData || ''],
+    queryFn: () => apiFetchJson<{ profile: PublicOwnerProfile }>(`/api/users/${encodeURIComponent(ownerIdFromData)}/public`),
+    enabled: Boolean(ownerIdFromData),
+  })
+
   const photosLength = (itemFromData?.images || itemFromData?.photos || []).length
 
   useEffect(() => {
@@ -159,12 +166,6 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const priceValue = Number((item as any).pricePerNight ?? (item as any).basePrice ?? 0)
   const viewsValue = (item as any).viewsCount ?? item.views ?? 0
   const owner = item.owner ?? { id: (item as any).ownerId || '', name: 'Пользователь', avatar: null, rating: null, rating_avg: null, reviews_count: 0, listingsCount: 0 }
-
-  const { data: ownerPublicData } = useQuery({
-    queryKey: ['user-public', owner.id || ''],
-    queryFn: () => apiFetchJson<{ profile: PublicOwnerProfile }>(`/api/users/${encodeURIComponent(owner.id!)}/public`),
-    enabled: Boolean(owner.id),
-  })
 
   const handleWrite = async () => {
     if (!isAuthenticated()) {
