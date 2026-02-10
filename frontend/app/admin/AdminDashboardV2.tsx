@@ -176,7 +176,7 @@ function UsersTab() {
           {users.map(user => (
             <div key={user.id} className="flex items-center justify-between p-4 rounded-[14px] bg-gray-50 border border-gray-200">
               <div className="flex-1">
-                <p className="font-medium text-[#1C1F26]">{user.email || 'Без email'}</p>
+                <p className="font-medium text-[#1C1F26]">{(user as any).profile?.name || user.email || 'Пользователь'}</p>
                 <p className="text-[13px] text-[#6B7280]">
                   {user.appRole === 'ADMIN' ? 'Администратор' : 'Пользователь'} • 
                   {user._count?.listings || 0} объявлений • 
@@ -278,7 +278,7 @@ function ListingsTab() {
               <div className="flex-1">
                 <p className="font-medium text-[#1C1F26]">{listing.title}</p>
                 <p className="text-[13px] text-[#6B7280]">
-                  {listing.city} • {formatPrice(listing.basePrice)} • {listing.owner?.email || 'Неизвестно'}
+                  {listing.city} • {formatPrice(listing.basePrice)} • {listing.owner?.profile?.name || 'Неизвестно'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ function ModerationTab() {
                 <div className="flex-1">
                   <p className="font-medium text-[#1C1F26] mb-1">{listing.title}</p>
                   <p className="text-[13px] text-[#6B7280] mb-2">
-                    {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.email || 'Неизвестно'}
+                    {listing.city} • {formatPrice(listing.basePrice)} • от {listing.owner?.profile?.name || 'Неизвестно'}
                   </p>
                   <p className="text-[12px] text-amber-700">
                     Создано: {new Date(listing.createdAt).toLocaleString('ru')}

@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { RegisterDto } from "./dto/register.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
@@ -52,6 +53,27 @@ export class UsersController {
   async updateMe(@Req() req: any, @Body() dto: UpdateProfileDto) {
     const profile = await this.users.updateMyProfile(req.user.id, dto);
     return { profile };
+  }
+
+  /**
+   * Public profile with aggregates for listings and reviews.
+   */
+  @Get(":id/public")
+  async getPublic(@Param("id") id: string) {
+    const profile = await this.users.getPublicProfile(id);
+    return { profile };
+  }
+
+  /**
+   * Upload avatar for current user.
+   */
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard)
+  @Post("avatar")
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadAvatar(@Req() req: any, @UploadedFile() file: any) {
+    const result = await this.users.updateAvatar(req.user.id, file);
+    return result;
   }
 }
 

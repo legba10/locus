@@ -97,5 +97,49 @@ export class ReviewsService {
       },
     }) as any;
   }
+
+  private buildRatingSummary(rows: Array<{ rating: number; _count: { _all: number } }>) {
+    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let total = 0;
+    let weighted = 0;
+
+    for (const row of rows) {
+      const r = row.rating;
+      const c = row._count._all;
+      if (r >= 1 && r <= 5) {
+        distribution[r] = (distribution[r] ?? 0) + c;
+      }
+      total += c;
+      weighted += r * c;
+    }
+
+    const avg = total > 0 ? weighted / total : null;
+
+    return { avg, count: total, distribution };
+  }
+
+  /**
+   * Aggregate rating summary for a listing.
+   */
+  async getListingRatingSummary(listingId: string) {
+    const rows = await this.prisma.review.groupBy({
+      by: ["rating"],
+      where: { listingId },
+      _count: { _all: true },
+    });
+    return this.buildRatingSummary(rows);
+  }
+
+  /**
+   * Aggregate rating summary for a host (owner of listings).
+   */
+  async getUserRatingSummary(userId: string) {
+    const rows = await this.prisma.review.groupBy({
+      by: ["rating"],
+      where: { listing: { ownerId: userId } },
+      _count: { _all: true },
+    });
+    return this.buildRatingSummary(rows);
+  }
 }
 
