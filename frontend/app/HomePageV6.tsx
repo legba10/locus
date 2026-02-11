@@ -11,6 +11,8 @@ import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/Li
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
+import HeroFlow from '@/components/HeroFlow'
+import AIBubble from '@/components/AIBubble'
 
 interface ListingsResponse {
   items: any[]
@@ -160,8 +162,9 @@ export function HomePageV6() {
       {/* ═══════════════════════════════════════════════════════════════
           HERO SECTION — v4 (real estate language, search доминирует)
           ═══════════════════════════════════════════════════════════════ */}
-      <section className="relative pt-10 pb-14 md:pt-14 md:pb-18">
-        <div className="max-w-5xl mx-auto px-4 text-center">
+      <section className="relative pt-10 pb-14 md:pt-14 md:pb-18 overflow-hidden">
+        <HeroFlow />
+        <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
           <HeroTitle />
 
           {/* Subtitle — по ТЗ v4 */}
@@ -727,9 +730,7 @@ export function HomePageV6() {
           )}
           onClick={() => setAiOpen(true)}
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-          </svg>
+          <AIBubble />
           Подобрать жильё с AI
         </button>
       </div>

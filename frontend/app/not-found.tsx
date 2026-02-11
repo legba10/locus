@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const ErrorAnim = dynamic(() => import('@/components/ErrorAnim'), { ssr: false })
 
 /**
  * Static 404 page — no providers, no requests.
@@ -10,6 +13,9 @@ export default function NotFound() {
       className="min-h-screen flex flex-col items-center justify-center px-4"
       style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}
     >
+      <div className="mb-4">
+        <ErrorAnim />
+      </div>
       <h1 className="text-6xl font-bold text-[#1C1F26] mb-2">404</h1>
       <p className="text-[#6B7280] text-[18px] mb-8">Страница не найдена</p>
       <Link

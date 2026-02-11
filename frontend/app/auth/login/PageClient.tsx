@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
+import MobileBubble from '@/components/MobileBubble'
 
 /**
  * LoginPage — Страница входа
@@ -40,6 +41,7 @@ export default function PageClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <MobileBubble />
       <div className="w-full max-w-md">
         {/* Glass Card */}
         <div className={cn(

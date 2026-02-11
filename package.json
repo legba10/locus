@@ -6,5 +6,8 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.10",
     "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "lottie-react": "^2.4.1"
   }
 }
