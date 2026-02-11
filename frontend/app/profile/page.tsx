@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { getAccessToken } from '@/shared/auth/token-storage'
@@ -10,6 +11,7 @@ import { cn } from '@/shared/utils/cn'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const initialSyncedRef = useRef<string | null>(null)
@@ -19,20 +21,12 @@ export default function ProfilePage() {
   const [toast, setToast] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const isTelegramPhone = Boolean(user?.telegram_id && user?.phone)
-  const roleLabel =
-    (user as any)?.role === 'admin' ? 'Администратор'
-    : (user as any)?.role === 'landlord' ? 'Арендодатель'
-    : 'Пользователь'
   const tariffLabel =
     user?.tariff === 'landlord_basic'
       ? 'Landlord Basic'
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
-  const listingLimit = user?.listingLimit ?? 1
-  const listingUsed = (user as any)?.listingUsed ?? 0
-  const canCreateListing = true
-  const createHref = listingUsed >= listingLimit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
 
   useEffect(() => {
     if (!user?.id) return
@@ -81,13 +75,6 @@ export default function ProfilePage() {
 
   const displayName = name || user?.full_name || user?.username || 'Пользователь'
   const displayAvatar = user?.avatar_url ?? null
-  const statsLine = (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#6B7280]">
-      <span>⭐ —</span>
-      <span>💬 — отзывов</span>
-      <span>🏠 {listingUsed} {listingUsed === 1 ? 'объявление' : 'объявлений'}</span>
-    </div>
-  )
 
   const handleSave = async () => {
     if (isSaving) return
@@ -105,11 +92,21 @@ export default function ProfilePage() {
       if (res?.name !== undefined) setName(res.name)
       if (res?.phone !== undefined) setPhone(res.phone)
       if (typeof useAuthStore.getState === 'function' && res) {
+        // Мгновенно обновляем локальный authStore
         useAuthStore.setState((s) => ({
-          user: s.user ? { ...s.user, full_name: res.name ?? s.user.full_name, avatar_url: res.avatar ?? s.user.avatar_url, phone: res.phone ?? s.user.phone } : null,
+          user: s.user
+            ? {
+                ...s.user,
+                full_name: res.name ?? s.user.full_name,
+                avatar_url: res.avatar ?? s.user.avatar_url,
+                phone: res.phone ?? s.user.phone,
+              }
+            : null,
         }))
       }
+      // Затем запрашиваем свежие данные профиля с бэкенда и обновляем страницу
       await refresh()
+      router.refresh()
       setSuccess(true)
       setToast(true)
     } catch (err) {
@@ -155,10 +152,10 @@ export default function ProfilePage() {
           Изменения сохранены
         </div>
       )}
-      <div className="max-w-[600px] mx-auto px-4 py-8">
+      <div className="max-w-[640px] mx-auto px-4 py-8 space-y-4">
         <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Профиль</h1>
         <div className="space-y-6">
-          {/* Верхняя карточка: avatar, имя, статистика, кнопки */}
+          {/* Верхняя карточка: только аватар, имя и смена фото */}
           <section className={cn(
             'rounded-[24px] p-5 sm:p-6',
             'shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
@@ -177,13 +174,11 @@ export default function ProfilePage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[20px] font-bold text-[#1C1F26]">{displayName}</p>
-                <div className="mt-2">{statsLine}</div>
                 <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
                   <label className="inline-flex items-center px-3 py-2 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50 bg-white">
                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                     {avatarUploading ? 'Загрузка…' : 'Сменить фото'}
                   </label>
-                  <span className="inline-flex items-center px-3 py-2 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#6B7280]">Изменить имя ниже</span>
                 </div>
               </div>
             </div>
@@ -246,53 +241,20 @@ export default function ProfilePage() {
           </section>
 
           <section className={cn(
-            'bg-white rounded-[18px] p-6',
+            'bg-white rounded-[24px] p-5 sm:p-6',
             'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
             'border border-gray-100/80'
           )}>
             <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Текущий тариф</h2>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-gray-100 text-gray-700">
-                Ваш статус: {roleLabel}
-              </span>
-              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-violet-100 text-violet-700">
-                Текущий тариф: {tariffLabel}
-              </span>
-              <span className="inline-flex px-3 py-1 rounded-lg text-[12px] font-medium bg-gray-50 text-gray-700">
-                Доступно: {listingLimit} • Использовано: {listingUsed}
-              </span>
-            </div>
             <p className="text-[14px] text-[#6B7280] mb-4">
-              На FREE вы можете разместить 1 объявление. Для большего лимита и расширенной аналитики можно выбрать PRO/AGENCY.
+              Ваш тариф: <span className="font-semibold text-[#1C1F26]">{tariffLabel}</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              {canCreateListing && (
-                <Link
-                  href={createHref}
-                  className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
-                >
-                  Разместить объявление
-                </Link>
-              )}
-              <Link
-                href="/pricing"
-                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
-              >
-                Посмотреть тарифы
-              </Link>
-            </div>
-          </section>
-
-          <section className={cn(
-            'bg-white rounded-[18px] p-6',
-            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-            'border border-gray-100/80'
-          )}>
-            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Безопасность</h2>
-            <div className="space-y-2 text-[14px] text-[#6B7280]">
-              <p>Сессия защищена токенами доступа и обновления.</p>
-              <p>{isTelegramPhone ? 'Телефон подтверждён через Telegram.' : 'Телефон можно подтвердить через Telegram.'}</p>
-            </div>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
+            >
+              Перейти к тарифам
+            </Link>
           </section>
 
           {error && <p className="text-[13px] text-red-600">{error}</p>}

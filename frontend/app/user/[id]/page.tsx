@@ -98,7 +98,7 @@ export default function UserProfilePage() {
               <h1 className="text-[24px] font-bold text-[#1C1F26]">{profile.name}</h1>
               {profile.rating_avg != null && (
                 <p className="text-[14px] text-[#6B7280] mt-0.5">
-                  ★ {profile.rating_avg.toFixed(1)} · {profile.reviews_count} отзывов
+                  Рейтинг {profile.rating_avg.toFixed(1)} · {profile.reviews_count} отзывов
                 </p>
               )}
               <p className="text-[14px] text-[#6B7280]">{profile.listingsCount} объявлений</p>

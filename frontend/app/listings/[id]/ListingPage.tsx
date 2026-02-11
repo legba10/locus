@@ -39,7 +39,11 @@ function Gallery({ photos, title }: { photos: Array<{ url: string }>; title: str
   const [idx, setIdx] = useState(0)
 
   if (!photos.length) {
-    return <div className="aspect-video rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-5xl">🏠</div>
+    return (
+      <div className="aspect-video rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+        Нет фото
+      </div>
+    )
   }
 
   return (

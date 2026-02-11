@@ -48,13 +48,12 @@ export function InsightPanel({ insight, currentPrice, className }: InsightPanelP
         {insight.pros.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-emerald-700 mb-2">
-              <span className="text-lg">👍</span>
               Почему это хороший вариант
             </h4>
             <ul className="space-y-1.5">
               {insight.pros.map((pro, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span className="text-emerald-500 mt-0.5">•</span>
                   {pro}
                 </li>
               ))}
@@ -66,13 +65,12 @@ export function InsightPanel({ insight, currentPrice, className }: InsightPanelP
         {insight.risks.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-amber-700 mb-2">
-              <span className="text-lg">⚠️</span>
               Обратите внимание
             </h4>
             <ul className="space-y-1.5">
               {insight.risks.map((risk, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-amber-500 mt-0.5">!</span>
+                  <span className="text-amber-500 mt-0.5">•</span>
                   {risk}
                 </li>
               ))}

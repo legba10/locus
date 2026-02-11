@@ -340,7 +340,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 mb-6 items-start">
                 <div className="flex flex-col items-center md:items-start min-w-[100px]">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-amber-500 text-2xl">⭐</span>
+                    <span className="text-[13px] font-medium text-[#6B7280]">Рейтинг</span>
                     <span className="text-3xl font-bold text-[#1C1F26]">
                       {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
                     </span>
@@ -361,7 +361,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                       const pct = ratingCount > 0 ? Math.round((count / ratingCount) * 100) : 0
                       return (
                         <div key={star} className="flex items-center gap-3">
-                          <span className="w-8 text-[13px] text-[#6B7280]">{star}★</span>
+                          <span className="w-8 text-[13px] text-[#6B7280]">{star}</span>
                           <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden min-w-[80px]">
                             <div
                               className="h-full rounded-full bg-violet-400 transition-all"

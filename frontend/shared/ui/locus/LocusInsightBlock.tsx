@@ -59,12 +59,12 @@ export function LocusInsightBlock({
         {pros.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-emerald-700 mb-2">
-              👍 Почему это хороший вариант
+              Почему это хороший вариант
             </h4>
             <ul className="space-y-1.5">
               {pros.map((pro, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span className="text-emerald-500 mt-0.5">•</span>
                   {pro}
                 </li>
               ))}
@@ -76,7 +76,7 @@ export function LocusInsightBlock({
         {cons.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-amber-700 mb-2">
-              👀 На что обратить внимание
+              На что обратить внимание
             </h4>
             <ul className="space-y-1.5">
               {cons.map((con, i) => (

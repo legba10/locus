@@ -36,7 +36,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
       <p className="text-[14px] text-[#6B7280] mb-4">
         Выберите даты заезда и выезда, количество гостей, затем подтвердите бронь.
       </p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-3 mb-4">
         <div>
           <label className="block text-[13px] font-medium text-[#6B7280] mb-1">Заезд</label>
           <input
@@ -63,7 +63,10 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           <button
             type="button"
             aria-label="Уменьшить"
-            onClick={() => setGuests((g) => Math.max(1, g - 1))}
+            onClick={() => {
+              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+              setGuests((g) => Math.max(1, g - 1))
+            }}
             className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests <= 1}
           >
@@ -73,7 +76,10 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           <button
             type="button"
             aria-label="Увеличить"
-            onClick={() => setGuests((g) => Math.min(effectiveMax, g + 1))}
+            onClick={() => {
+              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+              setGuests((g) => Math.min(effectiveMax, g + 1))
+            }}
             className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests >= effectiveMax}
           >

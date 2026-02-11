@@ -32,7 +32,6 @@ export function LocusComparePanel({ items, onRemove, className }: LocusComparePa
   if (items.length === 0) {
     return (
       <div className={cn('rounded-xl border border-gray-200 bg-gray-50 p-6 text-center', className)}>
-        <div className="text-3xl mb-2">⚖️</div>
         <p className="text-gray-500">Добавьте объявления для сравнения</p>
       </div>
     )
@@ -55,7 +54,7 @@ export function LocusComparePanel({ items, onRemove, className }: LocusComparePa
             {item.id === bestItem.id && (
               <div className="mb-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
-                  ⭐ Лучший выбор
+                  Лучший выбор
                 </span>
               </div>
             )}
@@ -65,7 +64,7 @@ export function LocusComparePanel({ items, onRemove, className }: LocusComparePa
               {item.photo ? (
                 <img src={item.photo} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">🏠</div>
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Нет фото</div>
               )}
             </div>
 

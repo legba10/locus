@@ -38,7 +38,6 @@ export function LocusInsightCard({ insight, currentPrice, className }: LocusInsi
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🏠</span>
               <h3 className="font-semibold text-gray-900">Оценка LOCUS</h3>
             </div>
             <p className="text-gray-600">{insight.recommendation}</p>
@@ -52,13 +51,12 @@ export function LocusInsightCard({ insight, currentPrice, className }: LocusInsi
         {insight.pros.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-emerald-700 mb-2">
-              <span>👍</span>
               Почему это хороший вариант
             </h4>
             <ul className="space-y-1.5">
               {insight.pros.map((pro, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span className="mt-0.5 text-emerald-500">•</span>
                   {pro}
                 </li>
               ))}
@@ -70,7 +68,6 @@ export function LocusInsightCard({ insight, currentPrice, className }: LocusInsi
         {insight.cons.length > 0 && (
           <div>
             <h4 className="flex items-center gap-2 text-sm font-medium text-amber-700 mb-2">
-              <span>👀</span>
               На что обратить внимание
             </h4>
             <ul className="space-y-1.5">

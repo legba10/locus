@@ -63,11 +63,13 @@ export default function MessagesPage() {
                     'shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:border-violet-200'
                   )}
                 >
-                  <div className="relative w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                  <div className="relative w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {photoUrl ? (
                       <Image src={photoUrl} alt="" fill className="object-cover" sizes="56px" />
                     ) : (
-                      <span className="flex items-center justify-center w-full h-full text-[20px]">💬</span>
+                      <span className="text-[16px] font-semibold text-[#4B5563]">
+                        {name.charAt(0).toUpperCase()}
+                      </span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">

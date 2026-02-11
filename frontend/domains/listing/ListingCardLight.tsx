@@ -245,7 +245,6 @@ export function ListingCardLight({
               'text-white text-[10px] font-semibold',
               'flex items-center gap-1'
             )}>
-              <span className="text-[12px]">🧠</span>
               Рекомендовано
             </div>
           )}

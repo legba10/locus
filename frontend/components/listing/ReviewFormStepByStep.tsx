@@ -158,24 +158,26 @@ export function ReviewFormStepByStep({
               <span>100</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
-              if (isLastMetric) setStep(3)
-              else setMetricIndex((i) => i + 1)
-            }}
-            className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
-          >
-            {isLastMetric ? 'Дальше' : 'Далее'}
-          </button>
-          <button
-            type="button"
-            onClick={() => (metricIndex === 0 ? setStep(1) : setMetricIndex((i) => i - 1))}
-            className="ml-2 px-4 py-2 rounded-[12px] border border-gray-200 text-[14px]"
-          >
-            Назад
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={() => (metricIndex === 0 ? setStep(1) : setMetricIndex((i) => i - 1))}
+              className="w-full sm:w-auto sm:flex-1 px-4 py-2 rounded-[12px] border border-gray-200 text-[14px]"
+            >
+              Назад
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+                if (isLastMetric) setStep(3)
+                else setMetricIndex((i) => i + 1)
+              }}
+              className="w-full sm:w-auto sm:flex-1 px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
+            >
+              {isLastMetric ? 'Дальше' : 'Далее'}
+            </button>
+          </div>
         </div>
       )}
 
