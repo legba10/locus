@@ -20,8 +20,14 @@ export default function ErrorAnim() {
   if (!ENABLE_ANIMATIONS || !data) return null
 
   return (
-    <div className="w-[160px] md:w-[200px] mx-auto">
-      <Lottie animationData={data} loop={false} />
+    <div className="w-28 mx-auto">
+      <Lottie
+        animationData={data}
+        loop={false}
+        autoplay
+        rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
+        style={{ width: 112, height: 112 }}
+      />
     </div>
   )
 }

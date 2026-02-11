@@ -11,8 +11,6 @@ import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/Li
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
-import HeroFlow from '@/components/HeroFlow'
-import AIBubble from '@/components/AIBubble'
 
 interface ListingsResponse {
   items: any[]
@@ -163,7 +161,6 @@ export function HomePageV6() {
           HERO SECTION — v4 (real estate language, search доминирует)
           ═══════════════════════════════════════════════════════════════ */}
       <section className="relative pt-10 pb-14 md:pt-14 md:pb-18 overflow-hidden">
-        <HeroFlow />
         <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
           <HeroTitle />
 
@@ -730,7 +727,6 @@ export function HomePageV6() {
           )}
           onClick={() => setAiOpen(true)}
         >
-          <AIBubble />
           Подобрать жильё с AI
         </button>
       </div>

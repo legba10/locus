@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
 import { apiFetchRaw } from "@/shared/api/client";
-
-const GlobalLoader = dynamic(() => import("@/components/GlobalLoader"), { ssr: false });
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -75,10 +72,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isInitialized, user]);
 
   // Always render children immediately - don't block on auth
-  return (
-    <>
-      {!isInitialized && <GlobalLoader />}
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

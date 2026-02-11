@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Lottie from 'lottie-react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
-import MobileBubble from '@/components/MobileBubble'
+
+const AI_LOTTIE_URL = '/lottie/ai.json'
 
 /**
  * LoginPage — Страница входа
@@ -20,6 +22,14 @@ export default function PageClient() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [robotData, setRobotData] = useState<object | null>(null)
+
+  useEffect(() => {
+    fetch(AI_LOTTIE_URL)
+      .then((r) => r.json())
+      .then(setRobotData)
+      .catch(() => setRobotData(null))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -41,7 +51,6 @@ export default function PageClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <MobileBubble />
       <div className="w-full max-w-md">
         {/* Glass Card */}
         <div className={cn(
@@ -122,12 +131,12 @@ export default function PageClient() {
                 />
               </div>
 
-              {/* Submit — фиолетовый */}
+              {/* Submit — фиолетовый, лёгкая Lottie в кнопке при загрузке */}
               <button
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'w-full py-3 rounded-[14px]',
+                  'w-full py-3 rounded-[14px] relative flex items-center justify-center gap-2',
                   'bg-violet-600 text-white font-semibold text-[15px]',
                   'hover:bg-violet-500 active:bg-violet-700',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -136,6 +145,17 @@ export default function PageClient() {
                   'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
                 )}
               >
+                {isLoading && robotData && (
+                  <div className="absolute left-3 w-6 h-6">
+                    <Lottie
+                      animationData={robotData}
+                      loop
+                      autoplay
+                      rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
+                      style={{ width: 32, height: 32 }}
+                    />
+                  </div>
+                )}
                 {isLoading ? 'Вход...' : 'Войти'}
               </button>
             </form>

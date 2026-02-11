@@ -7,7 +7,6 @@ import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { useAuthStore } from '@/domains/auth'
 import { CityInput } from '@/shared/components/CityInput'
-import MobileBubble from '@/components/MobileBubble'
 
 type UserRole = 'user' | 'landlord'
 
@@ -72,7 +71,6 @@ export function RegisterPageV5() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <MobileBubble />
       <div className="w-full max-w-md">
         {/* Glass Card */}
         <div className={cn(
