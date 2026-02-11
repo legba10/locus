@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
@@ -38,11 +39,14 @@ export function HeaderLight() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const authed = isAuthenticated()
+  if (authed && user === undefined) return null
   const limit = user?.listingLimit ?? 1
   const used = user?.listingUsed ?? 0
   const canCreateListing = authed
   const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
+  const displayName = user?.full_name ?? user?.username ?? null
+  const displayAvatar = user?.avatar_url ?? null
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -175,14 +179,16 @@ export function HeaderLight() {
               className="mobile-menu-profile-block"
             >
               <div className="mobile-menu-profile-inner">
-                <div className="mobile-menu-profile-avatar" aria-hidden>
-                  {isAuthenticated() && user?.full_name
-                    ? (user.full_name.trim().charAt(0) || 'П').toUpperCase()
-                    : 'Г'}
+                <div className="mobile-menu-profile-avatar relative overflow-hidden" aria-hidden>
+                  {displayAvatar ? (
+                    <Image src={displayAvatar} alt={displayName || 'Аватар'} fill className="object-cover" sizes="48px" />
+                  ) : (
+                    <span>{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
+                  )}
                 </div>
                 <div className="mobile-menu-profile-text">
                   <div className="mobile-menu-profile-name">
-                    {isAuthenticated() && user?.full_name ? user.full_name : 'Гость'}
+                    {isAuthenticated() && displayName ? displayName : 'Гость'}
                   </div>
                   <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
                 </div>

@@ -125,8 +125,8 @@ export class UsersService {
       throw new ConflictException("Supabase storage is not configured");
     }
 
-    const ext = (file.originalname.split(".").pop() || "jpg").toLowerCase();
-    const path = `avatars/${userId}.${ext}`;
+    const ext = (file.originalname.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/gi, "") || "jpg";
+    const path = `avatars/${userId}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")

@@ -62,22 +62,29 @@ export default function ProfilePage() {
     )
   }
 
+  if (!user) return null
+
   const handleSave = async () => {
     if (isSaving) return
     setIsSaving(true)
     setError(null)
     setSuccess(false)
     try {
-      const res = await apiFetchJson<{ name?: string; phone?: string; avatar?: string | null }>('/profile', {
+      const res = await apiFetchJson<{ id?: string; name?: string; phone?: string; avatar?: string | null; email?: string }>('/profile', {
         method: 'PATCH',
         body: JSON.stringify({
           full_name: name.trim() || null,
           phone: phone.trim() || null,
         }),
       })
-      await refresh()
       if (res?.name !== undefined) setName(res.name)
       if (res?.phone !== undefined) setPhone(res.phone)
+      if (typeof useAuthStore.getState === 'function' && res) {
+        useAuthStore.setState((s) => ({
+          user: s.user ? { ...s.user, full_name: res.name ?? s.user.full_name, avatar_url: res.avatar ?? s.user.avatar_url, phone: res.phone ?? s.user.phone } : null,
+        }))
+      }
+      await refresh()
       setSuccess(true)
       setToast(true)
     } catch (err) {
@@ -102,12 +109,12 @@ export default function ProfilePage() {
       const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include', headers })
       if (!res.ok) throw new Error('Upload failed')
       const json = await res.json().catch(() => ({}))
-      await refresh()
       if (json?.avatarUrl && typeof useAuthStore.getState === 'function') {
         useAuthStore.setState((s) => ({
           user: s.user ? { ...s.user, avatar_url: json.avatarUrl } : null,
         }))
       }
+      await refresh()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Не удалось загрузить аватар'
       setError(msg)

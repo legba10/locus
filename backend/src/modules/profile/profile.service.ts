@@ -4,7 +4,7 @@ import { NeonUserService } from "../users/neon-user.service";
 import { SupabaseAuthService } from "../auth/supabase-auth.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 
-const NAME_CHANGES_PER_DAY = 3;
+const NAME_CHANGES_PER_DAY = 10;
 const NAME_CHANGES_PER_MONTH = 6;
 
 export type ProfileResponse = {
@@ -50,12 +50,17 @@ export class ProfileService {
       const existing = await this.prisma.profile.findUnique({
         where: { userId },
         select: {
+          name: true,
           nameChangeCountDay: true,
           nameChangeCountMonth: true,
           lastDayResetAt: true,
           lastMonthResetAt: true,
         },
       });
+
+      const newName = fullName.trim();
+      const oldName = (existing?.name ?? "").trim();
+      const nameActuallyChanged = newName !== oldName;
 
       let countDay = existing?.nameChangeCountDay ?? 0;
       let countMonth = existing?.nameChangeCountMonth ?? 0;
@@ -71,22 +76,26 @@ export class ProfileService {
         lastMonth = now;
       }
 
-      if (countDay >= NAME_CHANGES_PER_DAY) {
-        throw new BadRequestException(
-          `Лимит смены имени: не более ${NAME_CHANGES_PER_DAY} раз в день`,
-        );
-      }
-      if (countMonth >= NAME_CHANGES_PER_MONTH) {
-        throw new BadRequestException(
-          `Лимит смены имени: не более ${NAME_CHANGES_PER_MONTH} раз в месяц`,
-        );
+      if (nameActuallyChanged) {
+        if (countDay >= NAME_CHANGES_PER_DAY) {
+          throw new BadRequestException(
+            `Лимит смены имени: не более ${NAME_CHANGES_PER_DAY} раз в день`,
+          );
+        }
+        if (countMonth >= NAME_CHANGES_PER_MONTH) {
+          throw new BadRequestException(
+            `Лимит смены имени: не более ${NAME_CHANGES_PER_MONTH} раз в месяц`,
+          );
+        }
       }
 
+      const incrementDay = nameActuallyChanged ? 1 : 0;
+      const incrementMonth = nameActuallyChanged ? 1 : 0;
       nameUpdate = {
-        name: fullName.trim(),
+        name: newName,
         nameChangedAt: now,
-        nameChangeCountDay: countDay + 1,
-        nameChangeCountMonth: countMonth + 1,
+        nameChangeCountDay: countDay + incrementDay,
+        nameChangeCountMonth: countMonth + incrementMonth,
         lastDayResetAt: lastDay,
         lastMonthResetAt: lastMonth,
       };
