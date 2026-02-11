@@ -2,19 +2,16 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import Lottie from 'lottie-react'
+import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
-
-const AI_LOTTIE_URL = '/lottie/ai.json'
+import LoginRobotController from '@/components/robot/LoginRobotController'
+import LoginButtonRobot from '@/components/robot/LoginButtonRobot'
+import type { RobotState } from '@/components/robot/types'
 
 /**
- * LoginPage — Страница входа
- * 
- * Дизайн: glass UI, фиолетовый акцент, плотность UI
- * Telegram login: UI + заглушка логики
+ * LoginPage — Страница входа. Интерактивный робот: смотрит на поля, реагирует на ввод, ошибку, успех.
  */
 export default function PageClient() {
   const router = useRouter()
@@ -22,44 +19,37 @@ export default function PageClient() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [robotData, setRobotData] = useState<object | null>(null)
 
-  useEffect(() => {
-    fetch(AI_LOTTIE_URL)
-      .then((r) => r.json())
-      .then(setRobotData)
-      .catch(() => setRobotData(null))
-  }, [])
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent, setRobotState: (s: RobotState) => void) {
     e.preventDefault()
     clearError()
+    setRobotState('thinking')
 
     try {
       await login({ email, password })
+      setRobotState('success')
       router.push('/')
     } catch (err: any) {
-      // Error is handled by store, but we can add additional logging
-      console.error('Login error:', err)
-      // Если ошибка связана с сетью или backend недоступен
-      if (err?.message?.includes('fetch') || err?.message?.includes('Failed to fetch')) {
-        // Попробуем показать более понятное сообщение
-        // Но основная ошибка уже установлена в store
-      }
+      console.error('Login error', err)
+      setRobotState('error')
+      setTimeout(() => setRobotState('idle'), 2000)
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="w-full max-w-md">
-        {/* Glass Card */}
-        <div className={cn(
-          'bg-white/[0.75] backdrop-blur-[22px]',
-          'rounded-[20px]',
-          'border border-white/60',
-          'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-          'p-8'
-        )}>
+      <LoginRobotController>
+        {({ setRobotState }) => (
+          <div className="w-full max-w-md">
+            {/* Glass Card */}
+            <div className={cn(
+              'bg-white/[0.75] backdrop-blur-[22px]',
+              'rounded-[20px]',
+              'border border-white/60',
+              'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
+              'p-8',
+              'relative'
+            )}>
           <div className="space-y-6">
             {/* Header */}
             <div className="text-center">
@@ -87,7 +77,10 @@ export default function PageClient() {
             )}
 
             {/* Form */}
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => handleSubmit(e, setRobotState)}
+            >
               <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
                   Email
@@ -96,7 +89,12 @@ export default function PageClient() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setRobotState('typing')
+                  }}
+                  onFocus={() => setRobotState('lookEmail')}
+                  onBlur={() => setRobotState('idle')}
                   placeholder="email@example.com"
                   autoComplete="email"
                   className={cn(
@@ -119,6 +117,8 @@ export default function PageClient() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setRobotState('lookPassword')}
+                  onBlur={() => setRobotState('idle')}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className={cn(
@@ -131,9 +131,9 @@ export default function PageClient() {
                 />
               </div>
 
-              {/* Submit — фиолетовый, лёгкая Lottie в кнопке при загрузке */}
-              <button
-                type="submit"
+              {/* Submit — робот в кнопке при загрузке (desktop + mobile) */}
+              <LoginButtonRobot
+                loading={isLoading}
                 disabled={isLoading}
                 className={cn(
                   'w-full py-3 rounded-[14px] relative flex items-center justify-center gap-2',
@@ -145,19 +145,8 @@ export default function PageClient() {
                   'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
                 )}
               >
-                {isLoading && robotData && (
-                  <div className="absolute left-3 w-6 h-6">
-                    <Lottie
-                      animationData={robotData}
-                      loop
-                      autoplay
-                      rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
-                      style={{ width: 32, height: 32 }}
-                    />
-                  </div>
-                )}
                 {isLoading ? 'Вход...' : 'Войти'}
-              </button>
+              </LoginButtonRobot>
             </form>
 
             {/* Register link */}
@@ -216,13 +205,15 @@ export default function PageClient() {
           </div>
         </div>
 
-        {/* Back to home */}
-        <div className="text-center mt-6">
-          <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
-            ← На главную
-          </Link>
-        </div>
-      </div>
+            {/* Back to home */}
+            <div className="text-center mt-6">
+              <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
+                ← На главную
+              </Link>
+            </div>
+          </div>
+        )}
+      </LoginRobotController>
     </div>
   )
 }

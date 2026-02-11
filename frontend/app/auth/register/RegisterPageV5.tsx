@@ -7,6 +7,9 @@ import { cn } from '@/shared/utils/cn'
 import { Logo } from '@/shared/ui/Logo'
 import { useAuthStore } from '@/domains/auth'
 import { CityInput } from '@/shared/components/CityInput'
+import LoginRobotController from '@/components/robot/LoginRobotController'
+import LoginButtonRobot from '@/components/robot/LoginButtonRobot'
+import type { RobotState } from '@/components/robot/types'
 
 type UserRole = 'user' | 'landlord'
 
@@ -46,11 +49,12 @@ export function RegisterPageV5() {
     setStep('confirm')
   }
 
-  const handleRegister = async () => {
+  const handleRegister = async (setRobotState?: (s: RobotState) => void) => {
     if (!selectedRole) return
 
     setLoading(true)
     setError('')
+    setRobotState?.('thinking')
 
     try {
       await register({
@@ -60,10 +64,12 @@ export function RegisterPageV5() {
         role: selectedRole,
       })
 
-      // После регистрации переходим на главную
+      setRobotState?.('success')
       router.push('/')
     } catch (err: any) {
       setError(err.message)
+      setRobotState?.('error')
+      if (setRobotState) setTimeout(() => setRobotState('idle'), 2000)
     } finally {
       setLoading(false)
     }
@@ -71,15 +77,18 @@ export function RegisterPageV5() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="w-full max-w-md">
-        {/* Glass Card */}
-        <div className={cn(
-          'bg-white/[0.75] backdrop-blur-[22px]',
-          'rounded-[20px]',
-          'border border-white/60',
-          'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-          'p-8'
-        )}>
+      <LoginRobotController>
+        {({ setRobotState }) => (
+          <div className="w-full max-w-md">
+            {/* Glass Card */}
+            <div className={cn(
+              'bg-white/[0.75] backdrop-blur-[22px]',
+              'rounded-[20px]',
+              'border border-white/60',
+              'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
+              'p-8',
+              'relative'
+            )}>
           {/* Logo */}
           <div className="text-center mb-8">
             <Logo variant="primary" size="md" />
@@ -125,7 +134,9 @@ export function RegisterPageV5() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setRobotState('typing') }}
+                    onFocus={() => setRobotState('lookEmail')}
+                    onBlur={() => setRobotState('idle')}
                     placeholder="email@example.com"
                     required
                     className={cn(
@@ -144,6 +155,8 @@ export function RegisterPageV5() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setRobotState('lookPassword')}
+                    onBlur={() => setRobotState('idle')}
                     placeholder="Минимум 6 символов"
                     minLength={6}
                     required
@@ -232,7 +245,7 @@ export function RegisterPageV5() {
                     </div>
                   )}
 
-                  <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} className="space-y-4">
+                  <form onSubmit={(e) => { e.preventDefault(); handleRegister(setRobotState); }} className="space-y-4">
                     <div>
                       <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Город</label>
                       <CityInput
@@ -288,8 +301,8 @@ export function RegisterPageV5() {
                       </select>
                     </div>
 
-                    <button
-                      type="submit"
+                    <LoginButtonRobot
+                      loading={loading}
                       disabled={loading}
                       className={cn(
                         'w-full py-3 rounded-[14px]',
@@ -300,7 +313,7 @@ export function RegisterPageV5() {
                       )}
                     >
                       {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-                    </button>
+                    </LoginButtonRobot>
                   </form>
                 </>
               ) : (
@@ -336,9 +349,11 @@ export function RegisterPageV5() {
                     </div>
                   )}
 
-                  <button
-                    onClick={handleRegister}
+                  <LoginButtonRobot
+                    type="button"
+                    loading={loading}
                     disabled={loading}
+                    onClick={() => handleRegister(setRobotState)}
                     className={cn(
                       'w-full py-3 rounded-[14px]',
                       'bg-violet-600 text-white font-semibold text-[15px]',
@@ -348,20 +363,22 @@ export function RegisterPageV5() {
                     )}
                   >
                     {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-                  </button>
+                  </LoginButtonRobot>
                 </>
               )}
             </div>
           )}
         </div>
 
-        {/* Back to home */}
-        <div className="text-center mt-6">
-          <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
-            ← На главную
-          </Link>
-        </div>
-      </div>
+            {/* Back to home */}
+            <div className="text-center mt-6">
+              <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
+                ← На главную
+              </Link>
+            </div>
+          </div>
+        )}
+      </LoginRobotController>
     </div>
   )
 }
