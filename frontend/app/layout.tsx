@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
 import { Providers } from './providers'
 import { HeaderLight } from '@/shared/ui/HeaderLight'
 import { Footer } from '@/shared/ui/Footer'
 import '../styles/globals.css'
+
+const AiMascot = dynamic(() => import('@/components/mascot/AiMascot'), { ssr: false })
 
 export const metadata: Metadata = {
   title: 'LOCUS — Поиск жилья',
@@ -26,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderLight />
             <main className="flex-1">{children}</main>
             <Footer />
+            <AiMascot />
           </div>
         </Providers>
       </body>

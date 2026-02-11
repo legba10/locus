@@ -11,6 +11,7 @@ import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/Li
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
+import { mascotController } from '@/components/mascot/mascotController'
 
 interface ListingsResponse {
   items: any[]
@@ -725,7 +726,12 @@ export function HomePageV6() {
             'hover:shadow-[0_12px_32px_rgba(124,58,237,0.5)]',
             'hover:-translate-y-1'
           )}
-          onClick={() => setAiOpen(true)}
+          onMouseEnter={() => mascotController.setHover()}
+          onMouseLeave={() => mascotController.setIdle()}
+          onClick={() => {
+            mascotController.setThinking()
+            setAiOpen(true)
+          }}
         >
           Подобрать жильё с AI
         </button>
@@ -737,6 +743,7 @@ export function HomePageV6() {
           onClick={() => {
             setAiOpen(false)
             setDragOffset(0)
+            mascotController.setIdle()
           }}
         >
           <div
@@ -787,6 +794,7 @@ export function HomePageV6() {
                   onClick={() => {
                     setAiOpen(false)
                     setDragOffset(0)
+                    mascotController.setIdle()
                   }}
                   className="rounded-full p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                   aria-label="Закрыть"
@@ -812,7 +820,10 @@ export function HomePageV6() {
 
               <button
                 type="button"
-                onClick={handleAiStart}
+                onClick={() => {
+                  handleAiStart()
+                  mascotController.setIdle()
+                }}
                 className={cn(
                   'mt-5 w-full rounded-[14px] px-5 py-3 text-[14px] font-semibold',
                   'bg-violet-600 text-white hover:bg-violet-500 active:bg-violet-700',
