@@ -32,9 +32,23 @@ npx prisma migrate dev
 - В Supabase профиль перестанет падать с «missing column username».
 - В Neon появятся поля лимитов смены имени (`nameChangedAt`, `nameChangeCountDay`, `nameChangeCountMonth` и т.д.), если миграция `18_profile_name_change_limits` применена.
 
-## 3. Проверка
+## 3. RLS на таблице `profiles` и 500 / 409
+
+Если в логах Railway: **«new row violates row-level security policy for table "profiles"»** или в браузере **PATCH /api/profile 500** и **POST /api/users/avatar 409**:
+
+1. **Railway: переменные окружения**  
+   Бэкенд должен ходить в Supabase с **Service Role Key** (он обходит RLS). В Railway в настройках сервиса задай:
+   - `SUPABASE_URL` = URL проекта (например `https://xxx.supabase.co`)
+   - `SUPABASE_SERVICE_ROLE_KEY` = **secret** из Supabase: Dashboard → Project Settings → API → **service_role** (длинный ключ, не anon).
+
+   Без этого ключа клиент создаётся с anon или не создаётся — профиль и аватар будут падать с RLS/409.
+
+2. **Политики RLS для `profiles`**  
+   В Supabase SQL Editor можно выполнить **`supabase-profiles-rls.sql`**: включить RLS и разрешить пользователю читать/обновлять/вставлять только свою строку (`auth.uid() = id`). Для серверного апсерта с бэкенда по-прежнему нужен именно Service Role Key (п. 1).
+
+## 4. Проверка
 
 - Смена имени на странице профиля → сохраняется после перезагрузки.
 - Загрузка аватара → аватар отображается, URL сохраняется в профиле.
 - Email отображается в профиле (readonly).
-- Ошибки 409/401 из-за отсутствующих колонок исчезают после выполнения шагов 1 и 2.
+- Ошибки 409/500 из-за RLS или отсутствующих колонок исчезают после шагов 1–3.
