@@ -55,7 +55,6 @@ export class ReviewsService {
         });
 
         // Atomic aggregate updates (avg + count) using INSERT..ON CONFLICT.
-        // We pass new metric value via EXCLUDED.avgValue (as "value") and do the weighted average in DB.
         for (const m of metrics) {
           await tx.$executeRaw(
             Prisma.sql`
@@ -71,6 +70,19 @@ export class ReviewsService {
       }
 
       return { reviewId: review.id };
+    }).then(async (out) => {
+      const summary = await this.getListingRatingSummary(dto.listingId);
+      const distribution = summary.distribution ?? { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      const total = summary.count ?? 0;
+      const positive = total > 0 ? ((distribution[4] ?? 0) + (distribution[5] ?? 0)) / total : 0;
+      const percent = Math.round(positive * 100);
+      return {
+        ...out,
+        avg: summary.avg ?? null,
+        count: total,
+        distribution,
+        percent,
+      };
     });
   }
 

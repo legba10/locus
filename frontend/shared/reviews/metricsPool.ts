@@ -29,10 +29,22 @@ export const METRICS_POOL: ReviewMetricDefinition[] = [
   { key: "safety", label: "Безопасность", hint: "Ощущение безопасности и надежности" },
 ];
 
-export function pickRandomMetrics(count = 6): ReviewMetricDefinition[] {
+/** Number of metrics to show in the review form (shuffled per user). */
+export const REVIEW_METRICS_COUNT = 3;
+
+/** Seeded shuffle for reproducible order (e.g. seed = userId + listingId). */
+function seededRandom(seed: number): () => number {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+
+export function pickRandomMetrics(count = REVIEW_METRICS_COUNT, seed?: number): ReviewMetricDefinition[] {
   const shuffled = [...METRICS_POOL];
+  const rng = seed !== undefined ? seededRandom(seed) : Math.random;
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled.slice(0, Math.max(1, Math.min(count, shuffled.length)));

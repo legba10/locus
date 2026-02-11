@@ -17,7 +17,7 @@ import {
   ListingOwner,
   ListingCta,
   ListingBooking,
-  ReviewFormStepByStep,
+  ReviewWizard,
 } from '@/components/listing'
 
 interface ListingPageV2Props {
@@ -212,9 +212,13 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   }
 
   const ratingSummary = ratingSummaryData?.summary
-  const ratingAvg = ratingSummary?.avg ?? null
+  const ratingAvg = ratingSummary?.avg ?? item.rating ?? null
   const ratingCount = ratingSummary?.count ?? 0
   const ratingDistribution = ratingSummary?.distribution ?? {}
+  const reviewPercent =
+    ratingCount > 0 && ratingDistribution
+      ? Math.round((((ratingDistribution[4] ?? 0) + (ratingDistribution[5] ?? 0)) / ratingCount) * 100)
+      : null
 
   return (
     <div className="min-h-screen pb-20 md:pb-8" style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}>
@@ -240,8 +244,9 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             <ListingHeader
               title={item.title ?? ''}
               city={item.city ?? ''}
-              rating={item.rating ?? null}
-              reviewCount={(item as any).reviewCount ?? null}
+              rating={ratingAvg}
+              reviewPercent={reviewPercent}
+              reviewCount={ratingCount || ((item as any).reviewCount ?? null)}
               rooms={item.bedrooms ?? null}
               area={item.area ?? null}
               floor={item.floor ?? null}
@@ -397,8 +402,9 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                   <p className="text-[14px] text-[#6B7280] py-2">Отзывов пока нет. Будьте первым.</p>
                 )}
               </div>
-              <ReviewFormStepByStep
+              <ReviewWizard
                 listingId={id}
+                ownerId={owner?.id}
                 userAlreadyReviewed={((reviewsData?.items ?? (reviewsData as any)?.data) ?? []).some((r: any) => r.authorId === user?.id)}
                 onSubmitted={() => {
                   queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })

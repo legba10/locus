@@ -72,6 +72,12 @@ Frontend запустится на `http://localhost:3000`
 - `POST /api/v1/bookings/:id/confirm` — подтверждение (HOST)
 - `POST /api/v1/bookings/:id/cancel` — отмена
 
+### Reviews (отзывы и метрики)
+- `POST /api/v1/reviews` — создать отзыв (авторизация обязательна). Тело: `{ listingId, rating (1–5), text?, metrics: [{ metricKey, value (0–100) }] }`. Ответ: `{ ok, reviewId, avg, count, distribution, percent }`.
+- `GET /api/v1/reviews/listing/:listingId` — список отзывов по объявлению.
+- `GET /api/v1/reviews/listing/:listingId/summary` — агрегат: `{ avg, count, distribution }`.
+- Метрики на бэкенд передаются массивом `metrics: [{ metricKey: "cleanliness", value: 75 }, ...]`. Разрешённые ключи задаются в пуле на фронте (`frontend/shared/reviews/metricsPool.ts`). В форме показываются 3 случайные метрики из пула (shuffle при загрузке).
+
 ### AI (MVP)
 - `POST /api/v1/ai/search` — AI-поиск
 - `POST /api/v1/ai/quality` — оценка качества

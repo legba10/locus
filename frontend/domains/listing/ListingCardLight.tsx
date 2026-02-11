@@ -28,6 +28,10 @@ interface ListingCardLightProps {
   verdict?: string
   reasons?: string[]
   tags?: string[]    // теги: "рядом метро", "выгодная цена"
+  /** Average stars (1-5). Shown as ★ {rating} {reviewPercent}% when both set. */
+  rating?: number | null
+  /** Percent of positive reviews (4-5), 0-100. */
+  reviewPercent?: number | null
   className?: string
 }
 
@@ -64,6 +68,8 @@ export function ListingCardLight({
   verdict,
   reasons = [],
   tags = [],
+  rating,
+  reviewPercent,
   className,
 }: ListingCardLightProps) {
   const [imgError, setImgError] = useState(false)
@@ -254,10 +260,15 @@ export function ListingCardLight({
       {/* Content — padding 14px по ТЗ */}
       <div className="p-3.5 pt-4">
         {/* Price — крупнее по ТЗ v2 */}
-        <div className="mb-1.5">
+        <div className="mb-1.5 flex items-baseline gap-2 flex-wrap">
           <span className="text-[20px] font-bold text-gray-900">
             {formatPrice(price, 'month')}
           </span>
+          {rating != null && Number.isFinite(rating) && reviewPercent != null && Number.isFinite(reviewPercent) && (
+            <span className="text-[13px] text-[#6B7280] font-medium tabular-nums">
+              <span className="text-amber-500">★</span> {rating.toFixed(1)} {Math.round(reviewPercent)}%
+            </span>
+          )}
         </div>
 
         {/* Location: город · район */}
