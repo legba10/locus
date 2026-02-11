@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useFetch } from '@/shared/hooks/useFetch'
+import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 
@@ -31,11 +32,24 @@ interface ApiResponse {
 export default function UserProfilePage() {
   const params = useParams()
   const id = typeof params?.id === 'string' ? params.id : ''
+  const currentUser = useAuthStore((s) => s.user)
+  const isOwnProfile = !!currentUser?.id && currentUser.id === id
+
   const { data, isLoading, error } = useFetch<ApiResponse>(
     id ? ['user-public', id] : null,
     id ? `/api/users/${encodeURIComponent(id)}/public` : null
   )
+  const { data: summaryData } = useFetch<{ ok: boolean; summary: { avg: number | null; count: number; distribution: Record<number, number> } }>(
+    id && !isOwnProfile ? ['reviews-user-summary', id] : null,
+    id && !isOwnProfile ? `/api/reviews/user/${encodeURIComponent(id)}/summary` : null
+  )
   const profile = data?.profile ?? null
+
+  const summary = summaryData?.summary
+  const ownerPercent =
+    summary && summary.count > 0 && summary.distribution
+      ? Math.round((((summary.distribution[4] ?? 0) + (summary.distribution[5] ?? 0)) / summary.count) * 100)
+      : null
 
   if (!id) {
     return (
@@ -96,7 +110,19 @@ export default function UserProfilePage() {
             </div>
             <div>
               <h1 className="text-[24px] font-bold text-[#1C1F26]">{profile.name}</h1>
-              {profile.rating_avg != null && (
+              {!isOwnProfile && (summary?.avg != null || profile.rating_avg != null) && (
+                <p className="text-[14px] mt-0.5 flex items-baseline gap-2 flex-wrap">
+                  <span className="text-amber-500">★</span>
+                  <span className="font-semibold text-[#1C1F26]">{(summary?.avg ?? profile.rating_avg ?? 0).toFixed(1)}</span>
+                  {ownerPercent != null && <span className="text-violet-600 font-medium tabular-nums">{ownerPercent}%</span>}
+                  {((summary?.count ?? profile.reviews_count) ?? 0) > 0 && (
+                    <span className="text-[#6B7280]">
+                      {(summary?.count ?? profile.reviews_count)} отзывов
+                    </span>
+                  )}
+                </p>
+              )}
+              {isOwnProfile && profile.rating_avg != null && (
                 <p className="text-[14px] text-[#6B7280] mt-0.5">
                   Рейтинг {profile.rating_avg.toFixed(1)} · {profile.reviews_count} отзывов
                 </p>

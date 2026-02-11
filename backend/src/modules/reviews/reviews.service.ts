@@ -93,19 +93,39 @@ export class ReviewsService {
     });
   }
 
-  async getListingReviews(listingId: string, limit = 10): Promise<Review[]> {
+  async getListingReviews(
+    listingId: string,
+    limit = 10,
+    skip = 0
+  ): Promise<
+    Array<{
+      id: string;
+      authorId: string;
+      rating: number;
+      text: string | null;
+      createdAt: Date;
+      author?: { id: string; profile?: { name: string | null; avatarUrl: string | null } | null };
+      metrics?: Array<{ metricKey: string; value: number }>;
+    }>
+  > {
     return this.prisma.review.findMany({
       where: { listingId },
       orderBy: { createdAt: "desc" },
       take: Math.min(Math.max(limit, 1), 50),
+      skip: Math.max(0, skip),
       select: {
         id: true,
-        listingId: true,
         authorId: true,
         rating: true,
         text: true,
         createdAt: true,
-        bookingId: true,
+        author: {
+          select: {
+            id: true,
+            profile: { select: { name: true, avatarUrl: true } },
+          },
+        },
+        metrics: { select: { metricKey: true, value: true } },
       },
     }) as any;
   }

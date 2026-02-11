@@ -28,12 +28,17 @@ export class ReviewsController {
   }
 
   @Get("listing/:listingId")
-  @ApiOperation({ summary: "Get latest reviews for listing" })
+  @ApiOperation({ summary: "Get latest reviews for listing with pagination" })
   async list(
     @Param("listingId") listingId: string,
-    @Query("limit") limit?: string
+    @Query("limit") limit?: string,
+    @Query("skip") skip?: string
   ) {
-    const items = await this.reviews.getListingReviews(listingId, limit ? Number(limit) : 10);
+    const items = await this.reviews.getListingReviews(
+      listingId,
+      limit ? Number(limit) : 10,
+      skip ? Number(skip) : 0
+    );
     return { ok: true, items };
   }
 
