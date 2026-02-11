@@ -30,3 +30,9 @@ Stabilize Telegram auth, sessions, and profile data across WebView/Safari.
 - [x] Telegram: email = telegram_${id}@locus.app when no email; name fallback already in upsertProfile.
 - [x] Listing: ListingOwner null-guard (fallback owner); backend owner fallback already present.
 - Commit: `fix: profile persistence + avatar upload + auth sync + listing crash`
+
+## DB sync + name change limits
+- [x] SQL для Supabase: `backend/supabase-profiles-sync.sql` — добавить username, email, phone в `profiles`. Выполнить в Supabase SQL Editor вручную.
+- [x] Prisma: миграции 17 (username/email/phone в Profile) и 18 (nameChangedAt, nameChangeCountDay/Month, lastDayResetAt, lastMonthResetAt). На проде: `npx prisma migrate deploy` + `npx prisma generate`.
+- [x] Инструкция: `backend/PROFILE_DB_SYNC.md`.
+- [x] PATCH /profile: лимиты смены имени 3/день, 6/месяц; счётчики в Neon Profile; перед обновлением имени — ensureUserExists, проверка лимитов, upsert Profile с новыми полями.

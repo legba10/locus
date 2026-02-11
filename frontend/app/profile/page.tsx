@@ -168,6 +168,19 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
+                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
+                <input
+                  type="email"
+                  value={user?.email ?? ''}
+                  readOnly
+                  className={cn(
+                    'w-full rounded-[14px] px-4 py-3',
+                    'border border-gray-200/60 bg-gray-50 text-[#6B7280]',
+                    'text-[14px]'
+                  )}
+                />
+              </div>
+              <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
                 <input
                   type="tel"

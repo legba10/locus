@@ -1,0 +1,6 @@
+-- AlterTable: name change limits (3/day, 6/month)
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "nameChangedAt" TIMESTAMP(3);
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "nameChangeCountDay" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "nameChangeCountMonth" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "lastDayResetAt" TIMESTAMP(3);
+ALTER TABLE "Profile" ADD COLUMN IF NOT EXISTS "lastMonthResetAt" TIMESTAMP(3);

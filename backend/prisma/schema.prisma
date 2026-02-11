@@ -79,13 +79,21 @@ model User {
 }
 
 model Profile {
-  userId    String   @id
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String?
-  avatarUrl String?
-  locale    String   @default("ru")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId              String    @id
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String?
+  username            String?
+  avatarUrl           String?
+  email               String?
+  phone               String?
+  locale              String    @default("ru")
+  nameChangedAt       DateTime?
+  nameChangeCountDay  Int       @default(0)
+  nameChangeCountMonth Int      @default(0)
+  lastDayResetAt      DateTime?
+  lastMonthResetAt    DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
 model Role {

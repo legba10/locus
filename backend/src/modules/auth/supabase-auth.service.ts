@@ -281,10 +281,10 @@ export class SupabaseAuthService {
         this.logger.warn(`Profile upsert failed due to missing column '${missingCol}'. Retrying without optional fields.`);
         const minimal: Record<string, unknown> = {
           id: user.id,
-          email: user.email ?? null,
+          email,
           phone: user.phone ?? null,
           telegram_id: telegramId ?? (md as any)?.telegram_id ?? null,
-          full_name: (md as any)?.full_name ?? null,
+          full_name: (md as any)?.full_name ?? finalUsername ?? null,
         };
         const retry = await tryUpsert(minimal);
         if (!retry.error && retry.data) return retry.data as SupabaseProfile;
