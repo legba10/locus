@@ -139,32 +139,43 @@ export function ReviewFormStepByStep({
           </p>
           <p className="text-[15px] font-semibold text-[#1C1F26] mb-1">{currentMetric.label}</p>
           <p className="text-[13px] text-[#6B7280] mb-4">{currentMetric.hint}</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {[0, 25, 50, 75, 100].map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => handleNextMetric(v)}
-                className={cn(
-                  'px-4 py-2 rounded-[12px] border text-[14px] font-medium transition-colors',
-                  metrics[currentMetric.key] === v
-                    ? 'border-violet-600 bg-violet-50 text-violet-700'
-                    : 'border-gray-200 hover:bg-gray-50'
-                )}
-              >
-                {v}
-              </button>
-            ))}
+          <div className="mb-4">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={metrics[currentMetric.key] ?? 75}
+              onChange={(e) => {
+                const v = Number(e.target.value)
+                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+                setMetrics((prev) => ({ ...prev, [currentMetric.key]: v }))
+              }}
+              className="w-full h-3 rounded-full appearance-none bg-gray-200 accent-violet-600"
+            />
+            <div className="flex justify-between text-[12px] text-[#6B7280] mt-1">
+              <span>0</span>
+              <span className="font-medium text-violet-600">{metrics[currentMetric.key] ?? 75}%</span>
+              <span>100</span>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => (metricIndex === 0 ? setStep(1) : setMetricIndex((i) => i - 1))}
-              className="px-4 py-2 rounded-[12px] border border-gray-200 text-[14px]"
-            >
-              Назад
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
+              if (isLastMetric) setStep(3)
+              else setMetricIndex((i) => i + 1)
+            }}
+            className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
+          >
+            {isLastMetric ? 'Дальше' : 'Далее'}
+          </button>
+          <button
+            type="button"
+            onClick={() => (metricIndex === 0 ? setStep(1) : setMetricIndex((i) => i - 1))}
+            className="ml-2 px-4 py-2 rounded-[12px] border border-gray-200 text-[14px]"
+          >
+            Назад
+          </button>
         </div>
       )}
 
@@ -173,11 +184,11 @@ export function ReviewFormStepByStep({
           {(() => {
             const vals = Object.values(metrics)
             const avgPercent = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
-            const rating5 = avgPercent / 20
+            const rating5 = Math.max(1, Math.min(5, (avgPercent / 100) * 5))
             return (
               <div className="mb-4 p-3 rounded-[12px] bg-violet-50 border border-violet-100">
                 <p className="text-[13px] text-[#1C1F26]">
-                  Ваш рейтинг: <strong>{avgPercent}%</strong> = <strong>{rating5.toFixed(1)}</strong>
+                  Ваш рейтинг: <strong>{avgPercent}%</strong> → <strong>{rating5.toFixed(1)}</strong>
                 </p>
               </div>
             )

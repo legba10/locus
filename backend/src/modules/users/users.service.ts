@@ -140,7 +140,7 @@ export class UsersService {
     }
 
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const avatarUrl = data.publicUrl;
+    const avatarUrl = `${data.publicUrl}?t=${Date.now()}`;
 
     const profile = await this.prisma.profile.upsert({
       where: { userId },

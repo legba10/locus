@@ -62,7 +62,32 @@ export default function ProfilePage() {
     )
   }
 
-  if (!user) return null
+  if (!user) {
+    return (
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+        <div className="max-w-[600px] mx-auto px-4 py-8">
+          <div className="h-8 w-48 rounded-lg bg-gray-200 animate-pulse mb-6" />
+          <div className="rounded-[24px] bg-white/90 border border-gray-100 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
+              <div className="h-4 w-64 rounded bg-gray-100 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const displayName = name || user?.full_name || user?.username || 'Пользователь'
+  const displayAvatar = user?.avatar_url ?? null
+  const statsLine = (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#6B7280]">
+      <span>⭐ —</span>
+      <span>💬 — отзывов</span>
+      <span>🏠 {listingUsed} {listingUsed === 1 ? 'объявление' : 'объявлений'}</span>
+    </div>
+  )
 
   const handleSave = async () => {
     if (isSaving) return
@@ -130,35 +155,46 @@ export default function ProfilePage() {
           Изменения сохранены
         </div>
       )}
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-[600px] mx-auto px-4 py-8">
         <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Профиль</h1>
         <div className="space-y-6">
+          {/* Верхняя карточка: avatar, имя, статистика, кнопки */}
           <section className={cn(
-            'bg-white rounded-[18px] p-6',
+            'rounded-[24px] p-5 sm:p-6',
+            'shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
+            'border border-white/80',
+            'bg-white/90 backdrop-blur-sm'
+          )}>
+            <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-4">
+              <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                {displayAvatar ? (
+                  <Image src={displayAvatar} alt={displayName} fill className="object-cover" sizes="96px" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
+                    {displayName[0]?.toUpperCase() || 'Г'}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[20px] font-bold text-[#1C1F26]">{displayName}</p>
+                <div className="mt-2">{statsLine}</div>
+                <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
+                  <label className="inline-flex items-center px-3 py-2 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50 bg-white">
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    {avatarUploading ? 'Загрузка…' : 'Сменить фото'}
+                  </label>
+                  <span className="inline-flex items-center px-3 py-2 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#6B7280]">Изменить имя ниже</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className={cn(
+            'bg-white rounded-[24px] p-5 sm:p-6',
             'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
             'border border-gray-100/80'
           )}>
             <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Личные данные</h2>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                {user?.avatar_url ? (
-                  <Image src={user.avatar_url} alt={user.full_name || 'Аватар'} fill className="object-cover" sizes="80px" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                    {(name || user?.full_name || user?.username || 'Г')[0]?.toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-[16px] font-semibold text-[#1C1F26]">
-                  {name || user?.full_name || user?.username || 'Пользователь'}
-                </p>
-                <label className="mt-2 inline-flex items-center px-3 py-1.5 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50">
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                  {avatarUploading ? 'Загрузка…' : 'Сменить фото'}
-                </label>
-              </div>
-            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>

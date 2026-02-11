@@ -23,6 +23,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
     : 0
   const total = nights * pricePerNight
   const canConfirm = checkIn && checkOut && guests >= 1
+  const effectiveMax = Math.min(maxGuests, MAX_GUESTS)
 
   return (
     <div
@@ -42,7 +43,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full rounded-[12px] px-4 py-2.5 border border-gray-200 text-[14px]"
+            className="w-full h-12 rounded-[12px] px-4 border border-gray-200 text-[14px]"
           />
         </div>
         <div>
@@ -52,20 +53,33 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
             min={checkIn || undefined}
-            className="w-full rounded-[12px] px-4 py-2.5 border border-gray-200 text-[14px]"
+            className="w-full h-12 rounded-[12px] px-4 border border-gray-200 text-[14px]"
           />
         </div>
       </div>
       <div className="mb-4">
         <label className="block text-[13px] font-medium text-[#6B7280] mb-1">Гости</label>
-        <input
-          type="number"
-          min={1}
-          max={Math.min(maxGuests, MAX_GUESTS)}
-          value={guests}
-          onChange={(e) => setGuests(Math.max(1, Math.min(MAX_GUESTS, parseInt(String(e.target.value), 10) || 1)))}
-          className="w-full rounded-[12px] px-4 py-2.5 border border-gray-200 text-[14px]"
-        />
+        <div className="flex items-center gap-3 h-12 rounded-[12px] border border-gray-200 px-4 bg-white">
+          <button
+            type="button"
+            aria-label="Уменьшить"
+            onClick={() => setGuests((g) => Math.max(1, g - 1))}
+            className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={guests <= 1}
+          >
+            −
+          </button>
+          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums">{guests}</span>
+          <button
+            type="button"
+            aria-label="Увеличить"
+            onClick={() => setGuests((g) => Math.min(effectiveMax, g + 1))}
+            className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={guests >= effectiveMax}
+          >
+            +
+          </button>
+        </div>
       </div>
       {nights > 0 && (
         <div className="rounded-[12px] bg-gray-50 p-4 mb-4 space-y-1">
@@ -90,7 +104,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         }
         disabled={!canConfirm}
         className={cn(
-          'w-full px-5 py-3 rounded-[14px] bg-violet-600 text-white font-semibold text-[15px]',
+          'w-full px-5 py-3 h-12 rounded-[14px] bg-violet-600 text-white font-semibold text-[15px]',
           'hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >

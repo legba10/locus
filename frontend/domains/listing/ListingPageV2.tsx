@@ -339,14 +339,17 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-5">Отзывы</h2>
               <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 mb-6 items-start">
                 <div className="flex flex-col items-center md:items-start min-w-[100px]">
-                  <div className="text-3xl font-bold text-[#1C1F26]">
-                    {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-amber-500 text-2xl">⭐</span>
+                    <span className="text-3xl font-bold text-[#1C1F26]">
+                      {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
+                    </span>
+                    {ratingCount > 0 && (
+                      <span className="text-[14px] text-violet-600 font-semibold tabular-nums">
+                        {Math.round((ratingAvg ?? 0) * 20)}%
+                      </span>
+                    )}
                   </div>
-                  {ratingCount > 0 && (
-                    <div className="text-[13px] text-violet-600 font-medium mt-0.5">
-                      {Math.round((ratingAvg ?? 0) * 20)}%
-                    </div>
-                  )}
                   <p className="text-[13px] text-[#6B7280] mt-1">
                     {ratingCount > 0 ? `на основе ${ratingCount} ${ratingCount === 1 ? 'отзыва' : ratingCount >= 2 && ratingCount <= 4 ? 'отзыва' : 'отзывов'}` : 'Отзывов пока нет'}
                   </p>
