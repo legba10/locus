@@ -76,6 +76,9 @@ select option {
 
 :root {
   color-scheme: light;
+  --bg: #ffffff;
+  --text: #111111;
+  --card: #f6f6f6;
   
   /* ═══════════ LOCUS BRAND (из логотипа) ═══════════ */
   --locus-primary: #7B4AE2;        /* Primary — главные CTA, AI, активные состояния */
@@ -121,6 +124,19 @@ select option {
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: var(--locus-danger);
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --text: #ffffff;
+  --card: #1b1e24;
+
+  --locus-bg-page: #0f1115;
+  --locus-bg-card: #1b1e24;
+  --locus-divider: #2a2f37;
+  --locus-text-main: #ffffff;
+  --locus-text-secondary: #c3cad5;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -171,20 +187,15 @@ select option {
   50% { opacity: 0; }
 }
 
-/* Force light mode */
-html {
-  color-scheme: light !important;
-}
-
 html,
 body {
   height: 100%;
 }
 
 body {
-  background: var(--locus-bg-page);
+  background: var(--bg);
   background-attachment: fixed;
-  color: var(--locus-text-main);
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -300,7 +311,7 @@ html {
 
 /* Card with shadow по ТЗ v3 */
 .card {
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 18px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
@@ -336,6 +347,23 @@ html {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Home AI button robot: idle sway + click jump */
+@keyframes home-robot-idle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+@keyframes home-robot-jump {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-12px); }
+  100% { transform: translateY(0); }
+}
+.animate-home-robot-idle {
+  animation: home-robot-idle 2s ease-in-out infinite;
+}
+.animate-home-robot-jump {
+  animation: home-robot-jump 0.4s ease-out;
 }
 
 /* Dropdown item hover */
