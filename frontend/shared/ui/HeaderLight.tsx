@@ -8,6 +8,7 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle, Shield } from 'lucide-react'
 import { NotificationsBell } from './NotificationsBell'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -112,6 +113,7 @@ export function HeaderLight() {
 
           {/* Auth — ТЗ: одна кнопка Войти/Зарегистрироваться; Выйти = Danger */}
           <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             {authed && <NotificationsBell />}
             {canCreateListing && (
               <Link
@@ -211,6 +213,9 @@ export function HeaderLight() {
               </button>
             </div>
           )}
+          <div className="md:hidden flex items-center justify-start px-1 pb-3">
+            <ThemeToggle />
+          </div>
           <nav className="mobile-menu-nav menu">
             <ul className="menu-list">
               <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />

@@ -196,10 +196,29 @@ body {
   background: var(--bg);
   background-attachment: fixed;
   color: var(--text);
+  transition: background 0.25s ease, color 0.25s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+.theme-toggle {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: 0.2s;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.05);
 }
 
 /* Minimal focus styles — фиолетовый акцент */
