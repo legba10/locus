@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UserRoleEnum } from "@prisma/client";
+import { Prisma, UserRoleEnum } from "@prisma/client";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -56,7 +56,7 @@ export class NotificationsService {
         body: text ?? null,
         link: opts?.link ?? null,
         entityId,
-        meta: meta ?? undefined,
+        meta: (meta ?? undefined) as Prisma.InputJsonValue | undefined,
         isRead: false,
         isSeen: false,
         read: false,
@@ -127,6 +127,7 @@ export class NotificationsService {
     } catch {
       return false;
     }
+    if (!webPush) return false;
     const vapidPublic = process.env.VAPID_PUBLIC_KEY;
     const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
     if (!vapidPublic || !vapidPrivate) return false;
