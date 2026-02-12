@@ -6,6 +6,7 @@ import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
 import { getShuffledQuestionMetrics, getQuestionPhrase, type ReviewMetricDefinition } from '@/shared/reviews/metricsPool'
 import { incrementReviewSubmittedCount, getReviewSubmittedCount } from '@/shared/reviews/reviewReminderStorage'
+import { Frown, Meh, Smile, Star } from 'lucide-react'
 
 const STORAGE_KEY = (listingId: string) => `review_draft_${listingId}`
 const TOTAL_STEPS = 5
@@ -213,7 +214,7 @@ export function ReviewWizard({
                 )}
                 aria-label={`${v} звезд`}
               >
-                ★
+                <Star size={20} />
               </button>
             ))}
           </div>
@@ -281,11 +282,11 @@ export function ReviewWizard({
           <div className="flex gap-4 justify-center mb-6">
             {(
               [
-                { value: 'positive' as EmotionValue, emoji: '🙂', label: 'Отлично' },
-                { value: 'neutral' as EmotionValue, emoji: '😐', label: 'Нормально' },
-                { value: 'negative' as EmotionValue, emoji: '😡', label: 'Плохо' },
+                { value: 'positive' as EmotionValue, icon: Smile, label: 'Отлично' },
+                { value: 'neutral' as EmotionValue, icon: Meh, label: 'Нормально' },
+                { value: 'negative' as EmotionValue, icon: Frown, label: 'Плохо' },
               ] as const
-            ).map(({ value, emoji, label }) => (
+            ).map(({ value, icon: Icon, label }) => (
               <button
                 key={value}
                 type="button"
@@ -300,7 +301,7 @@ export function ReviewWizard({
                     : 'border-gray-200 bg-white text-[#6B7280] hover:border-violet-200'
                 )}
               >
-                <span className="text-[28px]">{emoji}</span>
+                <Icon size={24} />
                 <span className="text-[13px] font-medium">{label}</span>
               </button>
             ))}
@@ -357,8 +358,10 @@ export function ReviewWizard({
         <div className="relative">
           <p className="text-[15px] font-semibold text-[#1C1F26] mb-3">Подтверждение</p>
           <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 mb-4 text-[14px] text-[#4B5563] space-y-1">
-            <p>Оценка: <strong className="text-amber-600">{stars} ★</strong></p>
-            <p>Впечатление: {emotion === 'positive' ? '🙂 Отлично' : emotion === 'neutral' ? '😐 Нормально' : emotion === 'negative' ? '😡 Плохо' : '—'}</p>
+            <p>
+              Оценка: <strong className="text-amber-600 inline-flex items-center gap-1">{stars} <Star size={14} /></strong>
+            </p>
+            <p>Впечатление: {emotion === 'positive' ? 'Отлично' : emotion === 'neutral' ? 'Нормально' : emotion === 'negative' ? 'Плохо' : '—'}</p>
             {comment.trim() && <p>Комментарий: «{comment.trim().slice(0, 80)}{comment.trim().length > 80 ? '…' : ''}»</p>}
           </div>
           {error && <p className="mb-2 text-[13px] text-red-600">{error}</p>}

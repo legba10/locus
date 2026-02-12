@@ -134,17 +134,17 @@ export function createListingButtons(
   return [
     [
       {
-        text: '👁 Подробнее',
+        text: 'Подробнее',
         callbackData: `view_${listingId}`,
       },
       {
-        text: isFavorited ? '❤️ В избранном' : '🤍 В избранное',
+        text: isFavorited ? 'В избранном' : 'В избранное',
         callbackData: isFavorited ? `unfav_${listingId}` : `fav_${listingId}`,
       },
     ],
     [
       {
-        text: '📞 Контакты',
+        text: 'Контакты',
         callbackData: `contact_${listingId}`,
       },
     ],
@@ -164,7 +164,7 @@ export function createNotificationResponse(
       text = `🆕 <b>Новое объявление!</b>\n\n${notification.body}`
       break
     case 'favorite_update':
-      text = `❤️ <b>Обновление избранного</b>\n\n${notification.body}`
+      text = `<b>Обновление избранного</b>\n\n${notification.body}`
       break
     case 'promo':
       text = `🎁 <b>${notification.title}</b>\n\n${notification.body}`

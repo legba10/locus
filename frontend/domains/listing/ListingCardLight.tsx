@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { RU, formatPrice, getVerdictFromScore } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
 import { apiFetch } from '@/shared/utils/apiFetch'
+import { Star } from 'lucide-react'
 
 interface ListingCardLightProps {
   id: string
@@ -53,7 +54,7 @@ interface ListingCardLightProps {
  * - shadow: 0 6px 24px rgba(0,0,0,0.08)
  * - hover: translateY(-6px), shadow: 0 20px 60px rgba(0,0,0,0.14)
  */
-export function ListingCardLight({
+function ListingCardLightComponent({
   id,
   photo,
   title,
@@ -149,13 +150,14 @@ export function ListingCardLight({
     onClick={() => router.push(`/listings/${id}`)}
     >
       {/* Photo — главный элемент */}
-      <Link href={`/listings/${id}`} className="listing-photo block relative aspect-[4/3] bg-gray-100 overflow-hidden">
+      <Link href={`/listings/${id}`} className="listing-photo block relative bg-gray-100 overflow-hidden">
         {imageUrl && !imgError ? (
           <Image
             src={imageUrl}
             alt={title || 'Фото жилья'}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            loading="lazy"
             sizes="(max-width: 640px) 100vw, 33vw"
             onError={() => setImgError(true)}
           />
@@ -186,9 +188,7 @@ export function ListingCardLight({
             {/* AI-анализ */}
             {showAiSignals && (
               <span className={cn(
-                'px-2 py-0.5 rounded-md',
-                'bg-violet-100 text-violet-700',
-                'text-[10px] font-semibold'
+                'ai-badge'
               )}>
                 AI-анализ
               </span>
@@ -209,7 +209,7 @@ export function ListingCardLight({
             )}
           </div>
           
-          {/* Save button ❤️ */}
+          {/* Save button */}
           <button
             onClick={handleFavoriteToggle}
             disabled={isToggling}
@@ -257,9 +257,7 @@ export function ListingCardLight({
           {/* AI Badge — Рекомендовано (если score > 75) */}
           {showAiBadge && score > 75 && (
             <div className={cn(
-              'px-2.5 py-1 rounded-md ml-auto',
-              'bg-violet-600/90 backdrop-blur-sm',
-              'text-white text-[10px] font-semibold',
+              'ai-badge ml-auto',
               'flex items-center gap-1'
             )}>
               Рекомендовано
@@ -277,7 +275,7 @@ export function ListingCardLight({
           </span>
           {rating != null && Number.isFinite(rating) && (
             <span className="text-[13px] text-[#6B7280] font-medium tabular-nums">
-              <span className="text-amber-500">★</span> {rating.toFixed(1)}
+              <Star size={12} className="inline-block text-amber-500 mb-[1px]" /> {rating.toFixed(1)}
               {reviewPercent != null && Number.isFinite(reviewPercent) && ` ${Math.round(reviewPercent)}%`}
             </span>
           )}
@@ -351,6 +349,8 @@ export function ListingCardLight({
     </article>
   )
 }
+
+export const ListingCardLight = memo(ListingCardLightComponent)
 
 /**
  * ListingCardLightSkeleton — Скелетон карточки (improved)
