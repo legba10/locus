@@ -30,7 +30,7 @@ export default function SearchIcon() {
       onClick={play}
       onTouchStart={play}
       style={{ width: isMobile ? 20 : 22, height: isMobile ? 20 : 22 }}
-      className="flex items-center justify-center"
+      className="search-icon flex items-center justify-center"
       aria-hidden
     >
       <Lottie

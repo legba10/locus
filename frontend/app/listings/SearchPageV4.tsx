@@ -196,6 +196,7 @@ export function SearchPageV4() {
       cleanTitle = `Квартира ${listing.city || ''}`.trim() || 'Без названия'
     }
 
+    const cache = listing.ratingCache as { rating?: number; positive_ratio?: number; cleanliness?: number; noise?: number } | null | undefined
     return {
       id: listing.id,
       photo,
@@ -203,7 +204,6 @@ export function SearchPageV4() {
       price: listing.pricePerNight || listing.basePrice || 0,
       city: listing.city || 'Не указан',
       district,
-      // HYDRATION-SAFE: Use data from API or stable defaults
       rooms: listing.bedrooms || listing.rooms || 1,
       area: listing.area || 40,
       floor: listing.floor || 1,
@@ -217,6 +217,10 @@ export function SearchPageV4() {
       tags: tags.length > 0 ? tags : [],
       aiScore: aiScore,
       aiReasons: aiReasons,
+      rating: cache?.rating ?? null,
+      reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
+      cleanliness: cache?.cleanliness ?? null,
+      noise: cache?.noise ?? null,
     }
   })
 
@@ -237,8 +241,8 @@ export function SearchPageV4() {
   })
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ═══════════════════════════════════════════════════════════════
               ПАНЕЛЬ ФИЛЬТРОВ (слева)
@@ -501,6 +505,10 @@ export function SearchPageV4() {
                     verdict={listing.verdict}
                     reasons={listing.aiReasons}
                     tags={listing.tags}
+                    rating={listing.rating}
+                    reviewPercent={listing.reviewPercent}
+                    cleanliness={listing.cleanliness}
+                    noise={listing.noise}
                   />
                 ))}
               </div>

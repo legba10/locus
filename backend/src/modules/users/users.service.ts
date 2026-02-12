@@ -65,12 +65,13 @@ export class UsersService {
     });
   }
 
-  /** Public profile view with aggregates for listings and reviews. */
+  /** Public profile view with aggregates for listings, reviews and reputation (ТЗ-7). */
   async getPublicProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         profile: true,
+        reputation: true,
         listings: {
           where: { status: ListingStatus.PUBLISHED },
           orderBy: { createdAt: "desc" },
@@ -91,6 +92,7 @@ export class UsersService {
       totalReviews > 0
         ? byRating.reduce((sum, row) => sum + row.rating * row._count._all, 0) / totalReviews
         : null;
+    const hostScore = user.reputation?.hostScore ?? (avgRating != null ? avgRating * 20 : null);
 
     const listings = user.listings.map((l) => ({
       id: l.id,
@@ -105,6 +107,9 @@ export class UsersService {
       name: user.profile?.name || "Пользователь",
       avatar: user.profile?.avatarUrl ?? null,
       rating_avg: avgRating,
+      host_score: hostScore,
+      guest_score: user.reputation?.guestScore ?? null,
+      trust_score: user.reputation?.trustScore ?? null,
       reviews_count: totalReviews,
       response_rate: null as number | null,
       last_seen: null as string | null,

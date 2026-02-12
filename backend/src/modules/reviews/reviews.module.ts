@@ -8,6 +8,7 @@ import { ReviewsService } from "./reviews.service";
   imports: [PrismaModule, UsersModule],
   controllers: [ReviewsController],
   providers: [ReviewsService],
+  exports: [ReviewsService],
 })
 export class ReviewsModule {}
 

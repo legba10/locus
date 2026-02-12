@@ -8,6 +8,7 @@ import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { getAccessToken } from '@/shared/auth/token-storage'
 import { cn } from '@/shared/utils/cn'
+import { useFetch } from '@/shared/hooks/useFetch'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
@@ -27,6 +28,8 @@ export default function ProfilePage() {
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
+  const { data: favoritesData } = useFetch<{ items: Array<{ id: string }> }>(['favorites-mini'], '/api/favorites', { enabled: isAuthenticated() })
+  const { data: chatsData } = useFetch<Array<{ id: string }>>(['chats-mini'], '/chats', { enabled: isAuthenticated() })
 
   useEffect(() => {
     if (!user?.id) return
@@ -45,7 +48,7 @@ export default function ProfilePage() {
 
   if (!isAuthenticated()) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Требуется авторизация</h2>
           <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 text-[14px]">
@@ -58,8 +61,8 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-        <div className="max-w-[600px] mx-auto px-4 py-8">
+      <div className="min-h-screen">
+        <div className="container py-8">
           <div className="h-8 w-48 rounded-lg bg-gray-200 animate-pulse mb-6" />
           <div className="rounded-[24px] bg-white/90 border border-gray-100 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
             <div className="flex flex-col items-center gap-4">
@@ -75,6 +78,15 @@ export default function ProfilePage() {
 
   const displayName = name || user?.full_name || user?.username || 'Пользователь'
   const displayAvatar = user?.avatar_url ?? null
+  const profileCompletion = Math.round(
+    ((Boolean(name || user?.full_name || user?.username) ? 1 : 0) +
+      (Boolean(user?.email) ? 1 : 0) +
+      (Boolean(phone || user?.phone) ? 1 : 0) +
+      (Boolean(displayAvatar) ? 1 : 0) +
+      (Boolean(user?.city) ? 1 : 0)) / 5 * 100
+  )
+  const favoritesCount = favoritesData?.items?.length ?? 0
+  const messagesCount = Array.isArray(chatsData) ? chatsData.length : 0
 
   const handleSave = async () => {
     if (isSaving) return
@@ -146,14 +158,37 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen">
       {toast && (
         <div className="fixed top-4 right-4 z-50 rounded-xl bg-emerald-600 text-white px-4 py-3 text-[14px] shadow-lg">
           Изменения сохранены
         </div>
       )}
-      <div className="max-w-[640px] mx-auto px-4 py-8 space-y-4">
+      <div className="container py-8 space-y-4 max-w-[720px]">
         <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Профиль</h1>
+        <section className="glass rounded-[16px] p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[14px] font-semibold text-[var(--text-main)]">Профиль заполнен на {profileCompletion}%</p>
+            <span className="text-[12px] text-[var(--text-secondary)]">Прогресс</span>
+          </div>
+          <div className="mt-2 h-2 rounded-full bg-[var(--accent-soft)] overflow-hidden">
+            <div className="h-full bg-[var(--accent)]" style={{ width: `${profileCompletion}%` }} />
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
+              <p className="text-[12px] text-[var(--text-secondary)]">Сохранено</p>
+              <p className="text-[14px] font-semibold text-[var(--text-main)]">{favoritesCount}</p>
+            </div>
+            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
+              <p className="text-[12px] text-[var(--text-secondary)]">Сообщения</p>
+              <p className="text-[14px] font-semibold text-[var(--text-main)]">{messagesCount}</p>
+            </div>
+            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
+              <p className="text-[12px] text-[var(--text-secondary)]">Подбор</p>
+              <p className="text-[14px] font-semibold text-[var(--text-main)]">Активен</p>
+            </div>
+          </div>
+        </section>
         <div className="space-y-6">
           {/* Верхняя карточка: только аватар, имя и смена фото */}
           <section className={cn(

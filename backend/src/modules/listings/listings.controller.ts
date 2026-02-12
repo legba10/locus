@@ -9,6 +9,7 @@ import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
 import { ListingsService } from "./listings.service";
 import { ListingsPhotosService } from "./listings-photos.service";
+import { ReviewsService } from "../reviews/reviews.service";
 
 @ApiTags("listings")
 @Controller("listings")
@@ -16,6 +17,7 @@ export class ListingsController {
   constructor(
     private readonly listings: ListingsService,
     private readonly photosService: ListingsPhotosService,
+    private readonly reviewsService: ReviewsService,
   ) {}
 
   @Get()
@@ -45,6 +47,12 @@ export class ListingsController {
   @ApiOperation({ summary: "Get listings for current landlord" })
   async getMine(@Req() req: any) {
     return this.listings.getMine(req.user.id);
+  }
+
+  @Get(":id/review-analytics")
+  @ApiOperation({ summary: "ТЗ-10: Review analytics for AI (rating, metrics, review_count, positive_ratio)" })
+  async getReviewAnalytics(@Param("id") id: string) {
+    return this.reviewsService.getReviewAnalytics(id);
   }
 
   @Get(":id")

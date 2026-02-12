@@ -49,6 +49,14 @@ export class ReviewsController {
     return { ok: true, summary };
   }
 
+  @Get("questions/random")
+  @ApiOperation({ summary: "ТЗ-9: Get random review form questions (default 5)" })
+  async randomQuestions(@Query("count") count?: string) {
+    const n = count ? Math.min(10, Math.max(1, parseInt(count, 10))) : 5;
+    const items = await this.reviews.getRandomQuestions(Number.isNaN(n) ? 5 : n);
+    return { ok: true, items };
+  }
+
   @Get("user/:userId/summary")
   @ApiOperation({ summary: "Get rating summary (avg, count, distribution) for host user" })
   async userSummary(@Param("userId") userId: string) {

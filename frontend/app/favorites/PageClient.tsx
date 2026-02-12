@@ -86,13 +86,13 @@ export default function PageClient() {
           <svg className="mx-auto h-16 w-16 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <h2 className="mt-4 text-xl font-semibold text-text">Пока ничего нет</h2>
-          <p className="mt-2 text-text-mut">Добавляйте объявления в избранное, нажимая на сердечко</p>
+          <h2 className="mt-4 text-xl font-semibold text-text">Сохраняйте варианты</h2>
+          <p className="mt-2 text-text-mut">Добавляйте объявления в избранное, чтобы вернуться к ним позже</p>
           <Link 
             href="/search" 
             className="mt-4 inline-block rounded-xl bg-brand px-6 py-2 font-medium text-white hover:bg-brand/90"
           >
-            Начать поиск
+            Найти жильё
           </Link>
         </div>
       )}

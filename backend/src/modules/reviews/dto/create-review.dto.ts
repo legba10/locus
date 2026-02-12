@@ -37,5 +37,13 @@ export class CreateReviewDto {
   @ValidateNested({ each: true })
   @Type(() => ReviewMetricInputDto)
   metrics!: ReviewMetricInputDto[];
+
+  /** Теги отзыва для AI и фильтров (тихо, чисто, удобный заезд и т.д.) */
+  @ApiPropertyOptional({ type: [String], example: ["тихо", "чисто"] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(20)
+  tags?: string[];
 }
 

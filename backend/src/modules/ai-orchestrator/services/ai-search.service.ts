@@ -41,34 +41,55 @@ export class AiSearchService {
       orderBy: { updatedAt: "desc" },
       include: {
         aiScores: true,
+        metricAggs: true,
       },
     });
+
+    const getMetric = (agg: { metricKey: string; avgValue: number }[] | undefined, key: string): number | null => {
+      const row = agg?.find((a) => a.metricKey === key);
+      return row ? Math.round(row.avgValue) : null;
+    };
 
     const scored: AiSearchResultItem[] = listings.map((p) => {
       let score = 0;
       const reasons: string[] = [];
       const riskFlags: string[] = [];
 
+      const noiseScore = getMetric(p.metricAggs, "noise");
+      const cleanScore = getMetric(p.metricAggs, "cleanliness");
+      const ownerScore = getMetric(p.metricAggs, "communication") ?? getMetric(p.metricAggs, "owner");
+      const valueScore = getMetric(p.metricAggs, "value");
+      const locationScore = getMetric(p.metricAggs, "location");
+
       // Budget fit
       if (intent.maxMonthlyPrice) {
         const diff = intent.maxMonthlyPrice - p.basePrice;
-        // closer to upper bound is ok, but under budget is better
         score += Math.max(-20, Math.min(20, diff / 1000));
         reasons.push(`Вписывается в бюджет до ${intent.maxMonthlyPrice} ₽/мес`);
       }
 
-      // Quietness - use qualityScore as proxy for quietness (MVP simplification)
-      // In production, we'd have a dedicated noiseLevel signal
+      // Quietness — приоритет: noise_score из отзывов, иначе описание (ТЗ-6)
       if (intent.wantsQuiet) {
-        // Use text analysis: check if description mentions "тихо", "спокойн", etc.
-        const quietKeywords = ["тихо", "тихий", "спокойн", "уютн"];
-        const desc = `${p.title} ${p.description}`.toLowerCase();
-        const hasQuietSignal = quietKeywords.some((kw) => desc.includes(kw));
-        const quietScore = hasQuietSignal ? 70 : 40;
-        score += (quietScore - 50) / 2; // -5..+10 roughly
-        if (hasQuietSignal) reasons.push("Тихий вариант (по описанию)");
-        else riskFlags.push("Может быть шумно для вашего запроса");
+        if (noiseScore != null) {
+          score += (noiseScore - 50) / 2.5;
+          if (noiseScore >= 70) reasons.push("Гости отмечают тишину");
+          else if (noiseScore < 50) riskFlags.push("В отзывах жалуются на шум");
+        } else {
+          const quietKeywords = ["тихо", "тихий", "спокойн", "уютн"];
+          const desc = `${p.title} ${p.description}`.toLowerCase();
+          const hasQuietSignal = quietKeywords.some((kw) => desc.includes(kw));
+          const quietScore = hasQuietSignal ? 70 : 40;
+          score += (quietScore - 50) / 2;
+          if (hasQuietSignal) reasons.push("Тихий вариант (по описанию)");
+          else riskFlags.push("Может быть шумно для вашего запроса");
+        }
       }
+
+      // Чистота и хозяева — бонус по отзывам для ранжирования
+      if (cleanScore != null && cleanScore >= 80) score += 5;
+      if (ownerScore != null && ownerScore >= 80) score += 5;
+      if (valueScore != null && valueScore >= 75) score += 3;
+      if (locationScore != null && locationScore >= 80) reasons.push("Гости хвалят район");
 
       // Metro (proxy: presence of keyword in title/description)
       if (intent.wantsMetro) {

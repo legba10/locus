@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
 import { useRouter } from 'next/navigation'
+import { track } from '@/shared/analytics/events'
 
 const NOTIFY_SOUND = '/sounds/notify.mp3'
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
@@ -169,7 +170,8 @@ export function NotificationsBell() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'relative rounded-[12px] text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-gray-100 transition-colors',
+          'notifications-bell-btn relative rounded-[12px] hover:bg-[var(--accent-soft)] transition-colors',
+          badgePop && 'shake',
           isMobile ? 'w-10 h-10 flex items-center justify-center mr-3' : 'p-2'
         )}
         aria-label="Уведомления"
@@ -177,7 +179,7 @@ export function NotificationsBell() {
         <Bell className={cn(isMobile ? 'w-6 h-6' : 'w-5 h-5')} strokeWidth={1.8} />
         {unreadCount > 0 && (
           <span className={cn(
-            'absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center transition-transform duration-200',
+            'notifications-badge absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-white text-[11px] font-bold flex items-center justify-center transition-transform duration-200',
             badgePop && 'scale-110'
           )}>
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -192,12 +194,11 @@ export function NotificationsBell() {
               isMobile
                 ? 'fixed left-0 right-0 top-[60px] z-[9999] w-full max-h-[70vh] overflow-hidden rounded-t-[16px]'
                 : 'absolute right-0 top-full mt-1 z-50 w-[320px] max-h-[360px] overflow-hidden rounded-[14px]',
-              'bg-white shadow-lg border border-gray-100 flex flex-col',
-              'dark:bg-[#111522]/95 dark:border-white/10 dark:backdrop-blur-xl'
+              'notifications-panel shadow-lg flex flex-col'
             )}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <span className="text-[14px] font-semibold text-[#1C1F26]">Уведомления</span>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+              <span className="text-[14px] font-semibold text-[var(--text-main)]">Уведомления</span>
               {unreadCount > 0 && (
                 <button
                   type="button"
@@ -210,10 +211,10 @@ export function NotificationsBell() {
             </div>
             <div className={cn('overflow-y-auto', isMobile ? 'max-h-[calc(70vh-96px)]' : 'max-h-[280px]')}>
               {list.length === 0 ? (
-                <div className="px-4 py-8 text-center text-[13px] text-[#6B7280]">Нет уведомлений</div>
+                <div className="px-4 py-8 text-center text-[13px] text-[var(--text-secondary)]">Нет уведомлений</div>
               ) : (
                 <>
-                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[#9CA3AF]">Новые</div>
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">Новые</div>
                   {list.filter((n) => !(n.isRead ?? n.read)).map((n) => (
                     <button
                       key={n.id}
@@ -225,12 +226,12 @@ export function NotificationsBell() {
                       }}
                       className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors bg-violet-50/50"
                     >
-                      <p className="text-[13px] font-medium text-[#1C1F26]">{n.title}</p>
-                      {(n.text || n.body) && <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
-                      <p className="text-[11px] text-[#9CA3AF] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
+                      <p className="text-[13px] font-medium text-[var(--text-main)]">{n.title}</p>
+                      {(n.text || n.body) && <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
+                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
                     </button>
                   ))}
-                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[#9CA3AF]">Старые</div>
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">Старые</div>
                   {list.filter((n) => (n.isRead ?? n.read)).map((n) => (
                     <button
                       key={n.id}
@@ -242,9 +243,9 @@ export function NotificationsBell() {
                       }}
                       className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors"
                     >
-                      <p className="text-[13px] font-medium text-[#1C1F26]">{n.title}</p>
-                      {(n.text || n.body) && <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
-                      <p className="text-[11px] text-[#9CA3AF] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
+                      <p className="text-[13px] font-medium text-[var(--text-main)]">{n.title}</p>
+                      {(n.text || n.body) && <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
+                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
                     </button>
                   ))}
                 </>
@@ -256,8 +257,12 @@ export function NotificationsBell() {
                 disabled={pushStatus === 'loading' || !('Notification' in window)}
                 onClick={async () => {
                   setPushStatus('loading')
+                  track('subscription_start', { channel: 'browser_push' })
                   const err = await subscribeBrowserPush()
                   setPushStatus(err === null ? 'ok' : err === 'no_vapid' ? 'no_vapid' : 'denied')
+                  if (err === null) {
+                    track('subscription_success', { channel: 'browser_push' })
+                  }
                 }}
                 className="text-[12px] text-violet-600 hover:text-violet-700 disabled:opacity-50"
               >

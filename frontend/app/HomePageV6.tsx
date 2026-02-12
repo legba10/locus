@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
@@ -12,6 +12,7 @@ import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
 import SearchIcon from '@/components/lottie/SearchIcon'
+import { track } from '@/shared/analytics/events'
 
 interface ListingsResponse {
   items: any[]
@@ -46,6 +47,15 @@ export function HomePageV6() {
   const [aiOpen, setAiOpen] = useState(false)
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [dragOffset, setDragOffset] = useState(0)
+  const [aiPreparing, setAiPreparing] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
+  const [viewsCount, setViewsCount] = useState(0)
+  const [showHelpNudge, setShowHelpNudge] = useState(false)
+  const [showQuickFab, setShowQuickFab] = useState(false)
+  const [quickCity, setQuickCity] = useState('')
+  const [quickBudget, setQuickBudget] = useState('')
+  const [highlightFirstCard, setHighlightFirstCard] = useState(false)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
   const isLandlord = user?.role === 'landlord'
@@ -76,7 +86,102 @@ export function HomePageV6() {
     if (priceRange) params.set('priceRange', priceRange)
     if (rentPeriod) params.set('period', rentPeriod)
     if (smartSearch) params.set('smart', 'true')
+    const hasSeenSearch = typeof window !== 'undefined' && localStorage.getItem('locus_first_search_done') === 'true'
+    if (!hasSeenSearch && typeof window !== 'undefined') {
+      localStorage.setItem('locus_first_search_done', 'true')
+      track('search_first', { city, priceRange, rentPeriod, propertyType })
+    }
     router.push(`/listings?${params.toString()}`)
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const seen = localStorage.getItem('onboarding_seen') === 'true'
+    const prefsRaw = localStorage.getItem('user.preferences')
+    if (!seen) {
+      setShowOnboarding(true)
+      return
+    }
+    if (prefsRaw) {
+      try {
+        const prefs = JSON.parse(prefsRaw) as { city?: string; budget?: string; period?: string }
+        if (prefs.city) setCity(prefs.city)
+        if (prefs.budget) setPriceRange(prefs.budget)
+        if (prefs.period) setRentPeriod(prefs.period)
+      } catch {}
+    }
+    const viewed = Number(localStorage.getItem('locus_viewed_count') || '0')
+    setViewsCount(Number.isFinite(viewed) ? viewed : 0)
+    const firstMatchSeen = localStorage.getItem('locus_first_match_seen') === 'true'
+    setHighlightFirstCard(!firstMatchSeen)
+  }, [])
+
+  useEffect(() => {
+    const onCardViewed = () => {
+      if (typeof window === 'undefined') return
+      const next = Number(localStorage.getItem('locus_viewed_count') || '0')
+      setViewsCount(next)
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('locus:listing-viewed', onCardViewed)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('locus:listing-viewed', onCardViewed)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isLoading) {
+      setAiPreparing(true)
+      return
+    }
+    const timer = setTimeout(() => setAiPreparing(false), 1500)
+    return () => clearTimeout(timer)
+  }, [isLoading])
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowHelpNudge(true), 30000)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const lastSeen = Number(localStorage.getItem('locus_last_activity') || '0')
+    const now = Date.now()
+    const twoDays = 2 * 24 * 60 * 60 * 1000
+    if (lastSeen > 0 && now - lastSeen > twoDays && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('Новые варианты под ваш бюджет')
+      } catch {}
+    }
+    localStorage.setItem('locus_last_activity', String(now))
+  }, [])
+
+  useEffect(() => {
+    if (!aiPreparing && listingCards.length > 0 && highlightFirstCard && typeof window !== 'undefined') {
+      const t = setTimeout(() => {
+        localStorage.setItem('locus_first_match_seen', 'true')
+        setHighlightFirstCard(false)
+      }, 2200)
+      return () => clearTimeout(t)
+    }
+  }, [aiPreparing, listingCards.length, highlightFirstCard])
+
+  const smartHeroText = useMemo(() => {
+    if (!city && !priceRange) return null
+    const budgetLabel = priceRange ? ` до ${priceRange.includes('-') ? priceRange.split('-')[1] : priceRange}` : ''
+    return `Подбор для вас в ${city || 'вашем городе'}${budgetLabel}`
+  }, [city, priceRange])
+
+  const saveOnboarding = () => {
+    if (typeof window === 'undefined') return
+    const prefs = { city, budget: priceRange, period: rentPeriod }
+    localStorage.setItem('user.preferences', JSON.stringify(prefs))
+    localStorage.setItem('onboarding_seen', 'true')
+    setShowOnboarding(false)
+    track('onboarding_complete', prefs)
   }
 
   // Используем данные напрямую из API (они уже содержат все нужные поля)
@@ -146,37 +251,50 @@ export function HomePageV6() {
     }
   })
 
-  // Стиль для select/dropdown — жидкое стекло с закругленными углами
+  // Единый стиль полей hero-search по TZ-4
   const selectStyles = cn(
-    'w-full rounded-[14px] pl-10 pr-4 py-2.5',
-    'border border-white/60',
-    'bg-white/75 backdrop-blur-[18px]',
-    'text-[#1C1F26] text-[15px]',
-    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-    'transition-all duration-150 ease-out cursor-pointer',
-    'appearance-none',
-    'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-    'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]',
-    'hover:bg-white/85'
+    'hero-search-control',
+    'pl-10',
+    'appearance-none cursor-pointer'
   )
 
   return (
-    <div className="min-h-screen font-sans antialiased" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen font-sans antialiased">
       {/* ═══════════════════════════════════════════════════════════════
           HERO SECTION — v4 (real estate language, search доминирует)
           ═══════════════════════════════════════════════════════════════ */}
-      <section className="relative pt-10 pb-14 md:pt-14 md:pb-18 overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
+      <section className="home-hero">
+        <div className="home-hero-container">
           <HeroTitle />
 
           {/* Subtitle — по ТЗ v4 */}
-          <p className="text-[15px] md:text-[16px] text-[#6B7280] mb-10 max-w-lg mx-auto leading-relaxed">
+          <p className="home-hero-subtitle">
             Тысячи объявлений с умным подбором
           </p>
+          {smartHeroText && (
+            <div className="mt-2 mb-3 inline-flex items-center gap-2 rounded-[12px] bg-[var(--accent-soft)] px-3 py-2 text-[13px] text-[var(--text-main)]">
+              <span>{smartHeroText}</span>
+              <button
+                type="button"
+                onClick={() => setShowOnboarding(true)}
+                className="text-[var(--accent)] underline-offset-2 hover:underline"
+              >
+                Изменить параметры
+              </button>
+            </div>
+          )}
+          {viewsCount > 0 && (
+            <p className="text-[13px] text-[var(--text-secondary)] mb-2">
+              Вы посмотрели {viewsCount} вариантов
+            </p>
+          )}
+          {viewsCount >= 8 && (
+            <p className="text-[13px] text-[var(--accent)] mb-2">Похожие квартиры найдены</p>
+          )}
 
-        <div className="mx-auto mb-6 max-w-2xl rounded-[14px] border border-violet-100 bg-violet-50 px-4 py-3 text-[13px] text-violet-700">
-          Сначала выберите город — мы подберём лучшие варианты под ваш бюджет.
-        </div>
+          <div className="home-hero-hint">
+            Сначала выберите город — мы подберём лучшие варианты под ваш бюджет.
+          </div>
 
           {/* ═══════════════════════════════════════════════════════════════
               GLASS SEARCH PANEL — по ТЗ v4 (доминирует)
@@ -185,19 +303,12 @@ export function HomePageV6() {
               - border-radius: 20px
               - shadow: 0 20px 60px rgba(0,0,0,0.12)
               ═══════════════════════════════════════════════════════════════ */}
-          <div className={cn(
-            'max-w-4xl mx-auto',
-            'bg-white/[0.75] backdrop-blur-[22px]',
-            'rounded-[20px]',
-            'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-            'border border-white/60',
-            'p-6 md:p-7'
-          )}>
-            <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="hero-search-shell glass">
+            <form className="hero-search-form" onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
+              <div className="hero-search-grid">
                 {/* Город */}
                 <div className="lg:col-span-1">
-                  <label className="block text-[13px] font-medium text-gray-600 mb-2 text-left">
+                  <label className="hero-search-label">
                     Город
                   </label>
                   <div className="relative">
@@ -218,7 +329,7 @@ export function HomePageV6() {
 
                 {/* Тип жилья */}
                 <div className="lg:col-span-1">
-                  <label className="block text-[13px] font-medium text-gray-600 mb-2 text-left">
+                  <label className="hero-search-label">
                     Тип жилья
                   </label>
                   <div className="relative">
@@ -243,7 +354,7 @@ export function HomePageV6() {
 
                 {/* Бюджет */}
                 <div className="lg:col-span-1">
-                  <label className="block text-[13px] font-medium text-gray-600 mb-2 text-left">
+                  <label className="hero-search-label">
                     Бюджет
                   </label>
                   <div className="relative">
@@ -269,7 +380,7 @@ export function HomePageV6() {
 
                 {/* Срок аренды */}
                 <div className="lg:col-span-1">
-                  <label className="block text-[13px] font-medium text-gray-600 mb-2 text-left">
+                  <label className="hero-search-label">
                     Срок
                   </label>
                   <div className="relative">
@@ -294,19 +405,7 @@ export function HomePageV6() {
                 <div className="lg:col-span-1 flex items-end">
                   <button
                     type="submit"
-                    className={cn(
-                      'w-full',
-                      'px-6 py-3 rounded-[14px]',
-                      'bg-violet-600 text-white font-semibold',
-                      'hover:bg-violet-500',
-                      'active:bg-violet-700',
-                      'transition-all duration-200',
-                      'shadow-[0_4px_14px_rgba(124,58,237,0.35)]',
-                      'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]',
-                      'hover:-translate-y-0.5',
-                      'flex items-center justify-center gap-2',
-                      'text-[15px]'
-                    )}
+                    className="hero-search-submit"
                   >
                     <SearchIcon />
                     Найти
@@ -315,15 +414,15 @@ export function HomePageV6() {
               </div>
               
               {/* AI Toggle — по ТЗ v4 */}
-              <div className="mt-4 pt-4 border-t border-gray-200/60">
+              <div className="hero-smart-toggle">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={smartSearch}
                     onChange={(e) => setSmartSearch(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 focus:ring-2"
+                    className="hero-smart-checkbox"
                   />
-                  <span className="text-[13px] text-[#6B7280] group-hover:text-[#1C1F26] transition-colors">
+                  <span className="hero-smart-label">
                     Умный подбор
                   </span>
                   <svg className="w-3.5 h-3.5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
@@ -340,7 +439,7 @@ export function HomePageV6() {
           АКТУАЛЬНЫЕ ПРЕДЛОЖЕНИЯ — по ТЗ v4 (6-12 карточек)
           ═══════════════════════════════════════════════════════════════ */}
       <section className="py-12 md:py-16" style={{ background: 'radial-gradient(800px 400px at 50% 0%, rgba(124,58,237,0.05), transparent 60%)' }}>
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="market-container">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[#1C1F26]">
               Актуальные предложения
@@ -354,12 +453,19 @@ export function HomePageV6() {
           </div>
 
           {/* Grid: 3-4 columns desktop, fixed card height */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
-            {isLoading ? (
+          <div className="listing-grid">
+            {isLoading || aiPreparing ? (
+              <div className="col-span-full glass rounded-[20px] p-5 text-center">
+                <p className="text-[15px] font-semibold text-[var(--text-main)]">AI подбирает варианты...</p>
+                <p className="text-[13px] text-[var(--text-secondary)] mt-1">анализируем рынок...</p>
+              </div>
+            ) : (
+              listingCards.length > 0 ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <ListingCardLightSkeleton key={i} />
               ))
-            ) : listingCards.length > 0 ? (
+            ) : null)}
+            {!isLoading && !aiPreparing && listingCards.length > 0 ? (
               listingCards.map((listing) => (
                 <ListingCardLight
                   key={listing.id}
@@ -384,13 +490,26 @@ export function HomePageV6() {
                   reviewPercent={listing.reviewPercent}
                   cleanliness={listing.cleanliness}
                   noise={listing.noise}
+                  highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
                 />
               ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-[#6B7280]">
-                Объявления скоро появятся
+            ) : !isLoading && !aiPreparing ? (
+              <div className="col-span-full">
+                <div className="glass rounded-[20px] p-6 md:p-8 text-center">
+                  <div className="mx-auto mb-3 w-10 h-10 rounded-[10px] bg-[var(--accent-soft)] flex items-center justify-center">
+                    <svg className="w-5 h-5 text-[var(--text-main)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7.5h18M6 4.5h12a2 2 0 012 2V18a2 2 0 01-2 2H6a2 2 0 01-2-2V6.5a2 2 0 012-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h8M8 16h5" />
+                    </svg>
+                  </div>
+                  <p className="text-[16px] font-semibold text-[var(--text-main)]">Пока нет объявлений</p>
+                  <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Подберите параметры и попробуйте расширить поиск.</p>
+                  <Link href="/listings" className="btn-primary mt-4 inline-flex items-center justify-center text-white">
+                    Смотреть все объявления
+                  </Link>
+                </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
@@ -469,7 +588,7 @@ export function HomePageV6() {
         className="py-12 md:py-16"
         style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}
       >
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="market-container">
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-[24px] md:text-[28px] font-bold text-gray-900 mb-1">
@@ -495,7 +614,7 @@ export function HomePageV6() {
           </div>
 
           {/* Grid: 3 columns desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          <div className="listing-grid">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <ListingCardLightSkeleton key={i} />
@@ -811,6 +930,82 @@ export function HomePageV6() {
                 Запустить AI‑подбор
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-[1200] bg-black/45 flex items-center justify-center p-4">
+          <div className="glass w-full max-w-[520px] rounded-[20px] p-5">
+            {onboardingStep === 1 ? (
+              <>
+                <h3 className="text-[22px] font-bold text-[var(--text-main)]">Найдём жильё под ваш бюджет</h3>
+                <p className="mt-2 text-[14px] text-[var(--text-secondary)]">AI анализирует рынок и подбирает варианты</p>
+                <button type="button" className="btn-primary mt-5 w-full text-white" onClick={() => setOnboardingStep(2)}>
+                  Начать
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-[18px] font-semibold text-[var(--text-main)]">Ваши параметры</h3>
+                <div className="mt-4 grid gap-3">
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Город" className="hero-search-control px-3" />
+                  <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} className="hero-search-control px-3">
+                    <option value="">Бюджет</option>
+                    <option value="0-30000">до 30 000 ₽</option>
+                    <option value="30000-50000">30 — 50 тыс. ₽</option>
+                    <option value="50000-80000">50 — 80 тыс. ₽</option>
+                    <option value="80000-150000">80 — 150 тыс. ₽</option>
+                    <option value="150000+">от 150 тыс. ₽</option>
+                  </select>
+                  <select value={rentPeriod} onChange={(e) => setRentPeriod(e.target.value)} className="hero-search-control px-3">
+                    <option value="">Срок</option>
+                    <option value="long">Длительный</option>
+                    <option value="short">Посуточно</option>
+                  </select>
+                </div>
+                <button type="button" className="btn-primary mt-5 w-full text-white" onClick={() => { saveOnboarding(); handleSearch(); }}>
+                  Сохранить и запустить AI подбор
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {showHelpNudge && (
+        <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[320px] z-[1100] glass rounded-[14px] p-4">
+          <p className="text-[14px] font-semibold text-[var(--text-main)]">Нужна помощь с подбором?</p>
+          <button type="button" className="text-[13px] text-[var(--accent)] mt-1" onClick={() => setShowOnboarding(true)}>Открыть быстрый старт</button>
+        </div>
+      )}
+      <button
+        type="button"
+        className="fixed right-4 bottom-24 md:bottom-8 z-[1100] btn-primary text-white px-4"
+        onClick={() => setShowQuickFab(true)}
+      >
+        Быстрый подбор
+      </button>
+      {showQuickFab && (
+        <div className="fixed inset-0 z-[1200] bg-black/45 flex items-center justify-center p-4" onClick={() => setShowQuickFab(false)}>
+          <div className="glass w-full max-w-[420px] rounded-[20px] p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[18px] font-semibold text-[var(--text-main)]">Быстрый подбор</h3>
+            <div className="mt-4 grid gap-3">
+              <input value={quickCity} onChange={(e) => setQuickCity(e.target.value)} className="hero-search-control px-3" placeholder="Город" />
+              <input value={quickBudget} onChange={(e) => setQuickBudget(e.target.value)} className="hero-search-control px-3" placeholder="Бюджет" />
+            </div>
+            <button
+              type="button"
+              className="btn-primary mt-5 w-full text-white"
+              onClick={() => {
+                const params = new URLSearchParams()
+                if (quickCity) params.set('city', quickCity)
+                if (quickBudget) params.set('priceRange', quickBudget)
+                setShowQuickFab(false)
+                track('quick_match_open', { quickCity, quickBudget })
+                router.push(`/listings?${params.toString()}`)
+              }}
+            >
+              Запустить
+            </button>
           </div>
         </div>
       )}

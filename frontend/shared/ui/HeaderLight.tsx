@@ -48,6 +48,13 @@ export function HeaderLight() {
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
   const displayName = user?.full_name ?? user?.username ?? null
   const displayAvatar = user?.avatar_url ?? null
+  const profileCompletion = Math.round(
+    ((Boolean(user?.full_name || user?.username) ? 1 : 0) +
+      (Boolean(user?.email) ? 1 : 0) +
+      (Boolean(user?.phone) ? 1 : 0) +
+      (Boolean(user?.avatar_url) ? 1 : 0) +
+      (Boolean((user as any)?.city) ? 1 : 0)) / 5 * 100
+  )
 
   const isActive = (path: string) => pathname === path
   const desktopNav = useMemo(() => ([
@@ -81,9 +88,7 @@ export function HeaderLight() {
   return (
     <header className={cn(
       'fixed top-0 left-0 right-0 z-[999]',
-      'bg-white/95 backdrop-blur-md',
-      'border-b border-gray-100/80',
-      'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
+      'shadow-sm'
     )}>
       <div className="header container">
         <div className="flex items-center justify-between h-[64px]">
@@ -102,7 +107,7 @@ export function HeaderLight() {
 
           <Link href="/" className="logo locus-home-link flex items-center shrink-0 md:mr-0">
             <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
-            <span className="header-logo-text text-[#1A1A1A]">LOCUS</span>
+            <span className="header-logo-text">LOCUS</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 h-full">
@@ -114,8 +119,8 @@ export function HeaderLight() {
                   'text-[14px] font-medium transition-colors',
                   'flex items-center h-full',
                   isActive(item.href.split('?')[0])
-                    ? 'text-[#7B4AE2]'
-                    : 'text-[#6B6B6B] hover:text-[#1A1A1A]'
+                    ? 'text-[var(--accent)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-main)]'
                 )}
               >
                 {item.label}
@@ -144,7 +149,7 @@ export function HeaderLight() {
                 onClick={logout}
                 className={cn(
                   'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                  'text-[#E14C4C] hover:bg-[rgba(225,76,76,0.08)]',
+                  'text-red-500 hover:bg-red-500/10',
                   'transition-colors'
                 )}
               >
@@ -155,7 +160,7 @@ export function HeaderLight() {
                 href="/auth/login"
                 className={cn(
                   'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                  'bg-[#7B4AE2] text-white',
+                  'bg-[var(--accent)] text-white',
                   'hover:opacity-90 transition-opacity'
                 )}
               >
@@ -199,6 +204,11 @@ export function HeaderLight() {
                     {isAuthenticated() && displayName ? displayName : 'Гость'}
                   </div>
                   <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
+                  {isAuthenticated() && (
+                    <div className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                      Профиль заполнен на {profileCompletion}%
+                    </div>
+                  )}
                 </div>
               </div>
             </button>

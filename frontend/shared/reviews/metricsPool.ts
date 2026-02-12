@@ -54,3 +54,27 @@ export function metricLabelByKey(key: string): string {
   return METRICS_POOL.find((m) => m.key === key)?.label ?? key;
 }
 
+/** Вопросы для шага «Вопросы» в форме отзыва (ТЗ-5): рандомный порядок */
+export const QUESTION_METRICS_KEYS: ReviewMetricKey[] = ["noise", "communication", "cleanliness", "location"];
+
+const QUESTION_PHRASES: Record<string, string> = {
+  noise: "Было ли тихо?",
+  communication: "Хозяин отвечал на вопросы?",
+  cleanliness: "Было чисто?",
+  location: "Как район?",
+};
+
+export function getQuestionPhrase(metricKey: string): string {
+  return QUESTION_PHRASES[metricKey] ?? metricLabelByKey(metricKey);
+}
+
+export function getShuffledQuestionMetrics(seed?: number): ReviewMetricDefinition[] {
+  const defs = QUESTION_METRICS_KEYS.map((key) => METRICS_POOL.find((m) => m.key === key)!).filter(Boolean);
+  const rng = seed !== undefined ? () => (seed = (seed * 9301 + 49297) % 233280) / 233280 : Math.random;
+  for (let i = defs.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [defs[i], defs[j]] = [defs[j], defs[i]];
+  }
+  return defs;
+}
+

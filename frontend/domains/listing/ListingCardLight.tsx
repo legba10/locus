@@ -9,6 +9,7 @@ import { RU, formatPrice, getVerdictFromScore } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { Star } from 'lucide-react'
+import { track } from '@/shared/analytics/events'
 
 interface ListingCardLightProps {
   id: string
@@ -38,6 +39,7 @@ interface ListingCardLightProps {
   cleanliness?: number | null
   /** ТЗ-11: Шум 0–100, показываем "Тишина: низкий/умеренный/шумно" */
   noise?: number | null
+  highlight?: boolean
   className?: string
 }
 
@@ -78,12 +80,14 @@ function ListingCardLightComponent({
   reviewPercent,
   cleanliness,
   noise,
+  highlight = false,
   className,
 }: ListingCardLightProps) {
   const router = useRouter()
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
+  const [favFlash, setFavFlash] = useState(false)
 
   const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -94,6 +98,11 @@ function ListingCardLightComponent({
     setIsToggling(true)
     const newState = !isSaved
     setIsSaved(newState) // Optimistic update
+    if (newState) {
+      setFavFlash(true)
+      setTimeout(() => setFavFlash(false), 260)
+      track('favorite_add', { listingId: id })
+    }
     
     try {
       await apiFetch(`/favorites/${id}/toggle`, { method: 'POST' })
@@ -136,18 +145,23 @@ function ListingCardLightComponent({
   return (
     <article className={cn(
       'listing-card',
-      'group bg-white rounded-[18px] overflow-hidden',
+      'group bg-white rounded-[20px] overflow-hidden',
       'border border-gray-100/80',
-      // Тень по ТЗ v3: 0 6px 24px
-      'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-      // Hover по ТЗ v3: translateY(-6px), shadow: 0 20px 60px
-      'hover:shadow-[0_20px_60px_rgba(0,0,0,0.14)]',
-      'hover:-translate-y-1.5',
       'hover:border-gray-200/80',
+      highlight && 'listing-card-glow',
       'transition-all duration-200 ease-out',
       className
     )}
-    onClick={() => router.push(`/listings/${id}`)}
+    onClick={() => {
+      if (typeof window !== 'undefined') {
+        const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
+        localStorage.setItem('locus_viewed_count', String(viewed))
+        localStorage.setItem('locus_last_activity', String(Date.now()))
+        window.dispatchEvent(new Event('locus:listing-viewed'))
+      }
+      track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
+      router.push(`/listings/${id}`)
+    }}
     >
       {/* Photo — главный элемент */}
       <Link href={`/listings/${id}`} className="listing-photo block relative bg-gray-100 overflow-hidden">
@@ -219,6 +233,7 @@ function ListingCardLightComponent({
               'shadow-sm',
               'transition-all duration-200',
               'hover:bg-white hover:scale-110',
+              favFlash && 'favorite-flash',
               isSaved && 'bg-red-50',
               isToggling && 'opacity-50 cursor-wait'
             )}
@@ -260,17 +275,17 @@ function ListingCardLightComponent({
               'ai-badge ml-auto',
               'flex items-center gap-1'
             )}>
-              Рекомендовано
+              {score > 80 ? 'Идеальный вариант' : 'Рекомендовано'}
             </div>
           )}
         </div>
       </Link>
 
       {/* Content — padding 14px по ТЗ */}
-      <div className="listing-content p-3.5 pt-4">
+      <div className="listing-content p-4">
         {/* Price — крупнее по ТЗ v2 */}
         <div className="mb-1.5 flex items-baseline gap-2 flex-wrap">
-          <span className="text-[20px] font-bold text-gray-900">
+          <span className="text-[20px] font-bold text-[var(--text-main)]">
             {formatPrice(price, 'month')}
           </span>
           {rating != null && Number.isFinite(rating) && (
@@ -296,7 +311,7 @@ function ListingCardLightComponent({
         )}
 
         {/* Location: город · район */}
-        <p className="text-[14px] text-gray-700 mb-0.5 line-clamp-1">
+        <p className="text-[14px] text-[var(--text-main)]/70 mb-0.5 line-clamp-1">
           {locationString}
         </p>
 

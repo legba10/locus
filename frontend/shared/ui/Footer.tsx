@@ -36,16 +36,12 @@ export function Footer({ className }: { className?: string }) {
   }
 
   return (
-    <footer 
-      className={cn('text-gray-300', className)}
-      style={{ 
-        background: 'linear-gradient(180deg, #141821 0%, #1B2230 100%)',
-        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-      }}
+    <footer
+      className={cn(className)}
+      style={{ background: 'linear-gradient(180deg, #141821 0%, #1B2230 100%)' }}
     >
-      {/* Main Footer Content — 64px padding, 80px gap */}
-      <div className="mx-auto max-w-6xl px-4 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-20">
+      <div className="container py-10 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 text-left">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             {/* Логотип light, 32px, без контейнера */}
@@ -148,16 +144,16 @@ export function Footer({ className }: { className?: string }) {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 py-5">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-[13px] text-gray-500">
+        <div className="container py-4 text-center">
+          <div className="flex flex-col items-center gap-2 opacity-70">
+            <p className="text-[14px] text-gray-400">
               © {currentYear} LOCUS. Все права защищены.
             </p>
-            <div className="flex items-center gap-5">
-              <Link href="/terms" className="text-[13px] text-gray-500 hover:text-gray-300 transition-colors">
+            <div className="flex items-center gap-4">
+              <Link href="/terms" className="text-[14px] text-gray-400 hover:text-gray-300 transition-colors">
                 Условия использования
               </Link>
-              <Link href="/privacy" className="text-[13px] text-gray-500 hover:text-gray-300 transition-colors">
+              <Link href="/privacy" className="text-[14px] text-gray-400 hover:text-gray-300 transition-colors">
                 Политика конфиденциальности
               </Link>
             </div>

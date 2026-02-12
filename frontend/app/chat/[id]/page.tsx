@@ -99,10 +99,12 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <header className="sticky top-0 z-10 bg-white/95 border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <Link href="/messages" className="text-violet-600 text-[14px] font-medium">← Сообщения</Link>
-        <span className="flex-1 font-semibold text-[#1C1F26] truncate">{conv?.listingTitle ?? 'Чат'}</span>
+    <div className="min-h-screen flex flex-col">
+      <header className="sticky top-0 z-10 bg-white/95 border-b border-gray-100">
+        <div className="container py-3 flex items-center gap-3">
+          <Link href="/messages" className="text-violet-600 text-[14px] font-medium">← Сообщения</Link>
+          <span className="flex-1 font-semibold text-[#1C1F26] truncate">{conv?.listingTitle ?? 'Чат'}</span>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">

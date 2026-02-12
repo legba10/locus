@@ -83,8 +83,8 @@ export function AdminDashboardV2() {
   ]
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="container max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="container py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">Панель администратора</h1>
