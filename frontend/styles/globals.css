@@ -1071,3 +1071,137 @@ textarea:focus {
 .dark .text-\[\#6B7280\] {
   color: var(--text-soft) !important;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   TZ-4: PREMIUM MOTION SYSTEM (CSS-only)
+   ════════════════════════════════════════════════════════════════ */
+
+* {
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    background .18s ease,
+    border .18s ease,
+    box-shadow .18s ease;
+}
+
+/* Listing cards: hover/tap/press */
+.listing-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.listing-card:active {
+  transform: scale(0.97);
+  opacity: .9;
+}
+
+/* Global button motion */
+button:hover,
+.btn:hover,
+.menu-cta:hover,
+.auth-button:hover {
+  transform: translateY(-1px);
+}
+
+button:active,
+.btn:active,
+.menu-cta:active,
+.auth-button:active {
+  transform: scale(0.96);
+}
+
+/* Premium AI/search CTA pulse */
+.ai-button {
+  animation: glowPulse 3s infinite;
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 0 rgba(120, 150, 255, 0); }
+  50% { box-shadow: 0 0 30px rgba(120, 150, 255, 0.35); }
+  100% { box-shadow: 0 0 0 rgba(120, 150, 255, 0); }
+}
+
+/* Page/route appearance helpers */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: .25s;
+}
+
+.route {
+  animation: routeFade .25s;
+}
+
+@keyframes routeFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Burger open/overlay transitions */
+.sidebar {
+  transform: translateX(100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+  transition: .25s ease;
+}
+
+.overlay {
+  opacity: 0;
+}
+
+.overlay.open {
+  opacity: 1;
+  transition: .2s;
+}
+
+/* Avatar reaction */
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Loading fade */
+.loading {
+  animation: fadeIn .2s;
+}
+
+/* Photo and slider interactions */
+.photo {
+  transition: transform .3s ease;
+}
+
+.slider:active {
+  transform: scale(1.02);
+}
+
+/* Mobile: faster motion, lighter blur */
+@media (max-width: 767px) {
+  * {
+    transition-duration: .14s;
+  }
+
+  .glass,
+  .glass-strong,
+  .glass-search,
+  .glass-dropdown {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Reduce motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
