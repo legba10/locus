@@ -1205,3 +1205,115 @@ button:active,
     transition: none !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   TZ-5: GLOBAL UI ALIGNMENT + ANTI-CRINGE PASS
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+}
+
+h1, .text-title-xl { font-size: 24px; }
+h2, .text-title-lg { font-size: 20px; }
+.text-main { font-size: 16px; }
+
+/* Header baseline alignment */
+.header {
+  min-height: 56px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    min-height: 64px;
+  }
+}
+
+.header .logo {
+  transform: none !important;
+}
+
+.header .logo:hover {
+  transform: none !important;
+}
+
+/* Unified button geometry */
+button,
+.btn,
+.menu-cta,
+.auth-button,
+a[class*="rounded"][class*="px-"][class*="py-"] {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+/* Listing cards consistency */
+.listing-card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.listing-card .listing-photo,
+.listing-card img {
+  border-radius: 16px;
+}
+
+.listing-card .listing-content {
+  padding: 12px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Profile owner card visual structure */
+.profile-card {
+  border-radius: 22px;
+  padding: 16px;
+}
+
+/* Admin compact premium grid */
+.admin-grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Burger menu clean spacing */
+.mobile-menu-header-row,
+.mobile-menu-nav,
+.mobile-menu-logout-wrap {
+  gap: 8px;
+}
+
+/* Section spacing normalization */
+section + section {
+  margin-top: 32px;
+}

@@ -84,7 +84,7 @@ export function AdminDashboardV2() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">Панель администратора</h1>
@@ -168,7 +168,7 @@ function DashboardTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+      <div className="admin-grid-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <StatCard title="Пользователей" value={stats.users.total} color="blue" />
         <StatCard title="Объявления" value={stats.listings.total} color="emerald" />
         <StatCard title="На модерации" value={stats.listings.pending} color="amber" />

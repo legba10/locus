@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { RU, formatPrice, getVerdictFromScore } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
@@ -32,6 +33,10 @@ interface ListingCardLightProps {
   rating?: number | null
   /** Percent of positive reviews (4-5), 0-100. */
   reviewPercent?: number | null
+  /** ТЗ-11: Чистота 0–100%, показываем "Чистота: 82%" */
+  cleanliness?: number | null
+  /** ТЗ-11: Шум 0–100, показываем "Тишина: низкий/умеренный/шумно" */
+  noise?: number | null
   className?: string
 }
 
@@ -70,8 +75,11 @@ export function ListingCardLight({
   tags = [],
   rating,
   reviewPercent,
+  cleanliness,
+  noise,
   className,
 }: ListingCardLightProps) {
+  const router = useRouter()
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
@@ -126,6 +134,7 @@ export function ListingCardLight({
 
   return (
     <article className={cn(
+      'listing-card',
       'group bg-white rounded-[18px] overflow-hidden',
       'border border-gray-100/80',
       // Тень по ТЗ v3: 0 6px 24px
@@ -136,9 +145,11 @@ export function ListingCardLight({
       'hover:border-gray-200/80',
       'transition-all duration-200 ease-out',
       className
-    )}>
+    )}
+    onClick={() => router.push(`/listings/${id}`)}
+    >
       {/* Photo — главный элемент */}
-      <Link href={`/listings/${id}`} className="block relative aspect-[4/3] bg-gray-100 overflow-hidden">
+      <Link href={`/listings/${id}`} className="listing-photo block relative aspect-[4/3] bg-gray-100 overflow-hidden">
         {imageUrl && !imgError ? (
           <Image
             src={imageUrl}
@@ -258,18 +269,33 @@ export function ListingCardLight({
       </Link>
 
       {/* Content — padding 14px по ТЗ */}
-      <div className="p-3.5 pt-4">
+      <div className="listing-content p-3.5 pt-4">
         {/* Price — крупнее по ТЗ v2 */}
         <div className="mb-1.5 flex items-baseline gap-2 flex-wrap">
           <span className="text-[20px] font-bold text-gray-900">
             {formatPrice(price, 'month')}
           </span>
-          {rating != null && Number.isFinite(rating) && reviewPercent != null && Number.isFinite(reviewPercent) && (
+          {rating != null && Number.isFinite(rating) && (
             <span className="text-[13px] text-[#6B7280] font-medium tabular-nums">
-              <span className="text-amber-500">★</span> {rating.toFixed(1)} {Math.round(reviewPercent)}%
+              <span className="text-amber-500">★</span> {rating.toFixed(1)}
+              {reviewPercent != null && Number.isFinite(reviewPercent) && ` ${Math.round(reviewPercent)}%`}
             </span>
           )}
         </div>
+
+        {/* ТЗ-11: Чистота · Тишина (без перегруза) */}
+        {(cleanliness != null || noise != null) && (
+          <p className="text-[12px] text-gray-500 mb-1 flex flex-wrap gap-x-2 gap-y-0">
+            {cleanliness != null && Number.isFinite(cleanliness) && (
+              <span>Чистота: {cleanliness}%</span>
+            )}
+            {noise != null && Number.isFinite(noise) && (
+              <span>
+                Тишина: {noise <= 35 ? 'низкий шум' : noise <= 65 ? 'умеренный шум' : 'шумно'}
+              </span>
+            )}
+          </p>
+        )}
 
         {/* Location: город · район */}
         <p className="text-[14px] text-gray-700 mb-0.5 line-clamp-1">

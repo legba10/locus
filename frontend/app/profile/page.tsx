@@ -157,13 +157,14 @@ export default function ProfilePage() {
         <div className="space-y-6">
           {/* Верхняя карточка: только аватар, имя и смена фото */}
           <section className={cn(
+            'profile-card',
             'rounded-[24px] p-5 sm:p-6',
             'shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
             'border border-white/80',
             'bg-white/90 backdrop-blur-sm'
           )}>
             <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-4">
-              <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+              <div className="avatar relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                 {displayAvatar ? (
                   <Image src={displayAvatar} alt={displayName} fill className="object-cover" sizes="96px" />
                 ) : (

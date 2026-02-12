@@ -6,8 +6,9 @@ import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
 import { CITIES, POPULAR_CITIES } from '@/shared/data/cities'
 import SearchIcon from '@/components/lottie/SearchIcon'
+import { MapPin } from 'lucide-react'
 
-const CITY_SUGGESTIONS = POPULAR_CITIES.map((name) => ({ name, emoji: '🏙️' }))
+const CITY_SUGGESTIONS = POPULAR_CITIES.map((name) => ({ name }))
 
 export function SearchBarAdvanced({ className }: { className?: string }) {
   const router = useRouter()
@@ -76,7 +77,7 @@ export function SearchBarAdvanced({ className }: { className?: string }) {
                   onClick={() => selectCity(city.name)}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-white/10"
                 >
-                  <span className="text-lg">{city.emoji}</span>
+                  <MapPin size={16} className="opacity-80" />
                   {city.name}
                 </button>
               ))}

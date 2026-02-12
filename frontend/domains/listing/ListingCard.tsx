@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { LocusDecisionBadge } from '@/components/LocusDecisionBlock'
 import { PRICE_LABELS, getPriceColor } from '@/shared/types/decision'
 import { cn } from '@/shared/utils/cn'
@@ -34,6 +35,7 @@ export function ListingCard({
   listing,
   className,
 }: ListingCardProps) {
+  const router = useRouter()
   const [imgError, setImgError] = useState(false)
   // Support both 'photos' (backend) and 'images' (legacy)
   const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url
@@ -44,15 +46,18 @@ export function ListingCard({
 
   return (
     <article className={cn(
+      'listing-card',
       'rounded-xl border border-gray-200 bg-white overflow-hidden',
       'transition hover:shadow-md hover:border-gray-300',
       className
-    )}>
+    )}
+    onClick={() => router.push(`/listings/${listing.id}`)}
+    >
       {/* 1. PHOTO */}
       <Link
         href={`/listings/${listing.id}`}
         aria-label={`Open listing: ${listing.title}`}
-        className="block relative aspect-[4/3] bg-gray-100"
+        className="listing-photo block relative aspect-[4/3] bg-gray-100"
       >
         {photo && !imgError ? (
           <Image
@@ -71,7 +76,7 @@ export function ListingCard({
         )}
       </Link>
 
-      <div className="p-3">
+      <div className="listing-content p-3">
         {/* Title */}
         <p className="mb-1 text-sm font-medium text-gray-900">{listing.title}</p>
 
