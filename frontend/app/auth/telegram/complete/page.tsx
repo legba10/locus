@@ -4,6 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
 import { useAuthStore } from "@/domains/auth";
+import Loader from "@/components/ui/Loader";
+import LottieIcon from "@/components/ui/LottieIcon";
+import checkAnim from "@/public/lottie/check.json";
+import errorAnim from "@/public/lottie/Error.json";
 
 function CompleteContent() {
   const router = useRouter();
@@ -67,19 +71,25 @@ function CompleteContent() {
       <div className="w-full max-w-md text-center">
         {status === "loading" && (
           <>
-            <div className="animate-spin w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <div className="mx-auto mb-4 w-fit">
+              <Loader size={48} />
+            </div>
             <p className="text-gray-600">{message}</p>
           </>
         )}
         {status === "success" && (
           <>
-            <div className="text-5xl mb-4">✅</div>
+            <div className="mx-auto mb-4 w-fit">
+              <LottieIcon animationData={checkAnim} size={56} loop={false} />
+            </div>
             <p className="text-gray-700">{message}</p>
           </>
         )}
         {status === "error" && (
           <>
-            <div className="text-5xl mb-4">❌</div>
+            <div className="mx-auto mb-4 w-fit">
+              <LottieIcon animationData={errorAnim} size={56} loop />
+            </div>
             <p className="text-gray-700 mb-6">{message}</p>
             <div className="flex flex-col gap-3 items-center">
               {token && (
@@ -116,7 +126,7 @@ export default function TelegramCompletePage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full" />
+          <Loader size={48} />
         </div>
       }
     >

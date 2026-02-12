@@ -6,12 +6,12 @@ import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
-import LoginRobotController from '@/components/robot/LoginRobotController'
-import LoginButtonRobot from '@/components/robot/LoginButtonRobot'
-import type { RobotState } from '@/components/robot/types'
+import LottieIcon from '@/components/ui/LottieIcon'
+import Loader from '@/components/ui/Loader'
+import checkAnim from '@/public/lottie/check.json'
 
 /**
- * LoginPage — Страница входа. Интерактивный робот: смотрит на поля, реагирует на ввод, ошибку, успех.
+ * LoginPage — Страница входа.
  */
 export default function PageClient() {
   const router = useRouter()
@@ -20,27 +20,20 @@ export default function PageClient() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  async function handleSubmit(e: React.FormEvent, setRobotState: (s: RobotState) => void) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     clearError()
-    setRobotState('thinking')
-
     try {
       await login({ email, password })
-      setRobotState('success')
       router.push('/')
     } catch (err: any) {
       console.error('Login error', err)
-      setRobotState('error')
-      setTimeout(() => setRobotState('idle'), 2000)
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
-      <LoginRobotController>
-        {({ setRobotState }) => (
-          <div className="w-full max-w-md">
+      <div className="w-full max-w-md">
             {/* Glass Card */}
             <div className={cn(
               'bg-white/[0.75] backdrop-blur-[22px]',
@@ -79,7 +72,7 @@ export default function PageClient() {
             {/* Form */}
             <form
               className="space-y-4"
-              onSubmit={(e) => handleSubmit(e, setRobotState)}
+              onSubmit={handleSubmit}
             >
               <div>
                 <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
@@ -89,12 +82,7 @@ export default function PageClient() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    setRobotState('typing')
-                  }}
-                  onFocus={() => setRobotState('lookEmail')}
-                  onBlur={() => setRobotState('idle')}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@example.com"
                   autoComplete="email"
                   className={cn(
@@ -117,8 +105,6 @@ export default function PageClient() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setRobotState('lookPassword')}
-                  onBlur={() => setRobotState('idle')}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className={cn(
@@ -131,12 +117,11 @@ export default function PageClient() {
                 />
               </div>
 
-              {/* Submit — робот в кнопке при загрузке (desktop + mobile) */}
-              <LoginButtonRobot
-                loading={isLoading}
+              <button
+                type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'w-full py-3 rounded-[14px] relative flex items-center justify-center gap-2',
+                  'w-full py-3 rounded-[14px] flex items-center justify-center gap-2',
                   'bg-violet-600 text-white font-semibold text-[15px]',
                   'hover:bg-violet-500 active:bg-violet-700',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -145,8 +130,13 @@ export default function PageClient() {
                   'hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
                 )}
               >
-                {isLoading ? 'Вход...' : 'Войти'}
-              </LoginButtonRobot>
+                {isLoading ? (
+                  <>
+                    <Loader size={22} />
+                    Вход...
+                  </>
+                ) : 'Войти'}
+              </button>
             </form>
 
             {/* Register link */}
@@ -195,6 +185,13 @@ export default function PageClient() {
                     'flex items-center justify-center gap-2'
                   )}
                 >
+                  <LottieIcon
+                    animationData={checkAnim}
+                    size={28}
+                    loop={false}
+                    autoplay={false}
+                    playOnHover
+                  />
                   Войти через Telegram
                 </button>
                 <p className="text-center text-[12px] text-[#6B7280]">
@@ -212,8 +209,6 @@ export default function PageClient() {
               </Link>
             </div>
           </div>
-        )}
-      </LoginRobotController>
     </div>
   )
 }

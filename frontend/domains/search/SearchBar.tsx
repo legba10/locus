@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
 import { CITIES } from '@/shared/data/cities'
+import LottieIcon from '@/components/ui/LottieIcon'
+import locationAnim from '@/public/lottie/location.json'
 
 /**
  * SearchBar — Premium Glass Search REDESIGNED
@@ -122,9 +124,13 @@ export function SearchBar({ className, mode }: { className?: string; mode?: 'hom
                 'flex items-center justify-center gap-2'
               )}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <LottieIcon
+                animationData={locationAnim}
+                size={24}
+                loop={false}
+                autoplay={false}
+                playOnHover
+              />
               {mode === 'results' ? 'Обновить' : 'Найти'}
             </button>
           </div>
@@ -139,9 +145,14 @@ export function SearchBar({ className, mode }: { className?: string; mode?: 'hom
           className="text-[13px] text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
           aria-expanded={filtersOpen}
         >
-          <svg className={cn('w-4 h-4 transition-transform', filtersOpen && 'rotate-180')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-          </svg>
+          <LottieIcon
+            animationData={locationAnim}
+            size={22}
+            loop={false}
+            autoplay={false}
+            playOnHover
+            className={cn('transition-transform', filtersOpen && 'rotate-180')}
+          />
           Фильтры
         </button>
       </div>

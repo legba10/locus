@@ -11,7 +11,8 @@ import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/Li
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
-import { mascotController } from '@/components/mascot/mascotController'
+import LottieIcon from '@/components/ui/LottieIcon'
+import locationAnim from '@/public/lottie/location.json'
 
 interface ListingsResponse {
   items: any[]
@@ -120,6 +121,7 @@ export function HomePageV6() {
       cleanTitle = `Квартира ${listing.city || ''}`.trim() || 'Без названия'
     }
 
+    const cache = listing.ratingCache as { rating?: number; positive_ratio?: number; cleanliness?: number; noise?: number } | null | undefined
     return {
       id: listing.id,
       photo,
@@ -127,7 +129,6 @@ export function HomePageV6() {
       price: listing.pricePerNight || listing.basePrice || 0,
       city: listing.city || 'Не указан',
       district,
-      // HYDRATION-SAFE: Use data from API or stable defaults
       rooms: listing.bedrooms || listing.rooms || 1,
       area: listing.area || 40,
       floor: listing.floor || 1,
@@ -139,6 +140,10 @@ export function HomePageV6() {
       verdict: listing.verdict || 'Средний вариант',
       reasons: listing.reasons || [],
       tags: tags.length > 0 ? tags : (listing.score >= 70 ? ['Рекомендуем'] : []),
+      rating: cache?.rating ?? null,
+      reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
+      cleanliness: cache?.cleanliness ?? null,
+      noise: cache?.noise ?? null,
     }
   })
 
@@ -304,9 +309,13 @@ export function HomePageV6() {
                       'text-[15px]'
                     )}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <LottieIcon
+                      animationData={locationAnim}
+                      size={24}
+                      loop={false}
+                      autoplay={false}
+                      playOnHover
+                    />
                     Найти
                   </button>
                 </div>
@@ -378,6 +387,10 @@ export function HomePageV6() {
                   verdict={listing.verdict}
                   reasons={listing.reasons}
                   tags={listing.tags}
+                  rating={listing.rating}
+                  reviewPercent={listing.reviewPercent}
+                  cleanliness={listing.cleanliness}
+                  noise={listing.noise}
                 />
               ))
             ) : (
@@ -515,6 +528,10 @@ export function HomePageV6() {
                   verdict={listing.verdict}
                   reasons={listing.reasons}
                   tags={listing.tags}
+                  rating={listing.rating}
+                  reviewPercent={listing.reviewPercent}
+                  cleanliness={listing.cleanliness}
+                  noise={listing.noise}
                 />
               ))
             ) : (
@@ -708,42 +725,12 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          AI FLOATING WIDGET — переход в поиск с параметрами
-          ═══════════════════════════════════════════════════════════════ */}
-      <div
-        className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <button
-          className={cn(
-            'flex items-center justify-center gap-2 px-5 py-3 rounded-[14px]',
-            'w-full sm:w-auto',
-            'bg-violet-600 text-white font-semibold text-[14px]',
-            'hover:bg-violet-500 active:bg-violet-700',
-            'transition-all duration-200',
-            'shadow-[0_8px_24px_rgba(124,58,237,0.4)]',
-            'hover:shadow-[0_12px_32px_rgba(124,58,237,0.5)]',
-            'hover:-translate-y-1'
-          )}
-          onMouseEnter={() => mascotController.setHover()}
-          onMouseLeave={() => mascotController.setIdle()}
-          onClick={() => {
-            mascotController.setThinking()
-            setAiOpen(true)
-          }}
-        >
-          Подобрать жильё с AI
-        </button>
-      </div>
-
       {aiOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
           onClick={() => {
             setAiOpen(false)
             setDragOffset(0)
-            mascotController.setIdle()
           }}
         >
           <div
@@ -794,7 +781,6 @@ export function HomePageV6() {
                   onClick={() => {
                     setAiOpen(false)
                     setDragOffset(0)
-                    mascotController.setIdle()
                   }}
                   className="rounded-full p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                   aria-label="Закрыть"
@@ -822,7 +808,6 @@ export function HomePageV6() {
                 type="button"
                 onClick={() => {
                   handleAiStart()
-                  mascotController.setIdle()
                 }}
                 className={cn(
                   'mt-5 w-full rounded-[14px] px-5 py-3 text-[14px] font-semibold',

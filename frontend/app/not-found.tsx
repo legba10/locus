@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
-
-const ErrorAnim = dynamic(() => import('@/components/ErrorAnim'), { ssr: false })
+import LottieIcon from '@/components/ui/LottieIcon'
+import errorAnim from '@/public/lottie/Error.json'
 
 /**
  * Static 404 page — no providers, no requests.
@@ -14,7 +13,7 @@ export default function NotFound() {
       style={{ background: 'linear-gradient(180deg, #FAFAFC 0%, #F0F1F5 100%)' }}
     >
       <div className="mb-4">
-        <ErrorAnim />
+        <LottieIcon animationData={errorAnim} size={112} loop />
       </div>
       <h1 className="text-6xl font-bold text-[#1C1F26] mb-2">404</h1>
       <p className="text-[#6B7280] text-[18px] mb-8">Страница не найдена</p>

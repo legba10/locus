@@ -8,6 +8,10 @@ import { buildListingsQuery, type ListingsResponse } from '@/domains/listing/lis
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { CityInput } from '@/shared/components/CityInput'
+import Loader from '@/components/ui/Loader'
+import LottieIcon from '@/components/ui/LottieIcon'
+import locationAnim from '@/public/lottie/location.json'
+import errorAnim from '@/public/lottie/Error.json'
 
 // Filter sidebar
 function FilterSidebar({ 
@@ -161,8 +165,9 @@ function QuickSearchInput({ value, onChange, onSubmit }: { value: string; onChan
         </div>
         <button
           type="submit"
-          className="rounded-xl bg-brand px-6 py-3 font-medium text-white hover:bg-brand/90 transition"
+          className="rounded-xl bg-brand px-6 py-3 font-medium text-white hover:bg-brand/90 transition flex items-center gap-2"
         >
+          <LottieIcon animationData={locationAnim} size={24} loop={false} autoplay={false} playOnHover />
           Найти
         </button>
       </form>
@@ -280,18 +285,16 @@ export function SearchPageClient() {
         {/* Results */}
         <main>
           {isLoading && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[...Array(6)].map((_, i) => (
-                <ListingCardSkeleton key={i} />
-              ))}
+            <div className="flex items-center justify-center py-10">
+              <Loader size={36} />
             </div>
           )}
 
           {error && (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center">
-              <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <div className="mx-auto w-fit">
+                <LottieIcon animationData={errorAnim} size={80} loop />
+              </div>
               <h3 className="mt-4 text-lg font-semibold text-red-300">Ошибка загрузки</h3>
               <p className="mt-2 text-sm text-red-200/70">Убедитесь, что backend запущен</p>
             </div>
@@ -299,9 +302,9 @@ export function SearchPageClient() {
 
           {!isLoading && !error && sortedItems.length === 0 && (
             <div className="rounded-2xl border border-border bg-surface-2 p-8 text-center">
-              <svg className="mx-auto h-16 w-16 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <div className="mx-auto w-fit">
+                <LottieIcon animationData={errorAnim} size={80} loop />
+              </div>
               <h3 className="mt-4 text-lg font-semibold text-text">Ничего не найдено</h3>
               <p className="mt-2 text-text-mut">Попробуйте изменить параметры поиска</p>
               <button
