@@ -11,6 +11,7 @@ const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewRem
 export const metadata: Metadata = {
   title: 'LOCUS — Поиск жилья',
   description: 'LOCUS помогает найти жильё и объясняет, почему оно вам подходит',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         var root = document.documentElement;
         root.classList.remove('light', 'dark');
         root.classList.add(theme);
+        root.setAttribute('data-theme', theme);
         root.style.colorScheme = theme;
       } catch (e) {}
     })();

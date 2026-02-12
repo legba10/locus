@@ -1,7 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
-import { NotificationType } from "../notifications/notifications.service";
 
 @Injectable()
 export class ChatsService {
@@ -150,9 +149,11 @@ export class ChatsService {
     this.notifications
       .create(
         recipientId,
-        NotificationType.NEW_MESSAGE,
+        "message",
         "Новое сообщение",
         `${(message.sender as any).profile?.name ?? "Кто-то"}: ${trimmed.slice(0, 80)}${trimmed.length > 80 ? "…" : ""}`,
+        null,
+        { link: `/chat/${conversationId}`, entityId: conversationId },
       )
       .catch(() => {});
 

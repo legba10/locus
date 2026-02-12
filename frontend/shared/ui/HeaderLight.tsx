@@ -85,9 +85,22 @@ export function HeaderLight() {
       'border-b border-gray-100/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
     )}>
-      <div className="header mx-auto max-w-6xl px-4 md:px-8">
-        <div className="flex items-center justify-between h-[56px] md:h-[64px]">
-          <Link href="/" className="logo locus-home-link flex items-center shrink-0">
+      <div className="header container">
+        <div className="flex items-center justify-between h-[64px]">
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              className="burger relative z-50"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
+
+          <Link href="/" className="logo locus-home-link flex items-center shrink-0 md:mr-0">
             <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
             <span className="header-logo-text text-[#1A1A1A]">LOCUS</span>
           </Link>
@@ -151,16 +164,10 @@ export function HeaderLight() {
             )}
           </div>
 
-          <button
-            type="button"
-            className="burger md:hidden relative z-50"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+          <div className="md:hidden flex items-center">
+            {authed && <NotificationsBell />}
+            {!authed && <div className="w-10 h-10 mr-3" aria-hidden />}
+          </div>
         </div>
       </div>
       <div

@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
+import { useRouter } from 'next/navigation'
 
 const NOTIFY_SOUND = '/sounds/notify.mp3'
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
+const API_BASE = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : ''
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4)
@@ -37,8 +39,22 @@ async function subscribeBrowserPush(): Promise<string | null> {
 }
 
 export function NotificationsBell() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [list, setList] = useState<Array<{ id: string; type: string; title: string; body?: string | null; read: boolean; createdAt: string }>>([])
+  const [isMobile, setIsMobile] = useState(false)
+  const [badgePop, setBadgePop] = useState(false)
+  const [list, setList] = useState<Array<{
+    id: string
+    type: string
+    title: string
+    text?: string | null
+    body?: string | null
+    link?: string | null
+    isRead?: boolean
+    isSeen?: boolean
+    read?: boolean
+    createdAt: string
+  }>>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'ok' | 'denied' | 'no_vapid'>('idle')
   const prevCountRef = useRef<number>(0)
@@ -62,13 +78,28 @@ export function NotificationsBell() {
   }
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const update = () => setIsMobile(window.innerWidth < 768)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  }, [])
+
+  useEffect(() => {
     fetchCount()
-    const t = setInterval(fetchCount, 30_000)
+    const t = setInterval(fetchCount, 20_000)
     return () => clearInterval(t)
   }, [])
 
   useEffect(() => {
     if (unreadCount > prevCountRef.current && prevCountRef.current > 0) {
+      setBadgePop(true)
+      setTimeout(() => setBadgePop(false), 220)
       try {
         const audio = new Audio(NOTIFY_SOUND)
         audio.volume = 0.5
@@ -82,9 +113,43 @@ export function NotificationsBell() {
     if (open) fetchList()
   }, [open])
 
+  useEffect(() => {
+    let sse: EventSource | null = null
+    try {
+      const streamUrl = `${API_BASE || ''}/api/notifications/stream`
+      sse = new EventSource(streamUrl, { withCredentials: true })
+      sse.onmessage = () => {
+        fetchCount()
+        fetchList()
+      }
+    } catch {}
+    return () => {
+      if (sse) sse.close()
+    }
+  }, [])
+
+  useEffect(() => {
+    apiFetch('/notifications/presence', {
+      method: 'POST',
+      body: JSON.stringify({ online: true }),
+    }).catch(() => {})
+    return () => {
+      apiFetch('/notifications/presence', {
+        method: 'POST',
+        body: JSON.stringify({ online: false }),
+      }).catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    apiFetch('/notifications/seen-all', { method: 'POST' }).catch(() => {})
+    fetchCount()
+  }, [open])
+
   const handleMarkRead = async (id: string) => {
     try {
-      await apiFetch(`/notifications/${id}/read`, { method: 'POST' })
+      await apiFetch('/notifications/read', { method: 'POST', body: JSON.stringify({ id }) })
       fetchCount()
       fetchList()
     } catch {}
@@ -103,24 +168,32 @@ export function NotificationsBell() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 rounded-[12px] text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-gray-100 transition-colors"
+        className={cn(
+          'relative rounded-[12px] text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-gray-100 transition-colors',
+          isMobile ? 'w-10 h-10 flex items-center justify-center mr-3' : 'p-2'
+        )}
         aria-label="Уведомления"
       >
-        <Bell className="w-5 h-5" strokeWidth={1.8} />
+        <Bell className={cn(isMobile ? 'w-6 h-6' : 'w-5 h-5')} strokeWidth={1.8} />
         {unreadCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+          <span className={cn(
+            'absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center transition-transform duration-200',
+            badgePop && 'scale-110'
+          )}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+          <div className={cn('fixed inset-0 z-[9998] bg-black/35', !isMobile && 'bg-transparent')} onClick={() => setOpen(false)} aria-hidden />
           <div
             className={cn(
-              'absolute right-0 top-full mt-1 z-50 w-[320px] max-h-[360px] overflow-hidden',
-              'bg-white rounded-[14px] shadow-lg border border-gray-100',
-              'flex flex-col'
+              isMobile
+                ? 'fixed left-0 right-0 top-[60px] z-[9999] w-full max-h-[70vh] overflow-hidden rounded-t-[16px]'
+                : 'absolute right-0 top-full mt-1 z-50 w-[320px] max-h-[360px] overflow-hidden rounded-[14px]',
+              'bg-white shadow-lg border border-gray-100 flex flex-col',
+              'dark:bg-[#111522]/95 dark:border-white/10 dark:backdrop-blur-xl'
             )}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -131,29 +204,50 @@ export function NotificationsBell() {
                   onClick={handleMarkAllRead}
                   className="text-[12px] text-violet-600 hover:text-violet-700"
                 >
-                  Прочитать все
+                  Отметить всё
                 </button>
               )}
             </div>
-            <div className="overflow-y-auto max-h-[280px]">
+            <div className={cn('overflow-y-auto', isMobile ? 'max-h-[calc(70vh-96px)]' : 'max-h-[280px]')}>
               {list.length === 0 ? (
                 <div className="px-4 py-8 text-center text-[13px] text-[#6B7280]">Нет уведомлений</div>
               ) : (
-                list.map((n) => (
-                  <button
-                    key={n.id}
-                    type="button"
-                    onClick={() => { handleMarkRead(n.id); setOpen(false) }}
-                    className={cn(
-                      'w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors',
-                      !n.read && 'bg-violet-50/50'
-                    )}
-                  >
-                    <p className="text-[13px] font-medium text-[#1C1F26]">{n.title}</p>
-                    {n.body && <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.body}</p>}
-                    <p className="text-[11px] text-[#9CA3AF] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
-                  </button>
-                ))
+                <>
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[#9CA3AF]">Новые</div>
+                  {list.filter((n) => !(n.isRead ?? n.read)).map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => {
+                        handleMarkRead(n.id)
+                        setOpen(false)
+                        if (n.link) router.push(n.link)
+                      }}
+                      className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors bg-violet-50/50"
+                    >
+                      <p className="text-[13px] font-medium text-[#1C1F26]">{n.title}</p>
+                      {(n.text || n.body) && <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
+                      <p className="text-[11px] text-[#9CA3AF] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
+                    </button>
+                  ))}
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[#9CA3AF]">Старые</div>
+                  {list.filter((n) => (n.isRead ?? n.read)).map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => {
+                        handleMarkRead(n.id)
+                        setOpen(false)
+                        if (n.link) router.push(n.link)
+                      }}
+                      className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    >
+                      <p className="text-[13px] font-medium text-[#1C1F26]">{n.title}</p>
+                      {(n.text || n.body) && <p className="text-[12px] text-[#6B7280] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
+                      <p className="text-[11px] text-[#9CA3AF] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
+                    </button>
+                  ))}
+                </>
               )}
             </div>
             <div className="border-t border-gray-100 px-4 py-2">

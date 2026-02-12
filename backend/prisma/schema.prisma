@@ -68,6 +68,7 @@ model User {
   auditLogs    AuditLog[]  @relation("AuditActor")
 
   reviewsAuthored Review[] @relation("ReviewAuthor")
+  reputation      UserReputation?
   favorites       Favorite[]
   notifications     Notification[]
   pushSubscriptions PushSubscription[]
@@ -94,6 +95,21 @@ model Profile {
   lastMonthResetAt    DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+}
+
+/// Репутация пользователя (ТЗ-7): рейтинг как хозяина и как гостя, доверие
+model UserReputation {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hostScore  Float?   // средний рейтинг по отзывам на объявлениях владельца (1–5 или 0–100)
+  guestScore Float?   // рейтинг как арендатор (пока от хозяев — в будущем)
+  trustScore Float?   // агрегат доверия (0–100), опционально
+
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Role {
@@ -292,6 +308,9 @@ model Listing {
   views        ListingView[]
 
   conversations Conversation[]
+
+  /// ТЗ-8: кэш рейтинга и метрик для AI { rating, cleanliness, noise, reviews, ... }
+  ratingCache  Json?
 
   @@index([ownerId])
   @@index([status])
@@ -498,9 +517,21 @@ model Review {
   rating    Int
   text      String?
 
-  createdAt DateTime @default(now())
+  /// ТЗ-6: структурированные метрики в JSON для аналитики/AI
+  metricsJson Json?
+  /// ТЗ-7: вес отзыва для взвешенного рейтинга (0.3–1.2)
+  aiWeight   Float   @default(1)
+  /// ТЗ-6: тип визита (night, long, short)
+  visitType  String?
+  /// ТЗ-6: количество дней проживания
+  stayDays   Int?
 
-  metrics   ReviewMetric[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  metrics          ReviewMetric[]
+  structuredMetrics ReviewMetrics?
+  tags             ReviewTag[]
 
   @@unique([listingId, authorId])
   @@index([listingId, createdAt])
@@ -521,6 +552,49 @@ model ReviewMetric {
   @@unique([reviewId, metricKey])
   @@index([reviewId])
   @@index([metricKey])
+}
+
+/// Структурированные метрики отзыва для AI (шум, чистота, хозяева, район, ценность, заселение)
+model ReviewMetrics {
+  id        String   @id @default(uuid())
+  reviewId  String   @unique
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  cleanliness Int?   // 0..100
+  location    Int?   // 0..100 район
+  noise       Int?   // 0..100 шум
+  owner       Int?   // 0..100 хозяева / коммуникация
+  value       Int?   // 0..100 цена/качество
+  checkin    Int?   // 0..100 заселение
+  safety      Int?   // 0..100 безопасность (под AI)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reviewId])
+}
+
+/// Теги отзыва (для AI и фильтров)
+model ReviewTag {
+  id      String  @id @default(uuid())
+  reviewId String
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  tag      String
+
+  @@unique([reviewId, tag])
+  @@index([reviewId])
+  @@index([tag])
+}
+
+/// ТЗ-9: вопросы для формы отзыва (случайный выбор 5 из активных)
+model ReviewQuestion {
+  id     String  @id @default(uuid())
+  key    String  @unique
+  label  String
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([active])
 }
 
 model ListingMetricAgg {
@@ -744,14 +818,23 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // NEW_LISTING_PENDING, LISTING_APPROVED, LISTING_REJECTED, NEW_BOOKING, NEW_MESSAGE, BOOKING_CONFIRMED
+  type      String   // NEW_LISTING_PENDING, ..., BOOKING_CONFIRMED, REVIEW_REMINDER
   title     String
+  text      String?
   body      String?
+  link      String?
+  entityId  String?
+  meta      Json?    // для REVIEW_REMINDER: { listingId }
+  isRead    Boolean  @default(false)
+  isSeen    Boolean  @default(false)
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([userId, read])
+  @@index([userId, isRead])
+  @@index([userId, isSeen])
+  @@index([userId, type, entityId, createdAt])
   @@index([userId, createdAt])
 }
 
