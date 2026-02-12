@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Providers>
             <div className="min-h-screen flex flex-col">
               <HeaderLight />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 pt-[60px] md:pt-[70px]">{children}</main>
               <Footer />
               <ReviewReminderPopup />
             </div>

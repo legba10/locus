@@ -80,13 +80,12 @@ export function HeaderLight() {
 
   return (
     <header className={cn(
-      'sticky top-0 z-40',
-      'relative',
+      'fixed top-0 left-0 right-0 z-[999]',
       'bg-white/95 backdrop-blur-md',
       'border-b border-gray-100/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
     )}>
-      <div className="header mx-auto max-w-6xl px-4">
+      <div className="header mx-auto max-w-6xl px-4 md:px-8">
         <div className="flex items-center justify-between h-[56px] md:h-[64px]">
           <Link href="/" className="logo locus-home-link flex items-center shrink-0">
             <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
@@ -154,7 +153,7 @@ export function HeaderLight() {
 
           <button
             type="button"
-            className="burger md:hidden relative z-50 w-8 h-8 p-0 bg-transparent border-0 cursor-pointer flex items-center justify-center"
+            className="burger md:hidden relative z-50"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
           >

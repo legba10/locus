@@ -204,8 +204,8 @@ body {
 }
 
 .theme-toggle {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   background: var(--card);
   border: 1px solid var(--border-soft);
@@ -486,14 +486,16 @@ textarea:focus {
 /* Overlay: затемнение фона */
 .mobile-menu-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 998;
   opacity: 0;
-  transition: opacity 200ms ease-out;
+  transition: opacity 0.25s ease;
   pointer-events: none;
 }
 .mobile-menu-overlay.open {
@@ -508,8 +510,8 @@ textarea:focus {
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 88%;
-  max-width: 420px;
+  width: 280px;
+  max-width: 280px;
   background: #ffffff;
   border-top-right-radius: 28px;
   border-bottom-right-radius: 28px;
@@ -518,9 +520,15 @@ textarea:focus {
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 0.25s ease-out;
+  transition: transform 0.25s ease;
   pointer-events: none;
   padding: 20px 18px 24px;
+}
+.dark .drawer.mobile-menu,
+[data-theme="dark"] .drawer.mobile-menu {
+  background: rgba(15, 18, 25, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 .drawer.mobile-menu.open {
   transform: translateX(0);
@@ -693,24 +701,40 @@ textarea:focus {
 
 /* Бургер: компактный, меньше логотипа, без трансформации */
 .burger {
-  width: 18px;
-  height: 14px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
-  gap: 4px;
-  margin-right: 12px;
+  gap: 5px;
+  margin-right: 0;
   z-index: 50;
   flex-shrink: 0;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  transition: background 0.25s ease;
 }
 .burger span {
   display: block;
-  width: 18px;
+  width: 24px;
   height: 2px;
   background: var(--locus-primary, #7B4AE2);
   margin: 0;
   border-radius: 1px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .burger:hover {
+    background: rgba(120, 120, 120, 0.1);
+  }
+}
+@media (min-width: 768px) {
+  .drawer.mobile-menu {
+    width: 320px;
+    max-width: 320px;
+  }
 }
 
 /* Список пунктов меню (по макету) */
