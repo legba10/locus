@@ -100,10 +100,10 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-10 bg-white/95 border-b border-gray-100">
+      <header className="sticky top-0 z-10 bg-[var(--surface)] border-b border-[var(--border)] safe-area-pt">
         <div className="container py-3 flex items-center gap-3">
-          <Link href="/messages" className="text-violet-600 text-[14px] font-medium">← Сообщения</Link>
-          <span className="flex-1 font-semibold text-[#1C1F26] truncate">{conv?.listingTitle ?? 'Чат'}</span>
+          <Link href="/messages" className="text-[var(--accent)] text-[14px] font-medium">← Сообщения</Link>
+          <span className="flex-1 font-semibold text-[var(--text-primary)] truncate">{conv?.listingTitle ?? 'Чат'}</span>
         </div>
       </header>
 
@@ -115,18 +115,18 @@ export default function ChatPage() {
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <p className="text-[14px] text-[#6B7280] text-center py-8">Пока нет сообщений. Напишите первым.</p>
+          <p className="text-[14px] text-[var(--text-secondary)] text-center py-8">Пока нет сообщений. Напишите первым.</p>
         ) : (
           messages.map((m) => (
             <div
               key={m.id}
               className={cn(
                 'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px]',
-                m.senderId === myId ? 'ml-auto bg-violet-600 text-white' : 'mr-auto bg-gray-100 text-[#1C1F26]'
+                m.senderId === myId ? 'ml-auto bg-[var(--accent)] text-white' : 'mr-auto bg-[var(--card-hover)] text-[var(--text-primary)]'
               )}
             >
               <div>{m.text}</div>
-              <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-violet-200' : 'text-gray-500')}>
+              <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-white/80' : 'text-[var(--text-muted)]')}>
                 {new Date(m.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      <footer className="sticky bottom-0 bg-white border-t border-gray-100 p-3 safe-area-pb">
+      <footer className="sticky bottom-0 bg-[var(--surface)] border-t border-[var(--border)] p-3 safe-area-pb">
         <form
           onSubmit={(e) => { e.preventDefault(); send() }}
           className="flex gap-2"
@@ -145,7 +145,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Сообщение..."
-            className="flex-1 rounded-[14px] border border-gray-200 px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+            className="flex-1 rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
             disabled={sending}
           />
           <button

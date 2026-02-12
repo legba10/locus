@@ -31,7 +31,8 @@ export default function PageClient() {
           <p className="mt-2 text-text-mut">Сохраняйте понравившиеся объявления и возвращайтесь к ним позже</p>
           <Link 
             href="/auth/login" 
-            className="mt-4 inline-block rounded-xl bg-brand px-6 py-2 font-medium text-white hover:bg-brand/90"
+            className="mt-4 inline-block rounded-xl px-6 py-2 font-medium text-white transition-[background] hover:opacity-95"
+            style={{ background: 'var(--button-primary)' }}
           >
             Войти
           </Link>
@@ -52,7 +53,7 @@ export default function PageClient() {
         </div>
         <Link 
           href="/search" 
-          className="rounded-xl border border-border bg-surface-3 px-4 py-2 text-sm text-text-mut hover:bg-white/10 hover:text-text transition"
+          className="rounded-xl border border-border bg-surface-3 px-4 py-2 text-sm text-text-mut hover:bg-[var(--accent-soft)] hover:text-text transition"
         >
           Искать ещё
         </Link>
@@ -90,7 +91,8 @@ export default function PageClient() {
           <p className="mt-2 text-text-mut">Добавляйте объявления в избранное, чтобы вернуться к ним позже</p>
           <Link 
             href="/search" 
-            className="mt-4 inline-block rounded-xl bg-brand px-6 py-2 font-medium text-white hover:bg-brand/90"
+            className="mt-4 inline-block rounded-xl px-6 py-2 font-medium text-white transition-[background] hover:opacity-95"
+            style={{ background: 'var(--button-primary)' }}
           >
             Найти жильё
           </Link>

@@ -159,15 +159,16 @@ export function HomePageV6() {
     localStorage.setItem('locus_last_activity', String(now))
   }, [])
 
+  const listingCount = data?.items?.length ?? 0
   useEffect(() => {
-    if (!aiPreparing && listingCards.length > 0 && highlightFirstCard && typeof window !== 'undefined') {
+    if (!aiPreparing && listingCount > 0 && highlightFirstCard && typeof window !== 'undefined') {
       const t = setTimeout(() => {
         localStorage.setItem('locus_first_match_seen', 'true')
         setHighlightFirstCard(false)
       }, 2200)
       return () => clearTimeout(t)
     }
-  }, [aiPreparing, listingCards.length, highlightFirstCard])
+  }, [aiPreparing, listingCount, highlightFirstCard])
 
   const smartHeroText = useMemo(() => {
     if (!city && !priceRange) return null
@@ -839,7 +840,7 @@ export function HomePageV6() {
 
       {aiOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-overlay flex items-end bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]"
           onClick={() => {
             setAiOpen(false)
             setDragOffset(0)
@@ -847,7 +848,7 @@ export function HomePageV6() {
         >
           <div
             className={cn(
-              'w-full rounded-t-3xl bg-white',
+              'w-full rounded-t-3xl bg-[var(--surface)]',
               'shadow-[0_-12px_40px_rgba(0,0,0,0.2)]',
               'pb-8'
             )}
@@ -934,8 +935,8 @@ export function HomePageV6() {
         </div>
       )}
       {showOnboarding && (
-        <div className="fixed inset-0 z-[1200] bg-black/45 flex items-center justify-center p-4">
-          <div className="glass w-full max-w-[520px] rounded-[20px] p-5">
+        <div className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]">
+          <div className="z-modal w-full max-w-[520px] rounded-[20px] p-5 bg-[var(--bg-card)] border border-[var(--border-main)]">
             {onboardingStep === 1 ? (
               <>
                 <h3 className="text-[22px] font-bold text-[var(--text-main)]">Найдём жильё под ваш бюджет</h3>
@@ -972,21 +973,21 @@ export function HomePageV6() {
         </div>
       )}
       {showHelpNudge && (
-        <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[320px] z-[1100] glass rounded-[14px] p-4">
+        <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[320px] z-toast glass rounded-[14px] p-4 safe-area-pb">
           <p className="text-[14px] font-semibold text-[var(--text-main)]">Нужна помощь с подбором?</p>
           <button type="button" className="text-[13px] text-[var(--accent)] mt-1" onClick={() => setShowOnboarding(true)}>Открыть быстрый старт</button>
         </div>
       )}
       <button
         type="button"
-        className="fixed right-4 bottom-24 md:bottom-8 z-[1100] btn-primary text-white px-4"
+        className="fixed right-4 bottom-24 md:bottom-8 z-toast btn-primary text-white px-4 safe-area-mb"
         onClick={() => setShowQuickFab(true)}
       >
         Быстрый подбор
       </button>
       {showQuickFab && (
-        <div className="fixed inset-0 z-[1200] bg-black/45 flex items-center justify-center p-4" onClick={() => setShowQuickFab(false)}>
-          <div className="glass w-full max-w-[420px] rounded-[20px] p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]" onClick={() => setShowQuickFab(false)}>
+          <div className="z-modal w-full max-w-[420px] rounded-[20px] p-5 bg-[var(--bg-card)] border border-[var(--border-main)]" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-[18px] font-semibold text-[var(--text-main)]">Быстрый подбор</h3>
             <div className="mt-4 grid gap-3">
               <input value={quickCity} onChange={(e) => setQuickCity(e.target.value)} className="hero-search-control px-3" placeholder="Город" />

@@ -1,6 +1,6 @@
 import type { Listing } from './listing-types'
 
-export const MOCK_LISTINGS: Listing[] = [
+export const MOCK_LISTINGS = [
   {
     id: 'lst_1',
     title: 'Современная квартира',
@@ -43,6 +43,6 @@ export const MOCK_LISTINGS: Listing[] = [
     ],
     hostId: 'host_2',
   },
-]
+] as unknown as Listing[]
 
 

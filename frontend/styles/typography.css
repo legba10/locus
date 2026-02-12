@@ -1,0 +1,7 @@
+/* TZ-4 typography */
+.text-h1 { font-size: 2.25rem; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
+.text-h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; color: var(--text-primary); }
+.text-h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; color: var(--text-primary); }
+.text-body { font-size: 1rem; line-height: 1.5; color: var(--text-primary); }
+.text-small { font-size: 0.875rem; line-height: 1.5; color: var(--text-secondary); }
+.text-caption { font-size: 0.75rem; line-height: 1.4; color: var(--text-muted); }

@@ -1,0 +1,133 @@
+/**
+ * ТЗ-4: Дизайн-токены (Core Design System)
+ * Единственный источник цветов. В компонентах — только var(--token).
+ * ЗАПРЕЩЕНО: #fff, #000, rgba(), bg-black, text-white в компонентах.
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   1.1 Цветовые токены — светлая тема (fallback + light)
+   ═══════════════════════════════════════════════════════════════ */
+:root,
+:root[data-theme="light"] {
+  /* Фоны */
+  --bg-main: #ffffff;
+  --bg-secondary: #f5f6fa;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+
+  /* Текст */
+  --text-primary: #0f172a;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Границы */
+  --border: #e5e7eb;
+  --divider: #e5e7eb;
+
+  /* Акцент */
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-soft: rgba(124, 58, 237, 0.12);
+
+  /* Семантика */
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.1);
+
+  /* Overlay / слои (исключение: только здесь rgba) */
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+
+  /* Тени и стекло */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --blur-glass: 20px;
+  --blur-soft: 6px;
+
+  /* Spacing (TZ-4): 4,8,12,16,20,24,32,40,48,64 */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  /* Z-index (TZ-4): только эти значения, без random */
+  --z-header: 50;
+  --z-drawer: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   1.2 Тёмная тема
+   ═══════════════════════════════════════════════════════════════ */
+:root[data-theme="dark"] {
+  --bg-main: #0b0f19;
+  --bg-secondary: #111827;
+  --surface: #161b2e;
+  --card: #111827;
+  --card-hover: #1e293b;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #71717a;
+
+  --border: #27272a;
+  --divider: #27272a;
+
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-soft: rgba(139, 92, 246, 0.18);
+
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.15);
+
+  --overlay-bg: rgba(10, 10, 20, 0.92);
+  --bg-overlay: rgba(10, 10, 20, 0.92);
+
+  --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --blur-glass: 20px;
+  --blur-soft: 6px;
+
+  --z-header: 50;
+  --z-drawer: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Алиасы для совместимости с theme.css / variables.css
+   ═══════════════════════════════════════════════════════════════ */
+:root,
+:root[data-theme="light"],
+:root[data-theme="dark"] {
+  --bg-surface: var(--bg-secondary);
+  --bg-card: var(--card);
+  --bg-elevated: var(--surface);
+  --border-main: var(--border);
+  --border-primary: var(--border);
+  --header-bg: var(--surface);
+  --surface-primary: var(--surface);
+  --surface-secondary: var(--bg-secondary);
+  --input-bg: var(--bg-secondary);
+  --icon-primary: var(--text-primary);
+  --icon-secondary: var(--text-secondary);
+  --icon-accent: var(--accent);
+  --icon-muted: var(--text-muted);
+}

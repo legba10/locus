@@ -82,7 +82,7 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
 
       {/* Модальное окно бронирования */}
       {showBookingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]">
           <div className={cn(
             'bg-white rounded-[20px] p-6 max-w-md w-full',
             'shadow-[0_20px_60px_rgba(0,0,0,0.3)]'

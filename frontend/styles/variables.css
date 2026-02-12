@@ -1,42 +1,39 @@
-:root {
-  --bg-main: #f6f7fb;
-  --bg-card: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.7);
+/**
+ * Aliases and supplementary tokens (ТЗ-1: theme.css — источник цветов)
+ * Не переопределять --bg-main, --bg-card, --text-primary и т.д. — они в theme.css
+ */
 
-  --text-main: #111111;
-  --text-secondary: #6b6b6b;
-
-  --border: rgba(0, 0, 0, 0.06);
-
-  --accent: #7b61ff;
-  --accent-soft: rgba(123, 97, 255, 0.12);
-
-  --header-bg: rgba(255, 255, 255, 0.75);
-
-  /* Backward-compatible aliases */
+/* ТЗ-3: алиасы для поверхностей и overlay */
+:root,
+:root[data-theme="light"] {
   --bg: var(--bg-main);
   --card-bg: var(--bg-card);
-  --text: var(--text-main);
+  --text: var(--text-primary);
+  --text-main: var(--text-primary);
+  --border: var(--border-main);
+  --header-bg: var(--bg-elevated);
+  --surface-primary: var(--bg-elevated);
+  --surface-secondary: var(--bg-surface);
+  --border-primary: var(--border-main);
+  --input-bg: var(--bg-surface);
+  --icon-primary: var(--text-primary);
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  --accent-soft: rgba(124, 58, 237, 0.12);
 }
 
-.dark,
-[data-theme="dark"] {
-  --bg-main: #0b0f1a;
-  --bg-card: #121826;
-  --bg-glass: rgba(18, 24, 38, 0.6);
-
-  --text-main: #ffffff;
-  --text-secondary: #9ca3af;
-
-  --border: rgba(255, 255, 255, 0.08);
-
-  --accent: #8b7cff;
-  --accent-soft: rgba(139, 124, 255, 0.18);
-
-  --header-bg: rgba(11, 15, 26, 0.6);
-
-  /* Backward-compatible aliases */
+:root[data-theme="dark"],
+.dark {
   --bg: var(--bg-main);
   --card-bg: var(--bg-card);
-  --text: var(--text-main);
+  --text: var(--text-primary);
+  --text-main: var(--text-primary);
+  --border: var(--border-main);
+  --header-bg: var(--bg-elevated);
+  --surface-primary: var(--bg-elevated);
+  --surface-secondary: var(--bg-surface);
+  --border-primary: var(--border-main);
+  --input-bg: var(--bg-surface);
+  --icon-primary: var(--text-primary);
+  --bg-glass: rgba(22, 27, 46, 0.6);
+  --accent-soft: rgba(139, 92, 246, 0.18);
 }

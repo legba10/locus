@@ -1,0 +1,91 @@
+/**
+ * ТЗ-1 + ТЗ-3: Архитектура системы тем (Light / Dark) для LOCUS
+ * Единый theme-движок: design tokens + data-theme на <html>
+ * Запрет: не использовать #fff, #000, rgba() в компонентах — только var(--token)
+ */
+
+/* Fallback (SSR / до применения темы) — светлая тема */
+:root {
+  --bg-main: #ffffff;
+  --bg-surface: #f5f6fa;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --border-main: #e5e7eb;
+
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+
+  --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
+
+  /* ТЗ-3: overlay и поверхности */
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --surface-primary: #ffffff;
+  --surface-secondary: #f5f6fa;
+  --header-bg: #ffffff;
+  --border-primary: #e5e7eb;
+  --input-bg: #f5f6fa;
+  --icon-primary: #0f172a;
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #111827;
+  --text-secondary-light: #6b7280;
+  --text-secondary-dark: #9ca3af;
+}
+
+/* Light — явно */
+:root[data-theme="light"] {
+  --bg-main: #ffffff;
+  --bg-surface: #f5f6fa;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --border-main: #e5e7eb;
+
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+
+  --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
+
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --surface-primary: #ffffff;
+  --surface-secondary: #f5f6fa;
+  --header-bg: #ffffff;
+  --border-primary: #e5e7eb;
+  --input-bg: #f5f6fa;
+  --icon-primary: #0f172a;
+}
+
+/* Dark — ТЗ-3: без прозрачности в overlay-слоях */
+:root[data-theme="dark"] {
+  --bg-main: #0b0f19;
+  --bg-surface: #111827;
+  --bg-card: #111827;
+  --bg-elevated: #161b2e;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #71717a;
+
+  --border-main: #27272a;
+
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+
+  --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
+
+  --overlay-bg: rgba(10, 10, 20, 0.92);
+  --surface-primary: #161b2e;
+  --surface-secondary: #111827;
+  --header-bg: #161b2e;
+  --border-primary: #27272a;
+  --input-bg: #111827;
+  --icon-primary: #ffffff;
+}

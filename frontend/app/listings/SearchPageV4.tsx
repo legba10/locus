@@ -39,6 +39,7 @@ export function SearchPageV4() {
   const [aiEnabled, setAiEnabled] = useState(searchParams.get('ai') === 'true')
   const [aiResults, setAiResults] = useState<{ reason: string; score: number } | null>(null)
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
+  const typeParam = type ? type.toUpperCase() : ''
 
   // Обновляем URL при изменении фильтров
   useEffect(() => {
@@ -53,14 +54,13 @@ export function SearchPageV4() {
     
     const newUrl = `/listings${params.toString() ? `?${params.toString()}` : ''}`
     router.replace(newUrl, { scroll: false })
-  }, [city, priceMin, priceMax, type, rooms, sort, aiEnabled, router])
+  }, [city, priceMin, priceMax, type, typeParam, rooms, sort, aiEnabled, router])
 
   // Формируем запрос
   const queryParams = new URLSearchParams()
   if (city) queryParams.set('city', city)
   if (priceMin) queryParams.set('priceMin', priceMin)
   if (priceMax) queryParams.set('priceMax', priceMax)
-  const typeParam = type ? type.toUpperCase() : ''
   if (typeParam) queryParams.set('type', typeParam)
   if (rooms) queryParams.set('rooms', rooms)
 
@@ -101,7 +101,7 @@ export function SearchPageV4() {
     } else {
       setAiResults(null)
     }
-  }, [aiEnabled, city, priceMin, priceMax, type, rooms])
+  }, [aiEnabled, city, priceMin, priceMax, type, typeParam, rooms])
 
   // Используем ai-engine для расчета scores, если AI включен
   useEffect(() => {

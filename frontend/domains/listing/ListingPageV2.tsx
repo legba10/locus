@@ -55,7 +55,7 @@ interface ListingResponse {
       listingsCount?: number
     }
   }
-  item?: typeof ListingResponse.prototype.listing
+  item?: ListingResponse['listing']
 }
 
 interface PublicOwnerProfile {
@@ -568,7 +568,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
       </div>
 
       {/* Мобильный CTA: один бар внизу, без дублирования кнопок в контенте */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[var(--bg-elevated)] backdrop-blur-[20px] border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           {priceValue > 0 && (
             <span className="hidden sm:inline text-[13px] font-semibold text-[#1C1F26] shrink-0">
@@ -648,7 +648,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
           />
           {photos.length > 1 && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              {photos.map((_, i) => (
+              {photos.map((_: { url: string }, i: number) => (
                 <button
                   key={i}
                   type="button"

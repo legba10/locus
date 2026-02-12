@@ -15,6 +15,7 @@ export const ThemeContext = createContext<ThemeContextValue>({
 });
 
 function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.classList.remove("light", "dark");
   root.classList.add(theme);
@@ -22,8 +23,15 @@ function applyTheme(theme: Theme) {
   root.style.colorScheme = theme;
 }
 
+/** ТЗ-3: начальная тема с document (скрипт в layout уже выставил data-theme) — избегаем hydration mismatch */
+function getInitialTheme(): Theme {
+  if (typeof document === "undefined") return "light";
+  const t = document.documentElement.getAttribute("data-theme");
+  return t === "dark" || t === "light" ? t : "light";
+}
+
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -32,12 +40,10 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       applyTheme(saved);
       return;
     }
-
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme: Theme = prefersDark ? "dark" : "light";
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
-    localStorage.setItem("theme", initialTheme);
+    const fromDom = getInitialTheme();
+    setTheme(fromDom);
+    applyTheme(fromDom);
+    localStorage.setItem("theme", fromDom);
   }, []);
 
   const toggle = useCallback(() => {

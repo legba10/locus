@@ -38,8 +38,9 @@ export function ListingCard({
   const router = useRouter()
   const [imgError, setImgError] = useState(false)
   // Support both 'photos' (backend) and 'images' (legacy)
-  const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url
-  const matchScore = listing.aiScores?.qualityScore ?? undefined
+  const listingWithLegacy = listing as typeof listing & { images?: { url: string }[]; aiScores?: { qualityScore?: number } }
+  const photo = listing.photos?.[0]?.url || listingWithLegacy.images?.[0]?.url
+  const matchScore = listingWithLegacy.aiScores?.qualityScore ?? undefined
   const verdict = matchScore !== undefined ? 'neutral' : undefined
   const priceSignal = undefined
   const priceColor = priceSignal ? getPriceColor(priceSignal) : 'text-gray-500'
@@ -82,7 +83,7 @@ export function ListingCard({
 
         {/* 2. PRICE (large) */}
         <div className="mb-2">
-          <span className="text-xl font-bold text-gray-900">{formatPrice(listing.pricePerNight)} ₽</span>
+          <span className="text-xl font-bold text-gray-900">{formatPrice(listing.pricePerNight ?? 0)} ₽</span>
           <span className="text-gray-500 text-sm"> / ночь</span>
         </div>
 

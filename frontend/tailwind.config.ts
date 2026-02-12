@@ -22,12 +22,12 @@ export default {
           'text-secondary': '#6B6B6B',
           danger: '#E14C4C',     // Выйти, ошибки
         },
-        // Legacy / alias
-        primary: { DEFAULT: '#7B4AE2', 50: '#f5f0ff', 100: '#ede5ff', 500: '#7B4AE2', 600: '#6b3dd4', 700: '#5a32b8' },
-        surface: { DEFAULT: '#ffffff', 2: '#F9F9FB', 3: '#f1f5f9' },
-        border: '#ECECEC',
-        text: { DEFAULT: '#1A1A1A', mut: '#6B6B6B', dim: '#94a3b8' },
-        brand: { DEFAULT: '#7B4AE2', 2: '#4AA3E2' },
+        // Legacy / alias — ТЗ-1: theme-aware через CSS variables
+        primary: { DEFAULT: 'var(--accent)', 50: '#f5f0ff', 100: '#ede5ff', 500: 'var(--accent)', 600: 'var(--accent-hover)', 700: '#5a32b8' },
+        surface: { DEFAULT: 'var(--bg-surface)', 2: 'var(--bg-card)', 3: 'var(--bg-surface)' },
+        border: 'var(--border-main)',
+        text: { DEFAULT: 'var(--text-primary)', mut: 'var(--text-muted)', dim: 'var(--text-secondary)' },
+        brand: { DEFAULT: 'var(--accent)', 2: '#4AA3E2' },
         success: { DEFAULT: '#059669', light: '#d1fae5' },
         warning: { DEFAULT: '#d97706', light: '#fef3c7' },
         danger: { DEFAULT: '#E14C4C', light: '#fee2e2' },

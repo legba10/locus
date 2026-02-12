@@ -36,12 +36,14 @@ export default function UserProfilePage() {
   const isOwnProfile = !!currentUser?.id && currentUser.id === id
 
   const { data, isLoading, error } = useFetch<ApiResponse>(
-    id ? ['user-public', id] : null,
-    id ? `/api/users/${encodeURIComponent(id)}/public` : null
+    ['user-public', id],
+    `/api/users/${encodeURIComponent(id)}/public`,
+    { enabled: !!id }
   )
   const { data: summaryData } = useFetch<{ ok: boolean; summary: { avg: number | null; count: number; distribution: Record<number, number> } }>(
-    id && !isOwnProfile ? ['reviews-user-summary', id] : null,
-    id && !isOwnProfile ? `/api/reviews/user/${encodeURIComponent(id)}/summary` : null
+    ['reviews-user-summary', id],
+    `/api/reviews/user/${encodeURIComponent(id)}/summary`,
+    { enabled: !!id && !isOwnProfile }
   )
   const profile = data?.profile ?? null
 

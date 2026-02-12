@@ -29,7 +29,7 @@ async function subscribeBrowserPush(): Promise<string | null> {
   if (!VAPID_PUBLIC) return 'no_vapid'
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,
   })
   const subscription = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
   await apiFetchJson('/notifications/push-subscribe', {
@@ -188,13 +188,17 @@ export function NotificationsBell() {
       </button>
       {open && (
         <>
-          <div className={cn('fixed inset-0 z-[9998] bg-black/35', !isMobile && 'bg-transparent')} onClick={() => setOpen(false)} aria-hidden />
+          {/* Backdrop: всегда full screen, theme-aware */}
+          <div className="fixed inset-0 z-notification" aria-hidden>
+            <div className="overlay-backdrop" onClick={() => setOpen(false)} />
+          </div>
+          {/* Panel: mobile — fixed от top 64px; desktop — absolute к кнопке */}
           <div
             className={cn(
               isMobile
-                ? 'fixed left-0 right-0 top-[60px] z-[9999] w-full max-h-[70vh] overflow-hidden rounded-t-[16px]'
-                : 'absolute right-0 top-full mt-1 z-50 w-[320px] max-h-[360px] overflow-hidden rounded-[14px]',
-              'notifications-panel shadow-lg flex flex-col'
+                ? 'fixed left-0 right-0 top-[64px] z-notification w-full max-h-[calc(100vh-64px)] overflow-hidden rounded-t-[16px]'
+                : 'absolute right-0 top-full mt-1 z-notification w-[320px] max-h-[360px] overflow-hidden rounded-[14px]',
+              'notifications-panel flex flex-col'
             )}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">

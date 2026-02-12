@@ -37,8 +37,7 @@ export function Footer({ className }: { className?: string }) {
 
   return (
     <footer
-      className={cn(className)}
-      style={{ background: 'linear-gradient(180deg, #141821 0%, #1B2230 100%)' }}
+      className={cn(className, 'bg-[var(--surface-secondary)]')}
     >
       <div className="container py-10 text-center">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 text-left">
@@ -62,7 +61,7 @@ export function Footer({ className }: { className?: string }) {
                 href="https://vk.ru/club235775695" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-violet-600 flex items-center justify-center transition-all duration-200"
+                className="w-9 h-9 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center transition-all duration-200"
                 aria-label="ВКонтакте"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -73,7 +72,7 @@ export function Footer({ className }: { className?: string }) {
                 href="https://t.me/Locusrental" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/10 hover:bg-violet-600 flex items-center justify-center transition-all duration-200"
+                className="w-9 h-9 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center transition-all duration-200"
                 aria-label="Telegram"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

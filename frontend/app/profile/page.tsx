@@ -83,7 +83,7 @@ export default function ProfilePage() {
       (Boolean(user?.email) ? 1 : 0) +
       (Boolean(phone || user?.phone) ? 1 : 0) +
       (Boolean(displayAvatar) ? 1 : 0) +
-      (Boolean(user?.city) ? 1 : 0)) / 5 * 100
+      (Boolean((user as { city?: string })?.city) ? 1 : 0)) / 5 * 100
   )
   const favoritesCount = favoritesData?.items?.length ?? 0
   const messagesCount = Array.isArray(chatsData) ? chatsData.length : 0

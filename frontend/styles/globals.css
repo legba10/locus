@@ -1,7 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ТЗ-4: tokens.css — единственный источник токенов; импорт после theme для переопределения */
+@import './theme.css';
+@import './tokens.css';
 @import './variables.css';
+@import './layers.css';
+@import './typography.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -36,11 +41,18 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ТЗ-1 п.5: фон — var(--bg-main) */
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
 /* Стили для option элементов в select - закругленные углы */
 select option {
   padding: 8px 12px;
   border-radius: 8px;
-  background: white;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 /* Улучшенный скроллинг для контейнеров */
@@ -91,18 +103,13 @@ select option {
   /* ═══════════ НЕЙТРАЛЬНЫЕ (база) ═══════════ */
   --locus-bg-page: var(--bg-main);
   --locus-bg-card: var(--bg-card);
-  --locus-divider: var(--border);
-  --locus-text-main: var(--text-main);
+  --locus-divider: var(--border-main);
+  --locus-text-main: var(--text-primary);
   --locus-text-secondary: var(--text-secondary);
   
-  /* ═══════════ СОВМЕСТИМОСТЬ (alias → locus) ═══════════ */
-  --bg-main: var(--locus-bg-page);
-  --bg-soft: var(--locus-bg-card);
-  --bg-card: var(--locus-bg-card);
-  --bg-gradient: linear-gradient(180deg, var(--locus-bg-page) 0%, var(--locus-bg-page) 100%);
-  --text-main: var(--locus-text-main);
-  --text-secondary: var(--locus-text-secondary);
-  --text-muted: var(--locus-text-secondary);
+  /* ═══════════ СОВМЕСТИМОСТЬ (ТЗ-1: базовые токены в theme.css) ═══════════ */
+  --bg-soft: var(--bg-card);
+  --bg-gradient: linear-gradient(180deg, var(--bg-main) 0%, var(--bg-main) 100%);
   --accent-primary: var(--locus-primary);
   --accent-light: var(--accent);
   --accent-soft: var(--accent-soft);
@@ -128,17 +135,13 @@ select option {
   --color-danger: var(--locus-danger);
 }
 
-.dark {
+.dark,
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: var(--bg-main);
-  --text: var(--text-main);
-  --card: var(--bg-card);
-  --card-bg: var(--bg-card);
-
   --locus-bg-page: var(--bg-main);
   --locus-bg-card: var(--bg-card);
-  --locus-divider: var(--border);
-  --locus-text-main: var(--text-main);
+  --locus-divider: var(--border-main);
+  --locus-text-main: var(--text-primary);
   --locus-text-secondary: var(--text-secondary);
 }
 
@@ -240,12 +243,13 @@ select option {
   text-align: left;
 }
 
+/* ТЗ-2 п.13: поля ввода — bg-surface, border-main */
 .hero-search-control {
   width: 100%;
   height: 52px;
   border-radius: 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-main);
   color: var(--text-main);
   font-size: 15px;
   padding: 0 14px;
@@ -644,7 +648,9 @@ textarea:focus {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 998;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-overlay);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -654,32 +660,35 @@ textarea:focus {
   pointer-events: auto;
 }
 
-/* Drawer: по макету — 86–90%, max 420px, тень, отступы */
+/* ТЗ-2 п.7: Sidebar — overlay обязателен, панель solid elevated */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 300px;
+  width: 280px;
   max-width: 85vw;
-  background: #ffffff;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   border-top-right-radius: 28px;
   border-bottom-right-radius: 28px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-  z-index: 999;
+  border-right: 1px solid var(--border-main);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  z-index: var(--z-modal);
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   padding: 20px 18px 24px;
 }
+.drawer.mobile-menu.open {
+  pointer-events: auto;
+}
 .dark .drawer.mobile-menu,
 [data-theme="dark"] .drawer.mobile-menu {
-  background: rgba(15, 18, 25, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-right-color: var(--border-main);
 }
 .drawer.mobile-menu.open {
   transform: translateX(0);
@@ -768,7 +777,7 @@ textarea:focus {
 }
 .mobile-menu-profile-subtitle {
   font-size: 13px;
-  color: #8e8e93;
+  color: var(--icon-primary);
   margin-top: 2px;
 }
 
@@ -913,7 +922,7 @@ textarea:focus {
   width: 100%;
   font-size: 15px;
   font-weight: 500;
-  color: #1c1c1e;
+  color: var(--text-primary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -928,13 +937,13 @@ textarea:focus {
 .drawer.mobile-menu .menu .menu-item-btn svg {
   width: 22px;
   height: 22px;
-  color: #8e8e93;
+  color: var(--icon-primary);
   stroke-width: 1.8;
   flex-shrink: 0;
 }
 .drawer.mobile-menu .menu .menu-item-btn:hover .menu-icon-wrap,
 .drawer.mobile-menu .menu .menu-item-btn:hover svg {
-  color: #1c1c1e;
+  color: var(--text-primary);
 }
 
 /* Кнопка Войти (только для гостя) */
@@ -1064,14 +1073,13 @@ textarea:focus {
 }
 
 /* Header glass */
+/* ТЗ-1 п.8: header одинаков в обеих темах, без прозрачности */
 [data-theme="dark"] .header,
 .dark .header,
 [data-theme="dark"] header,
 .dark header {
-  background: rgba(10, 12, 18, 0.7) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border) !important;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-main);
 }
 
 /* Shared glass primitives */
@@ -1174,15 +1182,13 @@ textarea:focus {
   box-shadow: 0 0 25px rgba(120, 150, 255, 0.3);
 }
 
-/* Burger/sidebar */
+/* Burger/sidebar — ТЗ-2: solid elevated, без прозрачности */
 [data-theme="dark"] .sidebar,
 .dark .sidebar,
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: rgba(8, 10, 14, 0.95) !important;
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border-right: 1px solid var(--border);
+  background: var(--bg-elevated) !important;
+  border-right: 1px solid var(--border-main);
 }
 
 /* Stars */
@@ -1586,9 +1592,7 @@ p, span, small, .text-soft {
 
 /* Burger menu dark */
 [data-theme="dark"] .drawer.mobile-menu {
-  background: rgba(18, 21, 30, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-elevated);
 }
 
 [data-theme="dark"] .mobile-menu-separator,
@@ -1606,17 +1610,18 @@ input,
 textarea,
 select,
 .input {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  color: var(--text-main);
 }
 
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select,
 [data-theme="dark"] .input {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  color: var(--text-main);
 }
 
 [data-theme="dark"] input:focus,
@@ -1728,17 +1733,18 @@ select,
 }
 
 /* TZ-7 Theme stabilization */
+/* ТЗ-1 п.8: Header — без прозрачности */
+/* ТЗ-2 п.6: Header — sticky, z-header, без прозрачности */
+/* ТЗ-3: Header theme-aware */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
   background: var(--header-bg);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
 }
 
-:root .header {
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
 
 .header .header-logo-img {
   height: 28px;
@@ -1765,14 +1771,12 @@ select,
 }
 
 .drawer.mobile-menu {
-  background: var(--bg-card);
+  background: var(--bg-elevated);
 }
 
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: rgba(18, 24, 38, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-elevated);
 }
 
 .drawer.mobile-menu .menu .menu-item-btn {
@@ -1801,9 +1805,70 @@ select,
   background: var(--accent);
 }
 
+/* ТЗ-1 п.13 + ТЗ-2 п.8: уведомления solid, тень */
+/* ТЗ-3: Уведомления — surface-primary, z-notification */
 .notifications-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  z-index: var(--z-notification);
+}
+
+/* ТЗ-1 п.13 + ТЗ-2: модалки — overlay + panel, слои */
+.modal-overlay {
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-overlay);
+}
+.modal-panel {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 20px;
+  color: var(--text-primary);
+  z-index: var(--z-modal);
+}
+
+/* ТЗ-3: Overlay — theme tokens, без фиксированного rgba */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-overlay);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-overlay);
+}
+.panel {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  z-index: var(--z-modal);
+}
+
+/* ТЗ-2 п.4.3: Glass только header / bottom bar / floating — light/dark */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-main);
+}
+:root[data-theme="light"] .glass,
+.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+}
+:root[data-theme="dark"] .glass,
+.dark .glass {
+  background: rgba(20, 20, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .tariff-primary-card {
@@ -1849,13 +1914,6 @@ h1 {
   h1 {
     font-size: 28px;
   }
-}
-
-.glass {
-  background: var(--bg-glass);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid var(--border);
 }
 
 .header + main {
@@ -2001,4 +2059,19 @@ textarea {
 @keyframes listingGlow {
   0%, 100% { box-shadow: var(--shadow-level-1); }
   50% { box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.35), var(--shadow-level-2); }
+}
+
+/* ТЗ-5: Mobile safe area (iOS Safari, notch, bottom bar) */
+.safe-area-pb {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+.safe-area-pt {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Отступ снизу для fixed-кнопок (FAB), чтобы не перекрывать home indicator */
+.safe-area-mb {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }

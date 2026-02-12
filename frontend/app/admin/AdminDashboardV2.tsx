@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch } from '@/shared/utils/apiFetch'
 
 type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'chats' | 'settings'
+const ADMIN_TAB_IDS: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
 
 interface AdminStats {
   users: { total: number }
@@ -62,14 +64,13 @@ interface AdminListing {
 export function AdminDashboardV2() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams?.get('tab') as AdminTab | null
-  const tabIds: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
-  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && tabIds.includes(tabFromUrl) ? tabFromUrl : 'dashboard')
+  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && ADMIN_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'dashboard')
 
   useEffect(() => {
-    if (tabFromUrl && tabFromUrl !== activeTab && tabIds.includes(tabFromUrl)) {
+    if (tabFromUrl && tabFromUrl !== activeTab && ADMIN_TAB_IDS.includes(tabFromUrl)) {
       setActiveTab(tabFromUrl)
     }
-  }, [tabFromUrl])
+  }, [tabFromUrl, activeTab])
 
   const tabs = [
     { id: 'dashboard' as AdminTab, label: 'Дашборд', icon: <DashboardIcon /> },
@@ -449,7 +450,7 @@ function ListingsTab() {
                 <tr key={listing.id} className="border-t border-gray-100 hover:bg-gray-50/50">
                   <td className="p-2">
                     {listing.photos?.[0]?.url ? (
-                      <img src={listing.photos[0].url} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                      <Image src={listing.photos[0].url} alt="" width={48} height={48} className="w-12 h-12 rounded-lg object-cover bg-gray-100" unoptimized={listing.photos[0].url.startsWith('http')} />
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-[10px] text-gray-400">Нет</div>
                     )}
@@ -567,8 +568,8 @@ function ModerationTab() {
           {listings.map(listing => (
             <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200 flex flex-col sm:flex-row gap-4">
               {listing.photos?.[0]?.url && (
-                <div className="w-full sm:w-24 h-24 rounded-[12px] overflow-hidden bg-gray-200 flex-shrink-0">
-                  <img src={listing.photos[0].url} alt={listing.title} className="w-full h-full object-cover" />
+                <div className="w-full sm:w-24 h-24 rounded-[12px] overflow-hidden bg-gray-200 flex-shrink-0 relative">
+                  <Image src={listing.photos[0].url} alt={listing.title} fill className="object-cover" sizes="96px" unoptimized={listing.photos[0].url.startsWith('http')} />
                 </div>
               )}
               <div className="flex-1 min-w-0">

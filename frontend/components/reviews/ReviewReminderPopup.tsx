@@ -62,21 +62,21 @@ export function ReviewReminderPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="review-reminder-title"
     >
       <div
         className={cn(
-          'bg-white rounded-2xl shadow-xl max-w-sm w-full p-6',
-          'border border-gray-100'
+          'bg-[var(--surface)] rounded-2xl shadow-[var(--shadow-modal)] max-w-sm w-full p-6',
+          'border border-[var(--border)] text-[var(--text-primary)]'
         )}
       >
-        <h2 id="review-reminder-title" className="text-[18px] font-bold text-[#1C1F26] mb-2">
+        <h2 id="review-reminder-title" className="text-[18px] font-bold text-[var(--text-primary)] mb-2">
           Как прошло проживание?
         </h2>
-        <p className="text-[14px] text-[#6B7280] mb-5">
+        <p className="text-[14px] text-[var(--text-secondary)] mb-5">
           Ваш отзыв поможет другим выбрать жильё
         </p>
         <div className="flex flex-col gap-2">

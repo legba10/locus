@@ -236,13 +236,13 @@ export function SearchPageClient() {
   // Sort results
   let sortedItems = [...(data?.items ?? [])]
   if (filters.sort === 'price_asc') {
-    sortedItems.sort((a, b) => a.pricePerNight - b.pricePerNight)
+    sortedItems.sort((a, b) => (a.pricePerNight ?? 0) - (b.pricePerNight ?? 0))
   } else if (filters.sort === 'price_desc') {
-    sortedItems.sort((a, b) => b.pricePerNight - a.pricePerNight)
+    sortedItems.sort((a, b) => (b.pricePerNight ?? 0) - (a.pricePerNight ?? 0))
   } else if (filters.sort === 'rating') {
-    sortedItems.sort((a, b) => b.rating - a.rating)
+    sortedItems.sort((a, b) => ((b as { rating?: number }).rating ?? 0) - ((a as { rating?: number }).rating ?? 0))
   } else if (filters.sort === 'ai_score') {
-    sortedItems.sort((a, b) => (b.aiScores?.qualityScore ?? 0) - (a.aiScores?.qualityScore ?? 0))
+    sortedItems.sort((a, b) => ((b as { aiScores?: { qualityScore?: number } }).aiScores?.qualityScore ?? 0) - ((a as { aiScores?: { qualityScore?: number } }).aiScores?.qualityScore ?? 0))
   }
 
   return (

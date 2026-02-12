@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="bg-white text-gray-900 antialiased">
+      <body className="antialiased" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
         <ThemeProvider>
           <Providers>
             <div className="min-h-screen flex flex-col">

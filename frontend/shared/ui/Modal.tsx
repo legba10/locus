@@ -29,16 +29,16 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-overlay"
     >
       <div
-        className="absolute inset-0 bg-black/60"
+        className="modal-overlay absolute inset-0"
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) onClose()
         }}
       />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className={cn('w-full max-w-lg rounded-2xl border border-border bg-surface-2 shadow-card')}>
+        <div className={cn('modal-panel w-full max-w-lg rounded-2xl shadow-card')}>
           <div className="flex items-start justify-between gap-3 border-b border-border p-5">
             <div>
               <h2 className="text-base font-semibold">{title}</h2>

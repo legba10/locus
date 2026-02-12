@@ -87,7 +87,7 @@ export function HeaderLight() {
 
   return (
     <header className={cn(
-      'fixed top-0 left-0 right-0 z-[999]',
+      'sticky top-0 left-0 right-0 z-header',
       'shadow-sm'
     )}>
       <div className="header container">

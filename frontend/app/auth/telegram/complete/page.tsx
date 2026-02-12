@@ -25,7 +25,7 @@ function CompleteContent() {
 
     async function completeAuth() {
       try {
-        const res = await pollTelegramLoginStatus(token);
+        const res = await pollTelegramLoginStatus(token!);
 
         // Tokens are now stored in httpOnly cookies by backend/proxy.
         // We only need to refresh profile and redirect.
