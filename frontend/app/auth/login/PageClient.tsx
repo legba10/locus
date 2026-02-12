@@ -6,9 +6,8 @@ import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
-import LottieIcon from '@/components/ui/LottieIcon'
-import Loader from '@/components/ui/Loader'
-import checkAnim from '@/public/lottie/check.json'
+import Loader from '@/components/lottie/Loader'
+import TelegramStatus from '@/components/lottie/TelegramStatus'
 
 /**
  * LoginPage — Страница входа.
@@ -185,13 +184,7 @@ export default function PageClient() {
                     'flex items-center justify-center gap-2'
                   )}
                 >
-                  <LottieIcon
-                    animationData={checkAnim}
-                    size={28}
-                    loop={false}
-                    autoplay={false}
-                    playOnHover
-                  />
+                  <TelegramStatus />
                   Войти через Telegram
                 </button>
                 <p className="text-center text-[12px] text-[#6B7280]">

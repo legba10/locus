@@ -8,10 +8,9 @@ import { buildListingsQuery, type ListingsResponse } from '@/domains/listing/lis
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { CityInput } from '@/shared/components/CityInput'
-import Loader from '@/components/ui/Loader'
-import LottieIcon from '@/components/ui/LottieIcon'
-import locationAnim from '@/public/lottie/location.json'
-import errorAnim from '@/public/lottie/Error.json'
+import Loader from '@/components/lottie/Loader'
+import SearchIcon from '@/components/lottie/SearchIcon'
+import ErrorAnim from '@/components/lottie/ErrorAnim'
 
 // Filter sidebar
 function FilterSidebar({ 
@@ -167,7 +166,7 @@ function QuickSearchInput({ value, onChange, onSubmit }: { value: string; onChan
           type="submit"
           className="rounded-xl bg-brand px-6 py-3 font-medium text-white hover:bg-brand/90 transition flex items-center gap-2"
         >
-          <LottieIcon animationData={locationAnim} size={24} loop={false} autoplay={false} playOnHover />
+          <SearchIcon />
           Найти
         </button>
       </form>
@@ -293,7 +292,7 @@ export function SearchPageClient() {
           {error && (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center">
               <div className="mx-auto w-fit">
-                <LottieIcon animationData={errorAnim} size={80} loop />
+                <ErrorAnim size={80} loop />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-red-300">Ошибка загрузки</h3>
               <p className="mt-2 text-sm text-red-200/70">Убедитесь, что backend запущен</p>
@@ -303,7 +302,7 @@ export function SearchPageClient() {
           {!isLoading && !error && sortedItems.length === 0 && (
             <div className="rounded-2xl border border-border bg-surface-2 p-8 text-center">
               <div className="mx-auto w-fit">
-                <LottieIcon animationData={errorAnim} size={80} loop />
+                <ErrorAnim size={80} loop />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-text">Ничего не найдено</h3>
               <p className="mt-2 text-text-mut">Попробуйте изменить параметры поиска</p>

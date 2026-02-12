@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
 import { CITIES } from '@/shared/data/cities'
-import LottieIcon from '@/components/ui/LottieIcon'
-import locationAnim from '@/public/lottie/location.json'
+import SearchIcon from '@/components/lottie/SearchIcon'
 
 /**
  * SearchBar — Premium Glass Search REDESIGNED
@@ -124,13 +123,7 @@ export function SearchBar({ className, mode }: { className?: string; mode?: 'hom
                 'flex items-center justify-center gap-2'
               )}
             >
-              <LottieIcon
-                animationData={locationAnim}
-                size={24}
-                loop={false}
-                autoplay={false}
-                playOnHover
-              />
+              <SearchIcon />
               {mode === 'results' ? 'Обновить' : 'Найти'}
             </button>
           </div>
@@ -145,14 +138,9 @@ export function SearchBar({ className, mode }: { className?: string; mode?: 'hom
           className="text-[13px] text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
           aria-expanded={filtersOpen}
         >
-          <LottieIcon
-            animationData={locationAnim}
-            size={22}
-            loop={false}
-            autoplay={false}
-            playOnHover
-            className={cn('transition-transform', filtersOpen && 'rotate-180')}
-          />
+          <span className={cn('transition-transform', filtersOpen && 'rotate-180')}>
+            <SearchIcon />
+          </span>
           Фильтры
         </button>
       </div>

@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { useSearchStore } from './search-store'
 import { CITIES, POPULAR_CITIES } from '@/shared/data/cities'
-import LottieIcon from '@/components/ui/LottieIcon'
-import locationAnim from '@/public/lottie/location.json'
+import SearchIcon from '@/components/lottie/SearchIcon'
 
 const CITY_SUGGESTIONS = POPULAR_CITIES.map((name) => ({ name, emoji: '🏙️' }))
 
@@ -113,7 +112,7 @@ export function SearchBarAdvanced({ className }: { className?: string }) {
           type="submit"
           className="flex items-center justify-center gap-2 rounded-xl bg-brand px-8 py-4 font-semibold text-white transition hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-surface"
         >
-          <LottieIcon animationData={locationAnim} size={24} loop={false} autoplay={false} playOnHover />
+          <SearchIcon />
           <span className="hidden md:inline">Найти</span>
         </button>
       </div>

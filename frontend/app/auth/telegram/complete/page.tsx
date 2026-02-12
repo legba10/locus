@@ -4,10 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
 import { useAuthStore } from "@/domains/auth";
-import Loader from "@/components/ui/Loader";
-import LottieIcon from "@/components/ui/LottieIcon";
-import checkAnim from "@/public/lottie/check.json";
-import errorAnim from "@/public/lottie/Error.json";
+import Loader from "@/components/lottie/Loader";
+import TelegramStatus from "@/components/lottie/TelegramStatus";
+import ErrorAnim from "@/components/lottie/ErrorAnim";
 
 function CompleteContent() {
   const router = useRouter();
@@ -80,7 +79,9 @@ function CompleteContent() {
         {status === "success" && (
           <>
             <div className="mx-auto mb-4 w-fit">
-              <LottieIcon animationData={checkAnim} size={56} loop={false} />
+              <div style={{ width: 56, height: 56 }}>
+                <TelegramStatus />
+              </div>
             </div>
             <p className="text-gray-700">{message}</p>
           </>
@@ -88,7 +89,7 @@ function CompleteContent() {
         {status === "error" && (
           <>
             <div className="mx-auto mb-4 w-fit">
-              <LottieIcon animationData={errorAnim} size={56} loop />
+              <ErrorAnim size={56} />
             </div>
             <p className="text-gray-700 mb-6">{message}</p>
             <div className="flex flex-col gap-3 items-center">

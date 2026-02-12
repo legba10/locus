@@ -11,8 +11,7 @@ import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/Li
 import { useAuthStore } from '@/domains/auth'
 import { CITIES } from '@/shared/data/cities'
 import { CityInput } from '@/shared/components/CityInput'
-import LottieIcon from '@/components/ui/LottieIcon'
-import locationAnim from '@/public/lottie/location.json'
+import SearchIcon from '@/components/lottie/SearchIcon'
 
 interface ListingsResponse {
   items: any[]
@@ -309,13 +308,7 @@ export function HomePageV6() {
                       'text-[15px]'
                     )}
                   >
-                    <LottieIcon
-                      animationData={locationAnim}
-                      size={24}
-                      loop={false}
-                      autoplay={false}
-                      playOnHover
-                    />
+                    <SearchIcon />
                     Найти
                   </button>
                 </div>
