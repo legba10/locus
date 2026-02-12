@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
+import { addPendingReminder } from '@/shared/reviews/reviewReminderStorage'
 import { useAuthStore } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
@@ -69,8 +70,11 @@ interface PublicOwnerProfile {
 
 interface RatingSummary {
   avg: number | null
+  /** Честный рейтинг (вес новых, проверенных и длинных отзывов выше) */
+  weightedAvg?: number | null
   count: number
   distribution: Record<number, number>
+  percent?: number | null
 }
 
 export function ListingPageV2({ id }: ListingPageV2Props) {
@@ -100,6 +104,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const [additionalReviews, setAdditionalReviews] = useState<any[]>([])
   const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false)
   const [reviewFilter, setReviewFilter] = useState<'all' | '5' | 'with_text' | 'recent'>('all')
+  const [metricFilter, setMetricFilter] = useState<'all' | 'cleanliness' | 'value' | 'owner' | 'location'>('all')
   const { data: ratingSummaryData } = useFetch<{ ok: boolean; summary: RatingSummary }>(
     ['listing-rating-summary', id],
     `/api/reviews/listing/${encodeURIComponent(id)}/summary`
@@ -207,7 +212,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
       return
     }
     try {
-      const res = await apiFetchJson<{ item?: unknown; conversationId?: string | null }>('/bookings', {
+      const res = await apiFetchJson<{ item?: { id?: string; listingId?: string; checkOut?: string }; conversationId?: string | null }>('/bookings', {
         method: 'POST',
         body: JSON.stringify({
           listingId: item.id,
@@ -216,6 +221,14 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
           guestsCount: data.guests,
         }),
       })
+      const booking = res?.item
+      if (booking?.id && booking?.listingId && booking?.checkOut) {
+        addPendingReminder({
+          bookingId: booking.id,
+          listingId: booking.listingId,
+          checkOut: typeof booking.checkOut === 'string' ? booking.checkOut : new Date(booking.checkOut).toISOString(),
+        })
+      }
       if (res?.conversationId) {
         router.push(`/chat/${res.conversationId}`)
       }
@@ -225,22 +238,41 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   }
 
   const ratingSummary = ratingSummaryData?.summary
-  const ratingAvg = ratingSummary?.avg ?? item.rating ?? null
+  const ratingAvg =
+    ratingSummary?.weightedAvg ?? ratingSummary?.avg ?? item.rating ?? null
   const ratingCount = ratingSummary?.count ?? 0
   const ratingDistribution = ratingSummary?.distribution ?? {}
   const reviewPercent =
-    ratingCount > 0 && ratingDistribution
+    ratingSummary?.percent ??
+    (ratingCount > 0 && ratingDistribution
       ? Math.round((((ratingDistribution[4] ?? 0) + (ratingDistribution[5] ?? 0)) / ratingCount) * 100)
-      : null
+      : null)
 
   const baseReviews = (reviewsData?.items ?? (reviewsData as any)?.data) ?? []
   const allReviews = [...baseReviews, ...additionalReviews]
-  const filteredReviews =
+  const MIN_METRIC_FILTER = 70
+  const byReviewFilter =
     reviewFilter === '5'
       ? allReviews.filter((r: any) => r.rating === 5)
       : reviewFilter === 'with_text'
         ? allReviews.filter((r: any) => r.text && String(r.text).trim())
         : allReviews
+  const filteredReviews =
+    metricFilter === 'all'
+      ? byReviewFilter
+      : byReviewFilter.filter((r: any) => {
+          const sm = r.structuredMetrics
+          if (!sm) return false
+          const v =
+            metricFilter === 'cleanliness'
+              ? sm.cleanliness
+              : metricFilter === 'value'
+                ? sm.value
+                : metricFilter === 'owner'
+                  ? sm.owner
+                  : sm.location
+          return v != null && v >= MIN_METRIC_FILTER
+        })
   const hasMoreReviews = baseReviews.length + additionalReviews.length >= 10 && baseReviews.length + additionalReviews.length < (ratingCount || 0)
   const loadMoreReviews = async () => {
     if (reviewsLoadingMore) return
@@ -377,77 +409,104 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
             <div id="reviews-section" className={cn('bg-white rounded-2xl p-5 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-                <h2 className="text-[18px] font-bold text-[#1C1F26]">Отзывы</h2>
+              {/* Блок 1: заголовок + кнопка */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h2 className="text-[20px] font-bold text-[#1C1F26]">Отзывы</h2>
                 <a
                   href="#review-form"
-                  className="order-first sm:order-none self-start sm:self-center min-h-[44px] px-4 py-2.5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500 md:sticky md:top-20"
+                  className="order-first sm:order-none self-start sm:self-center min-h-[44px] px-5 py-2.5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500 md:sticky md:top-20 shadow-[0_4px_14px_rgba(124,58,237,0.3)]"
                 >
                   Оставить отзыв
                 </a>
               </div>
 
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-4">
-                <span className="text-amber-500 text-[22px] leading-none">★</span>
-                <span className="text-2xl font-bold text-[#1C1F26]">
-                  {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
-                </span>
-                {reviewPercent != null && (
-                  <span className="text-[15px] font-semibold text-violet-600 tabular-nums">{reviewPercent}%</span>
+              {/* Блок 2: общий рейтинг + проценты */}
+              <div className="rounded-xl bg-gradient-to-br from-violet-50 to-white border border-violet-100/80 p-5 mb-6">
+                <p className="text-[13px] text-[#6B7280] mb-1">Общий рейтинг</p>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <span className="text-amber-500 text-[28px] leading-none">★</span>
+                  <span className="text-3xl font-bold text-[#1C1F26]">
+                    {ratingAvg != null ? ratingAvg.toFixed(1) : '—'}
+                  </span>
+                  {reviewPercent != null && (
+                    <span className="text-[16px] font-semibold text-violet-600 tabular-nums">{reviewPercent}% положительных</span>
+                  )}
+                  <span className="text-[14px] text-[#6B7280]">
+                    {ratingCount > 0 ? `на основе ${ratingCount} ${ratingCount === 1 ? 'отзыва' : ratingCount >= 2 && ratingCount <= 4 ? 'отзыва' : 'отзывов'}` : 'Отзывов пока нет'}
+                  </span>
+                </div>
+                {ratingCount > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = ratingDistribution[star] ?? 0
+                      const pct = ratingCount > 0 ? Math.round((count / ratingCount) * 100) : 0
+                      return (
+                        <div key={star} className="flex items-center gap-3">
+                          <span className="w-8 text-[13px] text-[#6B7280]">{star}★</span>
+                          <div className="flex-1 h-3 rounded-full bg-gray-100 overflow-hidden min-w-[60px]">
+                            <div
+                              className="h-full rounded-full bg-violet-400 transition-all duration-300"
+                              style={{ width: `${Math.max(pct, 2)}%` }}
+                            />
+                          </div>
+                          <span className="w-10 text-right text-[13px] text-[#6B7280] tabular-nums">{pct}%</span>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
-                <span className="text-[14px] text-[#6B7280]">
-                  {ratingCount > 0 ? `на основе ${ratingCount} ${ratingCount === 1 ? 'отзыва' : ratingCount >= 2 && ratingCount <= 4 ? 'отзыва' : 'отзывов'}` : 'Отзывов пока нет'}
-                </span>
               </div>
 
-              {ratingCount > 0 && (
-                <div className="mb-6 space-y-2">
-                  {[5, 4, 3, 2, 1].map((star) => {
-                    const count = ratingDistribution[star] ?? 0
-                    const pct = ratingCount > 0 ? Math.round((count / ratingCount) * 100) : 0
-                    return (
-                      <div key={star} className="flex items-center gap-3">
-                        <span className="w-8 text-[13px] text-[#6B7280]">{star}★</span>
-                        <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden min-w-[60px]">
-                          <div
-                            className="h-full rounded-full bg-violet-400 transition-all"
-                            style={{ width: `${Math.max(pct, 2)}%` }}
-                          />
-                        </div>
-                        <span className="w-10 text-right text-[13px] text-[#6B7280] tabular-nums">{pct}%</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
+              {/* Блок 3: график метрик */}
               <div className="mb-6">
                 <ListingMetricsCard listingId={id} />
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                {(['all', '5', 'with_text', 'recent'] as const).map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setReviewFilter(f)}
-                    className={cn(
-                      'min-h-[36px] px-3 rounded-[10px] text-[13px] font-medium transition-colors',
-                      reviewFilter === f
-                        ? 'bg-violet-600 text-white'
-                        : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'
-                    )}
-                  >
-                    {f === 'all' ? 'Все' : f === '5' ? 'Только 5★' : f === 'with_text' ? 'С текстом' : 'Последние'}
-                  </button>
-                ))}
+              {/* Блок 4: фильтры — тип отзывов + по метрикам */}
+              <div className="space-y-3 mb-5">
+                <p className="text-[13px] font-medium text-[#6B7280]">Сортировка и фильтры</p>
+                <div className="flex flex-wrap gap-2">
+                  {(['all', '5', 'with_text', 'recent'] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setReviewFilter(f)}
+                      className={cn(
+                        'min-h-[36px] px-3 rounded-[10px] text-[13px] font-medium transition-colors',
+                        reviewFilter === f
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'
+                      )}
+                    >
+                      {f === 'all' ? 'Все' : f === '5' ? 'Только 5★' : f === 'with_text' ? 'С текстом' : 'Последние'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(['all', 'cleanliness', 'value', 'owner', 'location'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMetricFilter(m)}
+                      className={cn(
+                        'min-h-[36px] px-3 rounded-[10px] text-[13px] font-medium transition-colors',
+                        metricFilter === m
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-gray-50 text-[#6B7280] hover:bg-gray-100 border border-gray-200'
+                      )}
+                    >
+                      {m === 'all' ? 'По метрикам: все' : m === 'cleanliness' ? 'Чистота' : m === 'value' ? 'Цена/качество' : m === 'owner' ? 'Хозяин' : 'Район'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="space-y-4 mb-6">
+              <p className="text-[16px] font-bold text-[#1C1F26] mb-4">Отзывы пользователей</p>
+              <div className="space-y-5 mb-6">
                 {isReviewsLoading ? (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 animate-pulse">
+                      <div key={i} className="rounded-xl border border-gray-100 bg-gray-50/80 p-5 animate-pulse">
                         <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
                         <div className="h-3 w-full bg-gray-200 rounded mb-2" />
                         <div className="h-3 w-2/3 bg-gray-200 rounded" />
@@ -455,7 +514,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                     ))}
                   </div>
                 ) : filteredReviews.length === 0 ? (
-                  <p className="text-[14px] text-[#6B7280] py-2">Отзывов пока нет. Будьте первым.</p>
+                  <p className="text-[14px] text-[#6B7280] py-4">Отзывов пока нет. Будьте первым.</p>
                 ) : (
                   filteredReviews.map((r: any) => <ReviewCard key={r.id} review={r} />)
                 )}

@@ -2,25 +2,15 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
-import { pickRandomMetrics, REVIEW_METRICS_COUNT, type ReviewMetricDefinition } from '@/shared/reviews/metricsPool'
-
-const LottiePlayer = dynamic(() => import('lottie-react').then((m) => m.default), { ssr: false })
+import { getShuffledQuestionMetrics, getQuestionPhrase, type ReviewMetricDefinition } from '@/shared/reviews/metricsPool'
+import { incrementReviewSubmittedCount, getReviewSubmittedCount } from '@/shared/reviews/reviewReminderStorage'
 
 const STORAGE_KEY = (listingId: string) => `review_draft_${listingId}`
+const TOTAL_STEPS = 5
 
-function useLowPerf(): boolean {
-  const [low, setLow] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const cores = navigator.hardwareConcurrency ?? 4
-    setLow(reduced || cores < 2)
-  }, [])
-  return low
-}
+export type EmotionValue = 'positive' | 'neutral' | 'negative'
 
 function vibrate(): void {
   if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
@@ -37,11 +27,7 @@ export function ReviewWizard({
   userAlreadyReviewed?: boolean
   ownerId?: string
 }) {
-  const lowPerf = useLowPerf()
-  const metricsDefs = useMemo<ReviewMetricDefinition[]>(
-    () => pickRandomMetrics(REVIEW_METRICS_COUNT),
-    []
-  )
+  const metricsDefs = useMemo<ReviewMetricDefinition[]>(() => getShuffledQuestionMetrics(), [])
 
   const [step, setStep] = useState(1)
   const [stars, setStars] = useState(5)
@@ -49,43 +35,43 @@ export function ReviewWizard({
   const [metrics, setMetrics] = useState<Record<string, number>>(() =>
     Object.fromEntries(metricsDefs.map((m) => [m.key, 75]))
   )
+  const [emotion, setEmotion] = useState<EmotionValue | null>(null)
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [submittedPercent, setSubmittedPercent] = useState<number | null>(null)
   const [submittedStars, setSubmittedStars] = useState<number | null>(null)
-  const [robotData, setRobotData] = useState<object | null>(null)
-
-  useEffect(() => {
-    fetch('/lottie/robot.json')
-      .then((r) => r.json())
-      .then(setRobotData)
-      .catch(() => setRobotData(null))
-  }, [])
 
   const currentMetric = metricsDefs[metricIndex]
   const isLastMetric = metricIndex >= metricsDefs.length - 1
 
   const saveDraft = useCallback(() => {
     try {
-      const payload = { step, stars, metrics, comment }
+      const payload = { step, stars, metrics, emotion, comment }
       localStorage.setItem(STORAGE_KEY(listingId), JSON.stringify(payload))
     } catch {
       // ignore
     }
-  }, [listingId, step, stars, metrics, comment])
+  }, [listingId, step, stars, metrics, emotion, comment])
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY(listingId))
       if (!raw) return
-      const draft = JSON.parse(raw) as { step?: number; stars?: number; metrics?: Record<string, number>; comment?: string }
-      if (draft.step != null && draft.step >= 1 && draft.step <= 3) setStep(draft.step)
+      const draft = JSON.parse(raw) as {
+        step?: number
+        stars?: number
+        metrics?: Record<string, number>
+        emotion?: EmotionValue
+        comment?: string
+      }
+      if (draft.step != null && draft.step >= 1 && draft.step <= TOTAL_STEPS) setStep(draft.step)
       if (draft.stars != null && draft.stars >= 1 && draft.stars <= 5) setStars(draft.stars)
       if (draft.metrics && typeof draft.metrics === 'object') {
         setMetrics((prev) => ({ ...prev, ...draft.metrics }))
       }
+      if (draft.emotion && ['positive', 'neutral', 'negative'].includes(draft.emotion)) setEmotion(draft.emotion as EmotionValue)
       if (typeof draft.comment === 'string') setComment(draft.comment)
     } catch {
       // ignore
@@ -112,6 +98,7 @@ export function ReviewWizard({
       const vals = Object.values(metrics)
       const avgPercent = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
       const rating5 = Math.max(1, Math.min(5, Math.round((avgPercent / 100) * 5) || 1))
+      const tags: string[] = emotion ? [emotion] : []
       const res = await apiFetchJson<{ ok: boolean; reviewId?: string; summary?: { avg?: number; count?: number; distribution?: Record<number, number> } }>('/reviews', {
         method: 'POST',
         body: JSON.stringify({
@@ -119,10 +106,12 @@ export function ReviewWizard({
           rating: rating5,
           text: comment.trim() || null,
           metrics: Object.entries(metrics).map(([metricKey, value]) => ({ metricKey, value })),
+          tags,
         }),
       })
       setSubmittedPercent(avgPercent)
       setSubmittedStars(rating5)
+      incrementReviewSubmittedCount()
       setSuccess(true)
       try {
         localStorage.removeItem(STORAGE_KEY(listingId))
@@ -152,12 +141,20 @@ export function ReviewWizard({
   if (success) {
     const avg = submittedStars ?? 0
     const pct = submittedPercent ?? 0
+    const helpedCount = getReviewSubmittedCount()
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-[0_6px_24px_rgba(0,0,0,0.08)]">
-        <p className="text-[16px] font-semibold text-emerald-800 mb-1">Спасибо! Ваш отзыв опубликован.</p>
-        <p className="text-[15px] text-emerald-700 mb-4">
+        <p className="text-[16px] font-semibold text-emerald-800 mb-1">Спасибо! Отзыв помогает другим.</p>
+        <p className="text-[15px] text-emerald-700 mb-1">
           Ваш рейтинг: <strong>{pct}%</strong> → <strong>{avg.toFixed(1)}</strong>
         </p>
+        <p className="text-[14px] font-medium text-emerald-700 mb-1">+5 к рейтингу пользователя</p>
+        {helpedCount > 0 && (
+          <p className="text-[13px] text-emerald-600 mb-4">
+            Вы помогли {helpedCount} {helpedCount === 1 ? 'человеку' : 'людям'} выбрать жильё.
+          </p>
+        )}
+        {helpedCount === 0 && <div className="mb-4" />}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href={`/listings/${listingId}`}
@@ -187,20 +184,14 @@ export function ReviewWizard({
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[18px] font-bold text-[#1C1F26]">Оставить отзыв</h3>
-        <span className="text-[13px] text-[#6B7280] tabular-nums">Шаг {step} / 3</span>
+        <span className="text-[13px] text-[#6B7280] tabular-nums">Шаг {step} / {TOTAL_STEPS}</span>
       </div>
       <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-5">
         <div
           className="h-full rounded-full bg-violet-500 transition-all duration-300"
-          style={{ width: `${(step / 3) * 100}%` }}
+          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
         />
       </div>
-
-      {!lowPerf && step <= 2 && robotData && (
-        <div className="absolute top-4 right-4 w-14 h-14 pointer-events-none opacity-80">
-          <LottiePlayer animationData={robotData} loop style={{ width: 56, height: 56 }} />
-        </div>
-      )}
 
       {step === 1 && (
         <div className="relative">
@@ -241,9 +232,9 @@ export function ReviewWizard({
       {step === 2 && currentMetric && (
         <div className="relative">
           <p className="text-[13px] text-[#6B7280] mb-1">
-            Метрики ({metricIndex + 1} из {metricsDefs.length})
+            Вопросы ({metricIndex + 1} из {metricsDefs.length})
           </p>
-          <p className="text-[15px] font-semibold text-[#1C1F26] mb-1">{currentMetric.label}</p>
+          <p className="text-[15px] font-semibold text-[#1C1F26] mb-1">{getQuestionPhrase(currentMetric.key)}</p>
           <p className="text-[13px] text-[#6B7280] mb-4">{currentMetric.hint}</p>
           <div className="mb-5">
             <input
@@ -286,6 +277,55 @@ export function ReviewWizard({
 
       {step === 3 && (
         <div className="relative">
+          <p className="text-[15px] font-semibold text-[#1C1F26] mb-3">Как общее впечатление?</p>
+          <div className="flex gap-4 justify-center mb-6">
+            {(
+              [
+                { value: 'positive' as EmotionValue, emoji: '🙂', label: 'Отлично' },
+                { value: 'neutral' as EmotionValue, emoji: '😐', label: 'Нормально' },
+                { value: 'negative' as EmotionValue, emoji: '😡', label: 'Плохо' },
+              ] as const
+            ).map(({ value, emoji, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  vibrate()
+                  setEmotion(value)
+                }}
+                className={cn(
+                  'flex flex-col items-center gap-1 min-h-[80px] px-6 rounded-[14px] border-2 transition-all',
+                  emotion === value
+                    ? 'border-violet-500 bg-violet-50 text-violet-700'
+                    : 'border-gray-200 bg-white text-[#6B7280] hover:border-violet-200'
+                )}
+              >
+                <span className="text-[28px]">{emoji}</span>
+                <span className="text-[13px] font-medium">{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="min-h-[44px] flex-1 rounded-[14px] border border-gray-200 bg-white text-[14px] font-medium hover:bg-gray-50"
+            >
+              Назад
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              className="min-h-[44px] flex-1 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
+            >
+              Дальше
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="relative">
           <p className="text-[13px] font-semibold text-[#1C1F26] mb-2">Комментарий (необязательно)</p>
           <textarea
             value={comment}
@@ -294,11 +334,38 @@ export function ReviewWizard({
             placeholder="Что понравилось / что улучшить"
             className="w-full rounded-[14px] px-4 py-3 border border-gray-200 text-[14px] focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400"
           />
-          {error && <p className="mt-2 text-[13px] text-red-600">{error}</p>}
           <div className="flex flex-col-reverse sm:flex-row gap-2 mt-4">
             <button
               type="button"
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
+              className="min-h-[44px] flex-1 rounded-[14px] border border-gray-200 bg-white text-[14px] font-medium hover:bg-gray-50"
+            >
+              Назад
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(5)}
+              className="min-h-[44px] flex-1 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
+            >
+              Дальше
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="relative">
+          <p className="text-[15px] font-semibold text-[#1C1F26] mb-3">Подтверждение</p>
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 mb-4 text-[14px] text-[#4B5563] space-y-1">
+            <p>Оценка: <strong className="text-amber-600">{stars} ★</strong></p>
+            <p>Впечатление: {emotion === 'positive' ? '🙂 Отлично' : emotion === 'neutral' ? '😐 Нормально' : emotion === 'negative' ? '😡 Плохо' : '—'}</p>
+            {comment.trim() && <p>Комментарий: «{comment.trim().slice(0, 80)}{comment.trim().length > 80 ? '…' : ''}»</p>}
+          </div>
+          {error && <p className="mb-2 text-[13px] text-red-600">{error}</p>}
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={() => setStep(4)}
               className="min-h-[44px] flex-1 rounded-[14px] border border-gray-200 bg-white text-[14px] font-medium hover:bg-gray-50"
             >
               Назад
