@@ -100,9 +100,7 @@ function CompleteContent() {
                   onClick={() => {
                     setStatus("loading");
                     setMessage("Повторяем попытку...");
-                    // Re-run by simulating effect re-entry:
-                    // easiest is full reload keeping token in URL
-                    window.location.reload();
+                    router.replace(`/auth/telegram/complete?token=${encodeURIComponent(token)}`);
                   }}
                 >
                   Повторить

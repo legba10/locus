@@ -7,6 +7,7 @@ import type { UserContract } from "@/shared/contracts";
 import { AuthApiError, me as fetchMe } from "./auth-api";
 import { supabase } from "@/shared/supabase-client";
 import { clearTokens, getAccessToken, setTokens } from "@/shared/auth/token-storage";
+import { getApiUrl } from "@/shared/config/api";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
 import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
@@ -231,73 +232,54 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /** TZ-3: проверка сессии ОДИН РАЗ. Без refresh в цикле, без ретраев. */
       initialize: async () => {
-        if (get().isInitialized) {
-          return;
-        }
-        const prevUser = get().user;
+        if (get().isInitialized) return;
         set({ isLoading: true, error: null });
 
-        const AUTH_TIMEOUT_MS = 5000;
-        const MAX_ATTEMPTS = 3;
-
-        const tryGetSession = async (): Promise<void> => {
-          try {
-            const { data } = await supabase.auth.getSession();
-            if (data?.session?.access_token && data?.session?.refresh_token) {
-              setTokens(data.session.access_token, data.session.refresh_token);
-            }
-          } catch {
-            /* ignore */
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data?.session?.access_token && data?.session?.refresh_token) {
+            setTokens(data.session.access_token, data.session.refresh_token);
           }
-        };
+        } catch {
+          /* ignore */
+        }
 
-        const runFetchMe = async (): Promise<MeResponse> => {
-          const mePromise = fetchMe();
-          const meTimeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("fetchMe timeout")), AUTH_TIMEOUT_MS)
-          );
-          return Promise.race([mePromise, meTimeout]);
-        };
+        try {
+          const url = getApiUrl("/api/auth/me");
+          const token = getAccessToken();
+          const res = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
 
-        let lastError: unknown;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          try {
-            await tryGetSession();
-            const backendResponse = await runFetchMe();
-            const meUser = userFromBackend(backendResponse);
-            const nextToken = getAccessToken();
+          if (res.ok) {
+            const data = (await res.json()) as MeResponse;
+            const meUser = userFromBackend(data);
             set({
               user: meUser,
-              accessToken: nextToken ?? null,
+              accessToken: getAccessToken() ?? null,
               isLoading: false,
               isInitialized: true,
             });
             return;
-          } catch (e) {
-            lastError = e;
-            // TZ-FIX-FINAL: при 401 не ретраим — один refresh уже сделан в apiFetchRaw, избегаем цикла
-            if (e instanceof AuthApiError && e.status === 401) break;
-            if (attempt < MAX_ATTEMPTS) {
-              await new Promise((r) => setTimeout(r, 800));
-            }
           }
+          if (res.status === 401) {
+            clearTokens();
+          }
+        } catch (e) {
+          logger.error("Auth", "checkSession error", e);
         }
 
-        const isUnauthed = lastError instanceof AuthApiError && lastError.status === 401;
-        if (!isUnauthed) {
-          logger.error("Auth", "initialize error", lastError);
-        }
         set({
-          user: isUnauthed ? null : prevUser ?? null,
-          accessToken: isUnauthed ? null : get().accessToken,
+          user: null,
+          accessToken: null,
           isLoading: false,
           isInitialized: true,
-          error: isUnauthed ? null : null,
+          error: null,
         });
-        if (isUnauthed) {
-          clearTokens();
-        }
       },
 
       clearError: () => set({ error: null }),

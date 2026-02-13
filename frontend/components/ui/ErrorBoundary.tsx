@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 type Props = {
   children: React.ReactNode;
@@ -42,19 +43,18 @@ export class ErrorBoundary extends React.Component<Props, State> {
         >
           <h1 className="text-xl font-semibold">Что-то пошло не так</h1>
           <p className="text-[var(--text-muted)] max-w-md">
-            Произошла ошибка. Попробуйте перезагрузить страницу.
+            Произошла ошибка. Вернитесь на главную.
           </p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded-lg font-medium transition-colors"
+          <Link
+            href="/"
+            className="px-4 py-2 rounded-lg font-medium transition-colors inline-block"
             style={{
               background: "var(--primary)",
               color: "var(--primary-contrast)",
             }}
           >
-            Перезагрузить
-          </button>
+            На главную
+          </Link>
         </div>
       );
     }

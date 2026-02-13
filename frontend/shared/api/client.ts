@@ -12,7 +12,7 @@
 
 import { getApiUrl } from "@/shared/config/api";
 import { getApiErrorMessage } from "@/shared/utils/apiError";
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/shared/auth/token-storage";
+import { getAccessToken, clearTokens } from "@/shared/auth/token-storage";
 
 /**
  * Normalize path to ensure it starts with /api/
@@ -32,27 +32,26 @@ function normalizePath(path: string): string {
   return p;
 }
 
-/** TZ-FIX-FINAL: один одновременный refresh, без цикла 401 → refresh → 400 */
-let isRefreshing = false;
-let refreshPromise: Promise<boolean> | null = null;
+let on401Handler: (() => void) | null = null;
+/** TZ-3: регистрация обработчика 401 (logout). Без авто-refresh — проверка сессии один раз при загрузке. */
+export function setOn401(handler: () => void) {
+  on401Handler = handler;
+}
 
 /**
- * Low-level fetch — returns raw Response
- * Use for cases where you need status/headers (like auth/me)
+ * Low-level fetch — returns raw Response.
+ * TZ-3: при 401 НЕ вызываем refresh (избегаем auth-loop). Только clearTokens + on401Handler.
  */
 export async function apiFetchRaw(path: string, options?: RequestInit): Promise<Response> {
   const fullPath = normalizePath(path);
   const url = fullPath.startsWith("http") ? fullPath : getApiUrl(fullPath);
-  
+
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string>),
   };
-  
-  // Set Content-Type for JSON (not for FormData)
   if (!(options?.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
-
   const accessToken = getAccessToken();
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
@@ -62,31 +61,7 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
     headers,
   });
 
-  if (response.status === 401 && !fullPath.includes("/auth/refresh")) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      refreshPromise = tryRefreshToken().then((r) => {
-        isRefreshing = false;
-        refreshPromise = null;
-        return r;
-      });
-    }
-    const refreshed = refreshPromise ? await refreshPromise : false;
-    if (refreshed) {
-      const retryHeaders: Record<string, string> = {
-        ...(options?.headers as Record<string, string>),
-      };
-      if (!(options?.body instanceof FormData)) {
-        retryHeaders["Content-Type"] = "application/json";
-      }
-      const nextToken = getAccessToken();
-      if (nextToken) retryHeaders["Authorization"] = `Bearer ${nextToken}`;
-      return fetch(url, {
-        credentials: "include",
-        ...options,
-        headers: retryHeaders,
-      });
-    }
+  if (response.status === 401) {
     clearTokens();
     if (typeof window !== "undefined" && on401Handler) {
       on401Handler();
@@ -94,45 +69,6 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
   }
 
   return response;
-}
-
-let on401Handler: (() => void) | null = null;
-/** TZ-2: регистрация обработчика 401 (logout + redirect). Вызвать из корня приложения. */
-export function setOn401(handler: () => void) {
-  on401Handler = handler;
-}
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-
-  try {
-    const refreshUrl = getApiUrl("/api/auth/refresh");
-    const res = await fetch(refreshUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      // If refresh token exists in storage → legacy flow.
-      // If not → cookie-based session (httpOnly refresh cookie).
-      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
-    });
-
-    if (!res.ok) {
-      if (refreshToken) clearTokens();
-      return false;
-    }
-
-    const payload = (await res.json()) as { access_token?: string; refresh_token?: string };
-    // For legacy storage-based auth, keep local tokens updated.
-    if (refreshToken && payload.access_token && payload.refresh_token) {
-      setTokens(payload.access_token, payload.refresh_token);
-    }
-    // For cookie-based auth we rely on Set-Cookie from backend/proxy.
-    return true;
-  } catch {
-    if (refreshToken) clearTokens();
-  }
-
-  return false;
 }
 
 /**

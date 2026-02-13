@@ -4,12 +4,30 @@
  * No hardcoded URLs. Routes use prefix /api (e.g. /api/listings).
  */
 
+import { getApiUrl } from "@/shared/config/api";
 import { apiFetch, apiFetchJson } from "@/shared/utils/apiFetch";
 
 /**
  * Paths are relative; apiFetch adds /api prefix and NEXT_PUBLIC_API_URL base.
  */
 export { apiFetch, apiFetchJson };
+
+/** TZ-3: простой fetch без авто-refresh. При 401 возвращает null (нет цикла). */
+export async function api(
+  path: string,
+  options: RequestInit = {}
+): Promise<unknown | null> {
+  const url = path.startsWith("http") ? path : getApiUrl(path.startsWith("/") ? path : `/${path}`);
+  const res = await fetch(url, { credentials: "include", ...options });
+  if (res.status === 401) return null;
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
 
 // ——— Typed helpers (all go to backend GET/POST /api/listings, GET /api/auth/me)
 
