@@ -124,7 +124,7 @@ function ListingCardComponent({
       }}
     >
       <article
-        className={cn('listing-card bg-[var(--card)] rounded-xl overflow-hidden flex flex-col h-full min-h-[320px]', highlight && 'listing-card-glow')}
+        className={cn('listing-card bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden flex flex-col h-full min-h-[320px]', highlight && 'listing-card-glow')}
       >
         {/* TZ-5: aspect 4/3, первое фото eager */}
         <div

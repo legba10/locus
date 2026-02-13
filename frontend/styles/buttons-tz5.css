@@ -80,22 +80,22 @@
   font-size: var(--font-size-lg, 18px);
 }
 
-/* Primary + ТЗ-10: единый .btnPrimary — 52px, radius 14px, gradient 135deg */
+/* Primary + TZ-7: из палитры --accent, hover:opacity-90 */
 .btn--primary,
 .btnPrimary {
   height: 52px;
   padding: 0 28px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #7b61ff, #5b8cff);
+  background: var(--accent);
   color: #fff;
   font-weight: 600;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.2s ease;
   border: none;
 }
 .btn--primary:hover,
 .btnPrimary:hover {
+  opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(123, 97, 255, 0.35);
 }
 .btn--primary:active,
 .btnPrimary:active {

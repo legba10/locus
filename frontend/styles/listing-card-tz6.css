@@ -53,11 +53,12 @@
   }
 }
 
-/* TZ-5: изображение — aspect-ratio 4/3, object-fit cover */
+/* TZ-5/TZ-7: изображение — aspect-ratio 4/3, object-fit cover, контейнер до 260px */
 .listing-card__image-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
+  max-height: 260px;
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 18px 18px 0 0;

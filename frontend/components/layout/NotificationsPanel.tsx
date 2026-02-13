@@ -70,14 +70,14 @@ export function NotificationsPanel({
       {/* TZ-4: dropdown right 0, top 56px, z-index 200 */}
       <div
         className={cn(
-          'notifications-panel flex flex-col border border-[var(--border)] bg-[var(--bg-modal)] shadow-[var(--shadow-level-2)]',
+          'notifications-panel flex flex-col border border-[var(--border)] bg-[var(--card)] text-[var(--text)] shadow-[var(--shadow-level-2)]',
           isMobile
             ? 'fixed left-4 right-4 top-[72px] w-[calc(100%-32px)] max-h-[420px] overflow-hidden rounded-[14px]'
             : 'absolute right-0 top-[56px] w-[320px] max-h-[420px] overflow-hidden rounded-[14px]'
         )}
         style={{ zIndex: 'var(--z-dropdown)' }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-card)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--card)]">
           <span className="text-[14px] font-semibold text-[var(--text-main)]">Уведомления</span>
           {unreadCount > 0 && (
             <button type="button" onClick={onMarkAllRead} className="text-[12px] text-[var(--accent)] hover:opacity-90">
@@ -131,7 +131,7 @@ export function NotificationsPanel({
             </>
           )}
         </div>
-        <div className="border-t border-[var(--border)] px-4 py-2 bg-[var(--bg-card)]">
+        <div className="border-t border-[var(--border)] px-4 py-2 bg-[var(--card)]">
           <button
             type="button"
             disabled={pushStatus === 'loading' || !('Notification' in (typeof window !== 'undefined' ? window : {}))}

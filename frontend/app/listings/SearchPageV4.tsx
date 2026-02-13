@@ -420,9 +420,9 @@ export function SearchPageV4() {
             {!isLoading && sortedListings.length === 0 && (
               <div className={cn(
                 'text-center py-16',
-                'bg-white/[0.75] backdrop-blur-[22px]',
+                'bg-[var(--card)] backdrop-blur-[22px]',
                 'rounded-[20px]',
-                'border border-white/60',
+                'border border-[var(--border)]',
                 'shadow-[0_20px_60px_rgba(0,0,0,0.12)]'
               )}>
                 <div className="w-20 h-20 rounded-full bg-[var(--bg-glass)] flex items-center justify-center mx-auto mb-4">

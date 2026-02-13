@@ -223,13 +223,13 @@
 }
 
 .search-hero-submit-tz7-compact {
-  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  background: var(--accent);
   color: #fff;
 }
 
 .search-hero-ai-tz7-compact:hover,
 .search-hero-submit-tz7-compact:hover {
-  opacity: 0.95;
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 

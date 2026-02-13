@@ -9,13 +9,14 @@ body {
   color: var(--text);
 }
 
-/* Fallback (SSR / до применения темы) — светлая тема. */
+/* TZ-7: единый слой токенов — без засветов и серых блоков */
 :root {
   --bg: #ffffff;
-  --card: #f6f7fb;
+  --card: #f7f7f7;
   --text: #0f172a;
   --sub: #64748b;
-  --border: #e6e8ef;
+  --border: #e5e7eb;
+  --accent: #2563eb;
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
@@ -33,8 +34,7 @@ body {
 
   --border-main: #e5e7eb;
 
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
+  --accent-hover: #1d4ed8;
   --accent-gradient: linear-gradient(to right, #7c3aed, #4f46e5);
   --button-primary: linear-gradient(to right, #7c3aed, #4f46e5);
 
@@ -128,18 +128,19 @@ body {
   --danger: #dc2626;
 }
 
-/* TZ-4: dark theme — единые токены без смешения */
+/* TZ-7: dark theme — без серых блоков, единый --card */
 :root[data-theme="dark"],
 .dark {
-  --bg: #0b0f1a;
+  --bg: #0b0f14;
   --bgSecondary: #111827;
-  --card: #0f172a;
+  --card: #11161c;
   --border: #1f2937;
+  --text: #e5e7eb;
   --surface-light: #111827;
-  --text: #ffffff;
   --textSecondary: #9ca3af;
   --sub: #9ca3af;
   --border-main: rgba(255, 255, 255, 0.08);
+  --accent: #3b82f6;
   --accent1: #8b5cf6;
   --accent2: #6366f1;
   --primary: #8b5cf6;

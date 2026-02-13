@@ -127,16 +127,16 @@ export function ListingPage({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       {/* Breadcrumbs */}
-      <nav className="text-sm text-gray-500">
-        <Link href="/" className="hover:text-gray-700">Главная</Link>
+      <nav className="text-sm text-[var(--text)]">
+        <Link href="/" className="hover:opacity-90">Главная</Link>
         {' / '}
-        <Link href="/listings" className="hover:text-gray-700">Поиск</Link>
+        <Link href="/listings" className="hover:opacity-90">Поиск</Link>
         {' / '}
-        <span className="text-gray-900">{item.city}</span>
+        <span className="text-[var(--text)]">{item.city}</span>
       </nav>
 
       {/* Title */}
-      <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>
+      <h1 className="text-2xl font-bold text-[var(--text)]">{item.title}</h1>
 
       {/* BLOCK 1: Decision (must be visible without scroll) */}
       {decision && (
@@ -218,12 +218,12 @@ export function ListingPage({ id }: { id: string }) {
               </div>
             </div>
 
-            <button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-3 rounded-xl font-medium hover:opacity-95 transition">
+            <button className="w-full bg-[var(--accent)] text-white py-3 rounded-xl font-medium hover:opacity-90 transition">
               Забронировать
             </button>
 
             {item.beds && (
-              <p className="text-center text-xs text-gray-400 mt-3">
+              <p className="text-center text-xs text-[var(--text)] mt-3">
                 {item.rooms} комн. • {item.beds} спальн. • {item.bathrooms} санузел
               </p>
             )}

@@ -825,6 +825,7 @@ body.modal-open {
 
 /* ТЗ-2 п.7: Sidebar — overlay обязателен, панель solid elevated */
 /* TZ-5: sidebar desktop 360px, mobile 100% (или 320px slide-in) */
+/* TZ-7: бургер-меню — непрозрачный фон, без засвета */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
@@ -833,11 +834,13 @@ body.modal-open {
   height: 100vh;
   width: 100%;
   max-width: 320px;
-  background: var(--surface-primary);
-  color: var(--text-primary);
+  background: var(--card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: var(--text);
   border-top-right-radius: var(--radius-lg, 20px);
   border-bottom-right-radius: var(--radius-lg, 20px);
-  border-right: 1px solid var(--border-main);
+  border-right: 1px solid var(--border);
   box-shadow: var(--shadow-1);
   z-index: 10050;
   overflow: hidden;
@@ -1343,13 +1346,13 @@ body.modal-open {
   box-shadow: 0 0 25px rgba(120, 150, 255, 0.3);
 }
 
-/* Burger/sidebar — ТЗ-2: solid elevated, без прозрачности */
+/* Burger/sidebar — TZ-7: единый --card, без засвета */
 [data-theme="dark"] .sidebar,
 .dark .sidebar,
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: var(--bg-elevated) !important;
-  border-right: 1px solid var(--border-main);
+  background: var(--card) !important;
+  border-right: 1px solid var(--border);
 }
 
 /* Stars */
@@ -1923,12 +1926,12 @@ select,
 }
 
 .drawer.mobile-menu {
-  background: var(--bg-elevated);
+  background: var(--card);
 }
 
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: var(--bg-elevated);
+  background: var(--card);
 }
 
 .drawer.mobile-menu .menu .menu-item-btn {
