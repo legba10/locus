@@ -11,8 +11,8 @@ import '../styles/globals.css'
 const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewReminderPopup').then((m) => ({ default: m.ReviewReminderPopup })), { ssr: false })
 
 export const metadata: Metadata = {
-  title: 'LOCUS — Поиск жилья',
-  description: 'LOCUS помогает найти жильё и объясняет, почему оно вам подходит',
+  title: 'LOCUS — AI поиск жилья',
+  description: 'Подбор жилья с AI',
   manifest: '/manifest.json',
   icons: {
     icon: [

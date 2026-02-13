@@ -262,7 +262,7 @@ export function HomePageV6() {
   return (
     <div className="min-h-screen font-sans antialiased bg-[var(--bg)]">
       {/* ТЗ-5: Hero + Search = единый стеклянный модуль; hero z-1, search glass z-2 */}
-      <section className="hero-and-search-tz5 hero-tz2" aria-label="Главный экран и поиск">
+      <section className="hero-and-search-tz5 hero-tz2 hero" aria-label="Главный экран и поиск">
         <Hero />
         <div className="market-container px-4 pb-6 md:pb-8">
           <div id="search" className="search-glass-tz5 filterCard -mt-2 md:-mt-4">

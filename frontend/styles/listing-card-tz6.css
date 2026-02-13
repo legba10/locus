@@ -3,39 +3,43 @@
  * цена акцент, hover живой, mobile без ломаний.
  */
 
-/* ТЗ-6: карточка — border-radius 20px, overflow hidden; фон и тени по теме */
+/* ТЗ-10: единая карточка .card — 18px radius, hover -4px, одна тень */
+.card,
 .listing-card {
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
+.card:hover,
 .listing-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
+.card:active,
 .listing-card:active {
   transform: translateY(0);
 }
 
+[data-theme="dark"] .card,
 [data-theme="dark"] .listing-card,
+.dark .card,
 .dark .listing-card {
-  background: rgba(30, 30, 50, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
-
+[data-theme="dark"] .card:hover,
 [data-theme="dark"] .listing-card:hover,
+.dark .card:hover,
 .dark .listing-card:hover {
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -57,7 +61,7 @@
   min-height: 0;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 20px 20px 0 0;
+  border-radius: 18px 18px 0 0;
   background: var(--color-surface-2, #1a1a22);
   -webkit-user-select: none;
   user-select: none;

@@ -80,21 +80,34 @@
   font-size: var(--font-size-lg, 18px);
 }
 
-/* Primary */
-.btn--primary {
-  background: linear-gradient(to right, #7c3aed, #4f46e5);
+/* Primary + ТЗ-10: единый .btnPrimary — 52px, radius 14px, gradient 135deg */
+.btn--primary,
+.btnPrimary {
+  height: 52px;
+  padding: 0 28px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #7b61ff, #5b8cff);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
-  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: none;
 }
-
-.btn--primary:hover {
-  filter: brightness(0.98);
-  transform: translateY(-1px);
+.btn--primary:hover,
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(123, 97, 255, 0.35);
 }
-
-.btn--primary:active {
-  transform: translateY(1px);
+.btn--primary:active,
+.btnPrimary:active {
+  transform: translateY(0);
+}
+@media (max-width: 767px) {
+  .btnPrimary,
+  .btn--primary {
+    min-height: 48px;
+    height: 48px;
+    padding: 0 16px;
+  }
 }
 
 /* Secondary */

@@ -51,10 +51,49 @@ html {
   scroll-behavior: smooth;
 }
 
-/* ТЗ-1 п.5: фон — var(--bg-main) */
+/* ТЗ-1 п.5: фон — var(--bg-main). ТЗ-10: плавное переключение темы */
 body {
   background: var(--bg-main);
   color: var(--text-primary);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ТЗ-10: skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+[data-theme="dark"] .skeleton,
+.dark .skeleton {
+  background: linear-gradient(90deg, #2a2a3a 25%, #353548 50%, #2a2a3a 75%);
+  background-size: 200% 100%;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ТЗ-10: mobile bottom action bar (карточка/страница объявления) */
+.mobileActionBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+@media (min-width: 768px) {
+  .mobileActionBar {
+    position: static;
+    padding: 16px;
+    border-top: none;
+    border-radius: 0 0 18px 18px;
+  }
 }
 
 /* Стили для option элементов в select - закругленные углы */

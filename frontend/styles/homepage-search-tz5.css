@@ -3,30 +3,48 @@
  * Без изменения логики. Только UI.
  */
 
-/* Единый модуль: hero фон на обёртке. ТЗ-9: overlay для контраста */
-.hero-and-search-tz5 {
+/* ТЗ-10: Hero — живой фон с глубиной (radial + linear), ::after blur */
+.hero-and-search-tz5.hero {
   position: relative;
   background: var(--hero-light);
-  transition: background 0.2s ease;
+  transition: background 0.25s ease;
+}
+[data-theme="dark"] .hero-and-search-tz5.hero,
+.dark .hero-and-search-tz5.hero {
+  background:
+    radial-gradient(1200px 600px at 50% -200px, #6c5cff22, transparent),
+    linear-gradient(180deg, #0b1020, #0e1428);
 }
 .hero-and-search-tz5::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-and-search-tz5::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   pointer-events: none;
   z-index: 0;
 }
 [data-theme="light"] .hero-and-search-tz5::before {
-  opacity: 0.15;
+  opacity: 0.12;
 }
-[data-theme="dark"] .hero-and-search-tz5,
-.dark .hero-and-search-tz5 {
-  background: linear-gradient(180deg, #0b1020 0%, #020617 100%);
+[data-theme="light"] .hero-and-search-tz5::after {
+  opacity: 0;
 }
 [data-theme="dark"] .hero-and-search-tz5::before,
 .dark .hero-and-search-tz5::before {
-  opacity: 0.4;
+  opacity: 0.35;
+}
+[data-theme="dark"] .hero-and-search-tz5::after,
+.dark .hero-and-search-tz5::after {
+  opacity: 0.15;
 }
 
 /* Hero content — без фона (фон на .hero-and-search-tz5) */
@@ -35,17 +53,17 @@
   z-index: 1;
 }
 
-/* ТЗ-9: фильтр на главной — живой блок (filterCard), не серый мёртвый */
+/* ТЗ-10: filterCard — glass-panel, border-radius 22px, blur 24px */
 .filterCard,
 .search-glass-tz5 {
   position: relative;
   z-index: 2;
   max-width: 980px;
   margin: 0 auto;
-  border-radius: 24px;
+  border-radius: 22px;
   padding: 28px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 [data-theme="dark"] .filterCard,
 [data-theme="dark"] .search-glass-tz5,
@@ -60,7 +78,7 @@
 :root .search-glass-tz5,
 :root[data-theme="light"] .search-glass-tz5 {
   background: #ffffff;
-  border: 1px solid #e6e8ef;
+  border: 1px solid #e7e7e7;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
 }
 
@@ -209,20 +227,25 @@
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Живой текст Hero: fade-in 0.6s, subtle letter-spacing */
+/* ТЗ-10: живой текст Hero — opacity + y:20, subtitle delay 0.15, CTA delay 0.3 */
 .hero-tz2__title {
+  opacity: 0;
   animation: hero-text-fade-in 0.6s ease-out forwards;
   letter-spacing: -0.02em;
 }
 .hero-tz2__lead {
   opacity: 0;
-  animation: hero-lead-fade-in 0.6s ease-out 0.1s forwards;
+  animation: hero-lead-fade-in 0.6s ease-out 0.15s forwards;
   letter-spacing: 0.01em;
+}
+.hero-tz2__cta {
+  opacity: 0;
+  animation: hero-cta-fade-in 0.5s ease-out 0.3s forwards;
 }
 @keyframes hero-text-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -232,10 +255,20 @@
 @keyframes hero-lead-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(20px);
   }
   to {
     opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+@keyframes hero-cta-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
     transform: translateY(0);
   }
 }
