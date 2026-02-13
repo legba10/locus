@@ -2,13 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState, useEffect, useRef, useContext } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield, User } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { ThemeContext } from '@/providers/ThemeProvider'
 import { MobileMenu } from './MobileMenu'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
@@ -45,15 +44,12 @@ function NavItem({
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
-  const { resolvedTheme } = useContext(ThemeContext)
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const isDark = resolvedTheme === 'dark'
-  const logoSrc = isDark ? '/logo-light.svg' : '/logo-dark.svg'
   const authed = isAuthenticated()
 
   useEffect(() => {
@@ -140,15 +136,16 @@ export function Header() {
           </div>
 
           <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
-            <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
+            <Link href="/search" className="layout-header__logo shrink-0 flex items-center gap-2" aria-label="LOCUS — поиск">
               <img
-                src={logoSrc}
+                src="/logo-dark.svg"
                 alt="LOCUS"
                 className="headerLogo layout-header__logo-img"
-                width={110}
-                height={32}
+                width={28}
+                height={28}
                 fetchPriority="high"
               />
+              <span className="font-semibold text-[var(--header-fg)]">LOCUS</span>
             </Link>
             <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">
               {desktopNavIcons.filter((item) => item.label !== 'Профиль').map((item) => {

@@ -276,6 +276,8 @@ export const useAuthStore = create<AuthState>()(
             return;
           } catch (e) {
             lastError = e;
+            // TZ-FIX-FINAL: при 401 не ретраим — один refresh уже сделан в apiFetchRaw, избегаем цикла
+            if (e instanceof AuthApiError && e.status === 401) break;
             if (attempt < MAX_ATTEMPTS) {
               await new Promise((r) => setTimeout(r, 800));
             }

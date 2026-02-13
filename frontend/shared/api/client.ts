@@ -32,6 +32,10 @@ function normalizePath(path: string): string {
   return p;
 }
 
+/** TZ-FIX-FINAL: один одновременный refresh, без цикла 401 → refresh → 400 */
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
 /**
  * Low-level fetch — returns raw Response
  * Use for cases where you need status/headers (like auth/me)
@@ -59,7 +63,15 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
   });
 
   if (response.status === 401 && !fullPath.includes("/auth/refresh")) {
-    const refreshed = await tryRefreshToken();
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = tryRefreshToken().then((r) => {
+        isRefreshing = false;
+        refreshPromise = null;
+        return r;
+      });
+    }
+    const refreshed = refreshPromise ? await refreshPromise : false;
     if (refreshed) {
       const retryHeaders: Record<string, string> = {
         ...(options?.headers as Record<string, string>),
@@ -75,7 +87,6 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
         headers: retryHeaders,
       });
     }
-    // TZ-2: после неудачного refresh — очистить токены и редирект на логин
     clearTokens();
     if (typeof window !== "undefined" && on401Handler) {
       on401Handler();
