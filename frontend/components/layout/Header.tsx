@@ -42,7 +42,7 @@ function NavItem({
 /**
  * ТЗ-8: Единый Header для всего сайта.
  * Высота: mobile 64px, desktop 72px. Safe-area. Grid: [burger][logo][bell].
- * Логотип по теме (logo-dark / logo-light). Бургер 24px, колокольчик 22px, badge 8px.
+ * Логотип: единый /logo.png (ТЗ-9). Бургер 24px, колокольчик 22px, badge 8px.
  */
 export function Header() {
   const pathname = usePathname()
@@ -54,9 +54,7 @@ export function Header() {
   const [isTelegram, setIsTelegram] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
-  const logoIconSrc = logoError
-    ? '/favicon.svg'
-    : (resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg')
+  const logoIconSrc = logoError ? '/favicon.ico' : '/logo.png'
   const authed = isAuthenticated()
 
   useEffect(() => {

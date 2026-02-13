@@ -82,12 +82,19 @@ export function ListingPageV3({ id }: ListingPageV3Props) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)]">
-        <div className="max-w-[1280px] mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <div className="h-[240px] md:h-[420px] rounded-b-[24px] md:rounded-[24px] skeleton-glass" />
-            <div className="h-32 skeleton-glass rounded-[20px]" />
-            <div className="h-48 skeleton-glass rounded-[20px]" />
+      <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-4 md:py-6">
+          <div className="space-y-6 md:space-y-8">
+            {/* ТЗ-7: skeleton фото 280/480px, border-radius 20px */}
+            <div className="listing-gallery-tz7__skeleton h-[280px] md:h-[480px] rounded-[20px] w-full max-w-[1200px] mx-auto" />
+            {/* skeleton цены и текста */}
+            <div className="rounded-[20px] border border-[var(--border)] p-5 md:p-6 space-y-2">
+              <div className="h-8 w-48 rounded-lg bg-[var(--bg-glass)] animate-pulse" />
+              <div className="h-4 w-32 rounded bg-[var(--bg-glass)] animate-pulse" />
+              <div className="h-4 w-40 rounded bg-[var(--bg-glass)] animate-pulse" />
+            </div>
+            <div className="h-24 rounded-[20px] bg-[var(--bg-glass)] animate-pulse" />
+            <div className="h-32 rounded-[20px] bg-[var(--bg-glass)] animate-pulse" />
           </div>
         </div>
       </div>

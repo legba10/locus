@@ -24,20 +24,20 @@ export function ReviewCard({ review }: ListingReviewCardProps) {
   const metrics = review.metrics ?? []
 
   return (
-    <div className={cn('rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5')}>
+    <div className={cn('listing-review-card-tz3')}>
       <div className="flex items-start gap-3">
         {avatarUrl ? (
-          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-[var(--bg-glass)] flex-shrink-0">
-            <Image src={avatarUrl} alt={name} fill className="object-cover" sizes="40px" />
+          <div className="listing-review-card-tz3__avatar relative rounded-full overflow-hidden bg-[var(--bg-glass)]">
+            <Image src={avatarUrl} alt={name} fill className="object-cover" sizes="36px" />
           </div>
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center flex-shrink-0 text-[var(--accent)] font-semibold text-[14px]">
+          <div className="listing-review-card-tz3__avatar rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent)] font-semibold text-[14px]">
             {name.charAt(0).toUpperCase()}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="inline-flex items-center gap-1 text-[14px] font-semibold text-[var(--text-main)]">
+            <span className="listing-review-card-tz3__name inline-flex items-center gap-1 text-[14px] font-bold text-[var(--text-main)]">
               <span className="text-amber-500">★</span> {review.rating.toFixed(1)}
             </span>
             <span className="text-[12px] text-[var(--text-secondary)]">{dateStr}</span>

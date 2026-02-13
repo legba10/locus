@@ -50,7 +50,7 @@ export function BudgetRange({ min, max, onChange, className }: BudgetRangeProps)
 
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">От, ₽</label>
           <input

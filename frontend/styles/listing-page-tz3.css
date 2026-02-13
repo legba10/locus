@@ -1,0 +1,137 @@
+/**
+ * ТЗ №3 + ТЗ-7: Страница объявления — галерея, блок цены/действий, бронирование, отзывы, mobile.
+ */
+
+/* ТЗ-7: галерея — фиксированная высота 480px desktop, 280px mobile, skeleton */
+.listing-gallery-tz7__main {
+  height: 280px;
+}
+@media (min-width: 768px) {
+  .listing-gallery-tz7__main {
+    height: 480px;
+  }
+}
+.listing-gallery-tz7__skeleton {
+  background: linear-gradient(90deg, var(--bg-glass) 0%, var(--border) 50%, var(--bg-glass) 100%);
+  background-size: 200% 100%;
+  animation: listing-gallery-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes listing-gallery-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Desktop: правая колонка — light #fff, dark glass blur 20px */
+.listing-sticky-card-tz3 {
+  background: var(--surface-light, var(--card));
+}
+[data-theme="dark"] .listing-sticky-card-tz3,
+.dark .listing-sticky-card-tz3 {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ТЗ-7: блок бронирования — radius 20px, padding 20px, dark glass; даты grid gap 8px, высота 48px */
+.listing-booking-tz3 {
+  max-width: 100%;
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+[data-theme="dark"] .listing-booking-tz3,
+.dark .listing-booking-tz3 {
+  background: rgba(30, 30, 50, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.listing-booking-tz3__dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 767px) {
+  .listing-booking-tz3__dates {
+    grid-template-columns: 1fr;
+  }
+}
+.listing-booking-tz3__dates input {
+  height: 48px !important;
+  min-height: 48px !important;
+  border-radius: 12px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.listing-booking-tz3__guests {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 48px;
+  border-radius: 12px;
+  width: 120px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 0 12px;
+}
+.listing-booking-tz3__submit {
+  height: 52px;
+  min-height: 52px;
+  font-weight: 600;
+  border-radius: 14px;
+  width: 100%;
+}
+.listing-booking-tz3__submit:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Описание: max-width 720px, line-height 1.6, плавное раскрытие */
+.listing-description-tz3 {
+  max-width: 720px;
+}
+.listing-description-tz3__text {
+  line-height: 1.6;
+}
+.listing-description-tz3[data-expanded="false"] .listing-description-tz3__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.listing-description-tz3[data-expanded="true"] .listing-description-tz3__text {
+  transition: opacity 0.2s ease;
+}
+
+/* Карточка отзыва: radius 16px, padding 16px, avatar 36px, имя bold */
+.listing-review-card-tz3 {
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface-light, var(--card));
+  border: 1px solid var(--border);
+}
+.listing-review-card-tz3__avatar {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.listing-review-card-tz3__name {
+  font-weight: 700;
+}
+.listing-reviews-list-tz3 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

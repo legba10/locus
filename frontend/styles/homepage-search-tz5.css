@@ -1,0 +1,231 @@
+/**
+ * ТЗ-5: Hero + Search — единый стеклянный модуль, блок поиска живой и читаемый.
+ * Без изменения логики. Только UI.
+ */
+
+/* Единый модуль: hero фон на обёртке */
+.hero-and-search-tz5 {
+  position: relative;
+  background: var(--hero-light);
+  transition: background 0.2s ease;
+}
+[data-theme="dark"] .hero-and-search-tz5,
+.dark .hero-and-search-tz5 {
+  background: linear-gradient(180deg, #0b0f1a 0%, #020617 100%);
+}
+
+/* Hero content — без фона (фон на .hero-and-search-tz5) */
+.hero-tz2-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* Новый контейнер поиска: glass, max-width 980px, z-index 2 */
+.search-glass-tz5 {
+  position: relative;
+  z-index: 2;
+  max-width: 980px;
+  margin: 0 auto;
+  border-radius: 24px;
+  padding: 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-theme="dark"] .search-glass-tz5,
+.dark .search-glass-tz5 {
+  background: rgba(20, 20, 35, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+:root .search-glass-tz5,
+:root[data-theme="light"] .search-glass-tz5 {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 767px) {
+  .search-glass-tz5 {
+    padding: 16px;
+    border-radius: 20px;
+    gap: 14px;
+  }
+}
+
+/* Dropdowns поверх блока — z-index 10 */
+.search-glass-tz5 .city-select-dropdown-tz7,
+.search-glass-tz5 [data-dropdown],
+.search-glass-tz5 .search-tz7-dropdown {
+  z-index: 10 !important;
+}
+
+/* ─── Поля фильтров ─── */
+
+/* Город: высота 44px, radius 12px, theme-glass, padding 0 12px */
+.search-glass-tz5 .search-hero-input,
+.search-glass-tz5 .search-tz7-input,
+.search-glass-tz5 .city-select-trigger-tz5 {
+  height: 44px !important;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text-main);
+}
+[data-theme="dark"] .search-glass-tz5 .search-hero-input,
+.dark .search-glass-tz5 .search-hero-input,
+[data-theme="dark"] .search-glass-tz5 .search-tz7-input,
+.dark .search-glass-tz5 .search-tz7-input,
+[data-theme="dark"] .search-glass-tz5 .city-select-trigger-tz5,
+.dark .search-glass-tz5 .city-select-trigger-tz5 {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Бюджет: поля и описание — единая высота, градиент для акцента при фокусе */
+.search-glass-tz5 .listing-booking-tz3__dates input,
+.search-glass-tz5 input[type="number"] {
+  height: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+}
+.search-glass-tz5 input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25);
+}
+[data-theme="dark"] .search-glass-tz5 input[type="number"],
+.dark .search-glass-tz5 input[type="number"] {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Тип жилья / чипсы: height 36px, border-radius 999px, padding 0 14px */
+.search-glass-tz5 .filter-chip,
+.search-glass-tz5 .filters-pill-tz10 .filter-chip {
+  height: 36px !important;
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.search-glass-tz5 .filter-chip.selected,
+.search-glass-tz5 .filters-pill-tz10 .filter-chip.selected {
+  background: linear-gradient(135deg, #7c5cff, #9f5cff);
+  color: #fff;
+  border-color: transparent;
+}
+.search-glass-tz5 .filter-chip:not(.selected) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border-color: transparent;
+}
+:root .search-glass-tz5 .filter-chip:not(.selected),
+:root[data-theme="light"] .search-glass-tz5 .filter-chip:not(.selected) {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+/* Кнопка «Найти жильё»: 56px, radius 16px, font 16px 600, градиент 135deg, hover */
+.search-glass-tz5 .search-hero-submit-tz7-compact,
+.search-glass-submit-tz5 {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-radius: 16px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  background: linear-gradient(135deg, #7c5cff, #9f5cff) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.search-glass-tz5 .search-hero-submit-tz7-compact:hover,
+.search-glass-submit-tz5:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(124, 92, 255, 0.5);
+}
+
+@media (max-width: 767px) {
+  .search-glass-tz5 .search-hero-actions-compact .search-hero-submit-tz7-compact,
+  .search-glass-tz5 .search-hero-submit-tz7-compact {
+    width: 100%;
+    height: 52px !important;
+    min-height: 52px !important;
+  }
+  .search-glass-tz5 .search-hero-actions-compact {
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+  .search-glass-tz5 .search-hero-actions-compact .search-hero-ai-tz7-compact {
+    width: 100%;
+  }
+}
+
+/* Умный подбор — вторичная кнопка в glass */
+.search-glass-tz5 .search-hero-ai-tz7-compact {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+:root .search-glass-tz5 .search-hero-ai-tz7-compact,
+:root[data-theme="light"] .search-glass-tz5 .search-hero-ai-tz7-compact {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Живой текст Hero: fade-in 0.6s, subtle letter-spacing */
+.hero-tz2__title {
+  animation: hero-text-fade-in 0.6s ease-out forwards;
+  letter-spacing: -0.02em;
+}
+.hero-tz2__lead {
+  opacity: 0;
+  animation: hero-lead-fade-in 0.6s ease-out 0.1s forwards;
+  letter-spacing: 0.01em;
+}
+@keyframes hero-text-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hero-lead-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* Отступы между секциями фильтров — единый столбец gap 14px */
+.search-glass-tz5 .filter-panel-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.search-glass-tz5 .filter-panel-card__inner > * {
+  width: 100%;
+}

@@ -1,7 +1,58 @@
 /**
- * TZ-10: Главная — кнопка Умный подбор, контейнеры по теме, популярные направления.
- * Только UI, токены темы.
+ * TZ-10 + ТЗ №2: Главная — Hero, кнопки, контейнеры, популярные направления.
  */
+
+/* ТЗ №2: Hero — светлая тема мягкий градиент, тёмная градиент; типографика, CTA без пересвета */
+.hero-tz2 {
+  background: var(--hero-light);
+  transition: background 0.2s ease;
+}
+[data-theme="dark"] .hero-tz2,
+.dark .hero-tz2 {
+  background: linear-gradient(180deg, #0b0f1a 0%, #020617 100%);
+}
+.hero-tz2__title {
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-main-light);
+}
+[data-theme="dark"] .hero-tz2__title,
+.dark .hero-tz2__title {
+  color: #eef2ff;
+}
+.hero-tz2__lead {
+  opacity: 0.9;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+  color: var(--text-muted-light);
+}
+[data-theme="dark"] .hero-tz2__lead,
+.dark .hero-tz2__lead {
+  color: rgba(255, 255, 255, 0.8);
+}
+.hero-tz2__cta {
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-tz2__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+}
+[data-theme="light"] .hero-tz2__cta {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .hero-tz2__cta:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
 
 /* Основной CTA: Умный подбор — height 56px, radius 16px, градиент */
 .smart-cta-tz10 {

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 
@@ -58,117 +58,103 @@ export function Gallery({
   )
 
   return (
-    <div
-      className={cn(
-        'relative w-full overflow-hidden',
-        'bg-[var(--bg-card)]',
-        'rounded-[16px]'
-      )}
-    >
-      {/* TZ-3: height 260px mobile, 420px desktop, border-radius 16px */}
-      <div
-        className={cn(
-          'relative w-full select-none',
-          'h-[260px] md:h-[420px] rounded-[16px] overflow-hidden'
-        )}
-        onClick={onOpenFullscreen}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        role={hasPhotos ? 'button' : undefined}
-      >
-        {hasPhotos && cover ? (
-          <>
-            <Image
-              src={cover}
-              alt={photos[activeIndex]?.alt ?? title}
-              fill
-              className="object-cover touch-none"
-              priority
-              loading="lazy"
-              unoptimized={cover.startsWith('http')}
-              sizes="(max-width: 768px) 100vw, 800px"
-              draggable={false}
-            />
-            {/* Кнопка назад — overlay слева сверху */}
-            {showBack && (
-              <Link
-                href="/listings"
-                className="absolute left-3 top-4 z-10 w-10 h-10 rounded-full bg-black/40 hover:bg-black/55 flex items-center justify-center text-white transition-colors"
-                aria-label="Назад"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-            )}
-            {/* Иконка ❤️ справа сверху */}
-            {onFavoriteClick && (
+    <div className="listing-gallery-tz7 max-w-[1200px] mx-auto">
+      <div className="relative w-full overflow-hidden bg-[var(--bg-card)] rounded-[20px]">
+        {/* ТЗ-7: фиксированная высота 480px desktop / 280px mobile — убирает скачок при загрузке */}
+        <div
+          className="listing-gallery-tz7__main relative w-full select-none rounded-t-[20px] overflow-hidden bg-[var(--bg-card)]"
+          onClick={onOpenFullscreen}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          role={hasPhotos ? 'button' : undefined}
+        >
+          {hasPhotos && cover ? (
+            <>
+              <Image
+                src={cover}
+                alt={photos[activeIndex]?.alt ?? title}
+                fill
+                className="object-cover touch-none"
+                priority={activeIndex === 0}
+                loading={activeIndex === 0 ? 'eager' : 'lazy'}
+                unoptimized={cover.startsWith('http')}
+                sizes="(max-width: 768px) 100vw, 1100px"
+                draggable={false}
+              />
+              {showBack && (
+                <Link
+                  href="/listings"
+                  className="absolute left-3 top-4 z-10 w-10 h-10 rounded-full bg-black/40 hover:bg-black/55 flex items-center justify-center text-white transition-colors"
+                  aria-label="Назад"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Link>
+              )}
+              {onFavoriteClick && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onFavoriteClick() }}
+                  className="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/55 flex items-center justify-center text-white transition-colors"
+                  aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                >
+                  <svg className={cn('w-5 h-5', isFavorite && 'fill-red-400 text-red-400')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              )}
+              {count > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); goPrev() }}
+                    className="listing-gallery-tz7__arrow absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center transition-opacity hidden md:flex opacity-60 hover:opacity-100"
+                    aria-label="Предыдущее"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); goNext() }}
+                    className="listing-gallery-tz7__arrow absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center transition-opacity hidden md:flex opacity-60 hover:opacity-100"
+                    aria-label="Следующее"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                </>
+              )}
+              {count > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/60 text-white text-[12px] font-medium tabular-nums">
+                  {activeIndex + 1}/{count}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="listing-gallery-tz7__skeleton w-full h-full min-h-[280px] md:min-h-[480px] flex items-center justify-center rounded-t-[20px]" />
+          )}
+        </div>
+
+        {/* ТЗ-7: миниатюры height 60px, border-radius 10px, gap 8px */}
+        {hasPhotos && count > 1 && (
+          <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
+            {photos.slice(0, 8).map((p, i) => (
               <button
+                key={i}
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onFavoriteClick()
-                }}
-                className="absolute right-3 top-4 z-10 w-10 h-10 rounded-full bg-black/40 hover:bg-black/55 flex items-center justify-center text-white transition-colors"
-                aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
+                className={cn(
+                  'relative flex-shrink-0 w-[60px] h-[60px] rounded-[10px] overflow-hidden border-2 transition-colors',
+                  activeIndex === i ? 'border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'border-transparent hover:border-[var(--border)]'
+                )}
               >
-                <svg className={cn('w-5 h-5', isFavorite && 'fill-red-400 text-red-400')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="60px" loading="lazy" unoptimized={p.url.startsWith('http')} />
               </button>
-            )}
-            {/* Стрелки — только desktop, не перекрывать назад/сердце на mobile */}
-            {count > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); goPrev() }}
-                  className="absolute left-14 md:left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors hidden sm:flex"
-                  aria-label="Предыдущее"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); goNext() }}
-                  className="absolute right-14 md:right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors hidden sm:flex"
-                  aria-label="Следующее"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </>
-            )}
-            {/* Индикатор 1/N */}
-            {count > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/60 text-white text-[12px] font-medium tabular-nums">
-                {activeIndex + 1}/{count}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center skeleton-photo rounded-[16px]" />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* TZ-3: миниатюры — горизонтальный скролл, активная рамка, без дерганий */}
-      {hasPhotos && count > 1 && (
-        <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
-          {photos.slice(0, 6).map((p, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
-              className={cn(
-                'relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-colors',
-                activeIndex === i ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-transparent hover:border-[var(--border)]'
-              )}
-            >
-              <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="80px" loading="lazy" unoptimized={p.url.startsWith('http')} />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

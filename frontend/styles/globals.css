@@ -15,6 +15,8 @@
 @import './search-tz7.css';
 @import './profile-tz9.css';
 @import './homepage-tz10.css';
+@import './listing-page-tz3.css';
+@import './homepage-search-tz5.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -454,9 +456,16 @@ body {
   color: var(--text);
   transition: background 0.25s ease, color 0.25s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+/* ТЗ №2: типографика — заголовки 700–800, line-height 1.15; body 1.6 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 .theme-toggle {
@@ -1720,24 +1729,17 @@ select,
   }
 }
 
-/* TZ-6: сетка карточек — desktop 3 cols gap 16px, tablet 2, mobile 1 gap 12px */
+/* ТЗ-6: сетка — desktop auto-fill 280px gap 24px; mobile 1 колонка gap 16px padding 16px */
 .listing-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-@media (max-width: 1023px) {
-  .listing-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 @media (max-width: 767px) {
   .listing-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
 }
 

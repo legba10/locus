@@ -59,40 +59,56 @@
   --danger: #dc2626;
 }
 
-/* Light — явно (ТЗ-1 п.4.1) */
+/* ТЗ №2: светлая тема — мягкий контраст, без пересвета */
+:root,
 :root[data-theme="light"] {
-  --bg: #ffffff;
-  --card: #f8fafc;
+  --bg-light: #f6f7fb;
+  --surface-light: #ffffff;
+  --text-main-light: #0f172a;
+  --text-muted-light: #6b7280;
+  --hero-light: linear-gradient(180deg, #f4f5fb 0%, #ffffff 100%);
+  --primary: #7b4cff;
+  --primary-hover: #6a3df0;
+  --primary-active: #5b32d6;
+  --primary-600: #7b4cff;
+  --outline: #d9dce7;
+  --outline-color: #e4e6ef;
+  --chip-inactive-bg: #f1f2f7;
+}
+
+/* Light — явно (ТЗ-1 п.4.1 + ТЗ №2) */
+:root[data-theme="light"] {
+  --bg: #f6f7fb;
+  --card: #ffffff;
   --text: #0f172a;
-  --sub: #64748b;
+  --sub: #6b7280;
   --border: rgba(0, 0, 0, 0.08);
-  --accent1: #7c3aed;
+  --accent1: #7b4cff;
   --accent2: #6366f1;
 
-  --bg-main: #ffffff;
-  --bg-secondary: #f6f7fb;
-  --bg-surface: #f5f6fa;
-  --bg-card: #f8fafc;
+  --bg-main: #f6f7fb;
+  --bg-secondary: #f0f1f5;
+  --bg-surface: #f1f2f7;
+  --bg-card: #ffffff;
   --bg-elevated: #ffffff;
   --bg-modal: #ffffff;
 
   --text-primary: #0f172a;
   --text-main: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #9ca3af;
+  --text-secondary: #6b7280;
+  --text-muted: #6b7280;
 
-  --border-main: #e5e7eb;
+  --border-main: #e4e6ef;
 
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  /* ТЗ-1: фирменный градиент violet-600 → indigo-600 */
+  --accent: #7b4cff;
+  --accent-hover: #6a3df0;
   --accent-gradient: linear-gradient(to right, #7c3aed, #4f46e5);
   --button-primary: linear-gradient(to right, #7c3aed, #4f46e5);
 
   --button-primary-text: #ffffff;
-  --button-secondary-bg: #f3f4f6;
+  --button-secondary-bg: #f1f2f7;
 
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.06);
   --overlay: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(0, 0, 0, 0.35);
   --overlay-bg-light: rgba(0, 0, 0, 0.45);
@@ -113,11 +129,17 @@
 .dark {
   --bg: #0b0f1a;
   --card: #111827;
+  --surface-light: #111827;
   --text: #ffffff;
   --sub: #9ca3af;
   --border: rgba(255, 255, 255, 0.08);
   --accent1: #8b5cf6;
   --accent2: #6366f1;
+  --primary: #8b5cf6;
+  --primary-600: #8b5cf6;
+  --outline: rgba(255, 255, 255, 0.15);
+  --outline-color: rgba(255, 255, 255, 0.12);
+  --chip-inactive-bg: rgba(255, 255, 255, 0.06);
 }
 
 :root[data-theme="dark"] {

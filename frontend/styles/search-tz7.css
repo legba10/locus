@@ -2,20 +2,25 @@
  * TZ-7 + ТЗ-MAIN-REDESIGN: Поиск — Airbnb-style блок (max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl).
  */
 
-/* ТЗ-MAIN-REDESIGN: поисковый блок продукта (центр страницы) */
+/* ТЗ №2: блок фильтров — max-width 1100px, border-radius 20–24px, padding 28–32px desktop, 16–18px mobile */
 .search-block-product {
-  max-width: 64rem;
+  max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
-  border-radius: 1rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: 22px;
+  background: var(--surface-light, var(--card));
+  border: 1px solid var(--outline-color, var(--border));
+  padding: 28px 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   transition: box-shadow 0.2s ease;
 }
+@media (max-width: 767px) {
+  .search-block-product {
+    padding: 16px 18px;
+  }
+}
 .search-block-product:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
 }
 .search-block-product .search-hero-submit-tz7-compact {
   height: 3rem;
@@ -407,28 +412,32 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Filter chips — dark theme (FilterChips component) */
+/* ТЗ №2: filter chips — active градиент, inactive без синего glow */
 .search-hero .filter-chip,
+.search-block-product .filter-chip,
 .filters-modal-tz7 .filter-chip {
-  background: var(--bg-card);
-  border-color: var(--border);
-  color: var(--color-text, var(--text-main));
+  background: var(--chip-inactive-bg);
+  border: 1px solid var(--outline-color);
+  color: var(--text-main);
+  box-shadow: none;
 }
-
 [data-theme="dark"] .search-hero .filter-chip,
 .dark .search-hero .filter-chip,
+[data-theme="dark"] .search-block-product .filter-chip,
+.dark .search-block-product .filter-chip,
 [data-theme="dark"] .filters-modal-tz7 .filter-chip,
 .dark .filters-modal-tz7 .filter-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--chip-inactive-bg);
+  border-color: var(--outline-color);
   color: #f2f3f5;
 }
-
 .search-hero .filter-chip.selected,
+.search-block-product .filter-chip.selected,
 .filters-modal-tz7 .filter-chip.selected {
   background: linear-gradient(to right, #7c3aed, #4f46e5);
   border-color: transparent;
   color: #fff;
+  box-shadow: none;
 }
 
 /* AIModeSwitch — dark theme */

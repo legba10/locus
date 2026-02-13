@@ -26,25 +26,19 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
   const effectiveMax = Math.min(maxGuests, MAX_GUESTS)
 
   return (
-    <div
-      className={cn(
-        'max-w-[320px] w-full',
-        'bg-[var(--bg-card)] rounded-[20px] p-4 md:p-6',
-        'border border-[var(--border)] shadow-[var(--shadow-card)]'
-      )}
-    >
+    <div className={cn('listing-booking-tz3 max-w-[360px] md:max-w-[400px] w-full')}>
       <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Бронирование</h2>
       <p className="text-[14px] text-[var(--text-secondary)] mb-4">
         Выберите даты заезда и выезда, количество гостей.
       </p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="listing-booking-tz3__dates mb-4">
         <div>
           <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Заезд</label>
           <input
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
+            className="w-full rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
           />
         </div>
         <div>
@@ -54,13 +48,13 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
             min={checkIn || undefined}
-            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
+            className="w-full rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
           />
         </div>
       </div>
       <div className="mb-4">
         <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Гости</label>
-        <div className="flex items-center gap-3 h-12 rounded-[12px] border border-[var(--border)] px-4 bg-[var(--bg-card)]">
+        <div className="listing-booking-tz3__guests">
           <button
             type="button"
             aria-label="Уменьшить"
@@ -73,7 +67,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           >
             −
           </button>
-          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums text-[var(--text-main)]">{guests}</span>
+          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums text-[var(--text-main)] min-w-[2ch]">{guests}</span>
           <button
             type="button"
             aria-label="Увеличить"
@@ -95,7 +89,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           </p>
           <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border)]">
             <span className="text-[14px] font-semibold text-[var(--text-main)]">{RU.price.total}</span>
-            <span className="text-[18px] font-bold text-[var(--text-main)]">{formatPrice(total, 'night')}</span>
+            <span className="text-[18px] font-bold text-[var(--primary)]">{formatPrice(total, 'night')}</span>
           </div>
         </div>
       )}
@@ -111,8 +105,8 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         }
         disabled={!canConfirm}
         className={cn(
-          'w-full px-5 py-3 h-12 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]',
-          'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+          'listing-booking-tz3__submit px-5 py-3 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]',
+          'hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed'
         )}
       >
         Забронировать

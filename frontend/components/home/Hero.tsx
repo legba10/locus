@@ -2,40 +2,28 @@
 
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
-import { DS } from '@/shared/lib/design-system'
 
 /**
- * ТЗ-MAIN-REDESIGN: Hero уровня продукта.
- * Заголовок, подзаголовок, CTA. Фон: dark gradient / light white.
+ * ТЗ №2: Hero — мягкий контраст в light, типографика 700–800, subtitle opacity, CTA без пересвета.
+ * Mobile: padding top 24–32px, CTA сразу под текстом.
  */
 export function Hero() {
   return (
     <section
       className={cn(
-        'relative overflow-hidden',
-        'bg-white',
-        'dark:bg-gradient-to-b dark:from-[#0B0F1A] dark:to-[#020617]',
-        '[data-theme="dark"]:bg-gradient-to-b [data-theme="dark"]:from-[#0B0F1A] [data-theme="dark"]:to-[#020617]',
-        'px-4 pt-12 pb-16 md:pt-16 md:pb-20'
+        'hero-tz2-inner relative overflow-hidden',
+        'px-4 pt-6 pb-8 md:pt-16 md:pb-10'
       )}
       aria-label="Главный экран"
     >
       <div className="market-container relative z-10 max-w-4xl mx-auto text-center">
-        <h1 className="text-[28px] md:text-[44px] font-bold text-[var(--text)] mb-4 leading-tight tracking-tight">
+        <h1 className="hero-tz2__title text-[28px] xs:text-[30px] md:text-[44px] lg:text-[52px] mb-4 tracking-tight">
           Найдите жильё, которое идеально подходит вам
         </h1>
-        <p className="text-[16px] md:text-[18px] text-[var(--sub)] mb-8 leading-relaxed max-w-2xl mx-auto">
+        <p className="hero-tz2__lead text-[15px] md:text-[18px] mb-6 md:mb-8">
           LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш бюджет
         </p>
-        <Link
-          href="#search"
-          className={cn(
-            'inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-[16px] font-semibold',
-            'bg-gradient-to-r from-violet-600 to-indigo-600 text-white',
-            DS.transition,
-            'hover:opacity-95 active:scale-[0.98] shadow-lg'
-          )}
-        >
+        <Link href="#search" className="hero-tz2__cta inline-flex items-center justify-center gap-2">
           Подобрать жильё
         </Link>
       </div>

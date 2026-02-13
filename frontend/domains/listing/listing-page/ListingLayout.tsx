@@ -138,7 +138,7 @@ export function ListingLayout(props: ListingLayoutProps) {
   const characteristics = chars.join(' · ')
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
+    <div className="min-h-screen bg-[var(--bg-main)] pb-[max(5rem,72px)] md:pb-8 overflow-x-hidden">
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-4 md:py-6">
         {/* 1. Header — только кнопка «назад» в контенте не дублируем, она в галерее */}
 
@@ -154,12 +154,12 @@ export function ListingLayout(props: ListingLayoutProps) {
           />
         </div>
 
-        <div className="grid md:grid-cols-[1fr_320px] gap-6 md:gap-8">
+        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:gap-8">
           {/* Основной контент */}
           <div className="space-y-6 md:space-y-8">
-            {/* 3. Основной инфо-блок */}
+            {/* 3. Цена крупно, город и тип ниже — ТЗ-7: 28px #7c5cff, без дублирования */}
             <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
-              <p className="text-[28px] font-bold text-[var(--text-main)]">{formatPrice(price)} ₽ <span className="text-[14px] font-normal text-[var(--text-secondary)]">/ ночь</span></p>
+              <p className="text-[28px] font-bold" style={{ color: '#7c5cff' }}>{formatPrice(price)} ₽ <span className="text-[14px] font-normal text-[var(--text-secondary)]">/ ночь</span></p>
               <p className="text-[14px] text-[var(--text-secondary)] mt-1">{city}</p>
               {characteristics && <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">{characteristics}</p>}
               {aiScore > 0 && (
@@ -183,14 +183,14 @@ export function ListingLayout(props: ListingLayoutProps) {
             {/* 7. Удобства */}
             <Amenities items={amenities} />
 
-            {/* 8. Описание */}
+            {/* 8. Описание — ТЗ №3: max-width 720px, line-height 1.6, плавное раскрытие */}
             {description && (
-              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
+              <div className={cn('listing-description-tz3 rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6')} data-expanded={isDescriptionExpanded}>
                 <h2 className="text-[18px] font-bold text-[var(--text-main)] mb-3">Описание</h2>
-                <p className={cn('text-[15px] text-[var(--text-main)] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')} style={{ lineHeight: 1.6 }}>
+                <p className="listing-description-tz3__text text-[15px] text-[var(--text-main)] whitespace-pre-line">
                   {description}
                 </p>
-                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-3 text-[14px] font-semibold text-[var(--accent)]">
+                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-3 text-[14px] font-semibold text-[var(--accent)] hover:underline">
                   {isDescriptionExpanded ? 'Свернуть' : 'Показать полностью'}
                 </button>
               </div>
@@ -222,8 +222,8 @@ export function ListingLayout(props: ListingLayoutProps) {
               <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
             </div>
 
-            {/* 9. Отзывы */}
-            <div id="reviews-section" className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
+            {/* 9. Отзывы — ТЗ-7: отступ сверху 32px */}
+            <div id="reviews-section" className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6 mt-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h2 className="text-[20px] font-bold text-[var(--text-main)]">Отзывы</h2>
                 <a href="#review-form" className="min-h-[44px] px-5 py-2.5 rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold inline-flex items-center justify-center">
@@ -273,10 +273,10 @@ export function ListingLayout(props: ListingLayoutProps) {
                 ))}
               </div>
               <p className="text-[16px] font-bold text-[var(--text-main)] mb-4">Отзывы пользователей</p>
-              <div className="space-y-4 mb-6">
+              <div className="listing-reviews-list-tz3 mb-6">
                 {isReviewsLoading ? (
                   [1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-[20px] border border-[var(--border)] p-5 skeleton-glass h-24" />
+                    <div key={i} className="rounded-[16px] border border-[var(--border)] p-4 skeleton-glass h-24" />
                   ))
                 ) : reviews.length === 0 ? (
                   <p className="text-[14px] text-[var(--text-secondary)] py-4">Отзывов пока нет. Будьте первым.</p>

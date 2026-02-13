@@ -40,7 +40,7 @@ export function HeaderLight() {
   const { resolvedTheme } = useContext(ThemeContext)
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const logoIconSrc = resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'
+  const logoIconSrc = '/logo.png'
   const menuRef = useRef<HTMLDivElement>(null)
   const authed = isAuthenticated()
   if (authed && user === undefined) return null

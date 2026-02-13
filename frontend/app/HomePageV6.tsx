@@ -261,46 +261,46 @@ export function HomePageV6() {
 
   return (
     <div className="min-h-screen font-sans antialiased bg-[var(--bg)]">
-      {/* ТЗ-MAIN-REDESIGN: Hero продукта */}
-      <Hero />
-
-      {/* ТЗ-MAIN-REDESIGN: поисковый блок (Airbnb-style) — центр продукта */}
-      <section id="search" className="bg-[var(--bg)] -mt-6 relative z-20">
-        <div className="market-container">
-          {!city && (
-            <p className="text-[14px] text-[var(--sub)] mb-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 text-center">
-              Сначала выберите город
-            </p>
-          )}
-          {/* Desktop: max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl */}
-          <div className="hidden md:block search-block-product">
-            <FilterPanel
-              embedded
-              wrapInCard={false}
-              showSearchButtons={true}
-              onSearch={handleSearch}
-              onSmartSearch={handleSmartSearch}
-            />
+      {/* ТЗ-5: Hero + Search = единый стеклянный модуль; hero z-1, search glass z-2 */}
+      <section className="hero-and-search-tz5 hero-tz2" aria-label="Главный экран и поиск">
+        <Hero />
+        <div className="market-container px-4 pb-6 md:pb-8">
+          <div id="search" className="search-glass-tz5 -mt-2 md:-mt-4">
+            {!city && (
+              <p className="text-[14px] text-[var(--sub)] mb-2 rounded-xl bg-[var(--bg-glass)] border border-[var(--border)] px-4 py-2.5 text-center">
+                Сначала выберите город
+              </p>
+            )}
+            {/* Desktop: фильтры внутри glass */}
+            <div className="hidden md:block">
+              <FilterPanel
+                embedded
+                wrapInCard={false}
+                showSearchButtons={true}
+                onSearch={handleSearch}
+                onSmartSearch={handleSmartSearch}
+              />
+            </div>
+            {/* Mobile: кнопки в одном столбце, gap 14px, full width, кнопка 52px */}
+            <div className="md:hidden flex flex-col gap-[14px] w-full">
+              <button
+                type="button"
+                onClick={() => setFilterSheetOpen(true)}
+                className="w-full flex items-center justify-center gap-2 h-12 min-h-[48px] px-4 rounded-[16px] border border-[var(--border)] bg-[var(--bg-glass)] text-[var(--text-main)] font-medium text-[14px]"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                Фильтры
+              </button>
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="search-glass-submit-tz5 w-full h-[52px] min-h-[52px]"
+              >
+                Найти жильё
+              </button>
+            </div>
           </div>
-          {/* Mobile: кнопка «Фильтры» открывает Sheet (не на весь экран) */}
-          <div className="md:hidden flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setFilterSheetOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-medium text-[14px]"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              Фильтры
-            </button>
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="search-hero-submit-tz7-compact w-full sm:w-auto min-h-[44px]"
-            >
-              Найти жильё
-            </button>
-          </div>
-          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" className="bg-[var(--card)] border-t border-[var(--border)]">
+          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="85vh" className="bg-[var(--card)] border-t border-[var(--border)]">
             <div className="rounded-t-2xl border-0 max-w-none mx-0 p-4 pb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
