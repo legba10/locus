@@ -28,7 +28,7 @@ export function FilterChips({ options, value, onChange, label, className }: Filt
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'filter-chip rounded-full px-4 py-2.5 text-[14px] font-medium transition-colors border min-h-[40px]',
+              'filter-chip rounded-full px-3 py-1.5 min-h-[36px] text-[13px] font-medium transition-colors border',
               value === opt.value && 'selected',
               value === opt.value
                 ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--button-primary-text)]'

@@ -1,26 +1,50 @@
 /**
- * TZ-7: Поиск + фильтры — единый блок, поля 52px, без засветов в dark.
- * Только UI, API не трогаем.
+ * TZ-7 + ТЗ-MAIN-REDESIGN: Поиск — Airbnb-style блок (max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl).
  */
 
-/* 1. Hero search container — TZ-10: light #fff + border, dark rgba */
+/* ТЗ-MAIN-REDESIGN: поисковый блок продукта (центр страницы) */
+.search-block-product {
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+.search-block-product:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+.search-block-product .search-hero-submit-tz7-compact {
+  height: 3rem;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  color: #fff;
+}
+
+/* 1. Hero search container (legacy) */
 .search-hero {
   max-width: 920px;
   margin: 0 auto;
   padding: 16px;
-  background: #ffffff;
-  border: 1px solid #eee;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg, 20px);
   box-shadow: var(--shadow-1, 0 6px 18px rgba(12, 14, 20, 0.08));
 }
 
 [data-theme="dark"] .search-hero,
 .dark .search-hero {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--card);
+  border-color: var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* 2. City / generic search input — height 52px, radius 12px */
@@ -107,7 +131,110 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* 3. Search button — Найти жильё */
+/* ТЗ-3: компактная панель фильтра (desktop card) */
+.filter-panel-card {
+  max-width: 56rem;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 1rem;
+  background: #111827;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.filter-panel-card .filter-panel-card__label,
+.filter-panel-card label,
+.filter-panel-card span.block {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.filter-panel-card .filter-chip {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.filter-panel-card .filter-chip.selected {
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  border-color: transparent;
+}
+
+.filter-panel-card input,
+.filter-panel-card select {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+.filter-panel-card .aim-mode-switch {
+  border-radius: 12px;
+  padding: 10px 12px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.filter-panel-card .aim-mode-switch span,
+.filter-panel-card .aim-mode-switch p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin-bottom: 6px;
+  margin-top: 0;
+}
+
+.filter-panel-card .aim-mode-switch button {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+/* Кнопки фильтра — chip-style, маленькие */
+.search-hero-actions-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-hero-submit-tz7-compact,
+.search-hero-ai-tz7-compact {
+  min-height: 36px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.search-hero-submit-tz7-compact {
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  color: #fff;
+}
+
+.search-hero-ai-tz7-compact:hover,
+.search-hero-submit-tz7-compact:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.search-hero-ai-tz7-compact {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e7ff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* 3. Search button — Найти жильё (legacy, large) */
 .search-hero-submit-tz7 {
   height: 52px;
   border-radius: 14px;
@@ -120,9 +247,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(180deg, var(--color-primary, var(--accent)), var(--color-primary-600, var(--accent-hover)));
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
   color: #fff;
-  box-shadow: var(--shadow-1);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
@@ -135,7 +262,7 @@
   transform: translateY(0);
 }
 
-/* 4. AI button — Умный подбор */
+/* 4. AI button — Умный подбор (legacy) */
 .search-hero-ai-tz7 {
   height: 52px;
   border-radius: 14px;
@@ -223,9 +350,9 @@
 .dark .filters-modal-tz7 .modal-panel,
 [data-theme="dark"] .modal-filters-tz7,
 .dark .modal-filters-tz7 {
-  background: #141418 !important;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  background: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
   color: #f2f3f5;
 }
 
@@ -243,7 +370,7 @@
 
 [data-theme="dark"] .filters-modal-tz7 .sticky-footer-tz7,
 .dark .filters-modal-tz7 .sticky-footer-tz7 {
-  background: #141418;
+  background: #111827;
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -256,8 +383,8 @@
 
 [data-theme="dark"] .quick-ai-modal-tz7 .modal-panel,
 .dark .quick-ai-modal-tz7 .modal-panel {
-  background: #141418 !important;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Inputs inside search/filters — dark theme solid */
@@ -299,8 +426,8 @@
 
 .search-hero .filter-chip.selected,
 .filters-modal-tz7 .filter-chip.selected {
-  background: var(--color-primary, var(--accent));
-  border-color: var(--color-primary, var(--accent));
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  border-color: transparent;
   color: #fff;
 }
 

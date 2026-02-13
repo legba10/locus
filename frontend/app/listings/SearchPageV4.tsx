@@ -278,7 +278,7 @@ export function SearchPageV4() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
-      <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6">
+      <div className="market-container py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           {/* ПАНЕЛЬ ФИЛЬТРОВ: desktop 280px, mobile — кнопка + модалка */}
           <aside className="hidden lg:block w-[280px] lg:sticky lg:top-6 self-start">

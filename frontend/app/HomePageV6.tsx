@@ -10,6 +10,11 @@ import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { useAuthStore } from '@/domains/auth'
 import { useFilterStore } from '@/core/filters'
 import { FilterPanel, QuickAIModal } from '@/components/filters'
+import { BottomSheet } from '@/components/ui/BottomSheet'
+import { Hero } from '@/components/home/Hero'
+import { PopularCities } from '@/components/home/PopularCities'
+import { HowItWorks } from '@/components/home/HowItWorks'
+import { AIBlock } from '@/components/home/AIBlock'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
 import { CITIES } from '@/shared/data/cities'
@@ -47,6 +52,7 @@ export function HomePageV6() {
   const [showHelpNudge, setShowHelpNudge] = useState(false)
   const [showQuickFab, setShowQuickFab] = useState(false)
   const [highlightFirstCard, setHighlightFirstCard] = useState(false)
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
   const isLandlord = user?.role === 'landlord'
@@ -254,46 +260,75 @@ export function HomePageV6() {
   })
 
   return (
-    <div className="min-h-screen font-sans antialiased">
-      {/* ТЗ-7: Hero + единый блок поиска (город, бюджет, тип, срок, комнаты, Найти жильё, Умный подбор) */}
-      <section className="py-6 md:py-8 bg-[var(--bg-main)]">
+    <div className="min-h-screen font-sans antialiased bg-[var(--bg)]">
+      {/* ТЗ-MAIN-REDESIGN: Hero продукта */}
+      <Hero />
+
+      {/* ТЗ-MAIN-REDESIGN: поисковый блок (Airbnb-style) — центр продукта */}
+      <section id="search" className="bg-[var(--bg)] -mt-6 relative z-20">
         <div className="market-container">
-          <h1 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-1 text-center">Найдём жильё под ваш бюджет</h1>
-          <p className="text-[14px] text-[var(--text-secondary)] mb-4 text-center">Выберите город и параметры — AI подберёт варианты</p>
           {!city && (
-            <p className="text-[14px] text-[var(--text-secondary)] mb-4 rounded-[16px] bg-[var(--accent-soft)] px-4 py-3 text-center">
+            <p className="text-[14px] text-[var(--sub)] mb-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 text-center">
               Сначала выберите город
             </p>
           )}
-          <div className="search-hero">
+          {/* Desktop: max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl */}
+          <div className="hidden md:block search-block-product">
             <FilterPanel
               embedded
+              wrapInCard={false}
               showSearchButtons={true}
               onSearch={handleSearch}
               onSmartSearch={handleSmartSearch}
             />
           </div>
-          {/* TZ-10: Популярные направления */}
-          <div className="mt-6">
-            <h2 className="text-[16px] font-semibold text-[var(--color-text)] mb-3">Популярные направления</h2>
-            <div className="popular-destinations-tz10">
-              <Link href="/listings?city=Москва">Москва</Link>
-              <Link href="/listings?city=Санкт-Петербург">Санкт-Петербург</Link>
-              <Link href="/listings?city=Сочи">Сочи</Link>
-              <Link href="/listings?city=Казань">Казань</Link>
-            </div>
+          {/* Mobile: кнопка «Фильтры» открывает Sheet (не на весь экран) */}
+          <div className="md:hidden flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setFilterSheetOpen(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-medium text-[14px]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Фильтры
+            </button>
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="search-hero-submit-tz7-compact w-full sm:w-auto min-h-[44px]"
+            >
+              Найти жильё
+            </button>
           </div>
+          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" className="bg-[var(--card)] border-t border-[var(--border)]">
+            <div className="rounded-t-2xl border-0 max-w-none mx-0 p-4 pb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
+                <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <FilterPanel
+                embedded
+                wrapInCard={false}
+                showSearchButtons={true}
+                onSearch={() => { handleSearch(); setFilterSheetOpen(false); }}
+                onSmartSearch={() => { handleSmartSearch(); setFilterSheetOpen(false); }}
+              />
+            </div>
+          </BottomSheet>
+          <PopularCities />
         </div>
       </section>
 
-      {/* ТЗ-5 БЛОК 5: Актуальные предложения — 3 кол gap 20 / mobile 1 gap 16 */}
-      <section className="py-10 md:py-14 bg-[var(--bg-main)]">
+      {/* Актуальные предложения */}
+      <section className="bg-[var(--bg)] animate-fade-in">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)]">
+            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">
               Актуальные предложения
             </h2>
-            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent)] hover:opacity-90 transition-opacity">
+            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">
               Смотреть все →
             </Link>
           </div>
@@ -323,9 +358,9 @@ export function HomePageV6() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h8M8 16h5" />
                     </svg>
                   </div>
-                  <p className="text-[16px] font-semibold text-[var(--text-main)]">Пока нет объявлений</p>
-                  <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Подберите параметры и попробуйте расширить поиск.</p>
-                  <Link href="/listings" className="btn btn--primary btn--md mt-4 inline-flex items-center justify-center">
+                  <p className="text-[16px] font-semibold text-[var(--text)]">Пока нет объявлений</p>
+                  <p className="mt-2 text-[14px] text-[var(--sub)]">Подберите параметры и попробуйте расширить поиск.</p>
+                  <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
                     Смотреть все объявления
                   </Link>
                 </div>
@@ -335,12 +370,12 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ТЗ-5: Рекомендации AI */}
-      <section className="py-10 md:py-14 bg-[var(--bg-secondary)]">
+      {/* Рекомендации AI */}
+      <section className="bg-[var(--card)]/30">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)]">Рекомендации AI</h2>
-            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent)] hover:opacity-90 transition-opacity">Смотреть все →</Link>
+            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">Рекомендации AI</h2>
+            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">Смотреть все →</Link>
           </div>
           <div className="listing-grid">
             {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 6).map((listing) => (
@@ -356,8 +391,8 @@ export function HomePageV6() {
               />
             )) : !isLoading ? (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
-                <p className="text-[var(--text-main)] font-semibold">Нет рекомендаций</p>
-                <p className="text-[var(--text-secondary)] text-[14px] mt-1">Подберите параметры в умном подборе</p>
+                <p className="text-[var(--text)] font-semibold">Нет рекомендаций</p>
+                <p className="text-[var(--sub)] text-[14px] mt-1">Подберите параметры в умном подборе</p>
               </div>
             ) : (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
@@ -366,10 +401,10 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ТЗ-5: Последние просмотренные */}
-      <section className="py-10 md:py-14 bg-[var(--bg-main)]">
+      {/* Последние просмотренные */}
+      <section className="bg-[var(--bg)]">
         <div className="market-container">
-          <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-6 md:mb-8">Последние просмотренные</h2>
+          <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-6 md:mb-8">Последние просмотренные</h2>
           <div className="listing-grid">
             {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 3).map((listing) => (
               <ListingCard
@@ -384,7 +419,7 @@ export function HomePageV6() {
               />
             )) : (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
-                <p className="text-[var(--text-secondary)] text-[14px]">Просматривайте объявления — они появятся здесь</p>
+                <p className="text-[var(--sub)] text-[14px]">Просматривайте объявления — они появятся здесь</p>
               </div>
             )}
           </div>
@@ -392,85 +427,31 @@ export function HomePageV6() {
       </section>
 
       {/* НОВЫЙ ПРОДУКТОВЫЙ БЛОК — доверие после объявлений */}
-      <div className="border-t border-gray-100">
+      <div className="border-t border-[var(--border)]">
         <MarketAnalysisBlock />
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          КАК РАБОТАЕТ LOCUS — 3 шага (v3: плотнее, subtle bg)
-          ═══════════════════════════════════════════════════════════════ */}
-      <section 
-        className="py-10 md:py-14"
-        style={{ background: 'linear-gradient(180deg, var(--bg-main) 0%, var(--bg-secondary) 100%)' }}
-      >
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-2">
-              Как это работает
-            </h2>
-            <p className="text-[var(--text-secondary)] max-w-md mx-auto text-[15px]">
-              Три простых шага до идеального жилья
-            </p>
-          </div>
+      {/* ТЗ-2: Как работает — 3 карточки */}
+      <HowItWorks />
 
-          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-            {/* Шаг 1 */}
-            <div className="relative bg-[var(--card)] rounded-xl p-5 border border-[var(--border)] shadow-[var(--shadow-card)]">
-              <div className="absolute -top-2.5 left-5 w-6 h-6 rounded-full bg-[var(--accent)] text-[var(--button-primary-text)] flex items-center justify-center font-semibold text-[12px]">
-                1
-              </div>
-              <div className="pt-2">
-                <h3 className="text-[15px] font-semibold text-[var(--text-main)] mb-1.5">Выберите параметры</h3>
-                <p className="text-[var(--text-secondary)] text-[13px] leading-relaxed">
-                  Город, тип жилья, бюджет и другие критерии
-                </p>
-              </div>
-            </div>
-
-            {/* Шаг 2 */}
-            <div className="relative bg-[var(--card)] rounded-xl p-5 border border-[var(--border)] shadow-[var(--shadow-card)]">
-              <div className="absolute -top-2.5 left-5 w-6 h-6 rounded-full bg-[var(--accent)] text-[var(--button-primary-text)] flex items-center justify-center font-semibold text-[12px]">
-                2
-              </div>
-              <div className="pt-2">
-                <h3 className="text-[16px] font-semibold text-[var(--text-main)] mb-2">LOCUS анализирует</h3>
-                <p className="text-[var(--text-secondary)] text-[14px] leading-relaxed">
-                  Изучаем тысячи объявлений по десяткам параметров
-                </p>
-              </div>
-            </div>
-
-            {/* Шаг 3 */}
-            <div className="relative bg-[var(--card)] rounded-2xl p-6 border border-[var(--border)] shadow-[var(--shadow-card)]">
-              <div className="absolute -top-3 left-6 w-7 h-7 rounded-full bg-blue-600 text-[var(--button-primary-text)] flex items-center justify-center font-semibold text-[13px]">
-                3
-              </div>
-              <div className="pt-3">
-                <h3 className="text-[16px] font-semibold text-[var(--text-main)] mb-2">Получите варианты</h3>
-                <p className="text-[var(--text-secondary)] text-[14px] leading-relaxed">
-                  С объяснением, почему они вам подходят
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ТЗ-MAIN-REDESIGN: AI-блок */}
+      <AIBlock />
 
       {/* НОВОСТИ РЫНКА */}
-      <section className="py-12 md:py-16 bg-gray-50/50">
-        <div className="max-w-5xl mx-auto px-4">
+      <section className="bg-[var(--card)]/50">
+        <div className="market-container">
           <div className="text-center mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-2">
+            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-2">
               Новости рынка
             </h2>
-            <p className="text-[var(--text-secondary)] max-w-md mx-auto text-[15px]">
+            <p className="text-[var(--sub)] max-w-md mx-auto text-[15px]">
               Актуальная информация о рынке аренды
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             {/* Новость 1 — Рост цен */}
-            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-md transition-shadow">
+            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-lg shadow-black/20 transition-shadow">
               <div className="h-32 bg-blue-50 flex items-center justify-center">
                 <svg className="w-12 h-12 text-blue-400 group-hover:scale-105 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -478,17 +459,17 @@ export function HomePageV6() {
               </div>
               <div className="p-5">
                 <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">Аналитика</span>
-                <h3 className="text-[15px] font-semibold text-[var(--text-main)] mt-1.5 mb-1.5 line-clamp-2">
+                <h3 className="text-[15px] font-semibold text-[var(--text)] mt-1.5 mb-1.5 line-clamp-2">
                   Средняя аренда в Москве выросла на 8%
                 </h3>
-                <p className="text-[var(--text-secondary)] text-[13px] leading-relaxed line-clamp-2">
+                <p className="text-[var(--sub)] text-[13px] leading-relaxed line-clamp-2">
                   Цены продолжают расти. Эксперты прогнозируют стабилизацию к весне.
                 </p>
               </div>
             </article>
 
             {/* Новость 2 — Популярные районы */}
-            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-md transition-shadow">
+            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-lg shadow-black/20 transition-shadow">
               <div className="h-32 bg-emerald-50 flex items-center justify-center">
                 <svg className="w-12 h-12 text-emerald-400 group-hover:scale-105 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -497,17 +478,17 @@ export function HomePageV6() {
               </div>
               <div className="p-5">
                 <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">Рейтинг</span>
-                <h3 className="text-[15px] font-semibold text-[var(--text-main)] mt-1.5 mb-1.5 line-clamp-2">
+                <h3 className="text-[15px] font-semibold text-[var(--text)] mt-1.5 mb-1.5 line-clamp-2">
                   Топ-5 районов для аренды в 2026
                 </h3>
-                <p className="text-[var(--text-secondary)] text-[13px] leading-relaxed line-clamp-2">
+                <p className="text-[var(--sub)] text-[13px] leading-relaxed line-clamp-2">
                   Самые комфортные районы с учётом инфраструктуры и транспорта.
                 </p>
               </div>
             </article>
 
             {/* Новость 3 — Советы */}
-            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-md transition-shadow">
+            <article className="group bg-[var(--card)] rounded-xl border border-[var(--border)] overflow-hidden shadow-lg shadow-black/20 transition-shadow">
               <div className="h-32 bg-amber-50 flex items-center justify-center">
                 <svg className="w-12 h-12 text-amber-400 group-hover:scale-105 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -515,10 +496,10 @@ export function HomePageV6() {
               </div>
               <div className="p-5">
                 <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide">Советы</span>
-                <h3 className="text-[15px] font-semibold text-[var(--text-main)] mt-1.5 mb-1.5 line-clamp-2">
+                <h3 className="text-[15px] font-semibold text-[var(--text)] mt-1.5 mb-1.5 line-clamp-2">
                   Как не переплатить за аренду
                 </h3>
-                <p className="text-[var(--text-secondary)] text-[13px] leading-relaxed line-clamp-2">
+                <p className="text-[var(--sub)] text-[13px] leading-relaxed line-clamp-2">
                   5 правил, чтобы снять квартиру по справедливой цене.
                 </p>
               </div>
@@ -530,24 +511,24 @@ export function HomePageV6() {
       {/* ═══════════════════════════════════════════════════════════════
           LOCUS В ЦИФРАХ — компактнее
           ═══════════════════════════════════════════════════════════════ */}
-      <section className="py-10 md:py-12 bg-[var(--bg-secondary)] text-[var(--text-primary)]">
-        <div className="max-w-5xl mx-auto px-4">
+      <section className="bg-[var(--bg)] text-[var(--text)]">
+        <div className="market-container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text-primary)] mb-1">15K+</p>
-              <p className="text-[var(--text-secondary)] text-[13px]">Объявлений</p>
+              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">15K+</p>
+              <p className="text-[var(--sub)] text-[13px]">Объявлений</p>
             </div>
             <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text-primary)] mb-1">8K+</p>
-              <p className="text-[var(--text-secondary)] text-[13px]">Пользователей</p>
+              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">8K+</p>
+              <p className="text-[var(--sub)] text-[13px]">Пользователей</p>
             </div>
             <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text-primary)] mb-1">{CITIES.length}+</p>
-              <p className="text-[var(--text-secondary)] text-[13px]">Городов</p>
+              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">{CITIES.length}+</p>
+              <p className="text-[var(--sub)] text-[13px]">Городов</p>
             </div>
             <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text-primary)] mb-1">98%</p>
-              <p className="text-[var(--text-secondary)] text-[13px]">Довольных</p>
+              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">98%</p>
+              <p className="text-[var(--sub)] text-[13px]">Довольных</p>
             </div>
           </div>
         </div>
@@ -556,16 +537,14 @@ export function HomePageV6() {
       {/* ═══════════════════════════════════════════════════════════════
           СДАТЬ ЖИЛЬЁ — по ТЗ v4 (glass card, product benefit)
           ═══════════════════════════════════════════════════════════════ */}
-      <section 
-        className="py-14 md:py-18"
+      <section
         style={{ background: 'linear-gradient(180deg, var(--bg-main) 0%, var(--bg-secondary) 100%)' }}
       >
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="market-container">
           <div className={cn(
             'bg-[var(--card)] backdrop-blur-[22px]',
-            'rounded-[20px]',
-            'border border-white/60',
-            'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
+            'rounded-[20px] border border-white/60',
+            'shadow-lg shadow-black/20',
             'p-8 md:p-10'
           )}>
             <div className="flex flex-col md:flex-row md:items-center gap-8">

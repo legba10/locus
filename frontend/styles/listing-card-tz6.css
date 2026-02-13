@@ -3,16 +3,18 @@
  * фото, тексты, тёмная тема. Только токены, без хардкода.
  */
 
+/* ТЗ-MAIN-REDESIGN: карточка продукта — rounded-2xl bg-[var(--card)] border hover:shadow-2xl */
 .listing-card {
-  border-radius: 16px;
-  background: var(--color-surface, var(--bg-card));
-  box-shadow: var(--shadow-1, var(--shadow-card));
+  border-radius: 1rem;
+  background: var(--card, var(--bg-card));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .listing-card:hover {
@@ -36,32 +38,29 @@
 
 @media (hover: hover) and (pointer: fine) {
   .listing-card:hover {
-    box-shadow: 0 8px 24px rgba(12, 14, 20, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   }
 }
 
 [data-theme="dark"] .listing-card,
 .dark .listing-card {
-  background: rgba(20, 20, 26, 0.85);
+  background: var(--card);
+  border-color: var(--border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .listing-card:hover,
 .dark .listing-card:hover {
-  background: rgba(18, 18, 22, 0.9);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
-/* Photo block */
-/* TZ-10: высота фото 220px, object-fit cover */
+/* Photo block — ТЗ-1: фиксированный ratio 4:3, фото не растягиваются */
 .listing-card__image-wrap {
   position: relative;
   width: 100%;
-  height: 220px;
+  aspect-ratio: 4 / 3;
+  min-height: 0;
   flex-shrink: 0;
   overflow: hidden;
   background: var(--color-surface-2, #f2f2f2);
@@ -138,6 +137,34 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ТЗ-5: рейтинг — единый шаблон фото | цена | город | рейтинг */
+.listing-card__rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.listing-card__rating {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, var(--text-main));
+}
+.listing-card__rating-star {
+  color: #eab308;
+  margin-right: 2px;
+}
+.listing-card__rating--empty {
+  color: var(--color-muted, var(--text-secondary));
+  font-weight: 400;
+}
+.listing-card__title--secondary {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted, var(--text-secondary));
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  margin-top: 2px;
 }
 
 /* Owner: avatar 24px + name only */
@@ -333,6 +360,11 @@
 
 .listing-card-skeleton__line--address {
   width: 60%;
+}
+
+.listing-card-skeleton__line--rating {
+  width: 24%;
+  height: 13px;
 }
 
 .listing-card-skeleton__owner {

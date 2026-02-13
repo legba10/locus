@@ -37,21 +37,19 @@ export function Footer({ className }: { className?: string }) {
 
   return (
     <footer
-      className={cn(className, 'bg-[var(--surface-secondary)]')}
+      className={cn(className, 'bg-[var(--bg)] border-t border-[var(--border)]')}
     >
-      <div className="container py-10 text-center">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 text-left">
+      <div className="market-container py-16 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
-            {/* Логотип light, 32px, без контейнера */}
             <Logo variant="theme" size="lg" showText={true} className="mb-5" />
-            <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed mb-5">
+            <p className="text-[14px] text-[var(--sub)] leading-relaxed mb-5">
               Подбираем жильё под ваши параметры с персональными рекомендациями
             </p>
-            {/* Телефон по ТЗ v3 */}
-            <a 
-              href="tel:+79224112141" 
-              className="text-[15px] text-[var(--text-primary)] font-medium hover:text-[var(--accent)] transition-colors"
+            <a
+              href="tel:+79224112141"
+              className="text-[15px] text-[var(--text)] font-medium hover:opacity-90 transition-all duration-200"
             >
               +7 (922) 411-21-41
             </a>
@@ -61,7 +59,7 @@ export function Footer({ className }: { className?: string }) {
                 href="https://vk.ru/club235775695" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center transition-all duration-200"
+                className="w-9 h-9 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent1)] hover:text-white text-[var(--text)] flex items-center justify-center transition-all duration-200"
                 aria-label="ВКонтакте"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -72,7 +70,7 @@ export function Footer({ className }: { className?: string }) {
                 href="https://t.me/Locusrental" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--accent)] text-[var(--text-primary)] flex items-center justify-center transition-all duration-200"
+                className="w-9 h-9 rounded-lg bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--accent1)] hover:text-white text-[var(--text)] flex items-center justify-center transition-all duration-200"
                 aria-label="Telegram"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -82,18 +80,15 @@ export function Footer({ className }: { className?: string }) {
             </div>
           </div>
 
-          {/* Platform Links */}
+          {/* Платформа */}
           <div>
-            <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            <h3 className="text-[13px] font-semibold text-[var(--sub)] uppercase tracking-wider mb-4">
               Платформа
             </h3>
             <ul className="space-y-3">
               {navigation.platform.map((item) => (
                 <li key={item.name}>
-                  <Link 
-                    href={item.href}
-                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                  >
+                  <Link href={item.href} className="text-[14px] text-[var(--sub)] hover:text-[var(--text)] transition-all duration-200">
                     {item.name}
                   </Link>
                 </li>
@@ -101,18 +96,15 @@ export function Footer({ className }: { className?: string }) {
             </ul>
           </div>
 
-          {/* Company Links */}
+          {/* Компания */}
           <div>
-            <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            <h3 className="text-[13px] font-semibold text-[var(--sub)] uppercase tracking-wider mb-4">
               Компания
             </h3>
             <ul className="space-y-3">
               {navigation.company.map((item) => (
                 <li key={item.name}>
-                  <Link 
-                    href={item.href}
-                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                  >
+                  <Link href={item.href} className="text-[14px] text-[var(--sub)] hover:text-[var(--text)] transition-all duration-200">
                     {item.name}
                   </Link>
                 </li>
@@ -120,18 +112,15 @@ export function Footer({ className }: { className?: string }) {
             </ul>
           </div>
 
-          {/* Support Links */}
+          {/* Помощь */}
           <div>
-            <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wider mb-4">
-              Поддержка
+            <h3 className="text-[13px] font-semibold text-[var(--sub)] uppercase tracking-wider mb-4">
+              Помощь
             </h3>
             <ul className="space-y-3">
               {navigation.support.map((item) => (
                 <li key={item.name}>
-                  <Link 
-                    href={item.href}
-                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                  >
+                  <Link href={item.href} className="text-[14px] text-[var(--sub)] hover:text-[var(--text)] transition-all duration-200">
                     {item.name}
                   </Link>
                 </li>
@@ -142,17 +131,17 @@ export function Footer({ className }: { className?: string }) {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/10">
-        <div className="container py-4 text-center">
-          <div className="flex flex-col items-center gap-2 opacity-70">
-            <p className="text-[14px] text-gray-400">
+      <div className="border-t border-[var(--border)]">
+        <div className="market-container py-4 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[14px] text-[var(--sub)]">
               © {currentYear} LOCUS. Все права защищены.
             </p>
             <div className="flex items-center gap-4">
-              <Link href="/terms" className="text-[14px] text-gray-400 hover:text-gray-300 transition-colors">
+              <Link href="/terms" className="text-[14px] text-[var(--sub)] hover:text-[var(--text)] transition-all duration-200">
                 Условия использования
               </Link>
-              <Link href="/privacy" className="text-[14px] text-gray-400 hover:text-gray-300 transition-colors">
+              <Link href="/privacy" className="text-[14px] text-[var(--sub)] hover:text-[var(--text)] transition-all duration-200">
                 Политика конфиденциальности
               </Link>
             </div>

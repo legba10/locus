@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield, User } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { ThemeContext } from '@/providers/ThemeProvider'
@@ -55,6 +55,28 @@ export function Header() {
 
   const logoIconSrc = resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'
   const authed = isAuthenticated()
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setIsTelegram(Boolean((window as any).Telegram?.WebApp))
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const desktopNavIcons = useMemo(
+    () => [
+      { label: 'Поиск', href: '/listings', icon: Search },
+      { label: 'Избранное', href: '/favorites', icon: Heart },
+      { label: 'Сообщения', href: '/messages', icon: MessageCircle },
+      { label: 'Профиль', href: authed ? '/profile' : '/auth/login', icon: User },
+    ],
+    [authed]
+  )
+
   if (authed && user === undefined) return null
 
   const limit = user?.listingLimit ?? 1
@@ -74,29 +96,7 @@ export function Header() {
       100
   )
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    setIsTelegram(Boolean((window as any).Telegram?.WebApp))
-  }, [])
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   const isActive = (path: string) => pathname === path
-  const desktopNav = useMemo(
-    () => [
-      { label: 'Поиск', href: '/listings' },
-      { label: 'Избранное', href: '/favorites' },
-      { label: 'Сообщения', href: '/messages' },
-      { label: 'Профиль', href: '/profile' },
-      { label: 'Тарифы', href: '/pricing' },
-      ...(isAdmin ? [{ label: 'Админ', href: '/admin' }] : []),
-    ],
-    [isAdmin]
-  )
 
   const handleLogout = async () => {
     await logout()
@@ -139,10 +139,10 @@ export function Header() {
             </button>
           </div>
 
-          {/* Logo */}
-          <div className="layout-header__cell layout-header__logo-cell">
-            <Link href="/" className="layout-header__logo" aria-label="LOCUS — на главную">
-              <img
+          {/* ТЗ-4: Logo + Nav — Лого | Поиск | Избранное | Сообщения | Профиль */}
+          <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
+            <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
+              <Image
                 src={logoIconSrc}
                 alt=""
                 className="layout-header__logo-img"
@@ -151,66 +151,49 @@ export function Header() {
               />
               <span className="layout-header__logo-text">LOCUS</span>
             </Link>
+            <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">
+              {desktopNavIcons.map((item) => {
+                const Icon = item.icon
+                const active = isActive(item.href.split('?')[0])
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-label={item.label}
+                    className={cn(
+                      'layout-header__nav-icon flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
+                      active && 'layout-header__nav-icon--active'
+                    )}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+                  </Link>
+                )
+              })}
+            </nav>
           </div>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6 h-full">
-            {desktopNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'text-[14px] font-medium transition-colors flex items-center h-full',
-                  isActive(item.href.split('?')[0])
-                    ? 'text-[var(--accent)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-main)]'
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Right: theme, bell, CTA, auth */}
+          {/* Right: bell, theme, CTA */}
           <div className="layout-header__cell layout-header__actions-cell">
-            <div className="hidden md:flex items-center gap-2">
-              <ThemeToggle />
+            <div className="hidden md:flex items-center gap-3">
               {authed && (
-                <div className="layout-header__bell-wrap">
+                <div className="layout-header__bell-wrap layout-header__nav-icon">
                   <NotificationsBell compactBadge />
                 </div>
               )}
+              <div className="layout-header__nav-icon">
+                <ThemeToggle />
+              </div>
               {canCreateListing && (
                 <Link
                   href={createHref}
-                  className={cn(
-                    'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                    'bg-[var(--button-secondary-bg)] text-[var(--accent)] border border-[var(--border)]',
-                    'hover:opacity-90 transition-opacity'
-                  )}
+                  className="layout-header__cta-btn"
                 >
-                  Разместить объявление
+                  Разместить
                 </Link>
               )}
-              {isAuthenticated() ? (
-                <button
-                  onClick={logout}
-                  className={cn(
-                    'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                    'text-[var(--danger)] hover:opacity-80 transition-colors'
-                  )}
-                >
-                  Выйти
-                </button>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className={cn(
-                    'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                    'bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90 transition-opacity'
-                  )}
-                >
-                  Войти / Зарегистрироваться
+              {!authed && (
+                <Link href="/auth/login" className="layout-header__cta-btn">
+                  Войти
                 </Link>
               )}
             </div>

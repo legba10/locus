@@ -139,9 +139,9 @@ export function HeaderLight() {
               <Link
                 href={createHref}
                 className={cn(
-                  'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                  'bg-[var(--button-secondary-bg)] text-[var(--accent)] border border-[var(--border)]',
-                  'hover:opacity-90 transition-opacity'
+                  'px-4 py-2.5 text-[14px] font-semibold rounded-xl',
+                  'bg-gradient-to-r from-violet-600 to-indigo-600 text-white',
+                  'hover:opacity-95 transition-opacity'
                 )}
               >
                 Разместить объявление

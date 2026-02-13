@@ -21,16 +21,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ТЗ-1: фирменный градиент violet-600 → indigo-600 */
 .smart-cta-tz10 {
-  background: linear-gradient(135deg, #5b4cfa 0%, #4c3fdd 100%);
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
   color: #fff;
-  box-shadow: 0 6px 20px rgba(91, 76, 250, 0.35);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
 }
 
 [data-theme="dark"] .smart-cta-tz10,
 .dark .smart-cta-tz10 {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-600) 100%);
-  box-shadow: 0 6px 24px rgba(106, 76, 255, 0.4);
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.4);
 }
 
 .smart-cta-tz10:hover {
@@ -48,7 +49,50 @@
   flex-shrink: 0;
 }
 
-/* Популярные направления — карточки */
+/* ТЗ-2: Популярные города — горизонтальный блок, карточки с hover */
+.popular-cities-home__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.popular-cities-home__card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  min-height: 56px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-weight: 500;
+  font-size: 15px;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.popular-cities-home__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .popular-cities-home__card,
+.dark .popular-cities-home__card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .popular-cities-home__card:hover,
+.dark .popular-cities-home__card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Популярные направления — карточки (legacy) */
 .popular-destinations-tz10 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));

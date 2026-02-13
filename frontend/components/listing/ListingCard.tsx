@@ -192,9 +192,20 @@ function ListingCardComponent({
       </div>
 
       <div className="listing-card__info">
-        <h3 className="listing-card__title">{title || 'Без названия'}</h3>
+        {/* ТЗ-5: единый шаблон — цена, город, рейтинг */}
         <p className="listing-card__price">{formatPrice(price, 'night')}</p>
         <p className="listing-card__address">{locationText}</p>
+        <div className="listing-card__rating-row">
+          {rating != null && Number(rating) > 0 ? (
+            <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
+              <span className="listing-card__rating-star" aria-hidden>★</span>
+              {Number(rating).toFixed(1)}
+            </span>
+          ) : (
+            <span className="listing-card__rating listing-card__rating--empty">—</span>
+          )}
+        </div>
+        <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
         {showOwner && (
           <div className="listing-card__owner">
             <div className="listing-card__owner-avatar">
@@ -220,9 +231,9 @@ export function ListingCardSkeleton() {
     <div className="listing-card-skeleton">
       <div className="listing-card-skeleton__photo" />
       <div className="listing-card-skeleton__info">
-        <div className="listing-card-skeleton__line listing-card-skeleton__line--title" />
         <div className="listing-card-skeleton__line listing-card-skeleton__line--price" />
         <div className="listing-card-skeleton__line listing-card-skeleton__line--address" />
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--rating" />
         <div className="listing-card-skeleton__owner">
           <div className="listing-card-skeleton__avatar" />
           <div className="listing-card-skeleton__name" />

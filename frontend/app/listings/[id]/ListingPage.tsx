@@ -117,7 +117,7 @@ export function ListingPage({ id }: { id: string }) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
         <p className="text-red-700 mb-2">Не удалось загрузить</p>
-        <Link href="/listings" className="text-blue-600 hover:underline">← К поиску</Link>
+        <Link href="/listings" className="text-[var(--accent)] hover:underline">← К поиску</Link>
       </div>
     )
   }
@@ -218,7 +218,7 @@ export function ListingPage({ id }: { id: string }) {
               </div>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+            <button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-3 rounded-xl font-medium hover:opacity-95 transition">
               Забронировать
             </button>
 

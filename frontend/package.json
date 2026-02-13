@@ -9,6 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "next lint",
+    "prepush": "npm run lint && npm run build",
     "stagewise": "npx stagewise@latest"
   },
   "dependencies": {

@@ -127,11 +127,12 @@ select option {
   --logo-accent: var(--locus-primary);
   --border-soft: var(--locus-divider);
   --border-default: var(--locus-divider);
-  --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 16px 50px rgba(0, 0, 0, 0.12);
-  --shadow-glass: 0 20px 60px rgba(0, 0, 0, 0.12);
-  --shadow-dropdown: 0 20px 50px rgba(0, 0, 0, 0.15);
+  /* ТЗ-5: тени — только shadow-lg shadow-black/20 */
+  --shadow-soft: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-glass: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-dropdown: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
   --shadow-button: 0 4px 14px rgba(123, 74, 226, 0.25);
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(255, 255, 255, 0.5);
@@ -1552,9 +1553,13 @@ a[class*="rounded"][class*="px-"][class*="py-"] {
   gap: var(--space-md, 12px);
 }
 
-/* Section spacing normalization */
+/* ТЗ-5: секции — единый padding py-16 */
+section {
+  padding-top: 4rem;   /* py-16 */
+  padding-bottom: 4rem;
+}
 section + section {
-  margin-top: 32px;
+  margin-top: 0;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1695,10 +1700,11 @@ select,
    TZ-3: LISTING CARDS + GRID (main screen)
    ════════════════════════════════════════════════════════════════ */
 
-/* ТЗ-5: отступы главной — 16px mobile, 32px desktop */
+/* ТЗ-5: контейнер — max-w-6xl (72rem), секции py-16 */
 .market-container {
-  max-width: 1180px;
-  margin: 0 auto;
+  max-width: 72rem; /* max-w-6xl */
+  margin-left: auto;
+  margin-right: auto;
   padding-left: 32px;
   padding-right: 32px;
 }
@@ -1731,6 +1737,18 @@ select,
   }
 }
 
+/* ТЗ-5: мобильная версия — кнопки full width на iPhone */
+@media (max-width: 767px) {
+  .search-hero-actions-compact {
+    flex-direction: column;
+    width: 100%;
+  }
+  .search-hero-actions-compact .search-hero-submit-tz7-compact,
+  .search-hero-actions-compact .search-hero-ai-tz7-compact {
+    width: 100%;
+  }
+}
+
 /* TZ-6: .listing-card in listing-card-tz6.css */
 
 .listing-photo {
@@ -1757,6 +1775,21 @@ select,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ТЗ-MAIN-REDESIGN: анимации — fade-in блоков, scale кнопок */
+.animate-fade-in {
+  animation: ds-fade-in 0.5s ease-out forwards;
+}
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ТЗ-5: glass skeleton — полупрозрачный блок с пульсацией */
@@ -2046,7 +2079,7 @@ button,
   min-height: 48px;
   padding: 0 20px;
   border-radius: var(--radius-btn, 14px);
-  background: linear-gradient(90deg, #7c3aed, #a855f7);
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
   color: var(--button-primary-text);
   font-weight: 500;
 }

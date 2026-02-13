@@ -36,18 +36,24 @@
   padding-right: 16px;
 }
 
+/* ТЗ-MAIN-REDESIGN: clean header h-16, backdrop-blur, border-[var(--border)] */
 .layout-header__grid {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  min-height: 64px;
+  min-height: 4rem; /* h-16 */
 }
 
-@media (min-width: 768px) {
-  .layout-header__grid {
-    min-height: 72px;
-  }
+.layout-header {
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .layout-header,
+.dark .layout-header {
+  background: rgba(11, 15, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .layout-header__burger-cell {
@@ -55,15 +61,10 @@
   margin-right: 16px;
 }
 
-.layout-header__logo-cell {
-  justify-self: start;
-  margin-right: auto;
-}
-
-@media (min-width: 768px) {
-  .layout-header__logo-cell {
-    margin-right: 0;
-  }
+/* ТЗ-4: центральный блок — лого + нав (grid 2-я колонка) */
+.layout-header__center {
+  min-width: 0;
+  justify-self: stretch;
 }
 
 /* TZ-5: бургер — 3 полоски 28×28px, hit area min 44×44px, без крестика */
@@ -163,6 +164,48 @@
 }
 
 /* Badge в header задаётся через compactBadge в NotificationsBell (8px circle) */
+
+/* ТЗ-4: иконки навигации — text-white/70 hover:text-white (в тёмной теме) */
+.layout-header__nav-icon {
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
+}
+.layout-header__nav-icon:hover {
+  color: var(--text-main);
+}
+[data-theme="dark"] .layout-header__nav-icon,
+.dark .layout-header__nav-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+[data-theme="dark"] .layout-header__nav-icon:hover,
+.dark .layout-header__nav-icon:hover {
+  color: #fff;
+}
+.layout-header__nav-icon--active {
+  color: var(--accent);
+}
+[data-theme="dark"] .layout-header__nav-icon--active,
+.dark .layout-header__nav-icon--active {
+  color: #a5b4fc;
+}
+
+/* ТЗ-4: кнопка «Разместить» */
+.layout-header__cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  transition: opacity 0.15s ease;
+}
+.layout-header__cta-btn:hover {
+  opacity: 0.95;
+}
 
 .layout-header__actions-cell {
   justify-self: end;

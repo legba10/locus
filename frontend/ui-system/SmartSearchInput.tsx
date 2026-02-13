@@ -77,7 +77,7 @@ export function SmartSearchInput({
 
         <button
           onClick={onSubmit}
-          className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 transition"
+          className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 font-medium text-white hover:opacity-95 transition"
         >
           Найти
         </button>
