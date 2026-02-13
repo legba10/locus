@@ -289,21 +289,21 @@ export function SearchPageV4() {
             />
           </aside>
           {/* Кнопка «Фильтры» на mobile */}
-          <div className="lg:hidden flex items-center gap-3 mb-4">
+          <div className="filters-bar lg:hidden flex items-center gap-3 mb-4">
             <button
               type="button"
               onClick={() => setFiltersModalOpen(true)}
-              className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-semibold text-[14px] flex items-center justify-center gap-2"
+              className="filters-bar-chip flex-1 min-h-[40px] rounded-[10px] px-4 font-medium text-[14px] flex items-center justify-center gap-2 border border-[var(--border)] bg-[var(--color-surface-2)]"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              <svg className="w-5 h-5 search-tz7-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
               Фильтры
             </button>
             <button
               type="button"
               onClick={() => setQuickAIOpen(true)}
-              className="min-h-[48px] px-4 rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px]"
+              className="search-hero-ai-tz7 min-h-[40px] px-4 rounded-[10px] shrink-0"
             >
-              Умный подбор ⚡
+              Умный подбор
             </button>
           </div>
 
@@ -313,11 +313,19 @@ export function SearchPageV4() {
             city={city}
             budgetMin={budgetMin}
             budgetMax={budgetMax}
+            type={type}
             onCityChange={setCity}
             onBudgetChange={setBudget}
+            onTypeChange={setType}
             onLaunch={() => {
               setQuickAIOpen(false)
-              router.push(`/listings?ai=true${city ? `&city=${encodeURIComponent(city)}` : ''}${priceMin ? `&priceMin=${priceMin}` : ''}${priceMax ? `&priceMax=${priceMax}` : ''}`)
+              const params = new URLSearchParams()
+              params.set('ai', 'true')
+              if (city) params.set('city', city)
+              if (priceMin) params.set('priceMin', priceMin)
+              if (priceMax) params.set('priceMax', priceMax)
+              if (type) params.set('type', type)
+              router.push(`/listings?${params.toString()}`)
             }}
           />
 
@@ -325,14 +333,9 @@ export function SearchPageV4() {
           <div className="min-w-0">
             {/* AI панель — если включён Умный подбор */}
             {aiMode && !isLoading && sortedListings.length > 0 && (
-              <div className={cn(
-                'bg-violet-50/80 backdrop-blur-sm',
-                'rounded-[18px]',
-                'border border-violet-100',
-                'p-5 mb-6'
-              )}>
+              <div className="search-tz7-ai-panel rounded-[18px] border border-[var(--border)] p-5 mb-6 bg-[var(--color-surface-2)]">
                 <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 search-tz7-icon text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                   </svg>
                   <h3 className="text-[16px] font-semibold text-[var(--text-main)]">
@@ -371,14 +374,11 @@ export function SearchPageV4() {
                     setSort(e.target.value as SortOption)
                   }}
                   className={cn(
-                    'rounded-[14px] px-4 py-2.5',
-                    'border border-white/60',
-                    'bg-white/75 backdrop-blur-[18px]',
-                    'text-[var(--text-main)] text-[14px]',
-                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                    'transition-all cursor-pointer appearance-none',
-                    'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-                    'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]'
+                    'search-tz7-select rounded-[14px] px-4 py-2.5 min-h-[40px]',
+                    'border border-[var(--border)]',
+                    'bg-[var(--color-surface-2)] text-[var(--color-text)] text-[14px]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]',
+                    'transition-all cursor-pointer appearance-none'
                   )}
                 >
                   <option value="ai">AI релевантность</option>

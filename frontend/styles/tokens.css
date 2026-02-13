@@ -66,7 +66,28 @@
   --space-md: 16px;
   --space-lg: 24px;
 
-  /* Z-index: шкала в zindex.css (ТЗ-2) */
+  /* TZ-5: кнопки и интерактив — радиусы, типографика, переходы */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --space-xs: 6px;
+  --font-size-sm: 13px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --transition-fast: 150ms;
+  --transition-medium: 220ms;
+  --easing: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --color-primary: #7b61ff;
+  --color-primary-600: #6d52e8;
+  --color-accent: #7b61ff;
+  --color-danger: #e04e4e;
+  --color-surface: #ffffff;
+  --color-surface-2: #f6f7fb;
+  --color-text: #121212;
+  --color-muted: #7e7e8a;
+  --shadow-1: 0 6px 18px rgba(12, 14, 20, 0.08);
+
+  /* Z-index: шкала в zindex.css */
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -111,6 +132,12 @@
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.45);
   --blur-glass: 20px;
   --blur-soft: 6px;
+  /* TZ-5 dark */
+  --color-surface: rgba(12, 12, 16, 0.95);
+  --color-surface-2: rgba(20, 20, 25, 0.65);
+  --color-text: #f2f3f5;
+  --color-muted: #b4b6bd;
+  --shadow-1: 0 6px 20px rgba(0, 0, 0, 0.6);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -134,4 +161,7 @@
   /* Шрифты ТЗ-4 БЛОК 5 */
   --font-main: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-secondary: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* TZ-5: алиасы для кнопок (primary = accent из логотипа) */
+  --color-primary: var(--accent);
+  --color-primary-600: var(--accent-hover);
 }

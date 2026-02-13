@@ -321,7 +321,7 @@ export function ListingLayout(props: ListingLayoutProps) {
 
       {/* Fullscreen галерея */}
       {isGalleryOpen && photos.length > 0 && (
-        <div className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Галерея">
+        <div className="fixed inset-0 overlay flex items-center justify-center" style={{ zIndex: 'var(--z-overlay)' }} role="dialog" aria-modal="true" aria-label="Галерея">
           <button type="button" onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Закрыть">×</button>
           {photos.length > 1 && (
             <>

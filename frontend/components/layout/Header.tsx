@@ -14,6 +14,7 @@ import { MobileMenu } from './MobileMenu'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
+/** TZ-5: пункт меню — full width, текст слева, иконка справа */
 function NavItem({
   icon,
   label,
@@ -28,10 +29,11 @@ function NavItem({
       <button
         type="button"
         onClick={onClick}
-        className="menu-item-btn w-full text-[15px] flex items-center transition-colors"
+        className="menu-item-btn w-full text-[15px] flex items-center justify-between gap-3 min-h-[44px] px-3 rounded-[var(--radius-md)] transition-colors"
+        style={{ fontSize: 'var(--font-size-md, 16px)' }}
       >
-        <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
         <span>{label}</span>
+        <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
       </button>
     </li>
   )
@@ -129,6 +131,7 @@ export function Header() {
               className="layout-header__burger"
               onClick={() => setIsMenuOpen((prev) => !prev)}
               aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+              aria-expanded={isMenuOpen}
             >
               <span />
               <span />
@@ -275,7 +278,7 @@ export function Header() {
             <button
               type="button"
               onClick={() => handleNavigate('/auth/login')}
-              className="menu-cta"
+              className="btn btn--primary btn--md w-full"
             >
               Войти / Зарегистрироваться
             </button>
@@ -305,20 +308,15 @@ export function Header() {
         </nav>
         {isAuthenticated() && (
           <div className="mobile-menu-logout-wrap">
-            <ul className="menu-list">
-              <li className="menu-item">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="menu-item-btn menu-item-btn--logout"
-                >
-                  <span className={cn('menu-icon-wrap', menuIconWrap)}>
-                    <LogOut size={22} strokeWidth={1.8} />
-                  </span>
-                  <span>Выйти</span>
-                </button>
-              </li>
-            </ul>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="btn btn--danger btn--md w-full"
+              aria-label="Выйти"
+            >
+              <LogOut size={20} strokeWidth={1.8} aria-hidden />
+              <span>Выйти</span>
+            </button>
           </div>
         )}
       </MobileMenu>

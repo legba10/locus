@@ -75,9 +75,20 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
         headers: retryHeaders,
       });
     }
+    // TZ-2: после неудачного refresh — очистить токены и редирект на логин
+    clearTokens();
+    if (typeof window !== "undefined" && on401Handler) {
+      on401Handler();
+    }
   }
 
   return response;
+}
+
+let on401Handler: (() => void) | null = null;
+/** TZ-2: регистрация обработчика 401 (logout + redirect). Вызвать из корня приложения. */
+export function setOn401(handler: () => void) {
+  on401Handler = handler;
 }
 
 async function tryRefreshToken(): Promise<boolean> {
@@ -140,7 +151,9 @@ export async function apiFetch<T = unknown>(path: string, options?: RequestInit)
     }
     
     const msg = getApiErrorMessage(res.status, serverMsg);
-    console.error("[API] Error:", path, res.status, msg);
+    if (process.env.NODE_ENV === "development") {
+      console.error("[API] Error:", path, res.status, msg);
+    }
     const err: any = new Error(msg);
     err.status = res.status;
     if (serverCode) err.code = serverCode;

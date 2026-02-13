@@ -1,0 +1,130 @@
+/**
+ * TZ-10: Главная — кнопка Умный подбор, контейнеры по теме, популярные направления.
+ * Только UI, токены темы.
+ */
+
+/* Основной CTA: Умный подбор — height 56px, radius 16px, градиент */
+.smart-cta-tz10 {
+  height: 56px;
+  min-height: 56px;
+  border-radius: 16px;
+  padding: 0 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.smart-cta-tz10 {
+  background: linear-gradient(135deg, #5b4cfa 0%, #4c3fdd 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(91, 76, 250, 0.35);
+}
+
+[data-theme="dark"] .smart-cta-tz10,
+.dark .smart-cta-tz10 {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-600) 100%);
+  box-shadow: 0 6px 24px rgba(106, 76, 255, 0.4);
+}
+
+.smart-cta-tz10:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.smart-cta-tz10:active {
+  transform: translateY(0);
+}
+
+.smart-cta-tz10 svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* Популярные направления — карточки */
+.popular-destinations-tz10 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.popular-destinations-tz10 a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 15px;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .popular-destinations-tz10 a,
+.dark .popular-destinations-tz10 a {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #f2f3f5;
+}
+
+.popular-destinations-tz10 a:hover {
+  background: var(--color-surface);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .popular-destinations-tz10 a:hover,
+.dark .popular-destinations-tz10 a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Фильтры pill — border-radius 999px */
+.filters-pill-tz10 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filters-pill-tz10 button,
+.filters-pill-tz10 a {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+[data-theme="dark"] .filters-pill-tz10 button,
+[data-theme="dark"] .filters-pill-tz10 a,
+.dark .filters-pill-tz10 button,
+.dark .filters-pill-tz10 a {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f2f3f5;
+}
+
+.filters-pill-tz10 button:hover,
+.filters-pill-tz10 a:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .filters-pill-tz10 button:hover,
+.dark .filters-pill-tz10 button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

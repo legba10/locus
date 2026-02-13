@@ -34,29 +34,45 @@ function formatPrice(amount: number) {
   return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(amount)
 }
 
-// Gallery
-function Gallery({ photos, title }: { photos: Array<{ url: string }>; title: string }) {
-  const [idx, setIdx] = useState(0)
+const PLACEHOLDER_IMAGE = '/placeholder.svg'
 
-  if (!photos.length) {
+// Gallery — TZ-2: защита от undefined url и сломанных фото
+function Gallery({ photos, title }: { photos: Array<{ url?: string }>; title: string }) {
+  const [idx, setIdx] = useState(0)
+  const [imgError, setImgError] = useState(false)
+
+  const safePhotos = Array.isArray(photos) ? photos.filter((p) => p?.url) : []
+  const currentUrl = safePhotos[idx]?.url ?? safePhotos[0]?.url
+
+  /* TZ-3: placeholder с иконкой дома при отсутствии фото */
+  if (!safePhotos.length || !currentUrl) {
     return (
-      <div className="aspect-video rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-        Нет фото
+      <div className="h-[260px] md:h-[420px] rounded-[16px] bg-[var(--bg-secondary)] flex flex-col items-center justify-center text-[var(--text-muted)] text-sm gap-2">
+        <img src={PLACEHOLDER_IMAGE} alt="" className="w-16 h-16 object-contain opacity-50" />
+        <span>Нет фото</span>
       </div>
     )
   }
 
+  /* TZ-3: основное фото 260px mobile, 420px desktop, radius 16px */
   return (
-    <div className="relative aspect-video rounded-xl bg-gray-100 overflow-hidden">
-      <Image src={photos[idx].url} alt={title} fill className="object-cover" priority />
-      {photos.length > 1 && (
+    <div className="relative w-full h-[260px] md:h-[420px] rounded-[16px] bg-[var(--bg-secondary)] overflow-hidden">
+      {imgError ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-muted)] text-sm gap-2">
+          <img src={PLACEHOLDER_IMAGE} alt="" className="w-16 h-16 object-contain opacity-50" />
+          <span>Нет фото</span>
+        </div>
+      ) : (
+        <Image src={currentUrl} alt={title ?? 'Фото'} fill className="object-cover" loading="lazy" onError={() => setImgError(true)} sizes="(max-width: 768px) 100vw, 800px" />
+      )}
+      {safePhotos.length > 1 && (
         <>
-          <button onClick={() => setIdx(i => i > 0 ? i - 1 : photos.length - 1)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 rounded-full w-9 h-9 flex items-center justify-center hover:bg-white shadow">←</button>
-          <button onClick={() => setIdx(i => i < photos.length - 1 ? i + 1 : 0)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 rounded-full w-9 h-9 flex items-center justify-center hover:bg-white shadow">→</button>
-          <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-            {idx + 1}/{photos.length}
+          <button type="button" onClick={() => setIdx(i => i > 0 ? i - 1 : safePhotos.length - 1)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center">←</button>
+          <button type="button" onClick={() => setIdx(i => i < safePhotos.length - 1 ? i + 1 : 0)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center">→</button>
+          <div className="absolute bottom-3 right-3 px-2 py-1 rounded-full bg-black/60 text-white text-xs tabular-nums">
+            {idx + 1}/{safePhotos.length}
           </div>
         </>
       )}
@@ -150,13 +166,13 @@ export function ListingPage({ id }: { id: string }) {
           </div>
 
           {/* BLOCK 7: Amenities */}
-          {item.amenities.length > 0 && (
+          {Array.isArray(item.amenities) && item.amenities.length > 0 && (
             <div className="rounded-xl border border-gray-200 bg-white p-4">
               <h2 className="font-semibold text-gray-900 mb-2">Удобства</h2>
               <div className="flex flex-wrap gap-2">
                 {item.amenities.map((a, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-gray-100 rounded-lg text-sm text-gray-700">
-                    {a.amenity.label}
+                  <span key={a?.amenity?.label ?? `amenity-${i}`} className="px-2.5 py-1 bg-gray-100 rounded-lg text-sm text-gray-700">
+                    {a?.amenity?.label ?? 'Удобство'}
                   </span>
                 ))}
               </div>

@@ -35,8 +35,7 @@ export interface ListingCardProps {
   highlight?: boolean
 }
 
-const PHOTO_HEIGHT_MOBILE = 220
-const PHOTO_HEIGHT_DESKTOP = 260
+/** TZ-3: единый ratio 4:3, desktop 320px, mobile 100% */
 const SWIPE_THRESHOLD = 50
 
 function ListingCardComponent({
@@ -121,7 +120,6 @@ function ListingCardComponent({
 
   const locationText = district ? `${city} · ${district}` : city
   const showOwner = owner?.name || owner?.avatar
-  const displayRating = owner?.rating ?? rating
 
   return (
     <article
@@ -129,19 +127,11 @@ function ListingCardComponent({
       tabIndex={0}
       onClick={openListing}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openListing()}
-      className={cn(
-        'listing-card-unified flex flex-col h-full rounded-[18px] overflow-hidden cursor-pointer',
-        'bg-[var(--bg-card)] border border-[var(--border)]',
-        'transition-all duration-200 ease-out',
-        'hover:scale-[1.01] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]',
-        'dark:bg-[#14161f] dark:border-[rgba(255,255,255,0.08)] [data-theme="dark"]:bg-[#14161f] [data-theme="dark"]:border-[rgba(255,255,255,0.08)]',
-        highlight && 'ring-2 ring-[var(--accent)]',
-        className
-      )}
+      className={cn('listing-card', highlight && 'listing-card-glow', className)}
     >
-      {/* Photo: 220px mobile, 260px desktop */}
+      {/* TZ-6: фото, placeholder из токенов, свайп + стрелки 32px */}
       <div
-        className="relative w-full h-[220px] md:h-[260px] flex-shrink-0 overflow-hidden rounded-t-[18px] bg-[var(--bg-glass)] select-none"
+        className="listing-card__image-wrap"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -150,103 +140,71 @@ function ListingCardComponent({
             src={displayPhoto}
             alt={title || 'Фото жилья'}
             fill
-            className="object-cover transition-opacity duration-200 md:hover:opacity-95"
+            className="listing-card__image object-cover"
             loading="lazy"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 768px) 100vw, 320px"
             onError={() => setImgError(true)}
             unoptimized={displayPhoto.startsWith('http')}
           />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-secondary)] text-[12px] gap-2">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3l2 2h7a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
-            </svg>
-            <span>Нет фото</span>
-          </div>
-        )}
-        {/* Desktop: arrows */}
+        ) : null}
         {hasMultiplePhotos && (
           <>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); goPrev() }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors hidden md:flex"
+              className="listing-card__arrow listing-card__arrow--prev"
               aria-label="Предыдущее фото"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); goNext() }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors hidden md:flex"
+              className="listing-card__arrow listing-card__arrow--next"
               aria-label="Следующее фото"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </>
         )}
-        {/* Dots (mobile + desktop) */}
         {hasMultiplePhotos && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          <div className="listing-card__dots" aria-hidden>
             {photos.map((_, i) => (
-              <span
-                key={i}
-                className={cn('w-1.5 h-1.5 rounded-full transition-all', activePhotoIndex === i ? 'bg-white scale-110' : 'bg-white/50')}
-                aria-hidden
-              />
+              <span key={i} className={cn('listing-card__dot', activePhotoIndex === i && 'is-active')} />
             ))}
           </div>
         )}
-        {/* Favorite heart */}
         <button
-            type="button"
-            onClick={handleFavorite}
-            disabled={isToggling}
-            className={cn(
-              'absolute top-2 right-2 z-10 p-2 rounded-full bg-black/30 hover:bg-black/45 transition-colors',
-              isSaved && 'text-red-400',
-              isToggling && 'opacity-60 pointer-events-none'
-            )}
-            aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
-          >
-            <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
+          type="button"
+          onClick={handleFavorite}
+          disabled={isToggling}
+          className={cn(
+            'listing-card__favorite',
+            isSaved && 'is-saved',
+            isToggling && 'is-busy'
+          )}
+          aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
+        >
+          <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 min-h-0 p-4">
-        <p className="text-[20px] font-bold text-[var(--text-main)] leading-tight mb-1">
-          {formatPrice(price, 'night')}
-        </p>
-        <h3 className="text-[15px] font-semibold text-[var(--text-main)] line-clamp-2 mb-1">
-          {title || 'Без названия'}
-        </h3>
-        <p className="text-[13px] text-[var(--text-secondary)] line-clamp-1 mb-3">
-          {locationText}
-        </p>
-
-        {/* Owner: avatar, name, rating */}
+      <div className="listing-card__info">
+        <h3 className="listing-card__title">{title || 'Без названия'}</h3>
+        <p className="listing-card__price">{formatPrice(price, 'night')}</p>
+        <p className="listing-card__address">{locationText}</p>
         {showOwner && (
-          <div className="flex items-center gap-2 mt-auto pt-2 border-t border-[var(--border)]">
-            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[var(--bg-glass)] flex-shrink-0">
+          <div className="listing-card__owner">
+            <div className="listing-card__owner-avatar">
               {owner?.avatar ? (
-                <Image src={owner.avatar} alt="" fill className="object-cover" sizes="32px" />
+                <Image src={owner.avatar} alt="" fill className="object-cover" sizes="24px" />
               ) : (
-                <span className="absolute inset-0 flex items-center justify-center text-[12px] font-semibold text-[var(--text-secondary)]">
-                  {(owner?.name || 'Г').charAt(0).toUpperCase()}
-                </span>
+                <span className="listing-card__owner-initial">{(owner?.name || 'Г').charAt(0).toUpperCase()}</span>
               )}
             </div>
-            <span className="text-[13px] font-medium text-[var(--text-main)] truncate flex-1 min-w-0">
-              {owner?.name || 'Владелец'}
-            </span>
-            {displayRating != null && Number.isFinite(displayRating) && (
-              <span className="text-[12px] text-[var(--text-secondary)] flex items-center gap-0.5 shrink-0">
-                ★ {Number(displayRating).toFixed(1)}
-              </span>
-            )}
+            <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
           </div>
         )}
       </div>
@@ -256,23 +214,18 @@ function ListingCardComponent({
 
 export const ListingCard = memo(ListingCardComponent)
 
-/** Skeleton for listing card */
+/** TZ-6: skeleton — один цвет, aspect-ratio 4/3 */
 export function ListingCardSkeleton() {
   return (
-    <div
-      className={cn(
-        'listing-card-unified flex flex-col h-full rounded-[18px] overflow-hidden',
-        'bg-[var(--bg-card)] border border-[var(--border)]'
-      )}
-    >
-      <div className="w-full rounded-t-[18px] skeleton-glass" style={{ height: PHOTO_HEIGHT_MOBILE }} />
-      <div className="flex flex-col flex-1 min-h-0 p-4 gap-2">
-        <div className="h-6 w-28 rounded-lg skeleton-glass" />
-        <div className="h-5 w-full rounded-lg skeleton-glass" />
-        <div className="h-4 w-24 rounded-lg skeleton-glass" />
-        <div className="mt-auto pt-2 border-t border-[var(--border)] flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full skeleton-glass" />
-          <div className="h-4 flex-1 rounded skeleton-glass" />
+    <div className="listing-card-skeleton">
+      <div className="listing-card-skeleton__photo" />
+      <div className="listing-card-skeleton__info">
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--title" />
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--price" />
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--address" />
+        <div className="listing-card-skeleton__owner">
+          <div className="listing-card-skeleton__avatar" />
+          <div className="listing-card-skeleton__name" />
         </div>
       </div>
     </div>

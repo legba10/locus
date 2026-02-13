@@ -1,0 +1,162 @@
+/**
+ * TZ-5: Единые кнопки — primary, secondary, ghost, danger.
+ * Только токены, без хардкода. Hover/active/focus без прыжков.
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm, 12px);
+  padding: 10px 16px;
+  border-radius: var(--radius-md, 12px);
+  font-size: var(--font-size-md, 16px);
+  font-weight: 600;
+  transition: transform var(--transition-fast, 150ms) var(--easing, ease-out),
+    box-shadow var(--transition-fast, 150ms) var(--easing),
+    background-color var(--transition-fast, 150ms),
+    filter var(--transition-fast, 150ms);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary, var(--accent)) 20%, transparent);
+}
+
+.btn.is-loading {
+  gap: var(--space-sm, 12px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn.is-disabled,
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.btn.is-loading {
+  pointer-events: none;
+}
+
+/* Sizes */
+.btn--sm {
+  height: 38px;
+  padding: 8px 12px;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.btn--md {
+  height: 48px;
+  padding: 10px 16px;
+  font-size: var(--font-size-md, 16px);
+}
+
+.btn--lg {
+  height: 56px;
+  padding: 12px 20px;
+  font-size: var(--font-size-lg, 18px);
+}
+
+/* Primary */
+.btn--primary {
+  background: linear-gradient(180deg, var(--color-primary, var(--accent)), var(--color-primary-600, var(--accent-hover)));
+  color: #fff;
+  box-shadow: var(--shadow-1);
+}
+
+.btn--primary:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+.btn--primary:active {
+  transform: translateY(1px);
+}
+
+/* Secondary */
+.btn--secondary {
+  background: var(--color-surface-2, var(--bg-secondary));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--color-text, var(--text-main));
+}
+
+[data-theme="dark"] .btn--secondary,
+.dark .btn--secondary {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn--secondary:hover {
+  transform: translateY(-1px);
+}
+
+.btn--secondary:active {
+  transform: translateY(1px);
+}
+
+/* Ghost */
+.btn--ghost {
+  background: transparent;
+  color: var(--color-primary, var(--accent));
+}
+
+.btn--ghost:hover {
+  background: var(--accent-soft, rgba(123, 97, 255, 0.12));
+}
+
+/* Danger */
+.btn--danger {
+  background: var(--color-danger, var(--danger));
+  color: #fff;
+}
+
+.btn--danger:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+.btn--danger:active {
+  transform: translateY(1px);
+}
+
+/* Spinner */
+.btn__spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn__spinner {
+    animation-duration: 1.2s;
+  }
+}

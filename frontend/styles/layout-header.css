@@ -52,6 +52,7 @@
 
 .layout-header__burger-cell {
   justify-self: start;
+  margin-right: 16px;
 }
 
 .layout-header__logo-cell {
@@ -65,36 +66,57 @@
   }
 }
 
-/* Бургер — ТЗ-8: 24px, отступ 16px */
+/* TZ-5: бургер — 3 полоски 28×28px, hit area min 44×44px, без крестика */
 .layout-header__burger {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  width: 40px;
-  height: 40px;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   margin-left: 0;
   padding: 8px;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md, 12px);
   background: transparent;
-  color: var(--text-main);
+  color: var(--color-text, var(--text-main));
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast, 150ms) var(--easing, ease-out);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .layout-header__burger:hover {
   background: var(--bg-glass);
 }
 
+.layout-header__burger:active {
+  background: var(--color-surface-2, var(--bg-secondary));
+}
+
+.layout-header__burger:focus {
+  outline: none;
+}
+
+.layout-header__burger:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary, var(--accent)) 20%, transparent);
+}
+
+/* TZ-10: иконка бургера 32px (полоски), hit area остаётся 44px */
 .layout-header__burger span {
   display: block;
-  width: 24px;
+  width: 32px;
   height: 2px;
   background: currentColor;
   border-radius: 1px;
-  transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-header__burger {
+    transition: none;
+  }
 }
 
 .layout-header__logo {

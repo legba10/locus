@@ -8,7 +8,6 @@ import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { getAccessToken } from '@/shared/auth/token-storage'
 import { cn } from '@/shared/utils/cn'
-import { useFetch } from '@/shared/hooks/useFetch'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
@@ -28,9 +27,6 @@ export default function ProfilePage() {
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
-  const { data: favoritesData } = useFetch<{ items: Array<{ id: string }> }>(['favorites-mini'], '/api/favorites', { enabled: isAuthenticated() })
-  const { data: chatsData } = useFetch<Array<{ id: string }>>(['chats-mini'], '/chats', { enabled: isAuthenticated() })
-
   useEffect(() => {
     if (!user?.id) return
     if (initialSyncedRef.current !== user.id) {
@@ -78,16 +74,6 @@ export default function ProfilePage() {
 
   const displayName = name || user?.full_name || user?.username || 'Пользователь'
   const displayAvatar = user?.avatar_url ?? null
-  const profileCompletion = Math.round(
-    ((Boolean(name || user?.full_name || user?.username) ? 1 : 0) +
-      (Boolean(user?.email) ? 1 : 0) +
-      (Boolean(phone || user?.phone) ? 1 : 0) +
-      (Boolean(displayAvatar) ? 1 : 0) +
-      (Boolean((user as { city?: string })?.city) ? 1 : 0)) / 5 * 100
-  )
-  const favoritesCount = favoritesData?.items?.length ?? 0
-  const messagesCount = Array.isArray(chatsData) ? chatsData.length : 0
-
   const handleSave = async () => {
     if (isSaving) return
     setIsSaving(true)
@@ -101,17 +87,19 @@ export default function ProfilePage() {
           phone: phone.trim() || null,
         }),
       })
-      if (res?.name !== undefined) setName(res.name)
-      if (res?.phone !== undefined) setPhone(res.phone)
+      const newName = (res as { name?: string; full_name?: string })?.full_name ?? (res as { name?: string })?.name
+      const newPhone = (res as { phone?: string })?.phone
+      if (newName !== undefined) setName(newName)
+      if (newPhone !== undefined) setPhone(newPhone)
       if (typeof useAuthStore.getState === 'function' && res) {
-        // Мгновенно обновляем локальный authStore
+        const r = res as { name?: string; full_name?: string; avatar?: string; phone?: string }
         useAuthStore.setState((s) => ({
           user: s.user
             ? {
                 ...s.user,
-                full_name: res.name ?? s.user.full_name,
-                avatar_url: res.avatar ?? s.user.avatar_url,
-                phone: res.phone ?? s.user.phone,
+                full_name: r.full_name ?? r.name ?? s.user.full_name,
+                avatar_url: r.avatar ?? s.user.avatar_url,
+                phone: r.phone ?? s.user.phone,
               }
             : null,
         }))
@@ -164,98 +152,61 @@ export default function ProfilePage() {
           Изменения сохранены
         </div>
       )}
-      <div className="container py-8 space-y-4 max-w-[720px]">
-        <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Профиль</h1>
-        <section className="glass rounded-[16px] p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[14px] font-semibold text-[var(--text-main)]">Профиль заполнен на {profileCompletion}%</p>
-            <span className="text-[12px] text-[var(--text-secondary)]">Прогресс</span>
-          </div>
-          <div className="mt-2 h-2 rounded-full bg-[var(--accent-soft)] overflow-hidden">
-            <div className="h-full bg-[var(--accent)]" style={{ width: `${profileCompletion}%` }} />
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
-              <p className="text-[12px] text-[var(--text-secondary)]">Сохранено</p>
-              <p className="text-[14px] font-semibold text-[var(--text-main)]">{favoritesCount}</p>
-            </div>
-            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
-              <p className="text-[12px] text-[var(--text-secondary)]">Сообщения</p>
-              <p className="text-[14px] font-semibold text-[var(--text-main)]">{messagesCount}</p>
-            </div>
-            <div className="rounded-[10px] bg-[var(--bg-glass)] p-2">
-              <p className="text-[12px] text-[var(--text-secondary)]">Подбор</p>
-              <p className="text-[14px] font-semibold text-[var(--text-main)]">Активен</p>
-            </div>
-          </div>
-        </section>
+      <div className="container py-8 space-y-6 max-w-[720px]">
+        <h1 className="text-[24px] font-bold text-[var(--color-text)] mb-2">Настройки профиля</h1>
         <div className="space-y-6">
-          {/* Верхняя карточка: только аватар, имя и смена фото */}
-          <section className={cn(
-            'profile-card',
-            'rounded-[24px] p-5 sm:p-6',
-            'shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
-            'border border-white/80',
-            'bg-white/90 backdrop-blur-sm'
-          )}>
-            <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-4">
-              <div className="avatar relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+          {/* TZ-9: верхняя карточка — аватар 80px, имя, смена фото */}
+          <section className="profile-header-tz9">
+            <div className="flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left gap-4">
+              <label className="profile-header-tz9__avatar relative block cursor-pointer w-20 h-20">
                 {displayAvatar ? (
-                  <Image src={displayAvatar} alt={displayName} fill className="object-cover" sizes="96px" />
+                  <Image src={displayAvatar} alt={displayName} fill className="object-cover" sizes="80px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[var(--color-muted)]">
                     {displayName[0]?.toUpperCase() || 'Г'}
                   </div>
                 )}
-              </div>
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
+              </label>
               <div className="flex-1 min-w-0">
-                <p className="text-[20px] font-bold text-[#1C1F26]">{displayName}</p>
-                <div className="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
-                  <label className="inline-flex items-center px-3 py-2 rounded-[12px] border border-gray-200 text-[13px] font-medium text-[#4B5563] cursor-pointer hover:bg-gray-50 bg-white">
-                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                    {avatarUploading ? 'Загрузка…' : 'Сменить фото'}
-                  </label>
-                </div>
+                <p className="profile-header-tz9__name">{displayName}</p>
+                <p className="text-[13px] text-[var(--color-muted)] mt-1">{avatarUploading ? 'Загрузка…' : 'Нажмите на аватар, чтобы сменить фото'}</p>
               </div>
             </div>
           </section>
 
-          <section className={cn(
-            'bg-white rounded-[24px] p-5 sm:p-6',
-            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-            'border border-gray-100/80'
-          )}>
-            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Личные данные</h2>
+          <section className="profile-header-tz9 rounded-[18px] p-5 sm:p-6">
+            <h2 className="text-[18px] font-semibold text-[var(--color-text)] mb-4">Личные данные</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
+                <label className="block text-[13px] font-medium text-[var(--color-muted)] mb-2">Имя</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
-                    'text-[#1C1F26] text-[14px]',
-                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                    'border border-[var(--border)] bg-[var(--color-surface)]',
+                    'text-[var(--color-text)] text-[14px]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]'
                   )}
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
+                <label className="block text-[13px] font-medium text-[var(--color-muted)] mb-2">Email</label>
                 <input
                   type="email"
                   value={user?.email ?? ''}
                   readOnly
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-gray-50 text-[#6B7280]',
+                    'border border-[var(--border)] bg-[var(--color-surface-2)] text-[var(--color-muted)]',
                     'text-[14px]'
                   )}
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
+                <label className="block text-[13px] font-medium text-[var(--color-muted)] mb-2">Телефон</label>
                 <input
                   type="tel"
                   value={phone}
@@ -264,30 +215,26 @@ export default function ProfilePage() {
                   readOnly={isTelegramPhone}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
-                    'text-[#1C1F26] text-[14px]',
-                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                    isTelegramPhone ? 'border border-[var(--border)] bg-[var(--color-surface-2)]' : 'border border-[var(--border)] bg-[var(--color-surface)]',
+                    'text-[var(--color-text)] text-[14px]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]'
                   )}
                 />
                 {isTelegramPhone && (
-                  <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
+                  <p className="text-[12px] text-[var(--color-muted)] mt-2">Подтверждён через Telegram</p>
                 )}
               </div>
             </div>
           </section>
 
-          <section className={cn(
-            'bg-white rounded-[24px] p-5 sm:p-6',
-            'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-            'border border-gray-100/80'
-          )}>
-            <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-4">Текущий тариф</h2>
-            <p className="text-[14px] text-[#6B7280] mb-4">
-              Ваш тариф: <span className="font-semibold text-[#1C1F26]">{tariffLabel}</span>
+          <section className="profile-header-tz9 rounded-[18px] p-5 sm:p-6">
+            <h2 className="text-[18px] font-semibold text-[var(--color-text)] mb-4">Текущий тариф</h2>
+            <p className="text-[14px] text-[var(--color-muted)] mb-4">
+              Ваш тариф: <span className="font-semibold text-[var(--color-text)]">{tariffLabel}</span>
             </p>
             <Link
               href="/pricing"
-              className="inline-flex items-center justify-center w-full px-4 py-2 rounded-[12px] text-[14px] font-medium bg-violet-50 text-violet-700 hover:bg-violet-100"
+              className="btn btn--secondary btn--md w-full inline-flex items-center justify-center"
             >
               Перейти к тарифам
             </Link>

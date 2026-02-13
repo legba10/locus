@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { ListingCard } from '@/domains/listing/ListingCard'
 import type { Listing } from '@/domains/listing'
 
-const listing: Listing = {
+const listing: Listing & { images?: { url: string }[] } = {
   id: 'lst_test',
   title: 'Test listing',
   city: 'Berlin',
@@ -16,12 +16,11 @@ const listing: Listing = {
 }
 
 describe('ListingCard', () => {
-  it('renders as an anchor (Link root) with aria-label', () => {
+  it('renders as a button (full card click) with title and aria-label', () => {
     render(<ListingCard listing={listing} />)
 
-    const link = screen.getByRole('link', { name: /open listing: test listing/i })
-    expect(link).toHaveAttribute('href', `/listings/${listing.id}`)
+    const card = screen.getByRole('button', { name: /открыть объявление: test listing/i })
+    expect(card).toBeInTheDocument()
     expect(screen.getByText('Test listing')).toBeInTheDocument()
   })
 })
-

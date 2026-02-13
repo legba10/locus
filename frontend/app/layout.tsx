@@ -4,6 +4,8 @@ import { Providers } from './providers'
 import { Header } from '@/components/layout'
 import { Footer } from '@/shared/ui/Footer'
 import ThemeProvider from '@/providers/ThemeProvider'
+import ErrorBoundaryWrapper from './ErrorBoundaryWrapper'
+import ModalRoot from './ModalRoot'
 import '../styles/globals.css'
 
 const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewReminderPopup').then((m) => ({ default: m.ReviewReminderPopup })), { ssr: false })
@@ -47,12 +49,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
         <ThemeProvider>
           <Providers>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1 main-with-header">{children}</main>
-              <Footer />
-              <ReviewReminderPopup />
-            </div>
+            <ErrorBoundaryWrapper>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1 main-with-header">{children}</main>
+                <Footer />
+                <ModalRoot />
+                <ReviewReminderPopup />
+              </div>
+            </ErrorBoundaryWrapper>
           </Providers>
         </ThemeProvider>
       </body>

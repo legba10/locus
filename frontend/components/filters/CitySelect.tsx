@@ -13,7 +13,7 @@ export interface CitySelectProps {
   fullscreenOnMobile?: boolean
 }
 
-const LIST_CLASS = 'w-full text-left px-4 py-3 text-[14px] text-[var(--text-main)] hover:bg-[var(--accent-soft)] transition-colors border-b border-[var(--border)] last:border-0'
+const LIST_CLASS = 'city-select-item w-full text-left px-4 py-3 text-[14px] transition-colors border-b border-[var(--border)] last:border-0 bg-transparent hover:bg-[var(--accent-soft)]'
 
 export function CitySelect({
   value,
@@ -41,6 +41,11 @@ export function CitySelect({
     return CITIES.filter((c) => c.toLowerCase().includes(q)).slice(0, 80)
   }, [query])
 
+  // Sync query with external value when closed to avoid stale/duplicate display (TZ-8)
+  useEffect(() => {
+    if (!open) setQuery((prev) => (prev !== value ? value : prev))
+  }, [value, open])
+
   useEffect(() => {
     if (!open) return
     const onDocClick = (e: MouseEvent) => {
@@ -64,41 +69,36 @@ export function CitySelect({
   }
 
   const inputClasses = cn(
-    'w-full rounded-[14px] px-4 py-3 text-[14px]',
-    'bg-[var(--bg-card)] border border-[var(--border)]',
-    'text-[var(--text-main)] placeholder-[var(--text-secondary)]',
-    'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)]',
+    'search-hero-input search-tz7-input w-full text-[15px]',
     'transition-colors',
     className
   )
 
-  const listContent = (
-    <>
-      {filtered.length === 0 ? (
-        <div className="px-4 py-6 text-[14px] text-[var(--text-secondary)]">Город не найден</div>
-      ) : (
-        <ul className="py-1">
-          {filtered.map((city) => (
-            <li key={city}>
-              <button
-                type="button"
-                className={cn(LIST_CLASS, value === city && 'bg-[var(--accent-soft)] font-medium')}
-                onClick={() => handleSelect(city)}
-              >
-                {city}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  )
+  /** TZ-8: render list with unique key prefix per context to avoid React reusing nodes (dropdown vs fullscreen) and duplicate symbols */
+  const renderCityList = (listKeyPrefix: string) =>
+    filtered.length === 0 ? (
+      <div key={`${listKeyPrefix}-empty`} className="px-4 py-6 text-[14px] text-[var(--text-secondary)]">Город не найден</div>
+    ) : (
+      <ul key={`${listKeyPrefix}-list`} className="py-1" role="listbox" aria-label="Список городов" data-testid="city-list">
+        {filtered.map((city, index) => (
+          <li key={`${listKeyPrefix}-city-${index}-${city}`} role="option" aria-selected={value === city}>
+            <button
+              type="button"
+              className={cn(LIST_CLASS, value === city && 'bg-[var(--accent-soft)] font-medium')}
+              onClick={() => handleSelect(city)}
+            >
+              {city}
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
 
   const useFullscreen = fullscreenOnMobile && isMobile && open
 
   return (
     <>
-      <div className="relative" ref={containerRef}>
+      <div className="relative" ref={containerRef} data-testid="city-select">
         {value && !open ? (
           <div className="flex flex-wrap items-center gap-2">
             <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[14px] font-medium bg-[var(--accent-soft)] text-[var(--accent)]')}>
@@ -121,18 +121,20 @@ export function CitySelect({
               placeholder={placeholder}
               className={inputClasses}
               autoComplete="off"
+              aria-expanded={open}
+              aria-haspopup="listbox"
             />
             {open && !useFullscreen && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-modal)] max-h-[280px] overflow-y-auto">
-                {listContent}
+              <div key="city-dropdown" className="city-select-dropdown-tz7 absolute left-0 right-0 top-full z-20 mt-1 rounded-[12px] border border-[var(--border)] shadow-[var(--shadow-1)] max-h-[280px] overflow-y-auto py-1">
+                {renderCityList('dropdown')}
               </div>
             )}
           </>
         )}
       </div>
       {useFullscreen && (
-        <div className="fixed inset-0 z-[var(--z-modal)] flex flex-col bg-[var(--bg-card)]" role="dialog" aria-modal="true" aria-label="Выбор города">
-          <div className="flex items-center gap-2 p-4 border-b border-[var(--border)]">
+        <div key="city-fullscreen" className="fixed inset-0 z-[var(--z-modal)] flex flex-col city-select-fullscreen-tz7 rounded-t-[20px] overflow-hidden" role="dialog" aria-modal="true" aria-label="Выбор города">
+          <div className="flex items-center gap-2 p-4 border-b border-[var(--border)] bg-inherit">
             <input
               type="text"
               value={query}
@@ -146,8 +148,8 @@ export function CitySelect({
               Готово
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {listContent}
+          <div className="flex-1 overflow-y-auto city-select-dropdown-tz7">
+            {renderCityList('fullscreen')}
           </div>
         </div>
       )}

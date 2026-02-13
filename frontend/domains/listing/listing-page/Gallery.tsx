@@ -62,15 +62,14 @@ export function Gallery({
       className={cn(
         'relative w-full overflow-hidden',
         'bg-[var(--bg-card)]',
-        'md:rounded-[24px]',
-        'rounded-b-[24px]'
+        'rounded-[16px]'
       )}
     >
-      {/* Mobile: 240px, Desktop: 420px */}
+      {/* TZ-3: height 260px mobile, 420px desktop, border-radius 16px */}
       <div
         className={cn(
           'relative w-full select-none',
-          'h-[240px] md:h-[420px]'
+          'h-[260px] md:h-[420px] rounded-[16px] overflow-hidden'
         )}
         onClick={onOpenFullscreen}
         onTouchStart={onTouchStart}
@@ -85,8 +84,9 @@ export function Gallery({
               fill
               className="object-cover touch-none"
               priority
+              loading="lazy"
               unoptimized={cover.startsWith('http')}
-              sizes="(max-width: 768px) 100vw, 66vw"
+              sizes="(max-width: 768px) 100vw, 800px"
               draggable={false}
             />
             {/* Кнопка назад — overlay слева сверху */}
@@ -147,24 +147,24 @@ export function Gallery({
             )}
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center skeleton-glass rounded-b-[24px] md:rounded-[24px]" />
+          <div className="w-full h-full flex items-center justify-center skeleton-photo rounded-[16px]" />
         )}
       </div>
 
-      {/* Desktop: справа 3 миниатюры */}
+      {/* TZ-3: миниатюры — горизонтальный скролл, активная рамка, без дерганий */}
       {hasPhotos && count > 1 && (
-        <div className="hidden md:flex gap-2 p-3 border-t border-[var(--border)]">
-          {photos.slice(0, 4).map((p, i) => (
+        <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
+          {photos.slice(0, 6).map((p, i) => (
             <button
               key={i}
               type="button"
               onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
               className={cn(
-                'relative flex-1 min-w-0 h-20 rounded-xl overflow-hidden border-2 transition-colors',
-                activeIndex === i ? 'border-[var(--accent)]' : 'border-transparent hover:border-[var(--border)]'
+                'relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-colors',
+                activeIndex === i ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-transparent hover:border-[var(--border)]'
               )}
             >
-              <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="120px" unoptimized={p.url.startsWith('http')} />
+              <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="80px" loading="lazy" unoptimized={p.url.startsWith('http')} />
             </button>
           ))}
         </div>

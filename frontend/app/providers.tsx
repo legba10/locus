@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState } from 'react'
 import { AuthProvider } from '@/domains/auth/AuthProvider'
+import { ModalProvider } from '@/shared/contexts/ModalContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const safeMode = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
@@ -11,12 +12,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1,
-        // Reduce duplicate refetches under load
+        // TZ-2: не повторять запрос при 401 (auth)
+        retry: (failureCount, error: unknown) => {
+          const err = error as { status?: number };
+          if (err?.status === 401) return false;
+          return failureCount < 2;
+        },
         staleTime: 60_000, // 1 min
         gcTime: 5 * 60_000, // 5 min
         refetchOnWindowFocus: false,
-        // Prevent hanging on failed requests
         networkMode: 'online',
       },
     },
@@ -24,17 +28,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {safeMode ? (
-        // SAFE_MODE: skip auth provider entirely
-        <>{children}</>
-      ) : (
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      )}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
+      <ModalProvider>
+        {safeMode ? (
+          <>{children}</>
+        ) : (
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        )}
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </ModalProvider>
     </QueryClientProvider>
   )
 }

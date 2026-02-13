@@ -10,7 +10,7 @@ export interface AIModeSwitchProps {
 
 export function AIModeSwitch({ aiMode, onChange, className }: AIModeSwitchProps) {
   return (
-    <div className={cn('rounded-[16px] border border-[var(--border)] bg-[var(--bg-card)] p-4', className)}>
+    <div className={cn('aim-mode-switch rounded-[16px] border border-[var(--border)] bg-[var(--bg-card)] p-4', className)}>
       <span className="block text-[13px] font-medium text-[var(--text-secondary)] mb-3">Режим поиска</span>
       <div className="flex rounded-[14px] p-1 bg-[var(--bg-glass)]">
         <button

@@ -10,6 +10,11 @@
 @import './layout.css';
 @import './layout-header.css';
 @import './typography.css';
+@import './buttons-tz5.css';
+@import './listing-card-tz6.css';
+@import './search-tz7.css';
+@import './profile-tz9.css';
+@import './homepage-tz10.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -758,28 +763,36 @@ body.modal-open {
 }
 
 /* ТЗ-2 п.7: Sidebar — overlay обязателен, панель solid elevated */
+/* TZ-5: sidebar desktop 360px, mobile 100% (или 320px slide-in) */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 280px;
-  max-width: 85vw;
+  width: 100%;
+  max-width: 320px;
   background: var(--surface-primary);
   color: var(--text-primary);
-  border-top-right-radius: 28px;
-  border-bottom-right-radius: 28px;
+  border-top-right-radius: var(--radius-lg, 20px);
+  border-bottom-right-radius: var(--radius-lg, 20px);
   border-right: 1px solid var(--border-main);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-1);
   z-index: var(--z-menu);
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-medium, 220ms) var(--easing, cubic-bezier(0.2, 0.9, 0.2, 1));
   pointer-events: none;
-  padding: 20px 18px 24px;
+  padding: var(--space-lg, 20px) var(--space-md, 12px) var(--space-lg, 20px);
 }
+
+@media (min-width: 768px) {
+  .drawer.mobile-menu {
+    max-width: 360px;
+  }
+}
+
 .drawer.mobile-menu.open {
   pointer-events: auto;
 }
@@ -956,42 +969,41 @@ body.modal-open {
   }
 }
 
-/* Бургер: компактный, меньше логотипа, без трансформации */
+/* TZ-5: бургер (класс .burger) — 3 полоски, hit area 44px, без крестика */
 .burger {
-  width: 38px;
-  height: 38px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   flex-direction: column;
-  gap: 5px;
-  margin-right: 0;
-  z-index: 50;
+  gap: 6px;
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: none;
   background: transparent;
   padding: 8px;
-  transition: background 0.25s ease;
+  color: var(--color-text, var(--text-main));
+  transition: background var(--transition-fast) var(--easing);
+  -webkit-tap-highlight-color: transparent;
 }
 .burger span {
   display: block;
-  width: 24px;
+  width: 28px;
   height: 2px;
-  background: var(--locus-primary, #7B4AE2);
-  margin: 0;
+  background: currentColor;
   border-radius: 1px;
 }
-@media (hover: hover) and (pointer: fine) {
-  .burger:hover {
-    background: rgba(120, 120, 120, 0.1);
-  }
+.burger:hover {
+  background: var(--bg-glass);
 }
-@media (min-width: 768px) {
-  .drawer.mobile-menu {
-    width: 320px;
-    max-width: 320px;
-  }
+.burger:focus {
+  outline: none;
+}
+.burger:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Список пунктов меню (по макету) */
@@ -1004,7 +1016,10 @@ body.modal-open {
 .drawer.mobile-menu .menu .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-md, 12px);
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 .drawer.mobile-menu .menu .menu-item {
   list-style: none;
@@ -1012,19 +1027,29 @@ body.modal-open {
 .drawer.mobile-menu .menu .menu-item-btn {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  gap: var(--space-md, 12px);
+  min-height: 44px;
   height: 48px;
-  border-radius: 12px;
-  padding: 0 6px;
+  border-radius: var(--radius-md);
+  padding: 0 12px;
   width: 100%;
-  font-size: 15px;
+  font-size: var(--font-size-md, 16px);
   font-weight: 500;
-  color: var(--text-primary);
+  line-height: 1.2;
+  color: var(--color-text, var(--text-primary));
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  pointer-events: auto;
+  transition: background var(--transition-fast) var(--easing);
   text-align: left;
+}
+.drawer.mobile-menu .menu .menu-item-btn:focus {
+  outline: none;
+}
+.drawer.mobile-menu .menu .menu-item-btn:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 .drawer.mobile-menu .menu .menu-item-btn:hover {
   background: var(--card-hover, var(--button-secondary-bg));
@@ -1046,6 +1071,7 @@ body.modal-open {
 /* Кнопка Войти (только для гостя) */
 .mobile-menu-cta-wrap {
   padding: 0;
+  width: 100%;
 }
 .menu-cta,
 .mobile-menu .auth-button {
@@ -1071,50 +1097,31 @@ body.modal-open {
   opacity: 0.92;
 }
 
-/* Выйти: под «Помощь», отступ 14px, в одну линию с пунктами */
+/* TZ-5: Выйти — full width, btn--danger внизу меню */
 .mobile-menu-logout-wrap {
-  margin-top: 14px;
+  margin-top: var(--space-lg, 20px);
   margin-bottom: 90px;
   padding: 0;
+  width: 100%;
 }
-.mobile-menu-logout-wrap .menu-list {
-  gap: 0;
+.mobile-menu-logout-wrap .btn--danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm, 12px);
 }
+/* Legacy: пункт Выйти со старым классом (если где-то остался) */
 .drawer.mobile-menu .menu-item-btn--logout {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  height: 48px;
-  border-radius: 12px;
-  padding: 0 6px;
-  width: 100%;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #ff3b30 !important;
+  min-height: 44px;
+  color: var(--color-danger, var(--danger));
   background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  text-align: left;
-}
-.drawer.mobile-menu .menu-item-btn--logout .menu-icon-wrap,
-.drawer.mobile-menu .menu-item-btn--logout .menu-icon-wrap svg,
-.drawer.mobile-menu .menu-item-btn--logout svg {
-  color: #ff3b30 !important;
-  stroke: #ff3b30 !important;
-  opacity: 1;
-  flex-shrink: 0;
 }
 .drawer.mobile-menu .menu-item-btn--logout:hover {
-  background: rgba(255, 59, 48, 0.08);
-}
-.drawer.mobile-menu .menu-item-btn--logout:hover svg {
-  color: #ff3b30 !important;
-  opacity: 1;
-}
-.drawer.mobile-menu .menu-item-btn--logout:active {
-  background: rgba(255, 59, 48, 0.12);
+  background: var(--danger-soft);
 }
 
 @media (min-width: 768px) {
@@ -1194,9 +1201,7 @@ body.modal-open {
   background: var(--card-strong) !important;
 }
 
-/* Listing cards + general cards */
-[data-theme="dark"] .listing-card,
-.dark .listing-card,
+/* Cards (TZ-6 listing-card styles in listing-card-tz6.css) */
 [data-theme="dark"] .card,
 .dark .card {
   background: var(--card) !important;
@@ -1208,8 +1213,6 @@ body.modal-open {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
-[data-theme="dark"] .listing-card:hover,
-.dark .listing-card:hover,
 [data-theme="dark"] .card:hover,
 .dark .card:hover {
   transform: translateY(-3px);
@@ -1363,16 +1366,7 @@ body.modal-open {
     box-shadow .18s ease;
 }
 
-/* Listing cards: hover/tap/press */
-.listing-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-}
-
-.listing-card:active {
-  transform: scale(0.97);
-  opacity: .9;
-}
+/* Listing card hover/active — TZ-6 in listing-card-tz6.css */
 
 /* Global button motion */
 button:hover,
@@ -1533,28 +1527,9 @@ a[class*="rounded"][class*="px-"][class*="py-"] {
   border-radius: 12px;
 }
 
-/* Listing cards consistency */
-.listing-card {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.listing-card .listing-photo,
-.listing-card img {
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.listing-card .listing-content {
-  padding: 16px;
-  gap: 8px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+/* Listing card layout — TZ-6 base in listing-card-tz6.css */
+.listing-card .listing-card__image-wrap {
+  border-radius: 16px 16px 0 0;
 }
 
 /* Profile owner card visual structure */
@@ -1574,7 +1549,7 @@ a[class*="rounded"][class*="px-"][class*="py-"] {
 .mobile-menu-header-row,
 .mobile-menu-nav,
 .mobile-menu-logout-wrap {
-  gap: 8px;
+  gap: var(--space-md, 12px);
 }
 
 /* Section spacing normalization */
@@ -1622,7 +1597,6 @@ body {
 .glass-search,
 .glass-dropdown,
 .card,
-.listing-card,
 .profile-card {
   background: var(--card);
   backdrop-filter: blur(18px);
@@ -1736,49 +1710,28 @@ select,
   }
 }
 
-/* ТЗ-5: сетка — 3 колонки gap 20px desktop, 1 колонка gap 16px mobile */
+/* TZ-6: сетка карточек — desktop 3 cols gap 16px, tablet 2, mobile 1 gap 12px */
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
 @media (max-width: 1023px) {
   .listing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+    gap: 16px;
   }
 }
 
 @media (max-width: 767px) {
   .listing-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
 }
 
-.listing-card {
-  background: var(--card-bg);
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: 0.25s ease;
-}
-
-[data-theme="dark"] .listing-card,
-.dark .listing-card {
-  background: rgba(18, 24, 38, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .listing-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-  }
-}
+/* TZ-6: .listing-card in listing-card-tz6.css */
 
 .listing-photo {
   width: 100%;
@@ -1796,14 +1749,9 @@ select,
   }
 }
 
-/* ТЗ-5: карточка объявления — фиксированные высоты фото, flex column */
+/* TZ-3: карточка объявления — единый ratio 4:3, без фиксированных высот */
 .listing-photo-tz5 {
-  height: 220px;
-}
-@media (max-width: 767px) {
-  .listing-photo-tz5 {
-    height: 180px;
-  }
+  aspect-ratio: 4 / 3;
 }
 .listing-photo-tz5 img {
   width: 100%;
@@ -1819,6 +1767,13 @@ select,
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
+}
+
+/* TZ-3: серый shimmer для фото карточек — не белый */
+.skeleton-photo {
+  background: linear-gradient(90deg, var(--border) 0%, var(--bg-secondary) 50%, var(--border) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
 .listing-photo img {
@@ -1864,17 +1819,7 @@ select,
 }
 
 .burger {
-  width: 40px;
-  height: 40px;
-  margin-left: 16px;
-  justify-content: center;
-  gap: 4px;
-}
-
-.burger span {
-  width: 22px;
-  height: 2px;
-  background: var(--text-main);
+  margin-left: 0;
 }
 
 .drawer.mobile-menu {
@@ -1922,7 +1867,7 @@ select,
   color: var(--text-primary);
 }
 
-/* ТЗ-2 п.5: overlay — затемняет фон, блокирует клики, одинаков везде */
+/* TZ-4: overlay единый — var(--overlay) из темы + blur 6px */
 .modal-overlay,
 .overlay-backdrop,
 .overlay {
@@ -1936,12 +1881,19 @@ select,
 }
 .modal-overlay { pointer-events: auto; }
 
+/* TZ-4: модалки берут bg из темы (--surface / --bg-modal), без белых окон в dark */
 .modal-panel {
   background: var(--bg-modal);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border);
   border-radius: 20px;
   color: var(--text-primary);
   z-index: var(--z-modal);
+  /* TZ-4: анимация открытия 200ms, scale 0.96 → 1, без bounce */
+  animation: modal-enter 200ms ease-out forwards;
+}
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* ТЗ-2 п.6: контейнер модалки (bottom-sheet вариант) */
@@ -2136,18 +2088,7 @@ button,
   opacity: 0.8;
 }
 
-.listing-card {
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-level-1);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .listing-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-level-2);
-  }
-}
+/* TZ-6 listing-card in listing-card-tz6.css */
 
 .listing-photo::after {
   content: "";
@@ -2205,21 +2146,19 @@ textarea {
   transition: all 0.25s ease;
 }
 
-.listing-card:active {
-  transform: scale(0.97);
-}
+/* TZ-6 .listing-card:active in listing-card-tz6.css */
 
 .favorite-flash {
   box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.14);
 }
 
+/* TZ-3: без фиолетового glow — мягкая тень */
 .listing-card-glow {
-  animation: listingGlow 1.4s ease-in-out 2;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
-
-@keyframes listingGlow {
-  0%, 100% { box-shadow: var(--shadow-level-1); }
-  50% { box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.35), var(--shadow-level-2); }
+[data-theme="dark"] .listing-card-glow,
+.dark .listing-card-glow {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 /* ТЗ-5: Mobile safe area (iOS Safari, notch, bottom bar) */

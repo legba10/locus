@@ -125,9 +125,7 @@ export function PropertyCard({
           <Link
             href={`/listings/${id}`}
             className={cn(
-              'btn-primary flex-1 h-12 min-h-[48px] rounded-[var(--radius-btn)] flex items-center justify-center',
-              'bg-[var(--accent-gradient)] text-[var(--button-primary-text)] font-medium text-[14px]',
-              'hover:opacity-90 transition'
+              'btn btn--primary btn--md flex-1 flex items-center justify-center'
             )}
           >
             Подробнее

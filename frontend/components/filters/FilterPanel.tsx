@@ -55,24 +55,26 @@ export function FilterPanel({
       <FilterChips options={DURATION_OPTIONS} value={duration} onChange={setDuration} label="Срок" />
       <div>
         <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Комнаты</label>
-        <FilterChips options={ROOMS_OPTIONS} value={rooms} onChange={setRooms} />
+        <FilterChips options={ROOMS_OPTIONS} value={rooms} onChange={setRooms} label="Комнаты" />
       </div>
       <AIModeSwitch aiMode={aiMode} onChange={setAiMode} />
       {showSearchButtons && (
-        <div className="flex flex-col gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onSearch}
-            className="w-full min-h-[48px] rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px]"
-          >
-            Найти
-          </button>
+        <div className="search-hero-actions-tz7 flex flex-col gap-3 pt-2">
           <button
             type="button"
             onClick={onSmartSearch}
-            className="w-full min-h-[48px] rounded-[16px] border-2 border-[var(--accent)] text-[var(--accent)] font-semibold text-[14px] flex items-center justify-center gap-2"
+            className="smart-cta-tz10 w-full"
+            aria-label="Умный подбор AI"
           >
-            Умный подбор ⚡
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+            <span>Умный подбор</span>
+          </button>
+          <button
+            type="button"
+            onClick={onSearch}
+            className="search-hero-submit-tz7 w-full"
+          >
+            Найти жильё
           </button>
         </div>
       )}

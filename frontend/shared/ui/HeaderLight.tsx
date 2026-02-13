@@ -227,7 +227,7 @@ export function HeaderLight() {
           <div className="mobile-menu-separator" aria-hidden />
           {!isAuthenticated() && (
             <div className="mobile-menu-cta-wrap">
-              <button type="button" onClick={() => handleNavigate('/auth/login')} className="menu-cta">
+              <button type="button" onClick={() => handleNavigate('/auth/login')} className="btn btn--primary btn--md w-full">
                 Войти / Зарегистрироваться
               </button>
             </div>

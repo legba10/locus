@@ -1,0 +1,107 @@
+/**
+ * TZ-9: Профиль пользователя — контейнер, заголовок, блок статистики.
+ * Light/dark без засветов.
+ */
+
+.profile-header-tz9 {
+  border-radius: 18px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: var(--shadow-1, 0 6px 18px rgba(12, 14, 20, 0.08));
+}
+
+[data-theme="dark"] .profile-header-tz9,
+.dark .profile-header-tz9 {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-header-tz9__avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-2, #f5f5f5);
+}
+
+[data-theme="dark"] .profile-header-tz9__avatar,
+.dark .profile-header-tz9__avatar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-header-tz9__name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text, #121212);
+}
+
+[data-theme="dark"] .profile-header-tz9__name,
+.dark .profile-header-tz9__name {
+  color: #f2f3f5;
+}
+
+/* Блок статистики — только публичный профиль */
+.profile-stats-tz9 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.profile-stats-tz9__item {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-surface-2, #f6f7fb);
+  text-align: center;
+}
+
+[data-theme="dark"] .profile-stats-tz9__item,
+.dark .profile-stats-tz9__item {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-stats-tz9__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text, #121212);
+}
+
+.profile-stats-tz9__label {
+  font-size: 13px;
+  color: var(--color-muted, #7e7e8a);
+  margin-top: 4px;
+}
+
+[data-theme="dark"] .profile-stats-tz9__value,
+.dark .profile-stats-tz9__value {
+  color: #f2f3f5;
+}
+
+[data-theme="dark"] .profile-stats-tz9__label,
+.dark .profile-stats-tz9__label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Рейтинг: ★ 4.7, 34 отзыва */
+.profile-rating-tz9 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-text, #121212);
+  margin-top: 4px;
+}
+
+[data-theme="dark"] .profile-rating-tz9,
+.dark .profile-rating-tz9 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.profile-rating-tz9 svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  color: #eab308;
+}

@@ -48,10 +48,6 @@ export default function UserProfilePage() {
   const profile = data?.profile ?? null
 
   const summary = summaryData?.summary
-  const ownerPercent =
-    summary && summary.count > 0 && summary.distribution
-      ? Math.round((((summary.distribution[4] ?? 0) + (summary.distribution[5] ?? 0)) / summary.count) * 100)
-      : null
 
   if (!id) {
     return (
@@ -91,61 +87,56 @@ export default function UserProfilePage() {
     )
   }
 
+  const ratingVal = summary?.avg ?? profile.rating_avg ?? null
+  const reviewsCount = (summary?.count ?? profile.reviews_count) ?? 0
+
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div
-          className={cn(
-            'bg-white rounded-[18px] p-6 mb-8',
-            'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80'
-          )}
-        >
+        <div className="profile-header-tz9 p-5 mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+            <div className="profile-header-tz9__avatar relative w-20 h-20 flex-shrink-0">
               {profile.avatar ? (
                 <Image src={profile.avatar} alt={profile.name} fill className="object-cover" sizes="80px" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                  {profile.name.charAt(0).toUpperCase()}
+                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[var(--color-muted)]">
+                  {(profile.name ?? '?').charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <div>
-              <h1 className="text-[24px] font-bold text-[#1C1F26]">{profile.name}</h1>
-              {!isOwnProfile && (summary?.avg != null || profile.rating_avg != null) && (
-                <p className="text-[14px] mt-0.5 flex items-baseline gap-2 flex-wrap">
-                  <span className="text-amber-500">★</span>
-                  <span className="font-semibold text-[#1C1F26]">{(summary?.avg ?? profile.rating_avg ?? 0).toFixed(1)}</span>
-                  {ownerPercent != null && <span className="text-violet-600 font-medium tabular-nums">{ownerPercent}%</span>}
-                  {((summary?.count ?? profile.reviews_count) ?? 0) > 0 && (
-                    <span className="text-[#6B7280]">
-                      {(summary?.count ?? profile.reviews_count)} отзывов
-                    </span>
-                  )}
+            <div className="flex-1 min-w-0">
+              <h1 className="profile-header-tz9__name">{profile.name}</h1>
+              {ratingVal != null && (
+                <p className="profile-rating-tz9">
+                  <svg viewBox="0 0 24 24" aria-hidden><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  <span>{(Number(ratingVal)).toFixed(1)}</span>
+                  {reviewsCount > 0 && <span className="text-[var(--color-muted)] ml-1">{reviewsCount} отзывов</span>}
                 </p>
               )}
-              {isOwnProfile && profile.rating_avg != null && (
-                <p className="text-[14px] text-[#6B7280] mt-0.5">
-                  Рейтинг {profile.rating_avg.toFixed(1)} · {profile.reviews_count} отзывов
-                </p>
-              )}
-              <p className="text-[14px] text-[#6B7280]">{profile.listingsCount} объявлений</p>
-              {profile.created_at && (
-                <p className="text-[13px] text-[#6B7280]">
-                  На LOCUS с {new Date(profile.created_at).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
-                </p>
-              )}
-              <p className="text-[13px] text-emerald-600 mt-1">Отвечает быстро</p>
+            </div>
+          </div>
+          <div className="profile-stats-tz9 mt-5">
+            <div className="profile-stats-tz9__item">
+              <div className="profile-stats-tz9__value">{profile.listingsCount}</div>
+              <div className="profile-stats-tz9__label">объявления</div>
+            </div>
+            <div className="profile-stats-tz9__item">
+              <div className="profile-stats-tz9__value">{reviewsCount}</div>
+              <div className="profile-stats-tz9__label">отзывы</div>
+            </div>
+            <div className="profile-stats-tz9__item">
+              <div className="profile-stats-tz9__value">{ratingVal != null ? (Number(ratingVal)).toFixed(1) : '—'}</div>
+              <div className="profile-stats-tz9__label">рейтинг</div>
             </div>
           </div>
         </div>
 
-        <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Объявления</h2>
-        {profile.listings.length === 0 ? (
+        <h2 className="text-[20px] font-bold text-[var(--color-text)] mb-4">Объявления</h2>
+        {!(profile.listings?.length) ? (
           <p className="text-[var(--text-secondary)]">Пока нет опубликованных объявлений</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {profile.listings.map((listing) => (
+            {(profile.listings ?? []).map((listing) => (
               <ListingCard
                 key={listing.id}
                 id={listing.id}

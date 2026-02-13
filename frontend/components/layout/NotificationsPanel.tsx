@@ -59,21 +59,23 @@ export function NotificationsPanel({
 
   return (
     <>
+      {/* TZ-4: клик вне — закрытие; слой ниже dropdown, не перекрывает панель */}
       <div
-        className="overlay"
-        style={{ zIndex: 'var(--z-overlay)' }}
+        className="fixed inset-0 bg-transparent"
+        style={{ zIndex: 199 }}
         onClick={onClose}
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
         aria-hidden
       />
+      {/* TZ-4: dropdown right 0, top 56px, z-index 200 */}
       <div
         className={cn(
-          'notifications-panel flex flex-col',
+          'notifications-panel flex flex-col border border-[var(--border)] bg-[var(--bg-modal)] shadow-[var(--shadow-level-2)]',
           isMobile
             ? 'fixed left-4 right-4 top-[72px] w-[calc(100%-32px)] max-h-[420px] overflow-hidden rounded-[14px]'
-            : 'absolute right-0 top-full mt-1 w-[320px] max-h-[420px] overflow-hidden rounded-[14px]'
+            : 'absolute right-0 top-[56px] w-[320px] max-h-[420px] overflow-hidden rounded-[14px]'
         )}
-        style={{ zIndex: 'var(--z-notification-panel)' }}
+        style={{ zIndex: 'var(--z-dropdown)' }}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-card)]">
           <span className="text-[14px] font-semibold text-[var(--text-main)]">Уведомления</span>

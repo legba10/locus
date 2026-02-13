@@ -446,11 +446,13 @@ function ListingsTab() {
               </tr>
             </thead>
             <tbody>
-              {listings.map((listing) => (
+              {listings.map((listing) => {
+                const photoUrl = listing.photos?.[0]?.url;
+                return (
                 <tr key={listing.id} className="border-t border-gray-100 hover:bg-gray-50/50">
                   <td className="p-2">
-                    {listing.photos?.[0]?.url ? (
-                      <Image src={listing.photos[0].url} alt="" width={48} height={48} className="w-12 h-12 rounded-lg object-cover bg-gray-100" unoptimized={listing.photos[0].url.startsWith('http')} />
+                    {photoUrl ? (
+                      <Image src={photoUrl} alt="" width={48} height={48} className="w-12 h-12 rounded-lg object-cover bg-gray-100" unoptimized={photoUrl.startsWith('http')} />
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-[10px] text-gray-400">Нет</div>
                     )}
@@ -505,7 +507,8 @@ function ListingsTab() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -565,13 +568,15 @@ function ModerationTab() {
         </div>
       ) : (
         <div className="space-y-3">
-          {listings.map(listing => (
+          {listings.map(listing => {
+            const modPhotoUrl = listing.photos?.[0]?.url;
+            return (
             <div key={listing.id} className="p-4 rounded-[14px] bg-amber-50 border border-amber-200 flex flex-col sm:flex-row gap-4">
-              {listing.photos?.[0]?.url && (
+              {modPhotoUrl ? (
                 <div className="w-full sm:w-24 h-24 rounded-[12px] overflow-hidden bg-gray-200 flex-shrink-0 relative">
-                  <Image src={listing.photos[0].url} alt={listing.title} fill className="object-cover" sizes="96px" unoptimized={listing.photos[0].url.startsWith('http')} />
+                  <Image src={modPhotoUrl} alt={listing.title ?? ''} fill className="object-cover" sizes="96px" unoptimized={modPhotoUrl.startsWith('http')} />
                 </div>
-              )}
+              ) : null}
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-[#1C1F26] mb-1">{listing.title}</p>
                 {listing.description && (
@@ -601,7 +606,8 @@ function ModerationTab() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

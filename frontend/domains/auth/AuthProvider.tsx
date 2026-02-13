@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
-import { apiFetchRaw } from "@/shared/api/client";
+import { apiFetchRaw, setOn401 } from "@/shared/api/client";
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -70,6 +70,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     syncCalled.current = true;
     apiFetchRaw("/sync-user", { method: "POST" }).catch(() => undefined);
   }, [isInitialized, user]);
+
+  // TZ-2: при 401 после неудачного refresh — logout и редирект на /auth/login
+  useEffect(() => {
+    setOn401(() => {
+      useAuthStore.getState().logout().then(() => {
+        if (typeof window !== "undefined") window.location.href = "/auth/login";
+      });
+    });
+  }, []);
 
   // Always render children immediately - don't block on auth
   return <>{children}</>;

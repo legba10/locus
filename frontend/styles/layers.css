@@ -5,6 +5,7 @@
 .z-base { z-index: var(--z-base); }
 .z-header { z-index: var(--z-header); }
 .z-bottom-bar { z-index: var(--z-bottom-bar); }
+.z-dropdown { z-index: var(--z-dropdown); }
 .z-overlay { z-index: var(--z-overlay); }
 .z-menu { z-index: var(--z-menu); }
 .z-modal { z-index: var(--z-modal); }
@@ -12,6 +13,5 @@
 .z-toast { z-index: var(--z-toast); }
 .z-tooltip { z-index: var(--z-tooltip); }
 
-/* Алиасы для совместимости */
 .z-notification { z-index: var(--z-notification-panel); }
 .z-drawer { z-index: var(--z-menu); }

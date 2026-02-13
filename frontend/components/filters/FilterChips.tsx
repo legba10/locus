@@ -21,15 +21,15 @@ export function FilterChips({ options, value, onChange, label, className }: Filt
       {label && (
         <span className="block text-[13px] font-medium text-[var(--text-secondary)]">{label}</span>
       )}
-      <div className="flex flex-wrap gap-2">
-        {options.map((opt) => (
+      <div className="flex flex-wrap gap-2 filters-pill-tz10" data-testid="filter-chips" data-label={label ?? undefined} data-options-count={options.length}>
+        {options.map((opt, index) => (
           <button
-            key={opt.value}
+            key={`filter-chip-${opt.value === '' ? '_any' : opt.value}-${index}`}
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'rounded-[14px] px-4 py-2.5 text-[14px] font-medium transition-colors',
-              'border-2',
+              'filter-chip rounded-full px-4 py-2.5 text-[14px] font-medium transition-colors border min-h-[40px]',
+              value === opt.value && 'selected',
               value === opt.value
                 ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--button-primary-text)]'
                 : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-main)] hover:border-[var(--accent)]/50'

@@ -1,0 +1,433 @@
+/**
+ * TZ-7: Поиск + фильтры — единый блок, поля 52px, без засветов в dark.
+ * Только UI, API не трогаем.
+ */
+
+/* 1. Hero search container — TZ-10: light #fff + border, dark rgba */
+.search-hero {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: var(--shadow-1, 0 6px 18px rgba(12, 14, 20, 0.08));
+}
+
+[data-theme="dark"] .search-hero,
+.dark .search-hero {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* 2. City / generic search input — height 52px, radius 12px */
+.search-hero-input,
+.search-tz7-input {
+  height: 52px;
+  border-radius: 12px;
+  padding: 0 14px;
+  width: 100%;
+  font-size: 15px;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #121212);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-hero-input::placeholder,
+.search-tz7-input::placeholder {
+  color: var(--color-muted, #7E7E8A);
+}
+
+.search-hero-input:focus,
+.search-tz7-input:focus {
+  outline: none;
+  border-color: var(--color-primary, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, var(--accent)) 18%, transparent);
+}
+
+[data-theme="dark"] .search-hero-input,
+.dark .search-hero-input,
+[data-theme="dark"] .search-tz7-input,
+.dark .search-tz7-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+[data-theme="dark"] .search-hero-input::placeholder,
+.dark .search-hero-input::placeholder,
+[data-theme="dark"] .search-tz7-input::placeholder,
+.dark .search-tz7-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* City dropdown — solid background, no transparency, scroll */
+.search-tz7-dropdown,
+.city-select-dropdown-tz7 {
+  background: #ffffff !important;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+[data-theme="dark"] .search-tz7-dropdown,
+.dark .search-tz7-dropdown,
+[data-theme="dark"] .city-select-dropdown-tz7,
+.dark .city-select-dropdown-tz7 {
+  background: #1a1a1f !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.city-select-dropdown-tz7 button,
+.city-select-item {
+  color: var(--color-text, var(--text-main));
+}
+
+[data-theme="dark"] .city-select-dropdown-tz7 button,
+.dark .city-select-dropdown-tz7 button,
+[data-theme="dark"] .city-select-item,
+.dark .city-select-item {
+  color: #f2f3f5;
+}
+
+.city-select-dropdown-tz7 .city-select-item:hover,
+.city-select-dropdown-tz7 button:hover {
+  background: var(--accent-soft, rgba(123, 97, 255, 0.12));
+}
+
+[data-theme="dark"] .city-select-dropdown-tz7 .city-select-item:hover,
+.dark .city-select-dropdown-tz7 .city-select-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 3. Search button — Найти жильё */
+.search-hero-submit-tz7 {
+  height: 52px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 0 24px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(180deg, var(--color-primary, var(--accent)), var(--color-primary-600, var(--accent-hover)));
+  color: #fff;
+  box-shadow: var(--shadow-1);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.search-hero-submit-tz7:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+.search-hero-submit-tz7:active {
+  transform: translateY(0);
+}
+
+/* 4. AI button — Умный подбор */
+.search-hero-ai-tz7 {
+  height: 52px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 0 20px;
+  border: 2px solid var(--color-primary, var(--accent));
+  background: transparent;
+  color: var(--color-primary, var(--accent));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.search-hero-ai-tz7:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .search-hero-ai-tz7,
+.dark .search-hero-ai-tz7 {
+  border-color: var(--color-accent, var(--accent));
+  color: var(--color-accent, var(--accent));
+}
+
+/* 5. Filters bar — horizontal chips */
+.filters-bar {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filters-bar::-webkit-scrollbar {
+  height: 6px;
+}
+
+/* TZ-10: pill кнопки */
+.filters-bar-chip {
+  height: 40px;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--color-surface-2, var(--bg-secondary));
+  color: var(--color-text, var(--text-main));
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+[data-theme="dark"] .filters-bar-chip,
+.dark .filters-bar-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f2f3f5;
+}
+
+.filters-bar-chip:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .filters-bar-chip:hover,
+.dark .filters-bar-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 6. Filters modal — solid bg, max-width 540px */
+.filters-modal-tz7 .modal-panel,
+.modal-filters-tz7 {
+  max-width: 540px;
+  background: #ffffff !important;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .filters-modal-tz7 .modal-panel,
+.dark .filters-modal-tz7 .modal-panel,
+[data-theme="dark"] .modal-filters-tz7,
+.dark .modal-filters-tz7 {
+  background: #141418 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #f2f3f5;
+}
+
+[data-theme="dark"] .filters-modal-tz7 h2,
+.dark .filters-modal-tz7 h2,
+[data-theme="dark"] .quick-ai-modal-tz7 h2,
+.dark .quick-ai-modal-tz7 h2 {
+  color: #f2f3f5;
+}
+
+.filters-modal-tz7 .sticky-footer-tz7 {
+  background: #ffffff;
+  border-top: 1px solid var(--border);
+}
+
+[data-theme="dark"] .filters-modal-tz7 .sticky-footer-tz7,
+.dark .filters-modal-tz7 .sticky-footer-tz7 {
+  background: #141418;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 7. Quick AI modal — solid bg */
+.quick-ai-modal-tz7.modal-panel,
+.quick-ai-modal-tz7 .modal-panel {
+  background: #ffffff !important;
+  max-width: 420px;
+}
+
+[data-theme="dark"] .quick-ai-modal-tz7 .modal-panel,
+.dark .quick-ai-modal-tz7 .modal-panel {
+  background: #141418 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Inputs inside search/filters — dark theme solid */
+[data-theme="dark"] .search-hero input,
+[data-theme="dark"] .search-hero select,
+.dark .search-hero input,
+.dark .search-hero select,
+[data-theme="dark"] .filters-modal-tz7 input,
+[data-theme="dark"] .filters-modal-tz7 select,
+.dark .filters-modal-tz7 input,
+.dark .filters-modal-tz7 select {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+[data-theme="dark"] .search-hero input::placeholder,
+.dark .search-hero input::placeholder,
+[data-theme="dark"] .filters-modal-tz7 input::placeholder,
+.dark .filters-modal-tz7 input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Filter chips — dark theme (FilterChips component) */
+.search-hero .filter-chip,
+.filters-modal-tz7 .filter-chip {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--color-text, var(--text-main));
+}
+
+[data-theme="dark"] .search-hero .filter-chip,
+.dark .search-hero .filter-chip,
+[data-theme="dark"] .filters-modal-tz7 .filter-chip,
+.dark .filters-modal-tz7 .filter-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f2f3f5;
+}
+
+.search-hero .filter-chip.selected,
+.filters-modal-tz7 .filter-chip.selected {
+  background: var(--color-primary, var(--accent));
+  border-color: var(--color-primary, var(--accent));
+  color: #fff;
+}
+
+/* AIModeSwitch — dark theme */
+[data-theme="dark"] .search-hero .aim-mode-switch,
+.dark .search-hero .aim-mode-switch,
+[data-theme="dark"] .filters-modal-tz7 .aim-mode-switch,
+.dark .filters-modal-tz7 .aim-mode-switch {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .aim-mode-switch span,
+[data-theme="dark"] .aim-mode-switch p,
+.dark .aim-mode-switch span,
+.dark .aim-mode-switch p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .aim-mode-switch button,
+.dark .aim-mode-switch button {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Labels inside search/filters — readable in dark */
+.search-hero label,
+.search-hero span.block,
+.filters-modal-tz7 label,
+.filters-modal-tz7 span.block {
+  color: var(--color-text, var(--text-main));
+}
+
+[data-theme="dark"] .search-hero label,
+[data-theme="dark"] .search-hero span.block,
+.dark .search-hero label,
+.dark .search-hero span.block,
+[data-theme="dark"] .filters-modal-tz7 label,
+[data-theme="dark"] .filters-modal-tz7 span.block,
+.dark .filters-modal-tz7 label,
+.dark .filters-modal-tz7 span.block {
+  color: #f2f3f5;
+}
+
+.search-hero .text-[var(--text-secondary)],
+.filters-modal-tz7 .text-[var(--text-secondary)] {
+  color: var(--color-muted, var(--text-secondary));
+}
+
+[data-theme="dark"] .search-hero .text-[var(--text-secondary)],
+.dark .search-hero .text-[var(--text-secondary)],
+[data-theme="dark"] .filters-modal-tz7 .text-[var(--text-secondary)],
+.dark .filters-modal-tz7 .text-[var(--text-secondary)] {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 8. Mobile: one column, full width buttons, padding 12px */
+@media (max-width: 767px) {
+  .search-hero {
+    padding: 12px;
+  }
+  .search-hero-actions-tz7 {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .search-hero-actions-tz7 .search-hero-submit-tz7,
+  .search-hero-actions-tz7 .search-hero-ai-tz7 {
+    width: 100%;
+  }
+}
+
+/* Icon color token for search/filter icons */
+:root {
+  --icon-color: var(--color-text, #121212);
+}
+[data-theme="dark"],
+.dark {
+  --icon-color: #f2f3f5;
+}
+
+.search-tz7-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--icon-color);
+}
+
+/* Sort select on search page — theme-aware */
+.search-tz7-select {
+  background: var(--color-surface-2, var(--bg-secondary));
+  color: var(--color-text, var(--text-main));
+}
+
+[data-theme="dark"] .search-tz7-select,
+.dark .search-tz7-select {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f2f3f5;
+}
+
+.search-tz7-select option {
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #121212);
+}
+
+[data-theme="dark"] .search-tz7-select option,
+.dark .search-tz7-select option {
+  background: #1a1a1f;
+  color: #f2f3f5;
+}
+
+/* AI results panel on search page */
+.search-tz7-ai-panel {
+  background: var(--color-surface-2, var(--bg-secondary));
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .search-tz7-ai-panel,
+.dark .search-tz7-ai-panel {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* City select fullscreen (mobile) — solid bg */
+.city-select-fullscreen-tz7 {
+  background: #ffffff;
+}
+[data-theme="dark"] .city-select-fullscreen-tz7,
+.dark .city-select-fullscreen-tz7 {
+  background: #1a1a1f;
+}

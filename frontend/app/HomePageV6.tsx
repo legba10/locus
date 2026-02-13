@@ -12,6 +12,7 @@ import { useFilterStore } from '@/core/filters'
 import { FilterPanel, QuickAIModal } from '@/components/filters'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
+import { CITIES } from '@/shared/data/cities'
 
 interface ListingsResponse {
   items: any[]
@@ -38,7 +39,7 @@ interface ListingsResponse {
 export function HomePageV6() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { city, budgetMin, budgetMax, type, duration, aiMode, setCity, setBudget, setDuration, getBudgetQuery } = useFilterStore()
+  const { city, budgetMin, budgetMax, type, duration, aiMode, setCity, setBudget, setType, setDuration, getBudgetQuery } = useFilterStore()
   const [aiPreparing, setAiPreparing] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
@@ -228,7 +229,7 @@ export function HomePageV6() {
 
     const cache = listing.ratingCache as { rating?: number; positive_ratio?: number; cleanliness?: number; noise?: number } | null | undefined
     return {
-      id: listing.id,
+      id: listing.id ?? `listing-${index}`,
       photo,
       title: cleanTitle,
       price: listing.pricePerNight || listing.basePrice || 0,
@@ -254,35 +255,33 @@ export function HomePageV6() {
 
   return (
     <div className="min-h-screen font-sans antialiased">
-      {/* ТЗ-5 БЛОК 2: Hero AI блок */}
-      <section className="home-hero-tz5">
-        <div className="home-hero-tz5-card">
-          <h1 className="home-hero-tz5-title">Найдём жильё под ваш бюджет</h1>
-          <p className="home-hero-tz5-subtitle">AI анализирует рынок и подбирает варианты</p>
-          <button type="button" className="home-hero-tz5-cta" onClick={() => setShowQuickFab(true)}>
-            Начать подбор
-          </button>
-        </div>
-        <button type="button" className="home-hero-tz5-smart-btn" onClick={() => setShowQuickFab(true)}>
-          Умный подбор AI
-        </button>
-      </section>
-
-      {/* ТЗ-7: Быстрые фильтры из единого store */}
+      {/* ТЗ-7: Hero + единый блок поиска (город, бюджет, тип, срок, комнаты, Найти жильё, Умный подбор) */}
       <section className="py-6 md:py-8 bg-[var(--bg-main)]">
         <div className="market-container">
+          <h1 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-1 text-center">Найдём жильё под ваш бюджет</h1>
+          <p className="text-[14px] text-[var(--text-secondary)] mb-4 text-center">Выберите город и параметры — AI подберёт варианты</p>
           {!city && (
             <p className="text-[14px] text-[var(--text-secondary)] mb-4 rounded-[16px] bg-[var(--accent-soft)] px-4 py-3 text-center">
               Сначала выберите город
             </p>
           )}
-          <div className="glass rounded-[20px] p-4 md:p-5 border border-[var(--border)]">
+          <div className="search-hero">
             <FilterPanel
               embedded
               showSearchButtons={true}
               onSearch={handleSearch}
               onSmartSearch={handleSmartSearch}
             />
+          </div>
+          {/* TZ-10: Популярные направления */}
+          <div className="mt-6">
+            <h2 className="text-[16px] font-semibold text-[var(--color-text)] mb-3">Популярные направления</h2>
+            <div className="popular-destinations-tz10">
+              <Link href="/listings?city=Москва">Москва</Link>
+              <Link href="/listings?city=Санкт-Петербург">Санкт-Петербург</Link>
+              <Link href="/listings?city=Сочи">Сочи</Link>
+              <Link href="/listings?city=Казань">Казань</Link>
+            </div>
           </div>
         </div>
       </section>
@@ -326,7 +325,7 @@ export function HomePageV6() {
                   </div>
                   <p className="text-[16px] font-semibold text-[var(--text-main)]">Пока нет объявлений</p>
                   <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Подберите параметры и попробуйте расширить поиск.</p>
-                  <Link href="/listings" className="btn-primary mt-4 inline-flex items-center justify-center text-[var(--button-primary-text)]">
+                  <Link href="/listings" className="btn btn--primary btn--md mt-4 inline-flex items-center justify-center">
                     Смотреть все объявления
                   </Link>
                 </div>
@@ -402,7 +401,7 @@ export function HomePageV6() {
           ═══════════════════════════════════════════════════════════════ */}
       <section 
         className="py-10 md:py-14"
-        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)' }}
+        style={{ background: 'linear-gradient(180deg, var(--bg-main) 0%, var(--bg-secondary) 100%)' }}
       >
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-8">
@@ -559,7 +558,7 @@ export function HomePageV6() {
           ═══════════════════════════════════════════════════════════════ */}
       <section 
         className="py-14 md:py-18"
-        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}
+        style={{ background: 'linear-gradient(180deg, var(--bg-main) 0%, var(--bg-secondary) 100%)' }}
       >
         <div className="max-w-5xl mx-auto px-4">
           <div className={cn(
@@ -620,7 +619,7 @@ export function HomePageV6() {
               <>
                 <h3 className="text-[22px] font-bold text-[var(--text-main)]">Найдём жильё под ваш бюджет</h3>
                 <p className="mt-2 text-[14px] text-[var(--text-secondary)]">AI анализирует рынок и подбирает варианты</p>
-                <button type="button" className="btn-primary mt-5 w-full text-[var(--button-primary-text)]" onClick={() => setOnboardingStep(2)}>
+                <button type="button" className="btn btn--primary btn--md mt-5 w-full" onClick={() => setOnboardingStep(2)}>
                   Начать
                 </button>
               </>
@@ -654,7 +653,7 @@ export function HomePageV6() {
                     <option value="short">Посуточно</option>
                   </select>
                 </div>
-                <button type="button" className="btn-primary mt-5 w-full text-[var(--button-primary-text)]" onClick={() => { saveOnboarding(); handleSearch(); }}>
+                <button type="button" className="btn btn--primary btn--md mt-5 w-full" onClick={() => { saveOnboarding(); handleSearch(); }}>
                   Сохранить и запустить AI подбор
                 </button>
               </>
@@ -675,8 +674,10 @@ export function HomePageV6() {
         city={city}
         budgetMin={budgetMin}
         budgetMax={budgetMax}
+        type={type}
         onCityChange={setCity}
         onBudgetChange={setBudget}
+        onTypeChange={setType}
         onLaunch={handleQuickAILaunch}
       />
     </div>

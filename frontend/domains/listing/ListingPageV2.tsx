@@ -579,14 +579,14 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             type="button"
             onClick={handleWrite}
             disabled={writeLoading}
-            className="flex-1 btn-primary disabled:opacity-70"
+            className="btn btn--primary btn--md flex-1 disabled:opacity-70"
           >
             {writeLoading ? '…' : 'Написать'}
           </button>
           <button
             type="button"
             onClick={handleBook}
-            className="flex-1 btn-secondary"
+            className="btn btn--secondary btn--md flex-1"
           >
             Забронировать
           </button>

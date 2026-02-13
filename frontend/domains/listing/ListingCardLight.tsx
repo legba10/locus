@@ -103,10 +103,10 @@ function ListingCardLightComponent({
         className
       )}
     >
-      {/* Фото: 180px mobile, 220px desktop, radius 18px */}
+      {/* TZ-3: фото без затемнения, aspect-ratio 4:3 */}
       <Link
         href={`/listings/${id}`}
-        className="listing-photo-tz5 block relative w-full flex-shrink-0 overflow-hidden rounded-t-[18px] bg-[var(--bg-glass)]"
+        className="listing-photo-tz5 block relative w-full flex-shrink-0 overflow-hidden rounded-t-[18px] bg-[var(--bg-secondary)]"
         onClick={(e) => { e.preventDefault(); openListing(); }}
       >
         {imageUrl && !imgError ? (
@@ -120,11 +120,9 @@ function ListingCardLightComponent({
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-secondary)] text-[12px] gap-2">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3l2 2h7a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
-            </svg>
-            <span>Фото отсутствует</span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-secondary)] text-[12px] gap-2 bg-[var(--bg-secondary)]">
+            <img src="/placeholder.svg" alt="" className="w-14 h-14 object-contain opacity-50" />
+            <span>Нет фото</span>
           </div>
         )}
         <button
@@ -202,14 +200,14 @@ export function ListingCardLightSkeleton() {
       'listing-card-tz5 flex flex-col h-full rounded-[18px] overflow-hidden',
       'glass border border-[var(--border)]'
     )}>
-      <div className="listing-photo-tz5 w-full flex-shrink-0 rounded-t-[18px] skeleton-glass" />
+      <div className="listing-photo-tz5 w-full flex-shrink-0 rounded-t-[18px] skeleton-photo" />
       <div className="flex flex-col flex-1 min-h-0 p-4 gap-2">
-        <div className="h-7 w-28 rounded-lg skeleton-glass" />
-        <div className="h-4 w-36 rounded-lg skeleton-glass" />
+        <div className="h-7 w-28 rounded-lg skeleton-photo" />
+        <div className="h-4 w-36 rounded-lg skeleton-photo" />
       </div>
       <div className="flex items-center gap-2 p-3 pt-0 border-t border-[var(--border)] flex-shrink-0">
-        <div className="h-8 w-8 rounded-full skeleton-glass" />
-        <div className="h-8 w-16 rounded-[12px] ml-auto skeleton-glass" />
+        <div className="h-8 w-8 rounded-full skeleton-photo" />
+        <div className="h-8 w-16 rounded-[12px] ml-auto skeleton-photo" />
       </div>
     </div>
   )
