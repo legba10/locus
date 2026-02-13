@@ -1648,12 +1648,12 @@ section + section {
 }
 
 body {
-  background: #f6f7fb;
+  background: var(--bg);
   color: var(--text);
 }
 
 [data-theme="dark"] body {
-  background: radial-gradient(circle at top, #1a1f2b 0%, #0f1117 60%);
+  background: var(--bg);
   color: var(--text);
 }
 

@@ -160,18 +160,18 @@ export function ListingPage({ id }: { id: string }) {
           )}
 
           {/* BLOCK 6: Description */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <h2 className="font-semibold text-gray-900 mb-2">Описание</h2>
-            <p className="text-gray-600 whitespace-pre-wrap">{item.description}</p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <h2 className="font-semibold text-[var(--text)] mb-2">Описание</h2>
+            <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{item.description}</p>
           </div>
 
           {/* BLOCK 7: Amenities */}
           {Array.isArray(item.amenities) && item.amenities.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Удобства</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+              <h2 className="font-semibold text-[var(--text)] mb-2">Удобства</h2>
               <div className="flex flex-wrap gap-2">
                 {item.amenities.map((a, i) => (
-                  <span key={a?.amenity?.label ?? `amenity-${i}`} className="px-2.5 py-1 bg-gray-100 rounded-lg text-sm text-gray-700">
+                  <span key={a?.amenity?.label ?? `amenity-${i}`} className="px-2.5 py-1 bg-[var(--bg-secondary)] rounded-lg text-sm text-[var(--text-secondary)]">
                     {a?.amenity?.label ?? 'Удобство'}
                   </span>
                 ))}
@@ -180,37 +180,37 @@ export function ListingPage({ id }: { id: string }) {
           )}
 
           {/* BLOCK 8: Map placeholder */}
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 h-48 flex items-center justify-center">
-            <span className="text-gray-400">🗺️ Карта</span>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4 h-48 flex items-center justify-center">
+            <span className="text-[var(--text-secondary)]">🗺️ Карта</span>
           </div>
         </div>
 
         {/* Booking sidebar */}
         <div className="md:sticky md:top-4 md:self-start">
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <p className="text-2xl font-bold text-[var(--text)] mb-1">
               {formatPrice(item.basePrice)} ₽
-              <span className="text-base font-normal text-gray-500"> / ночь</span>
+              <span className="text-base font-normal text-[var(--text-secondary)]"> / ночь</span>
             </p>
 
             {item.address && (
-              <p className="text-sm text-gray-500 mb-4">{item.address}</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">{item.address}</p>
             )}
 
             <div className="space-y-3 mb-4">
               <div className="grid grid-cols-2 gap-2">
-                <div className="border border-gray-200 rounded-lg p-2">
-                  <label className="text-xs text-gray-500">Заезд</label>
-                  <input type="date" className="w-full text-sm mt-1 outline-none" />
+                <div className="border border-[var(--border)] rounded-lg p-2">
+                  <label className="text-xs text-[var(--text-secondary)]">Заезд</label>
+                  <input type="date" className="w-full text-sm mt-1 outline-none bg-transparent text-[var(--text)]" />
                 </div>
-                <div className="border border-gray-200 rounded-lg p-2">
-                  <label className="text-xs text-gray-500">Выезд</label>
-                  <input type="date" className="w-full text-sm mt-1 outline-none" />
+                <div className="border border-[var(--border)] rounded-lg p-2">
+                  <label className="text-xs text-[var(--text-secondary)]">Выезд</label>
+                  <input type="date" className="w-full text-sm mt-1 outline-none bg-transparent text-[var(--text)]" />
                 </div>
               </div>
-              <div className="border border-gray-200 rounded-lg p-2">
-                <label className="text-xs text-gray-500">Гости</label>
-                <select className="w-full text-sm mt-1 outline-none">
+              <div className="border border-[var(--border)] rounded-lg p-2">
+                <label className="text-xs text-[var(--text-secondary)]">Гости</label>
+                <select className="w-full text-sm mt-1 outline-none bg-transparent text-[var(--text)]">
                   {[1,2,3,4,5,6].map(n => (
                     <option key={n}>{n} {n === 1 ? 'гость' : n < 5 ? 'гостя' : 'гостей'}</option>
                   ))}

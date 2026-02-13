@@ -1,13 +1,16 @@
 /**
- * ТЗ-1 + ТЗ-3: Архитектура системы тем (Light / Dark) для LOCUS
- * Единый theme-движок: design tokens + data-theme на <html>
- * Запрет: не использовать #fff, #000, rgba() в компонентах — только var(--token)
+ * ТЗ-1 + ТЗ-4: Единая система темы. Только global theme tokens.
+ * data-theme на <html> задаётся ThemeProvider.
  */
 
-/* ТЗ-1 + ТЗ-MAIN-REDESIGN: единый источник токенов. bg-[var(--bg)], text-[var(--text)], border-[var(--border)] */
-/* Fallback (SSR / до применения темы) — светлая тема. ТЗ-9: контраст карточек. */
+/* TZ-4: body всегда из токенов темы */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Fallback (SSR / до применения темы) — светлая тема. */
 :root {
-  /* DS product tokens (ТЗ-MAIN-REDESIGN) */
   --bg: #ffffff;
   --card: #f6f7fb;
   --text: #0f172a;
@@ -76,13 +79,14 @@
   --chip-inactive-bg: #f1f2f7;
 }
 
-/* Light — явно (ТЗ-1 п.4.1 + ТЗ №2) */
+/* TZ-4: light theme — фильтры, footer, карточки в светлой теме */
 :root[data-theme="light"] {
-  --bg: #f6f7fb;
+  --bg: #ffffff;
   --card: #ffffff;
   --text: #0f172a;
+  --textSecondary: #64748b;
   --sub: #6b7280;
-  --border: rgba(0, 0, 0, 0.08);
+  --border: #e5e7eb;
   --accent1: #7b4cff;
   --accent2: #6366f1;
 
@@ -124,14 +128,16 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ-1 п.4.2 + ТЗ-9: читаемые карточки */
+/* TZ-4: dark theme — единые токены без смешения */
 :root[data-theme="dark"],
 .dark {
-  --bg: #0b1020;
-  --card: #151a2e;
-  --border: #242a45;
+  --bg: #0b0f1a;
+  --bgSecondary: #111827;
+  --card: #0f172a;
+  --border: #1f2937;
   --surface-light: #111827;
   --text: #ffffff;
+  --textSecondary: #9ca3af;
   --sub: #9ca3af;
   --border-main: rgba(255, 255, 255, 0.08);
   --accent1: #8b5cf6;

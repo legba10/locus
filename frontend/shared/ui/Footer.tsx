@@ -37,7 +37,7 @@ export function Footer({ className }: { className?: string }) {
 
   return (
     <footer
-      className={cn(className, 'bg-[var(--bg)] border-t border-[var(--border)]')}
+      className={cn(className, 'bg-[var(--card)] text-[var(--text)] border-t border-[var(--border)]')}
     >
       <div className="market-container py-16 text-left">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">

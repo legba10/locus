@@ -69,16 +69,16 @@
 [data-theme="dark"] .search-glass-tz5,
 .dark .filterCard,
 .dark .search-glass-tz5 {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--card);
+  border: 1px solid var(--border);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 [data-theme="light"] .filterCard,
 [data-theme="light"] .search-glass-tz5,
 :root .search-glass-tz5,
 :root[data-theme="light"] .search-glass-tz5 {
-  background: #ffffff;
-  border: 1px solid #e7e7e7;
+  background: var(--card);
+  border: 1px solid var(--border);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
