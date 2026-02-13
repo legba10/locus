@@ -5,14 +5,14 @@
  */
 
 /* ТЗ-1 + ТЗ-MAIN-REDESIGN: единый источник токенов. bg-[var(--bg)], text-[var(--text)], border-[var(--border)] */
-/* Fallback (SSR / до применения темы) — светлая тема */
+/* Fallback (SSR / до применения темы) — светлая тема. ТЗ-9: контраст карточек. */
 :root {
   /* DS product tokens (ТЗ-MAIN-REDESIGN) */
   --bg: #ffffff;
-  --card: #f8fafc;
+  --card: #f6f7fb;
   --text: #0f172a;
   --sub: #64748b;
-  --border: rgba(0, 0, 0, 0.08);
+  --border: #e6e8ef;
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
@@ -124,15 +124,16 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ-1 п.4.2 + ТЗ-MAIN-REDESIGN (никаких белых блоков) */
+/* Dark — ТЗ-1 п.4.2 + ТЗ-9: читаемые карточки */
 :root[data-theme="dark"],
 .dark {
-  --bg: #0b0f1a;
-  --card: #111827;
+  --bg: #0b1020;
+  --card: #151a2e;
+  --border: #242a45;
   --surface-light: #111827;
   --text: #ffffff;
   --sub: #9ca3af;
-  --border: rgba(255, 255, 255, 0.08);
+  --border-main: rgba(255, 255, 255, 0.08);
   --accent1: #8b5cf6;
   --accent2: #6366f1;
   --primary: #8b5cf6;
@@ -143,10 +144,10 @@
 }
 
 :root[data-theme="dark"] {
-  --bg-main: #0b0f1a;
-  --bg-secondary: #111827;
-  --bg-surface: #111827;
-  --bg-card: #111827;
+  --bg-main: #0b1020;
+  --bg-secondary: #151a2e;
+  --bg-surface: #151a2e;
+  --bg-card: #151a2e;
   --bg-elevated: #161b2e;
   --bg-modal: #0f172a;
 

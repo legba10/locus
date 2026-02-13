@@ -2,9 +2,14 @@
  * ТЗ №3 + ТЗ-7: Страница объявления — галерея, блок цены/действий, бронирование, отзывы, mobile.
  */
 
-/* ТЗ-7: галерея — фиксированная высота 480px desktop, 280px mobile, skeleton */
+/* ТЗ-9: галерея — пропорции 16/9, не вытянуто, object-fit cover */
 .listing-gallery-tz7__main {
+  aspect-ratio: 16/9;
+  max-height: 520px;
   height: 280px;
+}
+.listing-gallery-tz7__main img {
+  object-fit: cover;
 }
 @media (min-width: 768px) {
   .listing-gallery-tz7__main {

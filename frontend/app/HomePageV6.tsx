@@ -265,7 +265,7 @@ export function HomePageV6() {
       <section className="hero-and-search-tz5 hero-tz2" aria-label="Главный экран и поиск">
         <Hero />
         <div className="market-container px-4 pb-6 md:pb-8">
-          <div id="search" className="search-glass-tz5 -mt-2 md:-mt-4">
+          <div id="search" className="search-glass-tz5 filterCard -mt-2 md:-mt-4">
             {!city && (
               <p className="text-[14px] text-[var(--sub)] mb-2 rounded-xl bg-[var(--bg-glass)] border border-[var(--border)] px-4 py-2.5 text-center">
                 Сначала выберите город

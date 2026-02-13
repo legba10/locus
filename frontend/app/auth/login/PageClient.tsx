@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { handleTelegramLogin } from '@/shared/telegram/telegram.bridge'
@@ -11,13 +11,19 @@ import TelegramStatus from '@/components/lottie/TelegramStatus'
 
 /**
  * LoginPage — Страница входа.
+ * ТЗ-9: редирект только когда user есть (на главную), не при !user — иначе бесконечный reload.
  */
 export default function PageClient() {
   const router = useRouter()
-  const { login, isLoading, error, clearError } = useAuthStore()
+  const { user, login, isLoading, error, clearError } = useAuthStore()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  useEffect(() => {
+    if (!user) return
+    router.push('/')
+  }, [user, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

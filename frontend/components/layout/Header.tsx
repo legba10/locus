@@ -40,9 +40,8 @@ function NavItem({
 }
 
 /**
- * ТЗ-8: Единый Header для всего сайта.
- * Высота: mobile 64px, desktop 72px. Safe-area. Grid: [burger][logo][bell].
- * Логотип: единый /logo.png (ТЗ-9). Бургер 24px, колокольчик 22px, badge 8px.
+ * ТЗ-8 + ТЗ-9: Единый Header. Логотип по теме: /logo-dark.svg (светлая тема), /logo-light.svg (тёмная).
+ * Бургер: только useState, без router.push при открытии.
  */
 export function Header() {
   const pathname = usePathname()
@@ -52,9 +51,10 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
-  const [logoError, setLogoError] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
 
-  const logoIconSrc = logoError ? '/favicon.ico' : '/logo.png'
+  const isDark = resolvedTheme === 'dark'
+  const logoSrc = isDark ? '/logo-light.svg' : '/logo-dark.svg'
   const authed = isAuthenticated()
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function Header() {
     >
       <div className="layout-header__inner">
         <div className="layout-header__grid">
-          {/* Burger — ТЗ-8: 24px, отступ 16px */}
+          {/* ТЗ-9: бургер — только toggle state, без reload/push */}
           <div className="layout-header__cell layout-header__burger-cell md:hidden">
             <button
               type="button"
@@ -140,21 +140,19 @@ export function Header() {
             </button>
           </div>
 
-          {/* ТЗ-4: Logo + Nav — Лого | Поиск | Избранное | Сообщения | Профиль */}
           <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
             <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
               <Image
-                src={logoIconSrc}
+                src={logoSrc}
                 alt=""
                 className="layout-header__logo-img"
-                width={28}
-                height={28}
-                onError={() => setLogoError(true)}
+                width={110}
+                height={32}
+                priority
               />
-              <span className="layout-header__logo-text">LOCUS</span>
             </Link>
             <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">
-              {desktopNavIcons.map((item) => {
+              {desktopNavIcons.filter((item) => item.label !== 'Профиль').map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href.split('?')[0])
                 return (
@@ -171,6 +169,53 @@ export function Header() {
                   </Link>
                 )
               })}
+              {authed && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setProfileOpen((p) => !p)}
+                    aria-label="Профиль"
+                    className={cn(
+                      'layout-header__nav-icon flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
+                      isActive('/profile') && 'layout-header__nav-icon--active'
+                    )}
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+                  </button>
+                  {profileOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" aria-hidden onClick={() => setProfileOpen(false)} />
+                      <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-lg">
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2.5 text-[14px] text-[var(--text-main)] hover:bg-[var(--bg-secondary)]"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          Профиль
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => { setProfileOpen(false); handleLogout(); }}
+                          className="w-full text-left px-4 py-2.5 text-[14px] text-[var(--text-main)] hover:bg-[var(--bg-secondary)] flex items-center gap-2"
+                        >
+                          <LogOut className="w-4 h-4" /> Выйти
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              {!authed && (
+                <Link
+                  href="/auth/login"
+                  aria-label="Профиль"
+                  className={cn(
+                    'layout-header__nav-icon flex items-center justify-center w-10 h-10 rounded-xl transition-colors'
+                  )}
+                >
+                  <User className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+                </Link>
+              )}
             </nav>
           </div>
 
