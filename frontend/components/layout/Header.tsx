@@ -10,6 +10,7 @@ import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircl
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { MobileMenu } from './MobileMenu'
+import LogoImg from '@/shared/ui/Logo'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -150,14 +151,7 @@ export function Header() {
 
           <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
             <Link href="/" className="layout-header__logo shrink-0 flex items-center gap-2" aria-label="LOCUS — на главную">
-              <img
-                src="/logo-dark.svg"
-                alt="LOCUS"
-                className="header-logo header-logo-img layout-header__logo-img"
-                width={28}
-                height={28}
-                fetchPriority="high"
-              />
+              <LogoImg />
               <span className="font-semibold text-[var(--header-fg)]">LOCUS</span>
             </Link>
             <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">

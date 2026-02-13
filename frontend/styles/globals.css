@@ -792,12 +792,12 @@ body.modal-open {
   overflow: hidden !important;
 }
 
-/* ТЗ-2: overlay только при открытом меню, без aria-hidden (фикс focus bug) */
+/* TZ-8: overlay выше header (z-50), чтобы бургер открывался и кликался */
 .menu-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 40;
+  z-index: 9999;
 }
 
 /* ТЗ №1: бургер overlay — z-index 10000, меню 10050; overlay не засвечивает; blur 4px */
@@ -859,14 +859,11 @@ body.modal-open {
 
 .drawer.mobile-menu.open {
   pointer-events: auto;
+  transform: translateX(0);
 }
 .dark .drawer.mobile-menu,
 [data-theme="dark"] .drawer.mobile-menu {
   border-right-color: var(--border-main);
-}
-.drawer.mobile-menu.open {
-  transform: translateX(0);
-  pointer-events: auto;
 }
 .drawer.mobile-menu .drawer-inner {
   position: relative;

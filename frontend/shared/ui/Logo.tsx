@@ -2,6 +2,27 @@
 
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
+import { useTheme } from '@/hooks/useTheme'
+
+/**
+ * TZ-8: Логотип-картинка по теме. Используется в Header.
+ * В public: logo-light.svg (для тёмной темы), logo-dark.svg (для светлой).
+ */
+export default function LogoImg() {
+  const { resolvedTheme } = useTheme()
+  const src = resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'
+  return (
+    <img
+      src={src}
+      alt="LOCUS"
+      className="h-8 w-auto"
+      width={28}
+      height={28}
+      draggable={false}
+      fetchPriority="high"
+    />
+  )
+}
 
 interface LogoProps {
   /** primary = тёмный текст, light = белый, accent = градиент, theme = по текущей теме (var(--text-primary)) */

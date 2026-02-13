@@ -126,9 +126,9 @@ function ListingCardComponent({
       <article
         className={cn('listing-card bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden flex flex-col h-full min-h-[320px]', highlight && 'listing-card-glow')}
       >
-        {/* TZ-5: aspect 4/3, первое фото eager */}
+        {/* TZ-5/TZ-8: фиксированная высота 240px, object-cover — без растягивания на ПК */}
         <div
-          className="listing-card__image-wrap relative w-full aspect-[4/3] overflow-hidden rounded-t-xl"
+          className="listing-card__image-wrap relative w-full h-[240px] overflow-hidden rounded-t-xl"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
