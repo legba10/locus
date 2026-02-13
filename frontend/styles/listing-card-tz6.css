@@ -79,6 +79,11 @@
   object-fit: cover;
   transition: transform 0.25s ease;
 }
+.card img {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 18px 18px 0 0;
+}
 @media (hover: hover) and (pointer: fine) {
   .listing-card:hover .listing-card__image-wrap .listing-card__image,
   .listing-card:hover .listing-card__image-wrap img {

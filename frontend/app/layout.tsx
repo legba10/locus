@@ -15,10 +15,8 @@ export const metadata: Metadata = {
   description: 'Подбор жилья с AI',
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/logo-icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
 }
@@ -44,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru" className="light" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" href="/logo-icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

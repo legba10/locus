@@ -6,6 +6,7 @@ import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
 import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
+import { useAuthStore } from '@/domains/auth'
 
 const NOTIFY_SOUND = '/sounds/notify.mp3'
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
@@ -64,7 +65,11 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'ok' | 'denied' | 'no_vapid'>('idle')
   const prevCountRef = useRef<number>(0)
 
+  const user = useAuthStore((s) => s.user)
+  const isAuthed = useAuthStore((s) => s.isAuthenticated)()
+
   const fetchCount = async () => {
+    if (!isAuthed || !user) return
     try {
       const res = await apiFetch<{ count: number }>('/notifications/unread-count')
       setUnreadCount(res?.count ?? 0)
@@ -96,10 +101,11 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   }, [])
 
   useEffect(() => {
+    if (!isAuthed || !user) return
     fetchCount()
     const t = setInterval(fetchCount, 20_000)
     return () => clearInterval(t)
-  }, [])
+  }, [isAuthed, user])
 
   useEffect(() => {
     if (unreadCount > prevCountRef.current && prevCountRef.current > 0) {
@@ -124,6 +130,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   }, [open])
 
   useEffect(() => {
+    if (!isAuthed || !user) return
     let sse: EventSource | null = null
     try {
       const streamUrl = `${API_BASE || ''}/api/notifications/stream`
@@ -136,9 +143,10 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
     return () => {
       if (sse) sse.close()
     }
-  }, [])
+  }, [isAuthed, user])
 
   useEffect(() => {
+    if (!isAuthed || !user) return
     apiFetch('/notifications/presence', {
       method: 'POST',
       body: JSON.stringify({ online: true }),
@@ -149,7 +157,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
         body: JSON.stringify({ online: false }),
       }).catch(() => {})
     }
-  }, [])
+  }, [isAuthed, user])
 
   useEffect(() => {
     if (!open) return
