@@ -792,6 +792,14 @@ body.modal-open {
   overflow: hidden !important;
 }
 
+/* ТЗ-2: overlay только при открытом меню, без aria-hidden (фикс focus bug) */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+}
+
 /* ТЗ №1: бургер overlay — z-index 10000, меню 10050; overlay не засвечивает; blur 4px */
 .mobile-menu-overlay {
   position: fixed;

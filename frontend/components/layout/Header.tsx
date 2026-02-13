@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
@@ -45,7 +46,7 @@ export function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -61,6 +62,18 @@ export function Header() {
     const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : 'auto'
+  }, [menuOpen])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   const desktopNavIcons = useMemo(
@@ -96,12 +109,12 @@ export function Header() {
 
   const handleLogout = async () => {
     await logout()
-    setIsMenuOpen(false)
+    setMenuOpen(false)
     router.push('/')
   }
 
   const handleNavigate = (path: string) => {
-    setIsMenuOpen(false)
+    setMenuOpen(false)
     router.push(path)
   }
 
@@ -120,14 +133,14 @@ export function Header() {
     >
       <div className="layout-header__inner">
         <div className="layout-header__grid">
-          {/* ТЗ-9: бургер — только toggle state, без reload/push */}
+          {/* ТЗ-2: бургер открывает меню; закрытие — overlay / ESC / крестик */}
           <div className="layout-header__cell layout-header__burger-cell md:hidden">
             <button
               type="button"
-              className="layout-header__burger"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-              aria-expanded={isMenuOpen}
+              className="burger-btn layout-header__burger"
+              onClick={() => setMenuOpen(true)}
+              aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
+              aria-expanded={menuOpen}
             >
               <span />
               <span />
@@ -136,7 +149,7 @@ export function Header() {
           </div>
 
           <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
-            <Link href="/search" className="layout-header__logo shrink-0 flex items-center gap-2" aria-label="LOCUS — поиск">
+            <Link href="/" className="layout-header__logo shrink-0 flex items-center gap-2" aria-label="LOCUS — на главную">
               <img
                 src="/logo-dark.svg"
                 alt="LOCUS"
@@ -180,7 +193,7 @@ export function Header() {
                   </button>
                   {profileOpen && (
                     <>
-                      <div className="fixed inset-0 z-40" aria-hidden onClick={() => setProfileOpen(false)} />
+                      <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                       <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] py-1 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-lg">
                         <Link
                           href="/profile"
@@ -253,7 +266,10 @@ export function Header() {
         </div>
       </div>
 
-      <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
+      {menuOpen && (
+        <div className="menu-overlay" onClick={() => setMenuOpen(false)} />
+      )}
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)}>
         <div className="mobile-menu-header-row">
           <button
             type="button"
@@ -289,7 +305,7 @@ export function Header() {
           </button>
           <button
             type="button"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() => setMenuOpen(false)}
             className="mobile-menu-close"
             aria-label="Закрыть меню"
           >

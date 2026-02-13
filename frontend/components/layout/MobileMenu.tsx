@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 
 export interface MobileMenuProps {
@@ -10,57 +9,13 @@ export interface MobileMenuProps {
 }
 
 /**
- * ТЗ-8: Меню (бургер) — slide left, backdrop rgba(0,0,0,0.4).
- * Закрытие: тап вне, свайп влево, крест внутри.
+ * ТЗ-2: Мобильное меню — панель slide left.
+ * Overlay рендерится в Header только при open. Здесь только панель, без aria-hidden на overlay.
  */
 export function MobileMenu({ open, onClose, children }: MobileMenuProps) {
-  const drawerRef = useRef<HTMLDivElement>(null)
-  const touchStartX = useRef<number>(0)
-
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : 'auto'
-    return () => {
-      document.body.style.overflow = 'auto'
-    }
-  }, [open])
-
-  useEffect(() => {
-    const onEscape = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    if (open) window.addEventListener('keydown', onEscape)
-    return () => window.removeEventListener('keydown', onEscape)
-  }, [open, onClose])
-
-  const handleOverlayClick = () => onClose()
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    if (dx < -60) onClose()
-  }
-
   return (
-    <>
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Закрыть меню"
-        className={cn('mobile-menu-overlay', open && 'open')}
-        onClick={handleOverlayClick}
-        onKeyDown={(e) => e.key === 'Enter' && onClose()}
-        aria-hidden={!open}
-      />
-      <div
-        ref={drawerRef}
-        className={cn('drawer mobile-menu', open && 'open')}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        aria-hidden={!open}
-      >
-        <div className="drawer-inner">{children}</div>
-      </div>
-    </>
+    <div className={cn('drawer mobile-menu', open && 'open')}>
+      <div className="drawer-inner">{children}</div>
+    </div>
   )
 }
