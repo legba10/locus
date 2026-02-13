@@ -129,21 +129,22 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
     return () => document.body.classList.remove('modal-open')
   }, [open])
 
-  useEffect(() => {
-    if (!isAuthed || !user) return
-    let sse: EventSource | null = null
-    try {
-      const streamUrl = `${API_BASE || ''}/api/notifications/stream`
-      sse = new EventSource(streamUrl, { withCredentials: true })
-      sse.onmessage = () => {
-        fetchCount()
-        fetchList()
-      }
-    } catch {}
-    return () => {
-      if (sse) sse.close()
-    }
-  }, [isAuthed, user])
+  // TZ-12: временно отключено — убирает 401 по /api/notifications/stream без auth
+  // useEffect(() => {
+  //   if (!isAuthed || !user) return
+  //   let sse: EventSource | null = null
+  //   try {
+  //     const streamUrl = `${API_BASE || ''}/api/notifications/stream`
+  //     sse = new EventSource(streamUrl, { withCredentials: true })
+  //     sse.onmessage = () => {
+  //       fetchCount()
+  //       fetchList()
+  //     }
+  //   } catch {}
+  //   return () => {
+  //     if (sse) sse.close()
+  //   }
+  // }, [isAuthed, user])
 
   useEffect(() => {
     if (!isAuthed || !user) return

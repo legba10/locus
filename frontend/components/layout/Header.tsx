@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
@@ -142,13 +141,13 @@ export function Header() {
 
           <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
             <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
-              <Image
+              <img
                 src={logoSrc}
-                alt=""
-                className="layout-header__logo-img"
+                alt="LOCUS"
+                className="headerLogo layout-header__logo-img"
                 width={110}
                 height={32}
-                priority
+                fetchPriority="high"
               />
             </Link>
             <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">

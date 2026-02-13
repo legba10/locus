@@ -18,9 +18,10 @@ export function MobileMenu({ open, onClose, children }: MobileMenuProps) {
   const touchStartX = useRef<number>(0)
 
   useEffect(() => {
-    if (!open) return
-    document.body.classList.add('body-scroll-lock')
-    return () => document.body.classList.remove('body-scroll-lock')
+    document.body.style.overflow = open ? 'hidden' : 'auto'
+    return () => {
+      document.body.style.overflow = 'auto'
+    }
   }, [open])
 
   useEffect(() => {
