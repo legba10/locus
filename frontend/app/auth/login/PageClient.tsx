@@ -15,22 +15,22 @@ import TelegramStatus from '@/components/lottie/TelegramStatus'
  */
 export default function PageClient() {
   const router = useRouter()
-  const { user, login, isLoading, error, clearError } = useAuthStore()
+  const { user, login, isLoading, error, clearError, isInitialized } = useAuthStore()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   useEffect(() => {
-    if (!user) return
-    router.push('/')
-  }, [user, router])
+    if (!isInitialized || isLoading) return
+    if (user) router.replace('/')
+  }, [user, isInitialized, isLoading, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     clearError()
     try {
       await login({ email, password })
-      router.push('/')
+      router.replace('/')
     } catch (err: any) {
       console.error('Login error', err)
     }

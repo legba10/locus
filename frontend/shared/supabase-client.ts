@@ -52,12 +52,12 @@ function getOrCreateClient(): SupabaseClient {
     throw new Error('Supabase configuration missing')
   }
 
-  // Create and cache the singleton
+  // TZ-6: persistSession + autoRefreshToken для Safari и стабильной сессии без refresh-loop
   supabaseInstance = createClient(url, key, {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
   })
 

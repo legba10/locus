@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
 import { apiFetchRaw, setOn401 } from "@/shared/api/client";
+import { supabase } from "@/shared/supabase-client";
+import { setTokens, clearTokens } from "@/shared/auth/token-storage";
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -76,6 +78,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOn401(() => {
       useAuthStore.getState().logout();
     });
+  }, []);
+
+  // TZ-6: Safari — persist session, синхронизация при смене auth state
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        clearTokens();
+        useAuthStore.getState().logout();
+      } else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.access_token && session?.refresh_token) {
+        setTokens(session.access_token, session.refresh_token);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   // Always render children immediately - don't block on auth
