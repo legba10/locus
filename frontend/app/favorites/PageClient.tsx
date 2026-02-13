@@ -59,8 +59,8 @@ export default function PageClient() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+          {[...Array(8)].map((_, i) => (
             <ListingCardSkeleton key={i} />
           ))}
         </div>
@@ -99,7 +99,7 @@ export default function PageClient() {
 
       {/* Listings grid */}
       {!isLoading && !error && data?.items && data.items.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
           {data.items.map((listing: any) => (
             <ListingCard
               key={listing.id}

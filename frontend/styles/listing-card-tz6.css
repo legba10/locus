@@ -53,23 +53,17 @@
   }
 }
 
-/* ТЗ-6: изображение — высота 220px desktop, 180px mobile, object-fit cover, overlay градиент */
+/* TZ-5: изображение — aspect-ratio 4/3, object-fit cover */
 .listing-card__image-wrap {
   position: relative;
   width: 100%;
-  height: 180px;
-  min-height: 0;
+  aspect-ratio: 4 / 3;
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 18px 18px 0 0;
-  background: var(--color-surface-2, #1a1a22);
+  background: var(--color-surface-2, var(--bg-secondary));
   -webkit-user-select: none;
   user-select: none;
-}
-@media (min-width: 768px) {
-  .listing-card__image-wrap {
-    height: 220px;
-  }
 }
 
 .listing-card__image-wrap img,
@@ -372,15 +366,10 @@
 
 .listing-card-skeleton__photo {
   width: 100%;
-  height: 180px;
+  aspect-ratio: 4 / 3;
   background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
   background-size: 200% 100%;
   animation: listing-card-shimmer 1.2s ease-in-out infinite;
-}
-@media (min-width: 768px) {
-  .listing-card-skeleton__photo {
-    height: 220px;
-  }
 }
 
 [data-theme="dark"] .listing-card-skeleton__photo,

@@ -1776,16 +1776,30 @@ select,
   }
 }
 
-/* ТЗ-6: сетка — desktop auto-fill 280px gap 24px; mobile 1 колонка gap 16px padding 16px */
+/* TZ-5: сетка — 1/2/3/4 колонки, центрирование карточек */
 .listing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
+  justify-items: center;
 }
-
-@media (max-width: 767px) {
+@media (min-width: 640px) {
   .listing-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .listing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .listing-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 639px) {
+  .listing-grid {
     gap: 16px;
   }
 }

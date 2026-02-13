@@ -60,9 +60,9 @@ export function Gallery({
   return (
     <div className="listing-gallery-tz7 max-w-[1200px] mx-auto">
       <div className="relative w-full overflow-hidden bg-[var(--bg-card)] rounded-[20px]">
-        {/* ТЗ-7: фиксированная высота 480px desktop / 280px mobile — убирает скачок при загрузке */}
+        {/* TZ-5: aspect 16/9 — фото не вытянуты на desktop */}
         <div
-          className="listing-gallery-tz7__main relative w-full select-none rounded-t-[20px] overflow-hidden bg-[var(--bg-card)]"
+          className="listing-gallery-tz7__main relative w-full aspect-[16/9] select-none rounded-t-[20px] overflow-hidden bg-[var(--bg-card)]"
           onClick={onOpenFullscreen}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
@@ -132,20 +132,20 @@ export function Gallery({
               )}
             </>
           ) : (
-            <div className="listing-gallery-tz7__skeleton w-full h-full min-h-[280px] md:min-h-[480px] flex items-center justify-center rounded-t-[20px]" />
+            <div className="listing-gallery-tz7__skeleton w-full aspect-[16/9] flex items-center justify-center rounded-t-[20px] bg-[var(--bg-secondary)]" />
           )}
         </div>
 
-        {/* ТЗ-7: миниатюры height 60px, border-radius 10px, gap 8px */}
+        {/* TZ-5: миниатюры + scroll snap на мобиле */}
         {hasPhotos && count > 1 && (
-          <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
+          <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin snap-x snap-mandatory">
             {photos.slice(0, 8).map((p, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
                 className={cn(
-                  'relative flex-shrink-0 w-[60px] h-[60px] rounded-[10px] overflow-hidden border-2 transition-colors',
+                  'relative flex-shrink-0 w-[60px] h-[60px] rounded-[10px] overflow-hidden border-2 transition-colors snap-start',
                   activeIndex === i ? 'border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'border-transparent hover:border-[var(--border)]'
                 )}
               >

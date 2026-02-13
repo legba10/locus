@@ -1,8 +1,8 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState, useCallback, memo } from 'react'
-import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
@@ -53,7 +53,6 @@ function ListingCardComponent({
   className,
   highlight = false,
 }: ListingCardProps) {
-  const router = useRouter()
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
@@ -67,17 +66,6 @@ function ListingCardComponent({
       : []
   const displayPhoto = photos[activePhotoIndex] ?? photo ?? null
   const hasMultiplePhotos = photos.length > 1
-
-  const openListing = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
-      localStorage.setItem('locus_viewed_count', String(viewed))
-      localStorage.setItem('locus_last_activity', String(Date.now()))
-      window.dispatchEvent(new Event('locus:listing-viewed'))
-    }
-    track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
-    router.push(`/listings/${id}`)
-  }, [id, title, city, price, router])
 
   const handleFavorite = useCallback(
     (e: React.MouseEvent) => {
@@ -122,31 +110,40 @@ function ListingCardComponent({
   const showOwner = owner?.name || owner?.avatar
 
   return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={openListing}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openListing()}
-      className={cn('listing-card', highlight && 'listing-card-glow', className)}
+    <Link
+      href={`/listings/${id}`}
+      className={cn('block w-full max-w-[420px] h-full', className)}
+      onClick={() => {
+        if (typeof window !== 'undefined') {
+          const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
+          localStorage.setItem('locus_viewed_count', String(viewed))
+          localStorage.setItem('locus_last_activity', String(Date.now()))
+          window.dispatchEvent(new Event('locus:listing-viewed'))
+        }
+        track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
+      }}
     >
-      {/* TZ-6: фото, placeholder из токенов, свайп + стрелки 32px */}
-      <div
-        className="listing-card__image-wrap"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
+      <article
+        className={cn('listing-card bg-[var(--card)] rounded-xl overflow-hidden flex flex-col h-full min-h-[320px]', highlight && 'listing-card-glow')}
       >
-        {displayPhoto && !imgError ? (
-          <Image
-            src={displayPhoto}
-            alt={title || 'Фото жилья'}
-            fill
-            className="listing-card__image object-cover"
-            loading="lazy"
-            sizes="(max-width: 768px) 100vw, 320px"
-            onError={() => setImgError(true)}
-            unoptimized={displayPhoto.startsWith('http')}
-          />
-        ) : null}
+        {/* TZ-5: aspect 4/3, первое фото eager */}
+        <div
+          className="listing-card__image-wrap relative w-full aspect-[4/3] overflow-hidden rounded-t-xl"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {displayPhoto && !imgError ? (
+            <Image
+              src={displayPhoto}
+              alt={title || 'Фото жилья'}
+              fill
+              className="listing-card__image object-cover"
+              loading={activePhotoIndex === 0 ? 'eager' : 'lazy'}
+              sizes="(max-width: 768px) 100vw, 420px"
+              onError={() => setImgError(true)}
+              unoptimized={displayPhoto.startsWith('http')}
+            />
+          ) : null}
         {hasMultiplePhotos && (
           <>
             <button
@@ -189,47 +186,47 @@ function ListingCardComponent({
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
         </button>
-      </div>
-
-      <div className="listing-card__info">
-        {/* ТЗ-5: единый шаблон — цена, город, рейтинг */}
-        <p className="listing-card__price">{formatPrice(price, 'night')}</p>
-        <p className="listing-card__address">{locationText}</p>
-        <div className="listing-card__rating-row">
-          {rating != null && Number(rating) > 0 ? (
-            <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
-              <span className="listing-card__rating-star" aria-hidden>★</span>
-              {Number(rating).toFixed(1)}
-            </span>
-          ) : (
-            <span className="listing-card__rating listing-card__rating--empty">—</span>
-          )}
         </div>
-        <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
-        {showOwner && (
-          <div className="listing-card__owner">
-            <div className="listing-card__owner-avatar">
-              {owner?.avatar ? (
-                <Image src={owner.avatar} alt="" fill className="object-cover" sizes="24px" />
-              ) : (
-                <span className="listing-card__owner-initial">{(owner?.name || 'Г').charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
+
+        <div className="listing-card__info p-3 flex flex-col gap-2 flex-1">
+          <p className="listing-card__address">{locationText}</p>
+          <div className="listing-card__rating-row">
+            {rating != null && Number(rating) > 0 ? (
+              <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
+                <span className="listing-card__rating-star" aria-hidden>★</span>
+                {Number(rating).toFixed(1)}
+              </span>
+            ) : (
+              <span className="listing-card__rating listing-card__rating--empty">—</span>
+            )}
           </div>
-        )}
-      </div>
-    </article>
+          <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
+          {showOwner && (
+            <div className="listing-card__owner">
+              <div className="listing-card__owner-avatar">
+                {owner?.avatar ? (
+                  <Image src={owner.avatar} alt="" fill className="object-cover" sizes="24px" />
+                ) : (
+                  <span className="listing-card__owner-initial">{(owner?.name || 'Г').charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
+            </div>
+          )}
+          <p className="listing-card__price mt-auto">{formatPrice(price, 'night')}</p>
+        </div>
+      </article>
+    </Link>
   )
 }
 
 export const ListingCard = memo(ListingCardComponent)
 
-/** TZ-6: skeleton — один цвет, aspect-ratio 4/3 */
+/** TZ-5: skeleton — aspect 4/3, animate-pulse */
 export function ListingCardSkeleton() {
   return (
-    <div className="listing-card-skeleton">
-      <div className="listing-card-skeleton__photo" />
+    <div className="listing-card-skeleton w-full max-w-[420px]">
+      <div className="listing-card-skeleton__photo aspect-[4/3] animate-pulse bg-[var(--bg-secondary)]" />
       <div className="listing-card-skeleton__info">
         <div className="listing-card-skeleton__line listing-card-skeleton__line--price" />
         <div className="listing-card-skeleton__line listing-card-skeleton__line--address" />
