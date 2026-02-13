@@ -345,7 +345,7 @@ export function HomePageV6() {
           </div>
           <div className="listing-grid">
             {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 6).map((listing) => (
-              <ListingCardLight
+              <ListingCard
                 key={listing.id}
                 id={listing.id}
                 photo={listing.photo || undefined}
@@ -353,21 +353,7 @@ export function HomePageV6() {
                 price={listing.price}
                 city={listing.city}
                 district={listing.district || undefined}
-                rooms={listing.rooms}
-                area={listing.area}
-                floor={listing.floor}
-                totalFloors={listing.totalFloors}
-                views={listing.views}
-                isNew={listing.isNew}
-                isVerified={listing.isVerified}
-                score={listing.score}
-                verdict={listing.verdict}
-                reasons={listing.reasons}
-                tags={listing.tags}
                 rating={listing.rating}
-                reviewPercent={listing.reviewPercent}
-                cleanliness={listing.cleanliness}
-                noise={listing.noise}
               />
             )) : !isLoading ? (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
@@ -375,7 +361,7 @@ export function HomePageV6() {
                 <p className="text-[var(--text-secondary)] text-[14px] mt-1">Подберите параметры в умном подборе</p>
               </div>
             ) : (
-              Array.from({ length: 6 }).map((_, i) => <ListingCardLightSkeleton key={i} />)
+              Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             )}
           </div>
         </div>
@@ -387,7 +373,7 @@ export function HomePageV6() {
           <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)] mb-6 md:mb-8">Последние просмотренные</h2>
           <div className="listing-grid">
             {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 3).map((listing) => (
-              <ListingCardLight
+              <ListingCard
                 key={listing.id}
                 id={listing.id}
                 photo={listing.photo || undefined}
@@ -395,21 +381,7 @@ export function HomePageV6() {
                 price={listing.price}
                 city={listing.city}
                 district={listing.district || undefined}
-                rooms={listing.rooms}
-                area={listing.area}
-                floor={listing.floor}
-                totalFloors={listing.totalFloors}
-                views={listing.views}
-                isNew={listing.isNew}
-                isVerified={listing.isVerified}
-                score={listing.score}
-                verdict={listing.verdict}
-                reasons={listing.reasons}
-                tags={listing.tags}
                 rating={listing.rating}
-                reviewPercent={listing.reviewPercent}
-                cleanliness={listing.cleanliness}
-                noise={listing.noise}
               />
             )) : (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
