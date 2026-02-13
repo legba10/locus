@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft, PlusCircle, Shield } from 'lucide-react'
 import { NotificationsBell } from './NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { ThemeContext } from '@/providers/ThemeProvider'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -36,8 +37,10 @@ function NavItem({ icon, label, onClick }: { icon: React.ReactNode; label: strin
 export function HeaderLight() {
   const pathname = usePathname()
   const router = useRouter()
+  const { resolvedTheme } = useContext(ThemeContext)
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const logoIconSrc = resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'
   const menuRef = useRef<HTMLDivElement>(null)
   const authed = isAuthenticated()
   if (authed && user === undefined) return null
@@ -106,7 +109,7 @@ export function HeaderLight() {
           </div>
 
           <Link href="/" className="logo locus-home-link flex items-center shrink-0 md:mr-0">
-            <img src="/logo-locus-icon.png" alt="LOCUS" className="header-logo-img" />
+            <img src={logoIconSrc} alt="LOCUS" className="header-logo-img" width={30} height={30} />
             <span className="header-logo-text">LOCUS</span>
           </Link>
 
@@ -137,8 +140,8 @@ export function HeaderLight() {
                 href={createHref}
                 className={cn(
                   'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                  'bg-violet-50 text-violet-700 border border-violet-100',
-                  'hover:bg-violet-100 transition-colors'
+                  'bg-[var(--button-secondary-bg)] text-[var(--accent)] border border-[var(--border)]',
+                  'hover:opacity-90 transition-opacity'
                 )}
               >
                 Разместить объявление
@@ -149,7 +152,7 @@ export function HeaderLight() {
                 onClick={logout}
                 className={cn(
                   'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                  'text-red-500 hover:bg-red-500/10',
+                  'text-[var(--danger)] hover:opacity-80',
                   'transition-colors'
                 )}
               >
@@ -160,7 +163,7 @@ export function HeaderLight() {
                 href="/auth/login"
                 className={cn(
                   'px-4 py-2.5 text-[14px] font-semibold rounded-[14px]',
-                  'bg-[var(--accent)] text-white',
+                  'bg-[var(--accent)] text-[var(--button-primary-text)]',
                   'hover:opacity-90 transition-opacity'
                 )}
               >

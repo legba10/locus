@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
-import { formatPrice } from '@/core/i18n/ru'
+import { ListingCard } from '@/components/listing'
 
 interface PublicProfile {
   id: string
@@ -140,42 +140,21 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Объявления</h2>
+        <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Объявления</h2>
         {profile.listings.length === 0 ? (
-          <p className="text-[#6B7280]">Пока нет опубликованных объявлений</p>
+          <p className="text-[var(--text-secondary)]">Пока нет опубликованных объявлений</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {profile.listings.map((listing) => (
-              <Link
+              <ListingCard
                 key={listing.id}
-                href={`/listings/${listing.id}`}
-                className={cn(
-                  'block rounded-[18px] overflow-hidden',
-                  'bg-white shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80',
-                  'hover:shadow-[0_8px_28px_rgba(0,0,0,0.12)] transition-shadow'
-                )}
-              >
-                <div className="relative aspect-[4/3] bg-gray-100">
-                  {listing.imageUrl ? (
-                    <Image
-                      src={listing.imageUrl}
-                      alt={listing.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[14px] text-gray-400">
-                      Нет фото
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <p className="font-semibold text-[#1C1F26] text-[14px] line-clamp-2">{listing.title}</p>
-                  <p className="text-[13px] text-[#6B7280] mt-1">{listing.city}</p>
-                  <p className="text-[14px] font-semibold text-violet-600 mt-2">{formatPrice(listing.basePrice)} / ночь</p>
-                </div>
-              </Link>
+                id={listing.id}
+                photo={listing.imageUrl}
+                title={listing.title}
+                price={listing.basePrice}
+                city={listing.city}
+                owner={{ id: profile.id, name: profile.name, avatar: profile.avatar, rating: profile.rating_avg ?? undefined }}
+              />
             ))}
           </div>
         )}

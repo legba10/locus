@@ -62,16 +62,20 @@ export function ReviewReminderPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]"
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 'var(--z-overlay)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="review-reminder-title"
     >
+      <div className="overlay" aria-hidden />
       <div
         className={cn(
-          'bg-[var(--surface)] rounded-2xl shadow-[var(--shadow-modal)] max-w-sm w-full p-6',
+          'modal-panel relative bg-[var(--bg-modal)] rounded-2xl shadow-[var(--shadow-modal)] max-w-sm w-full p-6',
           'border border-[var(--border)] text-[var(--text-primary)]'
         )}
+        style={{ zIndex: 'var(--z-modal)' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 id="review-reminder-title" className="text-[18px] font-bold text-[var(--text-primary)] mb-2">
           Как прошло проживание?
@@ -83,14 +87,14 @@ export function ReviewReminderPopup() {
           <button
             type="button"
             onClick={handleLeaveReview}
-            className="min-h-[44px] w-full rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
+            className="min-h-[44px] w-full rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90"
           >
             Оставить отзыв
           </button>
           <button
             type="button"
             onClick={handleLater}
-            className="min-h-[44px] w-full rounded-[14px] border border-gray-200 bg-white text-[14px] font-medium text-[#1C1F26] hover:bg-gray-50"
+            className="min-h-[44px] w-full rounded-[14px] border border-[var(--border)] bg-[var(--button-secondary-bg)] text-[14px] font-medium text-[var(--text-primary)] hover:opacity-90"
           >
             Позже
           </button>

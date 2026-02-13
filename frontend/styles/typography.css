@@ -1,7 +1,51 @@
-/* TZ-4 typography */
-.text-h1 { font-size: 2.25rem; font-weight: 700; line-height: 1.2; color: var(--text-primary); }
-.text-h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; color: var(--text-primary); }
-.text-h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; color: var(--text-primary); }
-.text-body { font-size: 1rem; line-height: 1.5; color: var(--text-primary); }
-.text-small { font-size: 0.875rem; line-height: 1.5; color: var(--text-secondary); }
-.text-caption { font-size: 0.75rem; line-height: 1.4; color: var(--text-muted); }
+/**
+ * ТЗ-4 БЛОК 5: Фикс шрифтов. Заголовок 22px, карточка 16px, описание 14px.
+ * Цвета только через токены. Запрещено: #ccc, #eee, белый на белом.
+ */
+body {
+  font-family: var(--font-main);
+}
+
+/* Заголовки */
+h1, .text-h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-main);
+}
+h2, .text-h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+h3, .text-h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+/* Текст: карточка 16px, описание 14px */
+.text-body {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+.text-secondary, .text-small {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.text-caption, .text-muted {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Цена в карточке — ТЗ-4: 22px, контрастно */
+.text-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+}

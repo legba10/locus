@@ -1,17 +1,16 @@
 'use client'
 
-import { ListingPageV2 } from './ListingPageV2'
+import { ListingPageV3 } from './ListingPageV3'
 
 interface ListingPageLightProps {
   id: string
 }
 
 /**
- * ListingPageLight — Детальная страница объявления (v2)
+ * ListingPageLight — Детальная страница объявления (ТЗ-6)
  *
- * Структура: Галерея → Основная информация → Цена+CTA → Владелец → Удобства → Описание → Карта → Бронирование → Отзывы.
- * Mobile: sticky bottom bar. Отзывы — пошаговые метрики.
+ * Единый ListingLayout: Галерея → Основной блок → StickyActions → Владелец → Метрики AI → Удобства → Описание → Отзывы → Похожие.
  */
 export function ListingPageLight({ id }: ListingPageLightProps) {
-  return <ListingPageV2 id={id} />
+  return <ListingPageV3 id={id} />
 }

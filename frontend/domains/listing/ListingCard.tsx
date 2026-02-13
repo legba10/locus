@@ -48,7 +48,7 @@ export function ListingCard({
   return (
     <article className={cn(
       'listing-card',
-      'rounded-xl border border-gray-200 bg-white overflow-hidden',
+      'rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden',
       'transition hover:shadow-md hover:border-gray-300',
       className
     )}
@@ -109,7 +109,7 @@ export function ListingCard({
         {/* 5. CTA BUTTON */}
         <Link
           href={`/listings/${listing.id}`}
-          className="block w-full text-center rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
+          className="block w-full text-center rounded-lg bg-[var(--accent)] py-2 text-sm font-medium text-[var(--button-primary-text)] hover:opacity-90 transition"
         >
           Подробнее
         </Link>
@@ -123,7 +123,7 @@ export function ListingCard({
  */
 export function ListingCardSkeleton() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden animate-pulse">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden animate-pulse">
       <div className="aspect-[4/3] bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-6 bg-gray-200 rounded w-1/2" />

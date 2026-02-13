@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/api/client'
 import { cn } from '@/shared/utils/cn'
-import { ListingCardLight, ListingCardLightSkeleton } from '@/domains/listing/ListingCardLight'
+import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
-import { CityInput } from '@/shared/components/CityInput'
+import { useFilterStore } from '@/core/filters'
+import { FilterPanel, QuickAIModal, FiltersModal } from '@/components/filters'
 
 interface SearchResponse {
   items: any[]
@@ -28,42 +29,71 @@ type SortOption = 'ai' | 'price_asc' | 'price_desc' | 'newest'
 export function SearchPageV4() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  // Фильтры из URL
-  const [city, setCity] = useState(searchParams.get('city') || '')
-  const [priceMin, setPriceMin] = useState(searchParams.get('priceMin') || '')
-  const [priceMax, setPriceMax] = useState(searchParams.get('priceMax') || '')
-  const [type, setType] = useState(searchParams.get('type') || '')
-  const [rooms, setRooms] = useState(searchParams.get('rooms') || '')
+  const hydrated = useRef(false)
+  const {
+    city,
+    budgetMin,
+    budgetMax,
+    type,
+    rooms,
+    duration,
+    aiMode,
+    setCity,
+    setBudget,
+    setType,
+    setRooms,
+    setDuration,
+    setAiMode,
+    getBudgetQuery,
+    reset,
+  } = useFilterStore()
+
   const [sort, setSort] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'ai')
-  const [aiEnabled, setAiEnabled] = useState(searchParams.get('ai') === 'true')
   const [aiResults, setAiResults] = useState<{ reason: string; score: number } | null>(null)
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
+  const [filtersModalOpen, setFiltersModalOpen] = useState(false)
+  const [quickAIOpen, setQuickAIOpen] = useState(false)
+
+  const priceMin = getBudgetQuery().priceMin
+  const priceMax = getBudgetQuery().priceMax
   const typeParam = type ? type.toUpperCase() : ''
 
-  // Обновляем URL при изменении фильтров
+  // Гидрация store из URL при первом рендере
+  useEffect(() => {
+    if (hydrated.current) return
+    hydrated.current = true
+    const urlCity = searchParams.get('city') || ''
+    const urlPriceMin = searchParams.get('priceMin') || ''
+    const urlPriceMax = searchParams.get('priceMax') || ''
+    const urlType = searchParams.get('type') || ''
+    const urlRooms = searchParams.get('rooms') || ''
+    const urlAi = searchParams.get('ai') === 'true'
+    if (urlCity || urlPriceMin || urlPriceMax || urlType || urlRooms) {
+      setCity(urlCity)
+      setBudget(urlPriceMin ? Number(urlPriceMin) : '', urlPriceMax ? Number(urlPriceMax) : '')
+      useFilterStore.setState({ type: urlType, rooms: urlRooms, aiMode: urlAi })
+    }
+  }, [searchParams, setCity, setBudget])
+
+  // Синхронизация store -> URL
   useEffect(() => {
     const params = new URLSearchParams()
     if (city) params.set('city', city)
     if (priceMin) params.set('priceMin', priceMin)
     if (priceMax) params.set('priceMax', priceMax)
-      if (typeParam) params.set('type', typeParam)
+    if (typeParam) params.set('type', typeParam)
     if (rooms) params.set('rooms', rooms)
     if (sort !== 'ai') params.set('sort', sort)
-    if (aiEnabled) params.set('ai', 'true')
-    
-    const newUrl = `/listings${params.toString() ? `?${params.toString()}` : ''}`
-    router.replace(newUrl, { scroll: false })
-  }, [city, priceMin, priceMax, type, typeParam, rooms, sort, aiEnabled, router])
+    if (aiMode) params.set('ai', 'true')
+    router.replace(`/listings${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
+  }, [city, priceMin, priceMax, type, rooms, sort, aiMode, router])
 
-  // Формируем запрос
   const queryParams = new URLSearchParams()
   if (city) queryParams.set('city', city)
   if (priceMin) queryParams.set('priceMin', priceMin)
   if (priceMax) queryParams.set('priceMax', priceMax)
   if (typeParam) queryParams.set('type', typeParam)
   if (rooms) queryParams.set('rooms', rooms)
-
   if (sort !== 'ai') queryParams.set('sort', sort)
 
   const { data, isLoading } = useFetch<SearchResponse>(
@@ -71,9 +101,9 @@ export function SearchPageV4() {
     `/api/search?${queryParams.toString()}`
   )
 
-  // AI поиск при включенном AI режиме — запрос напрямую в backend (Railway)
+  // AI поиск при включенном AI режиме
   useEffect(() => {
-    if (aiEnabled && (city || priceMin || priceMax || type || rooms)) {
+    if (aiMode && (city || priceMin || priceMax || type || rooms)) {
       const params = new URLSearchParams()
       if (city) params.set('city', city)
       if (priceMin) params.set('priceMin', String(priceMin))
@@ -101,11 +131,10 @@ export function SearchPageV4() {
     } else {
       setAiResults(null)
     }
-  }, [aiEnabled, city, priceMin, priceMax, type, typeParam, rooms])
+  }, [aiMode, city, priceMin, priceMax, type, typeParam, rooms])
 
-  // Используем ai-engine для расчета scores, если AI включен
   useEffect(() => {
-    if (aiEnabled && data?.items && (city || priceMin || priceMax || type || rooms)) {
+    if (aiMode && data?.items && (city || priceMin || priceMax || type || rooms)) {
       const userParams: UserParams = {
         city: city || undefined,
         priceMin: priceMin ? Number(priceMin) : undefined,
@@ -145,7 +174,7 @@ export function SearchPageV4() {
         return merged
       })
     }
-  }, [aiEnabled, data, city, priceMin, priceMax, type, rooms])
+  }, [aiMode, data, city, priceMin, priceMax, type, rooms])
 
   // Преобразуем данные для карточек
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
@@ -240,162 +269,62 @@ export function SearchPageV4() {
     }
   })
 
+  const handleSearch = () => {
+    setFiltersModalOpen(false)
+  }
+  const handleSmartSearch = () => {
+    setQuickAIOpen(true)
+  }
+
   return (
-    <div className="min-h-screen">
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* ═══════════════════════════════════════════════════════════════
-              ПАНЕЛЬ ФИЛЬТРОВ (слева)
-              ═══════════════════════════════════════════════════════════════ */}
-          <aside className="lg:col-span-1">
-            <div className={cn(
-              'bg-white/[0.75] backdrop-blur-[22px]',
-              'rounded-[20px]',
-              'border border-white/60',
-              'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-              'p-6 lg:sticky lg:top-6'
-            )}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-5">Фильтры</h2>
-              
-              <div className="space-y-5">
-                {/* Город */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
-                    Город
-                  </label>
-                  <CityInput
-                    value={city}
-                    onChange={setCity}
-                    placeholder="Все города"
-                    className={cn(
-                      'w-full rounded-[14px] px-4 py-2.5',
-                      'border border-white/60',
-                      'bg-white/75 backdrop-blur-[18px]',
-                      'text-[#1C1F26] text-[14px]',
-                      'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all',
-                      'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-                      'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]'
-                    )}
-                  />
-                </div>
-
-                {/* Цена от */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
-                    Цена от
-                  </label>
-                  <input
-                    type="number"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    placeholder="0"
-                    className={cn(
-                      'w-full rounded-[14px] px-4 py-2.5',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
-                      'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all'
-                    )}
-                  />
-                </div>
-
-                {/* Цена до */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
-                    Цена до
-                  </label>
-                  <input
-                    type="number"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    placeholder="100000"
-                    className={cn(
-                      'w-full rounded-[14px] px-4 py-2.5',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
-                      'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all'
-                    )}
-                  />
-                </div>
-
-                {/* Тип жилья */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
-                    Тип жилья
-                  </label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className={cn(
-                      'w-full rounded-[14px] px-4 py-2.5',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
-                      'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all cursor-pointer'
-                    )}
-                  >
-                    <option value="">Любой</option>
-                    <option value="apartment">Квартира</option>
-                    <option value="room">Комната</option>
-                    <option value="house">Дом</option>
-                    <option value="studio">Студия</option>
-                  </select>
-                </div>
-
-                {/* Комнаты */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
-                    Комнаты
-                  </label>
-                  <select
-                    value={rooms}
-                    onChange={(e) => setRooms(e.target.value)}
-                    className={cn(
-                      'w-full rounded-[14px] px-4 py-2.5',
-                      'border border-white/60',
-                      'bg-white/75 backdrop-blur-[18px]',
-                      'text-[#1C1F26] text-[14px]',
-                      'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
-                      'transition-all cursor-pointer appearance-none',
-                      'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
-                      'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]'
-                    )}
-                  >
-                    <option value="">Любое</option>
-                    <option value="1">1 комната</option>
-                    <option value="2">2 комнаты</option>
-                    <option value="3">3 комнаты</option>
-                    <option value="4">4+ комнат</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* AI-подбор (дополняет фильтры) */}
-              <div className="mt-6 rounded-[16px] border border-violet-100 bg-violet-50/60 p-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={aiEnabled}
-                    onChange={(e) => setAiEnabled(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-                  />
-                  <div>
-                    <div className="text-[13px] font-semibold text-[#1C1F26]">AI‑подбор</div>
-                    <div className="text-[12px] text-[#6B7280]">AI поможет отобрать лучшие варианты</div>
-                  </div>
-                </label>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[var(--bg-main)]">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* ПАНЕЛЬ ФИЛЬТРОВ: desktop 280px, mobile — кнопка + модалка */}
+          <aside className="hidden lg:block w-[280px] lg:sticky lg:top-6 self-start">
+            <FilterPanel
+              onSearch={handleSearch}
+              onSmartSearch={handleSmartSearch}
+              showSearchButtons={true}
+            />
           </aside>
+          {/* Кнопка «Фильтры» на mobile */}
+          <div className="lg:hidden flex items-center gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => setFiltersModalOpen(true)}
+              className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-semibold text-[14px] flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Фильтры
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuickAIOpen(true)}
+              className="min-h-[48px] px-4 rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px]"
+            >
+              Умный подбор ⚡
+            </button>
+          </div>
 
-          {/* ═══════════════════════════════════════════════════════════════
-              ОСНОВНОЙ КОНТЕНТ (справа)
-              ═══════════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-3">
-            {/* AI ПАНЕЛЬ — показываем только если AI включен */}
-            {aiEnabled && !isLoading && sortedListings.length > 0 && (
+          <QuickAIModal
+            open={quickAIOpen}
+            onClose={() => setQuickAIOpen(false)}
+            city={city}
+            budgetMin={budgetMin}
+            budgetMax={budgetMax}
+            onCityChange={setCity}
+            onBudgetChange={setBudget}
+            onLaunch={() => {
+              setQuickAIOpen(false)
+              router.push(`/listings?ai=true${city ? `&city=${encodeURIComponent(city)}` : ''}${priceMin ? `&priceMin=${priceMin}` : ''}${priceMax ? `&priceMax=${priceMax}` : ''}`)
+            }}
+          />
+
+          {/* Основной контент */}
+          <div className="min-w-0">
+            {/* AI панель — если включён Умный подбор */}
+            {aiMode && !isLoading && sortedListings.length > 0 && (
               <div className={cn(
                 'bg-violet-50/80 backdrop-blur-sm',
                 'rounded-[18px]',
@@ -406,21 +335,21 @@ export function SearchPageV4() {
                   <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                   </svg>
-                  <h3 className="text-[16px] font-semibold text-[#1C1F26]">
+                  <h3 className="text-[16px] font-semibold text-[var(--text-main)]">
                     AI подобрал для вас
                   </h3>
                 </div>
                 {aiResults && (
                   <div className="mb-3">
-                    <p className="text-[14px] text-[#1C1F26] mb-1">
+                    <p className="text-[14px] text-[var(--text-main)] mb-1">
                       <strong>Почему эти варианты подходят:</strong> {aiResults.reason}
                     </p>
-                    <p className="text-[13px] text-[#6B7280]">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       Основные критерии совпадения: город, бюджет, тип жилья
                     </p>
                   </div>
                 )}
-                <p className="text-[13px] text-[#6B7280]">
+                <p className="text-[13px] text-[var(--text-secondary)]">
                   Для каждого объявления показаны рекомендации LOCUS с объяснением, почему оно вам подходит
                 </p>
               </div>
@@ -430,8 +359,8 @@ export function SearchPageV4() {
             <div className="mb-6 flex items-center justify-between">
               <div>
                 {!isLoading && (
-                  <p className="text-[14px] text-[#6B7280]">
-                    Найдено: <span className="font-semibold text-[#1C1F26]">{sortedListings.length}</span> {sortedListings.length === 1 ? 'вариант' : 'вариантов'}
+                  <p className="text-[14px] text-[var(--text-secondary)]">
+                    Найдено: <span className="font-semibold text-[var(--text-main)]">{sortedListings.length}</span> {sortedListings.length === 1 ? 'вариант' : 'вариантов'}
                   </p>
                 )}
               </div>
@@ -445,7 +374,7 @@ export function SearchPageV4() {
                     'rounded-[14px] px-4 py-2.5',
                     'border border-white/60',
                     'bg-white/75 backdrop-blur-[18px]',
-                    'text-[#1C1F26] text-[14px]',
+                    'text-[var(--text-main)] text-[14px]',
                     'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                     'transition-all cursor-pointer appearance-none',
                     'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
@@ -464,7 +393,7 @@ export function SearchPageV4() {
             {isLoading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {Array.from({ length: 9 }).map((_, i) => (
-                  <ListingCardLightSkeleton key={i} />
+                  <ListingCardSkeleton key={i} />
                 ))}
               </div>
             )}
@@ -473,42 +402,15 @@ export function SearchPageV4() {
             {!isLoading && sortedListings.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {sortedListings.map((listing) => (
-                  <ListingCardLight
+                  <ListingCard
                     key={listing.id}
                     id={listing.id}
                     photo={listing.photo || undefined}
-                    title={(() => {
-                      let cleanTitle = listing.title || 'Без названия'
-                      cleanTitle = cleanTitle
-                        .replace(/квартира рядом с метро #?\d*/gi, '')
-                        .replace(/тихая квартира #?\d*/gi, '')
-                        .replace(/рядом с метро #?\d*/gi, '')
-                        .replace(/метро #?\d*/gi, '')
-                        .replace(/квартира #?\d*/gi, '')
-                        .trim()
-                      if (!cleanTitle || cleanTitle.length < 3) {
-                        cleanTitle = `Квартира ${listing.city || ''}`.trim() || 'Без названия'
-                      }
-                      return cleanTitle
-                    })()}
+                    title={listing.title}
                     price={listing.price}
                     city={listing.city}
                     district={listing.district || undefined}
-                    rooms={listing.rooms}
-                    area={listing.area}
-                    floor={listing.floor}
-                    totalFloors={listing.totalFloors}
-                    views={listing.views}
-                    isNew={listing.isNew}
-                    isVerified={listing.isVerified}
-                    score={listing.aiScore}
-                    verdict={listing.verdict}
-                    reasons={listing.aiReasons}
-                    tags={listing.tags}
                     rating={listing.rating}
-                    reviewPercent={listing.reviewPercent}
-                    cleanliness={listing.cleanliness}
-                    noise={listing.noise}
                   />
                 ))}
               </div>
@@ -523,15 +425,15 @@ export function SearchPageV4() {
                 'border border-white/60',
                 'shadow-[0_20px_60px_rgba(0,0,0,0.12)]'
               )}>
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 rounded-full bg-[var(--bg-glass)] flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 </div>
-                <h3 className="text-[18px] font-semibold text-[#1C1F26] mb-2">
+                <h3 className="text-[18px] font-semibold text-[var(--text-main)] mb-2">
                   Пока нет подходящих вариантов
                 </h3>
-                <p className="text-[14px] text-[#6B7280]">
+                <p className="text-[14px] text-[var(--text-secondary)]">
                   Попробуйте изменить параметры поиска
                 </p>
               </div>
@@ -539,6 +441,7 @@ export function SearchPageV4() {
           </div>
         </div>
       </div>
+      <FiltersModal open={filtersModalOpen} onClose={() => setFiltersModalOpen(false)} onApply={handleSearch} />
     </div>
   )
 }

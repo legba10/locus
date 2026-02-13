@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell } from 'lucide-react'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
-import { useRouter } from 'next/navigation'
 import { track } from '@/shared/analytics/events'
+import { NotificationsPanel } from '@/components/layout'
 
 const NOTIFY_SOUND = '/sounds/notify.mp3'
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
@@ -39,8 +39,12 @@ async function subscribeBrowserPush(): Promise<string | null> {
   return null
 }
 
-export function NotificationsBell() {
-  const router = useRouter()
+export interface NotificationsBellProps {
+  /** ТЗ-8: в header — только 8px dot, без числа */
+  compactBadge?: boolean
+}
+
+export function NotificationsBell({ compactBadge = false }: NotificationsBellProps) {
   const [open, setOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [badgePop, setBadgePop] = useState(false)
@@ -115,6 +119,11 @@ export function NotificationsBell() {
   }, [open])
 
   useEffect(() => {
+    if (open) document.body.classList.add('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [open])
+
+  useEffect(() => {
     let sse: EventSource | null = null
     try {
       const streamUrl = `${API_BASE || ''}/api/notifications/stream`
@@ -164,6 +173,14 @@ export function NotificationsBell() {
     } catch {}
   }
 
+  const handleEnablePush = useCallback(async () => {
+    setPushStatus('loading')
+    track('subscription_start', { channel: 'browser_push' })
+    const err = await subscribeBrowserPush()
+    setPushStatus(err === null ? 'ok' : err === 'no_vapid' ? 'no_vapid' : 'denied')
+    if (err === null) track('subscription_success', { channel: 'browser_push' })
+  }, [])
+
   return (
     <div className="relative">
       <button
@@ -176,106 +193,31 @@ export function NotificationsBell() {
         )}
         aria-label="Уведомления"
       >
-        <Bell className={cn(isMobile ? 'w-6 h-6' : 'w-5 h-5')} strokeWidth={1.8} />
+        <Bell className={cn(isMobile && !compactBadge ? 'w-6 h-6' : 'w-[22px] h-[22px]')} strokeWidth={1.8} />
         {unreadCount > 0 && (
-          <span className={cn(
-            'notifications-badge absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-white text-[11px] font-bold flex items-center justify-center transition-transform duration-200',
-            badgePop && 'scale-110'
-          )}>
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span
+            className={cn(
+              'notifications-badge absolute top-0.5 right-0.5 rounded-full text-[var(--button-primary-text)] font-bold flex items-center justify-center transition-transform duration-200 bg-[var(--accent)]',
+              compactBadge ? 'min-w-[8px] w-[8px] h-[8px] text-[0]' : 'min-w-[18px] h-[18px] px-1 text-[11px]',
+              badgePop && 'scale-110'
+            )}
+            title={unreadCount > 0 ? `${unreadCount} непрочитанных` : undefined}
+          >
+            {compactBadge ? '' : (unreadCount > 99 ? '99+' : unreadCount)}
           </span>
         )}
       </button>
-      {open && (
-        <>
-          {/* Backdrop: всегда full screen, theme-aware */}
-          <div className="fixed inset-0 z-notification" aria-hidden>
-            <div className="overlay-backdrop" onClick={() => setOpen(false)} />
-          </div>
-          {/* Panel: mobile — fixed от top 64px; desktop — absolute к кнопке */}
-          <div
-            className={cn(
-              isMobile
-                ? 'fixed left-0 right-0 top-[64px] z-notification w-full max-h-[calc(100vh-64px)] overflow-hidden rounded-t-[16px]'
-                : 'absolute right-0 top-full mt-1 z-notification w-[320px] max-h-[360px] overflow-hidden rounded-[14px]',
-              'notifications-panel flex flex-col'
-            )}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-              <span className="text-[14px] font-semibold text-[var(--text-main)]">Уведомления</span>
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllRead}
-                  className="text-[12px] text-violet-600 hover:text-violet-700"
-                >
-                  Отметить всё
-                </button>
-              )}
-            </div>
-            <div className={cn('overflow-y-auto', isMobile ? 'max-h-[calc(70vh-96px)]' : 'max-h-[280px]')}>
-              {list.length === 0 ? (
-                <div className="px-4 py-8 text-center text-[13px] text-[var(--text-secondary)]">Нет уведомлений</div>
-              ) : (
-                <>
-                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">Новые</div>
-                  {list.filter((n) => !(n.isRead ?? n.read)).map((n) => (
-                    <button
-                      key={n.id}
-                      type="button"
-                      onClick={() => {
-                        handleMarkRead(n.id)
-                        setOpen(false)
-                        if (n.link) router.push(n.link)
-                      }}
-                      className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors bg-violet-50/50"
-                    >
-                      <p className="text-[13px] font-medium text-[var(--text-main)]">{n.title}</p>
-                      {(n.text || n.body) && <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
-                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
-                    </button>
-                  ))}
-                  <div className="px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">Старые</div>
-                  {list.filter((n) => (n.isRead ?? n.read)).map((n) => (
-                    <button
-                      key={n.id}
-                      type="button"
-                      onClick={() => {
-                        handleMarkRead(n.id)
-                        setOpen(false)
-                        if (n.link) router.push(n.link)
-                      }}
-                      className="w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                    >
-                      <p className="text-[13px] font-medium text-[var(--text-main)]">{n.title}</p>
-                      {(n.text || n.body) && <p className="text-[12px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{n.text || n.body}</p>}
-                      <p className="text-[11px] text-[var(--text-secondary)] mt-1">{new Date(n.createdAt).toLocaleString('ru')}</p>
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
-            <div className="border-t border-gray-100 px-4 py-2">
-              <button
-                type="button"
-                disabled={pushStatus === 'loading' || !('Notification' in window)}
-                onClick={async () => {
-                  setPushStatus('loading')
-                  track('subscription_start', { channel: 'browser_push' })
-                  const err = await subscribeBrowserPush()
-                  setPushStatus(err === null ? 'ok' : err === 'no_vapid' ? 'no_vapid' : 'denied')
-                  if (err === null) {
-                    track('subscription_success', { channel: 'browser_push' })
-                  }
-                }}
-                className="text-[12px] text-violet-600 hover:text-violet-700 disabled:opacity-50"
-              >
-                {pushStatus === 'loading' ? '…' : pushStatus === 'ok' ? 'Браузерные уведомления включены' : pushStatus === 'no_vapid' ? 'Нужны VAPID ключи' : 'Включить уведомления в браузере'}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      <NotificationsPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        list={list}
+        unreadCount={unreadCount}
+        onMarkRead={handleMarkRead}
+        onMarkAllRead={handleMarkAllRead}
+        pushStatus={pushStatus}
+        onEnablePush={handleEnablePush}
+        isMobile={isMobile}
+      />
     </div>
   )
 }

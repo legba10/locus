@@ -47,8 +47,6 @@ async function handleProxy(req: NextRequest, pathSegments: string[]) {
 
   const contentType = req.headers.get("content-type") || "";
   const isMultipart = contentType.includes("multipart/form-data");
-  
-  console.log(`[Proxy] ${req.method} ${url} (multipart: ${isMultipart})`);
 
   try {
     // Prepare headers

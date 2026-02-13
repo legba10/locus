@@ -1,34 +1,37 @@
 /**
- * ТЗ-4: Дизайн-токены (Core Design System)
- * Единственный источник цветов. В компонентах — только var(--token).
- * ЗАПРЕЩЕНО: #fff, #000, rgba(), bg-black, text-white в компонентах.
+ * ТЗ-4: Единые переменные дизайна LOCUS.
+ * Единственный источник цветов. ЗАПРЕЩЕНО: #fff, #000, random rgba в компонентах.
  */
 
 /* ═══════════════════════════════════════════════════════════════
-   1.1 Цветовые токены — светлая тема (fallback + light)
+   LIGHT — ТЗ-4 БЛОК 1
    ═══════════════════════════════════════════════════════════════ */
 :root,
 :root[data-theme="light"] {
   /* Фоны */
-  --bg-main: #ffffff;
+  --bg-main: #f5f6fb;
   --bg-secondary: #f5f6fa;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(0, 0, 0, 0.04);
   --surface: #ffffff;
   --card: #ffffff;
   --card-hover: #f8fafc;
 
+  /* Границы */
+  --border: rgba(0, 0, 0, 0.08);
+  --divider: rgba(0, 0, 0, 0.08);
+
   /* Текст */
-  --text-primary: #0f172a;
+  --text-main: #0e1424;
+  --text-primary: #0e1424;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
 
-  /* Границы */
-  --border: #e5e7eb;
-  --divider: #e5e7eb;
-
   /* Акцент */
-  --accent: #7c3aed;
+  --accent: #7b61ff;
+  --accent2: #9c7bff;
   --accent-hover: #6d28d9;
-  --accent-soft: rgba(124, 58, 237, 0.12);
+  --accent-soft: rgba(123, 97, 255, 0.12);
 
   /* Семантика */
   --danger: #dc2626;
@@ -63,33 +66,37 @@
   --space-md: 16px;
   --space-lg: 24px;
 
-  /* Z-index (TZ-4): только эти значения, без random */
-  --z-header: 50;
-  --z-drawer: 100;
-  --z-modal: 200;
-  --z-toast: 300;
+  /* Z-index: шкала в zindex.css (ТЗ-2) */
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   1.2 Тёмная тема
+   DARK — ТЗ-4 БЛОК 1
    ═══════════════════════════════════════════════════════════════ */
 :root[data-theme="dark"] {
-  --bg-main: #0b0f19;
+  /* Фоны */
+  --bg-main: #0b0f1a;
   --bg-secondary: #111827;
+  --bg-card: #11182a;
+  --bg-glass: rgba(255, 255, 255, 0.06);
   --surface: #161b2e;
-  --card: #111827;
+  --card: #11182a;
   --card-hover: #1e293b;
 
+  /* Границы */
+  --border: rgba(255, 255, 255, 0.12);
+  --divider: rgba(255, 255, 255, 0.12);
+
+  /* Текст */
+  --text-main: #ffffff;
   --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
+  --text-secondary: #9aa3b2;
   --text-muted: #71717a;
 
-  --border: #27272a;
-  --divider: #27272a;
-
-  --accent: #8b5cf6;
+  /* Акцент */
+  --accent: #7b61ff;
+  --accent2: #9c7bff;
   --accent-hover: #7c3aed;
-  --accent-soft: rgba(139, 92, 246, 0.18);
+  --accent-soft: rgba(123, 97, 255, 0.18);
 
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.15);
@@ -104,11 +111,6 @@
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.45);
   --blur-glass: 20px;
   --blur-soft: 6px;
-
-  --z-header: 50;
-  --z-drawer: 100;
-  --z-modal: 200;
-  --z-toast: 300;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -118,7 +120,6 @@
 :root[data-theme="light"],
 :root[data-theme="dark"] {
   --bg-surface: var(--bg-secondary);
-  --bg-card: var(--card);
   --bg-elevated: var(--surface);
   --border-main: var(--border);
   --border-primary: var(--border);
@@ -126,8 +127,11 @@
   --surface-primary: var(--surface);
   --surface-secondary: var(--bg-secondary);
   --input-bg: var(--bg-secondary);
-  --icon-primary: var(--text-primary);
+  --icon-primary: var(--text-main);
   --icon-secondary: var(--text-secondary);
   --icon-accent: var(--accent);
   --icon-muted: var(--text-muted);
+  /* Шрифты ТЗ-4 БЛОК 5 */
+  --font-main: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-secondary: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }

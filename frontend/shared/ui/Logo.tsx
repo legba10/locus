@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 
 interface LogoProps {
-  variant?: 'primary' | 'light' | 'accent'
+  /** primary = тёмный текст, light = белый, accent = градиент, theme = по текущей теме (var(--text-primary)) */
+  variant?: 'primary' | 'light' | 'accent' | 'theme'
   size?: 'sm' | 'md' | 'lg'
   className?: string
   href?: string
@@ -33,25 +34,28 @@ export function Logo({
     lg: { text: 'text-[26px]', weight: 'font-extrabold' },
   }
 
-  // Цвета — четкий, контрастный
+  // Цвета — ТЗ-1: theme = по токену, без жёстких цветов
   const getColors = () => {
     switch (variant) {
+      case 'theme':
+        return {
+          textColor: 'text-[var(--text-primary)]',
+          shadow: '',
+        }
       case 'light':
         return {
           textColor: 'text-white',
           shadow: 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]',
         }
       case 'accent':
-        // Градиент для акцентного варианта
         return {
           textColor: 'bg-gradient-to-r from-blue-600 via-blue-500 to-violet-600 bg-clip-text text-transparent',
           shadow: '',
         }
       case 'primary':
       default:
-        // Четкий темный цвет для лучшей видимости
         return {
-          textColor: 'text-[#0F172A]', // Почти черный для максимального контраста
+          textColor: 'text-[var(--text-primary)]',
           shadow: 'drop-shadow-[0_1px_3px_rgba(0,0,0,0.15)]',
         }
     }

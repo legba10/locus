@@ -1,13 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ListingCard, ListingCardSkeleton } from '@/domains/listing/ListingCard'
+import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { useAuthStore } from '@/domains/auth'
-import type { Listing } from '@/domains/listing/listing-types'
-
 interface FavoritesResponse {
-  items: Listing[]
+  items: any[]
   total: number
 }
 
@@ -102,10 +100,20 @@ export default function PageClient() {
       {/* Listings grid */}
       {!isLoading && !error && data?.items && data.items.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((listing) => (
-            <ListingCard 
-              key={listing.id} 
-              listing={listing} 
+          {data.items.map((listing: any) => (
+            <ListingCard
+              key={listing.id}
+              id={listing.id}
+              photo={listing.photos?.[0]?.url ?? listing.images?.[0]?.url ?? listing.imageUrl}
+              photos={listing.photos}
+              title={listing.title ?? 'Без названия'}
+              price={listing.pricePerNight ?? listing.basePrice ?? 0}
+              city={listing.city ?? ''}
+              district={listing.district}
+              owner={listing.owner ? { id: listing.owner.id, name: listing.owner.name ?? 'Владелец', avatar: listing.owner.avatar ?? null, rating: listing.owner.rating } : undefined}
+              rating={listing.rating}
+              isFavorite={true}
+              onFavoriteToggle={() => refetch()}
             />
           ))}
         </div>

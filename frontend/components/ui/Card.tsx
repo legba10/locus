@@ -3,8 +3,8 @@
 import { cn } from '@/shared/utils/cn'
 
 /**
- * TZ-4: Единая карточка. Только токены (--card, --border, --shadow-card).
- * Используется в объявлениях, тарифах, профиле, уведомлениях.
+ * ТЗ-4 БЛОК 3: Единая карточка. Везде: объявления, отзывы, профиль, уведомления.
+ * background: var(--bg-card), border, radius 20px, backdrop-filter blur(20px)
  */
 export function Card({
   className,
@@ -13,8 +13,8 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card)]',
-        'transition-shadow hover:shadow-[var(--shadow-elevated)]',
+        'rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]',
+        'backdrop-blur-[20px] transition-shadow hover:shadow-[var(--shadow-elevated)]',
         className
       )}
       {...props}

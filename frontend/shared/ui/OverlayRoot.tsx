@@ -32,7 +32,8 @@ export function OverlayRoot({
   className,
   panelClassName,
 }: OverlayRootProps) {
-  const zIndex = z[layer] ?? z.modal
+  const contentZ = z[layer] ?? z.modal
+  const overlayZ = z.overlay
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -56,7 +57,7 @@ export function OverlayRoot({
   ) : (
     <div
       className={cn('panel', panelClassName)}
-      style={{ zIndex: zIndex + 1 }}
+      style={{ zIndex: contentZ }}
       onClick={(e) => e.stopPropagation()}
     >
       {children}
@@ -66,13 +67,13 @@ export function OverlayRoot({
   return createPortal(
     <div
       className={cn('fixed inset-0 flex items-center justify-center p-4', className)}
-      style={{ zIndex }}
+      style={{ zIndex: overlayZ }}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="overlay-backdrop"
-        style={{ zIndex }}
+        className="overlay"
+        style={{ zIndex: overlayZ }}
         onClick={onClose}
         onKeyDown={(e) => e.key === 'Enter' && onClose()}
         tabIndex={0}

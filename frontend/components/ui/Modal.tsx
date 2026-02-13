@@ -31,9 +31,11 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
   }, [open, onClose])
 
   React.useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden'
+    if (open) {
+      document.body.classList.add('modal-open')
+    }
     return () => {
-      document.body.style.overflow = ''
+      document.body.classList.remove('modal-open')
     }
   }, [open])
 
@@ -42,12 +44,11 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
 
   const content = (
     <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ zIndex: 'var(--z-modal)' }}
+      className="fixed inset-0 flex items-center justify-center p-4 z-overlay"
+      style={{ zIndex: 'var(--z-overlay)' }}
     >
       <div
-        className="absolute inset-0 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)] -webkit-backdrop-blur-[var(--blur-soft)]"
-        style={{ zIndex: 'var(--z-modal)' }}
+        className="overlay"
         onClick={onClose}
         aria-hidden
       />
@@ -56,10 +57,10 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-modal)]',
+          'relative w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--bg-modal)] shadow-[var(--shadow-modal)] modal-panel',
           'text-[var(--text-primary)]'
         )}
-        style={{ zIndex: 'calc(var(--z-modal) + 1)' }}
+        style={{ zIndex: 'var(--z-modal)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--divider)] p-5">

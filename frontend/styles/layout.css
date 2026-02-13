@@ -1,0 +1,37 @@
+/**
+ * ТЗ-3 + ТЗ-4 БЛОК 6: Сетка и отступы.
+ * Spacing — только 8px шаг: 8, 12, 16, 20, 24, 32. Запрет: рандомные margin.
+ */
+:root {
+  --radius-card: 20px;
+  --radius-btn: 14px;
+  --radius-input: 14px;
+
+  --space-block: 20px;
+  --space-card-inner: 16px;
+  --space-element: 12px;
+  /* 8px step: 8, 12, 16, 20, 24, 32 (см. tokens.css --space-8 … --space-32) */
+}
+
+/* Контейнер: мобильный 420px, планшет+ шире */
+.container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 1100px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1180px;
+  }
+}

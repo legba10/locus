@@ -5,18 +5,18 @@ import { ThemeContext } from "@/providers/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
 
 export default function ThemeToggle() {
-  const { theme, toggle } = useContext(ThemeContext);
+  const { resolvedTheme, toggle } = useContext(ThemeContext);
 
   return (
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle theme"
+      aria-label="Переключить тему"
       className="theme-toggle"
-      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      title={resolvedTheme === "dark" ? "Светлая тема" : "Тёмная тема"}
     >
       <span className="theme-toggle-icon" aria-hidden>
-        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
       </span>
     </button>
   );

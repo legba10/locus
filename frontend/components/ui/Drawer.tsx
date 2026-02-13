@@ -55,19 +55,15 @@ export function Drawer({
   const content = (
     <div
       className="fixed inset-0"
-      style={{ zIndex: 'var(--z-drawer)' }}
+      style={{ zIndex: 'var(--z-overlay)' }}
       role="dialog"
       aria-modal="true"
     >
-      <div
-        className="absolute inset-0 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]"
-        onClick={onClose}
-        aria-hidden
-      />
+      <div className="overlay" onClick={onClose} aria-hidden />
       <aside
         className={cn(
           'absolute top-0 bottom-0 w-full max-w-[85vw] overflow-y-auto',
-          'border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-modal)]',
+          'border-[var(--border)] bg-[var(--bg-modal)] shadow-[var(--shadow-modal)]',
           'text-[var(--text-primary)] transition-transform duration-300 ease-out',
           isLeft ? 'left-0 border-r' : 'right-0 border-l',
           open ? 'translate-x-0' : isLeft ? '-translate-x-full' : 'translate-x-full',
@@ -75,7 +71,7 @@ export function Drawer({
         )}
         style={{
           width: w,
-          zIndex: 'calc(var(--z-drawer) + 1)',
+          zIndex: 'var(--z-modal)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

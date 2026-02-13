@@ -44,14 +44,14 @@ export function Footer({ className }: { className?: string }) {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             {/* Логотип light, 32px, без контейнера */}
-            <Logo variant="light" size="lg" showText={true} className="mb-5" />
-            <p className="text-[14px] text-gray-400 leading-relaxed mb-5">
+            <Logo variant="theme" size="lg" showText={true} className="mb-5" />
+            <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed mb-5">
               Подбираем жильё под ваши параметры с персональными рекомендациями
             </p>
             {/* Телефон по ТЗ v3 */}
             <a 
               href="tel:+79224112141" 
-              className="text-[15px] text-white font-medium hover:text-violet-400 transition-colors"
+              className="text-[15px] text-[var(--text-primary)] font-medium hover:text-[var(--accent)] transition-colors"
             >
               +7 (922) 411-21-41
             </a>
@@ -92,7 +92,7 @@ export function Footer({ className }: { className?: string }) {
                 <li key={item.name}>
                   <Link 
                     href={item.href}
-                    className="text-[14px] text-gray-400 hover:text-white transition-colors"
+                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     {item.name}
                   </Link>
@@ -111,7 +111,7 @@ export function Footer({ className }: { className?: string }) {
                 <li key={item.name}>
                   <Link 
                     href={item.href}
-                    className="text-[14px] text-gray-400 hover:text-white transition-colors"
+                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     {item.name}
                   </Link>
@@ -130,7 +130,7 @@ export function Footer({ className }: { className?: string }) {
                 <li key={item.name}>
                   <Link 
                     href={item.href}
-                    className="text-[14px] text-gray-400 hover:text-white transition-colors"
+                    className="text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     {item.name}
                   </Link>

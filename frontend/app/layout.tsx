@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Providers } from './providers'
-import { HeaderLight } from '@/shared/ui/HeaderLight'
+import { Header } from '@/components/layout'
 import { Footer } from '@/shared/ui/Footer'
 import ThemeProvider from '@/providers/ThemeProvider'
 import '../styles/globals.css'
@@ -23,17 +23,18 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  /* ТЗ-1: 3 режима — light, dark, system. До гидрации выставляем data-theme по сохранённому или system */
   const themeInitScript = `
     (function () {
       try {
         var saved = localStorage.getItem('theme');
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
+        var resolved = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
         var root = document.documentElement;
         root.classList.remove('light', 'dark');
-        root.classList.add(theme);
-        root.setAttribute('data-theme', theme);
-        root.style.colorScheme = theme;
+        root.classList.add(resolved);
+        root.setAttribute('data-theme', resolved);
+        root.style.colorScheme = resolved;
       } catch (e) {}
     })();
   `;
@@ -47,8 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Providers>
             <div className="min-h-screen flex flex-col">
-              <HeaderLight />
-              <main className="flex-1 pt-[60px] md:pt-[70px]">{children}</main>
+              <Header />
+              <main className="flex-1 main-with-header">{children}</main>
               <Footer />
               <ReviewReminderPopup />
             </div>

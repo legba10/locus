@@ -49,12 +49,9 @@ function getOrCreateClient(): SupabaseClient {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
-    console.error('[Supabase] Missing env vars:', { url: !!url, key: !!key })
     throw new Error('Supabase configuration missing')
   }
 
-  console.log('[Supabase] Creating singleton client')
-  
   // Create and cache the singleton
   supabaseInstance = createClient(url, key, {
     auth: {

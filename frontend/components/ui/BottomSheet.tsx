@@ -17,7 +17,7 @@ export function BottomSheet({
   open,
   onClose,
   children,
-  maxHeight = '90vh',
+  maxHeight = '85vh',
   className,
 }: BottomSheetProps) {
   const [mounted, setMounted] = React.useState(false)
@@ -48,25 +48,21 @@ export function BottomSheet({
   const content = (
     <div
       className="fixed inset-0 flex flex-col justify-end"
-      style={{ zIndex: 'var(--z-modal)' }}
+      style={{ zIndex: 'var(--z-overlay)' }}
       role="dialog"
       aria-modal="true"
     >
-      <div
-        className="absolute inset-0 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]"
-        onClick={onClose}
-        aria-hidden
-      />
+      <div className="overlay" onClick={onClose} aria-hidden />
       <div
         className={cn(
-          'relative flex flex-col rounded-t-2xl border-t border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-modal)]',
-          'text-[var(--text-primary)] overflow-hidden',
+          'relative flex flex-col rounded-t-[24px] border-t border-[var(--border)] bg-[var(--bg-glass)] shadow-[var(--shadow-modal)]',
+          'backdrop-blur-[20px] text-[var(--text-main)] overflow-hidden',
           'animate-in slide-in-from-bottom duration-300',
           className
         )}
         style={{
           maxHeight,
-          zIndex: 'calc(var(--z-modal) + 1)',
+          zIndex: 'var(--z-modal)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

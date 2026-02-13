@@ -28,38 +28,39 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
   return (
     <div
       className={cn(
-        'bg-white rounded-2xl p-4 md:p-6',
-        'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
+        'max-w-[320px] w-full',
+        'bg-[var(--bg-card)] rounded-[20px] p-4 md:p-6',
+        'border border-[var(--border)] shadow-[var(--shadow-card)]'
       )}
     >
-      <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Бронирование</h2>
-      <p className="text-[14px] text-[#6B7280] mb-4">
-        Выберите даты заезда и выезда, количество гостей, затем подтвердите бронь.
+      <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Бронирование</h2>
+      <p className="text-[14px] text-[var(--text-secondary)] mb-4">
+        Выберите даты заезда и выезда, количество гостей.
       </p>
-      <div className="grid grid-cols-2 gap-3 md:gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="block text-[13px] font-medium text-[#6B7280] mb-1">Заезд</label>
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Заезд</label>
           <input
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full h-12 rounded-[12px] px-4 border border-gray-200 text-[14px]"
+            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
           />
         </div>
         <div>
-          <label className="block text-[13px] font-medium text-[#6B7280] mb-1">Выезд</label>
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Выезд</label>
           <input
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
             min={checkIn || undefined}
-            className="w-full h-12 rounded-[12px] px-4 border border-gray-200 text-[14px]"
+            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
           />
         </div>
       </div>
       <div className="mb-4">
-        <label className="block text-[13px] font-medium text-[#6B7280] mb-1">Гости</label>
-        <div className="flex items-center gap-3 h-12 rounded-[12px] border border-gray-200 px-4 bg-white">
+        <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Гости</label>
+        <div className="flex items-center gap-3 h-12 rounded-[12px] border border-[var(--border)] px-4 bg-[var(--bg-card)]">
           <button
             type="button"
             aria-label="Уменьшить"
@@ -67,12 +68,12 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.max(1, g - 1))
             }}
-            className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-lg border border-[var(--border)] text-[18px] font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests <= 1}
           >
             −
           </button>
-          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums">{guests}</span>
+          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums text-[var(--text-main)]">{guests}</span>
           <button
             type="button"
             aria-label="Увеличить"
@@ -80,7 +81,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.min(effectiveMax, g + 1))
             }}
-            className="w-9 h-9 rounded-lg border border-gray-200 text-[18px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-lg border border-[var(--border)] text-[18px] font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests >= effectiveMax}
           >
             +
@@ -88,13 +89,13 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         </div>
       </div>
       {nights > 0 && (
-        <div className="rounded-[12px] bg-gray-50 p-4 mb-4 space-y-1">
-          <p className="text-[14px] text-[#6B7280]">
+        <div className="rounded-[12px] bg-[var(--bg-glass)] p-4 mb-4 space-y-1">
+          <p className="text-[14px] text-[var(--text-secondary)]">
             {formatPrice(pricePerNight, 'night')} × {nights} ночей
           </p>
-          <div className="flex justify-between items-baseline pt-2 border-t border-gray-200">
-            <span className="text-[14px] font-semibold text-[#1C1F26]">{RU.price.total}</span>
-            <span className="text-[18px] font-bold text-[#1C1F26]">{formatPrice(total, 'night')}</span>
+          <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border)]">
+            <span className="text-[14px] font-semibold text-[var(--text-main)]">{RU.price.total}</span>
+            <span className="text-[18px] font-bold text-[var(--text-main)]">{formatPrice(total, 'night')}</span>
           </div>
         </div>
       )}
@@ -110,11 +111,11 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         }
         disabled={!canConfirm}
         className={cn(
-          'w-full px-5 py-3 h-12 rounded-[14px] bg-violet-600 text-white font-semibold text-[15px]',
-          'hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed'
+          'w-full px-5 py-3 h-12 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]',
+          'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >
-        Подтвердить бронь
+        Забронировать
       </button>
     </div>
   )

@@ -122,7 +122,7 @@ export default function ChatPage() {
               key={m.id}
               className={cn(
                 'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px]',
-                m.senderId === myId ? 'ml-auto bg-[var(--accent)] text-white' : 'mr-auto bg-[var(--card-hover)] text-[var(--text-primary)]'
+                m.senderId === myId ? 'ml-auto bg-[var(--accent)] text-[var(--button-primary-text)]' : 'mr-auto bg-[var(--card-hover)] text-[var(--text-primary)]'
               )}
             >
               <div>{m.text}</div>
@@ -151,7 +151,7 @@ export default function ChatPage() {
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="rounded-[14px] bg-violet-600 text-white px-5 py-3 font-semibold text-[14px] disabled:opacity-50"
+            className="rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] px-5 py-3 font-semibold text-[14px] disabled:opacity-50"
           >
             {sending ? '…' : 'Отправить'}
           </button>

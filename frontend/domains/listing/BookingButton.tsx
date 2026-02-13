@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
@@ -23,6 +23,11 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
   const [checkOut, setCheckOut] = useState('')
   const [guests, setGuests] = useState(1)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (showBookingModal) document.body.classList.add('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [showBookingModal])
 
   const handleBooking = async () => {
     if (!isAuthenticated()) {
@@ -70,8 +75,8 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
         className={cn(
           'w-full px-5 py-3 rounded-[14px] font-semibold text-[15px]',
           variant === 'primary'
-            ? 'bg-violet-600 text-white hover:bg-violet-500 active:bg-violet-700 shadow-[0_4px_14px_rgba(124,58,237,0.35)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
-            : 'bg-white text-[#1C1F26] border-2 border-gray-200 hover:bg-gray-50',
+            ? 'bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90 active:opacity-80 shadow-[0_4px_14px_rgba(124,58,237,0.35)]'
+            : 'bg-[var(--button-secondary-bg)] text-[var(--text-primary)] border-2 border-[var(--border)] hover:opacity-90',
           'transition-all duration-200',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
@@ -80,13 +85,14 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
         {loading ? 'Отправка...' : 'Забронировать'}
       </button>
 
-      {/* Модальное окно бронирования */}
+      {/* Модальное окно бронирования — ТЗ-2: overlay (z-overlay) + panel (z-modal) */}
       {showBookingModal && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-[var(--blur-soft)]">
+        <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 'var(--z-overlay)' }}>
+          <div className="overlay" onClick={() => setShowBookingModal(false)} aria-hidden />
           <div className={cn(
-            'bg-white rounded-[20px] p-6 max-w-md w-full',
-            'shadow-[0_20px_60px_rgba(0,0,0,0.3)]'
-          )}>
+            'relative rounded-[20px] p-6 max-w-md w-full modal-panel bg-[var(--bg-modal)]',
+            'shadow-[var(--shadow-modal)]'
+          )} style={{ zIndex: 'var(--z-modal)' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[20px] font-bold text-[#1C1F26]">Бронирование</h3>
               <button
@@ -109,7 +115,7 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
                   min={new Date().toISOString().split('T')[0]}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
+                    'border border-[var(--border)] bg-[var(--input-bg)]',
                     'text-[#1C1F26] text-[14px]',
                     'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                   )}
@@ -125,7 +131,7 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
                   min={checkIn || new Date().toISOString().split('T')[0]}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
+                    'border border-[var(--border)] bg-[var(--input-bg)]',
                     'text-[#1C1F26] text-[14px]',
                     'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                   )}
@@ -142,7 +148,7 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
                   max={10}
                   className={cn(
                     'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
+                    'border border-[var(--border)] bg-[var(--input-bg)]',
                     'text-[#1C1F26] text-[14px]',
                     'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                   )}
@@ -163,7 +169,7 @@ export function BookingButton({ listingId, price, variant = 'primary' }: Booking
                   disabled={!checkIn || !checkOut || loading}
                   className={cn(
                     'w-full py-3 rounded-[14px]',
-                    'bg-violet-600 text-white font-semibold text-[15px]',
+                    'bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]',
                     'hover:bg-violet-500 transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed'
                   )}

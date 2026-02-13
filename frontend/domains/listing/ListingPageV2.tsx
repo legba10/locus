@@ -322,7 +322,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               typeLabel="Квартира"
             />
             {!owner.id ? (
-              <div className="bg-white rounded-2xl p-4 md:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100 animate-pulse">
+              <div className="bg-[var(--card)] rounded-2xl p-4 md:p-6 shadow-[var(--shadow-card)] border border-[var(--border)] animate-pulse">
                 <div className="h-5 w-24 bg-gray-200 rounded mb-3" />
                 <div className="flex gap-4">
                   <div className="w-14 h-14 rounded-full bg-gray-200" />
@@ -346,13 +346,13 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 onWrite={handleWrite}
               />
             )}
-            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
               {amenities.length > 0 ? (
                 <>
                   <div className="grid grid-cols-2 gap-2">
                     {(showAllAmenities ? amenities : amenities.slice(0, 8)).map((label, i) => (
-                      <div key={i} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-gray-50/80 border border-gray-100">
+                      <div key={i} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-gray-50/80 border border-[var(--border)]">
                         <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -371,7 +371,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               )}
             </div>
             {item.description && (
-<div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+<div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Описание</h2>
                 <p className={cn('text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')}>
                   {item.description}
@@ -381,7 +381,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 </button>
               </div>
             )}
-            <div className={cn('bg-white rounded-2xl p-4 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
               <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Расположение</h2>
               {item.addressLine ? (
                 <p className="text-[14px] text-[#6B7280]">{item.addressLine}</p>
@@ -408,13 +408,13 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             <div id="listing-booking" className="lg:hidden">
               <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
-            <div id="reviews-section" className={cn('bg-white rounded-2xl p-5 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100')}>
+            <div id="reviews-section" className={cn('bg-[var(--card)] rounded-2xl p-5 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
               {/* Блок 1: заголовок + кнопка */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h2 className="text-[20px] font-bold text-[#1C1F26]">Отзывы</h2>
                 <a
                   href="#review-form"
-                  className="order-first sm:order-none self-start sm:self-center min-h-[44px] px-5 py-2.5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500 md:sticky md:top-20 shadow-[0_4px_14px_rgba(124,58,237,0.3)]"
+                  className="order-first sm:order-none self-start sm:self-center min-h-[44px] px-5 py-2.5 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:bg-violet-500 md:sticky md:top-20 shadow-[0_4px_14px_rgba(124,58,237,0.3)]"
                 >
                   Оставить отзыв
                 </a>
@@ -474,7 +474,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                       className={cn(
                         'min-h-[36px] px-3 rounded-[10px] text-[13px] font-medium transition-colors',
                         reviewFilter === f
-                          ? 'bg-violet-600 text-white'
+                          ? 'bg-[var(--accent)] text-[var(--button-primary-text)]'
                           : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'
                       )}
                     >
@@ -491,7 +491,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                       className={cn(
                         'min-h-[36px] px-3 rounded-[10px] text-[13px] font-medium transition-colors',
                         metricFilter === m
-                          ? 'bg-emerald-600 text-white'
+                          ? 'bg-[var(--success)] text-[var(--button-primary-text)]'
                           : 'bg-gray-50 text-[#6B7280] hover:bg-gray-100 border border-gray-200'
                       )}
                     >
@@ -506,7 +506,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 {isReviewsLoading ? (
                   <div className="space-y-5">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="rounded-xl border border-gray-100 bg-gray-50/80 p-5 animate-pulse">
+                      <div key={i} className="rounded-xl border border-[var(--border)] bg-gray-50/80 p-5 animate-pulse">
                         <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
                         <div className="h-3 w-full bg-gray-200 rounded mb-2" />
                         <div className="h-3 w-2/3 bg-gray-200 rounded" />
@@ -526,7 +526,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                     type="button"
                     onClick={loadMoreReviews}
                     disabled={reviewsLoadingMore}
-                    className="min-h-[44px] px-5 rounded-[14px] border border-gray-200 bg-white text-[14px] font-medium text-[#1C1F26] hover:bg-gray-50 disabled:opacity-50"
+                    className="min-h-[44px] px-5 rounded-[14px] border border-[var(--border)] bg-[var(--button-secondary-bg)] text-[14px] font-medium text-[var(--text-primary)] hover:opacity-90 disabled:opacity-50"
                   >
                     {reviewsLoadingMore ? 'Загрузка…' : 'Показать ещё'}
                   </button>
@@ -568,10 +568,10 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
       </div>
 
       {/* Мобильный CTA: один бар внизу, без дублирования кнопок в контенте */}
-      <div className="fixed bottom-0 left-0 right-0 z-header md:hidden bg-[var(--bg-elevated)] backdrop-blur-[20px] border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="bottom-action-bar md:hidden px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           {priceValue > 0 && (
-            <span className="hidden sm:inline text-[13px] font-semibold text-[#1C1F26] shrink-0">
+            <span className="hidden sm:inline text-[13px] font-semibold text-[var(--text-primary)] shrink-0">
               от {priceValue.toLocaleString('ru-RU')} ₽
             </span>
           )}
@@ -579,21 +579,21 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
             type="button"
             onClick={handleWrite}
             disabled={writeLoading}
-            className="flex-1 py-3 rounded-xl bg-violet-600 text-white font-semibold text-[14px] shadow-lg shadow-violet-600/25 disabled:opacity-70"
+            className="flex-1 btn-primary disabled:opacity-70"
           >
             {writeLoading ? '…' : 'Написать'}
           </button>
           <button
             type="button"
             onClick={handleBook}
-            className="flex-1 py-3 rounded-xl border-2 border-violet-600 text-violet-600 font-semibold text-[14px] bg-white"
+            className="flex-1 btn-secondary"
           >
             Забронировать
           </button>
           <button
             type="button"
             onClick={() => setIsFavorite((f) => !f)}
-            className="p-3 rounded-xl border-2 border-gray-200 bg-white shrink-0"
+            className="p-3 rounded-[var(--radius-btn)] border-2 border-[var(--border)] bg-[var(--bg-card)] shrink-0 h-12 min-h-[48px] flex items-center justify-center"
             aria-label={isFavorite ? 'Убрать из избранного' : 'Сохранить'}
           >
             <svg className={cn('w-5 h-5', isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400')} fill="currentColor" viewBox="0 0 20 20">

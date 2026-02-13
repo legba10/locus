@@ -1,28 +1,17 @@
 /**
- * ТЗ-2 + ТЗ-3: Система слоёв (Z-index)
- * Синхронизировано с styles/zIndex.ts. Не использовать random z-index.
+ * ТЗ-2: Утилиты слоёв. Шкала в zindex.css.
+ * Не использовать случайные z-index.
  */
-
-/* ТЗ-4: базовая шкала в tokens.css (--z-header, --z-drawer, --z-modal, --z-toast). Здесь — расширенная для overlay/notification. */
-:root {
-  --z-base: 1;
-  --z-header: 50;
-  --z-drawer: 100;
-  --z-dropdown: 150;
-  --z-modal: 200;
-  --z-overlay: 200;
-  --z-notification: 250;
-  --z-toast: 300;
-  --z-tooltip: 300;
-}
-
-/* Утилиты для подстановки в компонентах */
 .z-base { z-index: var(--z-base); }
 .z-header { z-index: var(--z-header); }
-.z-drawer { z-index: var(--z-drawer); }
-.z-dropdown { z-index: var(--z-dropdown); }
+.z-bottom-bar { z-index: var(--z-bottom-bar); }
 .z-overlay { z-index: var(--z-overlay); }
+.z-menu { z-index: var(--z-menu); }
 .z-modal { z-index: var(--z-modal); }
-.z-notification { z-index: var(--z-notification); }
+.z-notification-panel { z-index: var(--z-notification-panel); }
 .z-toast { z-index: var(--z-toast); }
 .z-tooltip { z-index: var(--z-tooltip); }
+
+/* Алиасы для совместимости */
+.z-notification { z-index: var(--z-notification-panel); }
+.z-drawer { z-index: var(--z-menu); }

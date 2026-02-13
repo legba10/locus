@@ -5,10 +5,9 @@ import Image from 'next/image'
 import { useState, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
-import { RU, formatPrice, getVerdictFromScore } from '@/core/i18n/ru'
+import { formatPrice } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
 import { apiFetch } from '@/shared/utils/apiFetch'
-import { Star } from 'lucide-react'
 import { track } from '@/shared/analytics/events'
 
 interface ListingCardLightProps {
@@ -20,41 +19,29 @@ interface ListingCardLightProps {
   address?: string
   district?: string
   rooms?: number
-  area?: number      // м²
-  floor?: number     // этаж
+  area?: number
+  floor?: number
   totalFloors?: number
-  views?: number     // просмотры
-  isNew?: boolean    // новое объявление
-  isVerified?: boolean // проверено LOCUS
-  isFavorite?: boolean // уже в избранном
+  views?: number
+  isNew?: boolean
+  isVerified?: boolean
+  isFavorite?: boolean
   score?: number
   verdict?: string
   reasons?: string[]
-  tags?: string[]    // теги: "рядом метро", "выгодная цена"
-  /** Average stars (1-5). Shown as ★ {rating} {reviewPercent}% when both set. */
+  tags?: string[]
   rating?: number | null
-  /** Percent of positive reviews (4-5), 0-100. */
   reviewPercent?: number | null
-  /** ТЗ-11: Чистота 0–100%, показываем "Чистота: 82%" */
   cleanliness?: number | null
-  /** ТЗ-11: Шум 0–100, показываем "Тишина: низкий/умеренный/шумно" */
   noise?: number | null
   highlight?: boolean
   className?: string
 }
 
 /**
- * ListingCardLight — Карточка объявления v3
- * 
- * По ТЗ v3:
- * - image ratio 4:3
- * - price bigger: 20px
- * - location secondary
- * - AI explanation badge
- * - favorite icon always visible
- * - border-radius: 18px
- * - shadow: 0 6px 24px rgba(0,0,0,0.08)
- * - hover: translateY(-6px), shadow: 0 20px 60px rgba(0,0,0,0.14)
+ * ListingCardLight — ТЗ-5: карточка объявления
+ * [фото] [цена 24px] [город] [метрики AI] [панель ❤️ 💬 Открыть]
+ * Фото: 180px mobile / 220px desktop, radius 18px. Карточка: flex column, height 100%.
  */
 function ListingCardLightComponent({
   id,
@@ -62,24 +49,9 @@ function ListingCardLightComponent({
   title,
   price,
   city,
-  address,
   district,
-  rooms,
-  area,
-  floor,
-  totalFloors,
-  views = 0,
-  isNew = false,
-  isVerified = false,
   isFavorite = false,
   score = 0,
-  verdict,
-  reasons = [],
-  tags = [],
-  rating,
-  reviewPercent,
-  cleanliness,
-  noise,
   highlight = false,
   className,
 }: ListingCardLightProps) {
@@ -87,27 +59,18 @@ function ListingCardLightComponent({
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
-  const [favFlash, setFavFlash] = useState(false)
 
   const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
     if (isToggling) return
-    
     setIsToggling(true)
     const newState = !isSaved
-    setIsSaved(newState) // Optimistic update
-    if (newState) {
-      setFavFlash(true)
-      setTimeout(() => setFavFlash(false), 260)
-      track('favorite_add', { listingId: id })
-    }
-    
+    setIsSaved(newState)
+    if (newState) track('favorite_add', { listingId: id })
     try {
       await apiFetch(`/favorites/${id}/toggle`, { method: 'POST' })
     } catch (err) {
-      // Revert on error
       setIsSaved(!newState)
       console.error('Failed to toggle favorite:', err)
     } finally {
@@ -115,251 +78,116 @@ function ListingCardLightComponent({
     }
   }, [id, isSaved, isToggling])
 
-  const verdictType = getVerdictFromScore(score)
-  
-  // AI badge показывается только если score > 50
-  const showAiBadge = score > 50
-  const showAiSignals = score > 0
-
-  // Формируем строку параметров
-  const params: string[] = []
-  if (rooms) params.push(`${rooms} комн.`)
-  if (area) params.push(`${area} м²`)
-  if (floor) params.push(totalFloors ? `${floor}/${totalFloors} эт.` : `${floor} эт.`)
-  const paramsString = params.join(' · ')
-
-  // Локация: город + район/адрес
-  const locationString = district 
-    ? `${city} · ${district}` 
-    : address 
-      ? `${city} · ${address}` 
-      : city
-
-  // AI объяснение (короткое)
-  const aiExplanation = reasons.length > 0 
-    ? reasons.slice(0, 2).join(', ').toLowerCase()
-    : null
+  const openListing = () => {
+    if (typeof window !== 'undefined') {
+      const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
+      localStorage.setItem('locus_viewed_count', String(viewed))
+      localStorage.setItem('locus_last_activity', String(Date.now()))
+      window.dispatchEvent(new Event('locus:listing-viewed'))
+    }
+    track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
+    router.push(`/listings/${id}`)
+  }
 
   const imageUrl = photo && isValidImageUrl(photo) ? photo : null
+  const locationString = district ? `${city} · ${district}` : city
+  const showAi = score > 0
 
   return (
-    <article className={cn(
-      'listing-card',
-      'group bg-white rounded-[20px] overflow-hidden',
-      'border border-gray-100/80',
-      'hover:border-gray-200/80',
-      highlight && 'listing-card-glow',
-      'transition-all duration-200 ease-out',
-      className
-    )}
-    onClick={() => {
-      if (typeof window !== 'undefined') {
-        const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
-        localStorage.setItem('locus_viewed_count', String(viewed))
-        localStorage.setItem('locus_last_activity', String(Date.now()))
-        window.dispatchEvent(new Event('locus:listing-viewed'))
-      }
-      track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
-      router.push(`/listings/${id}`)
-    }}
+    <article
+      className={cn(
+        'listing-card-tz5 flex flex-col h-full rounded-[18px] overflow-hidden',
+        'bg-[var(--card)] border border-[var(--border)]',
+        'transition-all duration-200 ease-out',
+        highlight && 'listing-card-glow',
+        className
+      )}
     >
-      {/* Photo — главный элемент */}
-      <Link href={`/listings/${id}`} className="listing-photo block relative bg-gray-100 overflow-hidden">
+      {/* Фото: 180px mobile, 220px desktop, radius 18px */}
+      <Link
+        href={`/listings/${id}`}
+        className="listing-photo-tz5 block relative w-full flex-shrink-0 overflow-hidden rounded-t-[18px] bg-[var(--bg-glass)]"
+        onClick={(e) => { e.preventDefault(); openListing(); }}
+      >
         {imageUrl && !imgError ? (
           <Image
             src={imageUrl}
             alt={title || 'Фото жилья'}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-300 hover:scale-[1.03]"
             loading="lazy"
             sizes="(max-width: 640px) 100vw, 33vw"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-[#9CA3AF] text-[12px] gap-2">
+          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-secondary)] text-[12px] gap-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3l2 2h7a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 13l2-2 3 3 2-2 3 3" />
             </svg>
             <span>Фото отсутствует</span>
           </div>
         )}
-        
-        {/* Top row: Tags + Favorite */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
-          {/* Left side tags */}
-          <div className="flex flex-wrap gap-1.5">
-            {/* Новое объявление */}
-            {isNew && (
-              <span className={cn(
-                'px-2 py-0.5 rounded-md',
-                'bg-amber-500 text-white',
-                'text-[10px] font-semibold uppercase tracking-wide'
-              )}>
-                Новое
-              </span>
-            )}
-            {/* AI-анализ */}
-            {showAiSignals && (
-              <span className={cn(
-                'ai-badge'
-              )}>
-                AI-анализ
-              </span>
-            )}
-            {/* Проверено LOCUS */}
-            {isVerified && (
-              <span className={cn(
-                'px-2 py-0.5 rounded-md',
-                'bg-emerald-500 text-white',
-                'text-[10px] font-semibold',
-                'flex items-center gap-0.5'
-              )}>
-                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Проверено
-              </span>
-            )}
-          </div>
-          
-          {/* Save button */}
-          <button
-            onClick={handleFavoriteToggle}
-            disabled={isToggling}
-            className={cn(
-              'p-1.5 rounded-full',
-              'bg-white/90 backdrop-blur-sm',
-              'shadow-sm',
-              'transition-all duration-200',
-              'hover:bg-white hover:scale-110',
-              favFlash && 'favorite-flash',
-              isSaved && 'bg-red-50',
-              isToggling && 'opacity-50 cursor-wait'
-            )}
-            aria-label={isSaved ? 'Удалить из избранного' : 'Добавить в избранное'}
-          >
-            <svg 
-              className={cn('w-4.5 h-4.5', isSaved ? 'text-red-500 fill-red-500' : 'text-gray-600')} 
-              fill={isSaved ? 'currentColor' : 'none'} 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Bottom row: Views + AI Badge */}
-        <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between">
-          {/* Views counter 👁 */}
-          {views > 0 && (
-            <div className={cn(
-              'px-2 py-1 rounded-md',
-              'bg-black/60 backdrop-blur-sm',
-              'text-white text-[11px] font-medium',
-              'flex items-center gap-1'
-            )}>
-              <svg className="w-3 h-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              {views}
-            </div>
+        <button
+          onClick={handleFavoriteToggle}
+          disabled={isToggling}
+          className={cn(
+            'absolute top-2 right-2 p-2 rounded-full',
+            'bg-[var(--bg-glass)] backdrop-blur-[var(--blur-soft)]',
+            'transition-all duration-200 hover:scale-105',
+            isSaved && 'text-red-500',
+            isToggling && 'opacity-50 cursor-wait'
           )}
-          
-          {/* AI Badge — Рекомендовано (если score > 75) */}
-          {showAiBadge && score > 75 && (
-            <div className={cn(
-              'ai-badge ml-auto',
-              'flex items-center gap-1'
-            )}>
-              {score > 80 ? 'Идеальный вариант' : 'Рекомендовано'}
-            </div>
-          )}
-        </div>
+          aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
+        >
+          <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
       </Link>
 
-      {/* Content — padding 14px по ТЗ */}
-      <div className="listing-content p-4">
-        {/* Price — крупнее по ТЗ v2 */}
-        <div className="mb-1.5 flex items-baseline gap-2 flex-wrap">
-          <span className="text-[20px] font-bold text-[var(--text-main)]">
-            {formatPrice(price, 'month')}
-          </span>
-          {rating != null && Number.isFinite(rating) && (
-            <span className="text-[13px] text-[#6B7280] font-medium tabular-nums">
-              <Star size={12} className="inline-block text-amber-500 mb-[1px]" /> {rating.toFixed(1)}
-              {reviewPercent != null && Number.isFinite(reviewPercent) && ` ${Math.round(reviewPercent)}%`}
-            </span>
-          )}
-        </div>
-
-        {/* ТЗ-11: Чистота · Тишина (без перегруза) */}
-        {(cleanliness != null || noise != null) && (
-          <p className="text-[12px] text-gray-500 mb-1 flex flex-wrap gap-x-2 gap-y-0">
-            {cleanliness != null && Number.isFinite(cleanliness) && (
-              <span>Чистота: {cleanliness}%</span>
-            )}
-            {noise != null && Number.isFinite(noise) && (
-              <span>
-                Тишина: {noise <= 35 ? 'низкий шум' : noise <= 65 ? 'умеренный шум' : 'шумно'}
-              </span>
-            )}
-          </p>
-        )}
-
-        {/* Location: город · район */}
-        <p className="text-[14px] text-[var(--text-main)]/70 mb-0.5 line-clamp-1">
+      {/* Контент: цена, город, AI — flex растягивается */}
+      <div className="flex flex-col flex-1 min-h-0 p-4">
+        <p className="text-[24px] font-bold text-[var(--text-main)] leading-tight mb-1">
+          {formatPrice(price, 'month')}
+        </p>
+        <p className="text-[14px] text-[var(--text-secondary)] line-clamp-1 mb-2">
           {locationString}
         </p>
-
-        {/* Parameters: комнаты · м² · этаж */}
-        {paramsString && (
-          <p className="text-[13px] text-gray-500 mb-2">
-            {paramsString}
+        {showAi && (
+          <p className="text-[13px] font-semibold text-[var(--accent)] mb-3">
+            Подходит на {score}%
           </p>
         )}
+      </div>
 
-        {/* Marketplace tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {tags.slice(0, 2).map((tag, i) => (
-              <span 
-                key={i}
-                className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px]"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* AI Block — по ТЗ: AI score и reasons */}
-        {showAiSignals && score > 0 && (
-          <div className="pt-2.5 mt-2.5 border-t border-gray-100">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-[13px] font-semibold text-violet-600">
-                Подходит на {score}%
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2 text-[11px] text-gray-500 mb-1.5">
-              <span className="px-2 py-0.5 rounded bg-gray-100">Подобрано AI</span>
-              <span className="px-2 py-0.5 rounded bg-gray-100">Сравнено с рынком</span>
-            </div>
-            {reasons.length > 0 && (
-              <ul className="space-y-0.5">
-                {reasons.slice(0, 2).map((reason, i) => (
-                  <li key={i} className="text-[12px] text-gray-500 flex items-start gap-1.5">
-                    <span className="text-violet-500 mt-0.5">•</span>
-                    <span className="line-clamp-1">{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+      {/* Нижняя панель: ❤️ 💬 Открыть */}
+      <div className="flex items-center gap-2 p-3 pt-0 border-t border-[var(--border)] flex-shrink-0">
+        <button
+          onClick={handleFavoriteToggle}
+          disabled={isToggling}
+          className="p-2 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-glass)] hover:text-[var(--text-main)] transition-colors"
+          aria-label="В избранное"
+        >
+          <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="p-2 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-glass)] hover:text-[var(--text-main)] transition-colors"
+          aria-label="Написать"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={openListing}
+          className="ml-auto rounded-[12px] px-4 py-2 text-[14px] font-semibold bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90 transition-opacity"
+        >
+          Открыть
+        </button>
       </div>
     </article>
   )
@@ -367,35 +195,22 @@ function ListingCardLightComponent({
 
 export const ListingCardLight = memo(ListingCardLightComponent)
 
-/**
- * ListingCardLightSkeleton — Скелетон карточки (improved)
- * Анимированный pulse с плавным градиентом
- */
+/** ТЗ-5: glass skeleton вместо серого */
 export function ListingCardLightSkeleton() {
   return (
     <div className={cn(
-      'bg-white rounded-[18px] overflow-hidden',
-      'border border-gray-100'
+      'listing-card-tz5 flex flex-col h-full rounded-[18px] overflow-hidden',
+      'glass border border-[var(--border)]'
     )}>
-      {/* Photo skeleton */}
-      <div className="aspect-[4/3] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer bg-[length:200%_100%]" />
-      
-      {/* Content skeleton */}
-      <div className="p-3.5 space-y-2.5">
-        {/* Price */}
-        <div className="h-5 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer bg-[length:200%_100%] rounded-md w-28" />
-        {/* Location */}
-        <div className="h-4 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer bg-[length:200%_100%] rounded-md w-36" />
-        {/* Params */}
-        <div className="h-3.5 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer bg-[length:200%_100%] rounded-md w-24" />
+      <div className="listing-photo-tz5 w-full flex-shrink-0 rounded-t-[18px] skeleton-glass" />
+      <div className="flex flex-col flex-1 min-h-0 p-4 gap-2">
+        <div className="h-7 w-28 rounded-lg skeleton-glass" />
+        <div className="h-4 w-36 rounded-lg skeleton-glass" />
+      </div>
+      <div className="flex items-center gap-2 p-3 pt-0 border-t border-[var(--border)] flex-shrink-0">
+        <div className="h-8 w-8 rounded-full skeleton-glass" />
+        <div className="h-8 w-16 rounded-[12px] ml-auto skeleton-glass" />
       </div>
     </div>
   )
 }
-
-// Добавить в globals.css:
-// @keyframes shimmer {
-//   0% { background-position: 200% 0; }
-//   100% { background-position: -200% 0; }
-// }
-// .animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }

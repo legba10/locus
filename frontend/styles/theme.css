@@ -4,88 +4,122 @@
  * Запрет: не использовать #fff, #000, rgba() в компонентах — только var(--token)
  */
 
+/* ТЗ-1: единый источник токенов. Запрещено: #fff, #000, rgba() в компонентах — только var(--token) */
 /* Fallback (SSR / до применения темы) — светлая тема */
 :root {
   --bg-main: #ffffff;
+  --bg-secondary: #f6f7fb;
   --bg-surface: #f5f6fa;
   --bg-card: #ffffff;
   --bg-elevated: #ffffff;
+  --bg-modal: #ffffff;
 
   --text-primary: #0f172a;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
 
+  --border: #e5e7eb;
   --border-main: #e5e7eb;
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
-
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
   --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
 
-  /* ТЗ-3: overlay и поверхности */
-  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #f3f4f6;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+  /* ТЗ-2: overlay затемняет фон, не светлее 0.5 */
+  --overlay: rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
   --header-bg: #ffffff;
   --border-primary: #e5e7eb;
   --input-bg: #f5f6fa;
+  --bg-input: #f5f6fa;
   --icon-primary: #0f172a;
   --card-bg-light: #ffffff;
   --card-bg-dark: #111827;
   --text-secondary-light: #6b7280;
   --text-secondary-dark: #9ca3af;
+  --danger: #dc2626;
 }
 
-/* Light — явно */
+/* Light — явно (ТЗ-1 п.4.1) */
 :root[data-theme="light"] {
   --bg-main: #ffffff;
+  --bg-secondary: #f6f7fb;
   --bg-surface: #f5f6fa;
   --bg-card: #ffffff;
   --bg-elevated: #ffffff;
+  --bg-modal: #ffffff;
 
   --text-primary: #0f172a;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
 
+  --border: #e5e7eb;
   --border-main: #e5e7eb;
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
-
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
   --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
 
-  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #f3f4f6;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --overlay: rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
   --header-bg: #ffffff;
   --border-primary: #e5e7eb;
   --input-bg: #f5f6fa;
+  --bg-input: #f5f6fa;
   --icon-primary: #0f172a;
+  --danger: #dc2626;
 }
 
-/* Dark — ТЗ-3: без прозрачности в overlay-слоях */
+/* Dark — ТЗ-1 п.4.2 + ТЗ-3 п.13 */
 :root[data-theme="dark"] {
-  --bg-main: #0b0f19;
+  --bg-main: #0b0f1a;
+  --bg-secondary: #111827;
   --bg-surface: #111827;
   --bg-card: #111827;
   --bg-elevated: #161b2e;
+  --bg-modal: #0f172a;
 
   --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #71717a;
+  --text-secondary: #a0a7b8;
+  --text-muted: #6f7685;
 
-  --border-main: #27272a;
+  --border: #1f2937;
+  --border-main: #1f2937;
 
   --accent: #8b5cf6;
   --accent-hover: #7c3aed;
-
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
   --button-primary: linear-gradient(135deg, #7c3aed, #9f67ff);
 
-  --overlay-bg: rgba(10, 10, 20, 0.92);
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #1f2937;
+
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.6);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
   --surface-primary: #161b2e;
   --surface-secondary: #111827;
   --header-bg: #161b2e;
   --border-primary: #27272a;
   --input-bg: #111827;
+  --bg-input: #111827;
   --icon-primary: #ffffff;
+  --danger: #ef4444;
 }
