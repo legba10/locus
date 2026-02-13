@@ -130,7 +130,7 @@ function ListingCardLightComponent({
           disabled={isToggling}
           className={cn(
             'absolute top-2 right-2 p-2 rounded-full',
-            'bg-[var(--bg-glass)] backdrop-blur-[var(--blur-soft)]',
+            'bg-[var(--bg-glass)] backdrop-blur-[6px]',
             'transition-all duration-200 hover:scale-105',
             isSaved && 'text-red-500',
             isToggling && 'opacity-50 cursor-wait'

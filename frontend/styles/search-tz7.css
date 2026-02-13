@@ -46,7 +46,7 @@
 .search-tz7-input:focus {
   outline: none;
   border-color: var(--color-primary, var(--accent));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, var(--accent)) 18%, transparent);
+  box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.18);
 }
 
 [data-theme="dark"] .search-hero-input,
@@ -154,7 +154,7 @@
 }
 
 .search-hero-ai-tz7:hover {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: rgba(123, 97, 255, 0.12);
   transform: translateY(-1px);
 }
 
@@ -344,15 +344,16 @@
   color: #f2f3f5;
 }
 
-.search-hero .text-[var(--text-secondary)],
-.filters-modal-tz7 .text-[var(--text-secondary)] {
+/* ТЗ-1: селектор .text-[var(--...)] ломает cssnano; цвет задаётся темой и Tailwind */
+.search-hero .search-tz7-text-secondary,
+.filters-modal-tz7 .search-tz7-text-secondary {
   color: var(--color-muted, var(--text-secondary));
 }
 
-[data-theme="dark"] .search-hero .text-[var(--text-secondary)],
-.dark .search-hero .text-[var(--text-secondary)],
-[data-theme="dark"] .filters-modal-tz7 .text-[var(--text-secondary)],
-.dark .filters-modal-tz7 .text-[var(--text-secondary)] {
+[data-theme="dark"] .search-hero .search-tz7-text-secondary,
+.dark .search-hero .search-tz7-text-secondary,
+[data-theme="dark"] .filters-modal-tz7 .search-tz7-text-secondary,
+.dark .filters-modal-tz7 .search-tz7-text-secondary {
   color: rgba(255, 255, 255, 0.6);
 }
 

@@ -26,7 +26,7 @@ export function StickyActions({
         className={cn(
           'fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)]',
           'h-[72px] flex items-center gap-2 px-4',
-          'backdrop-blur-[var(--blur-glass)] bg-[var(--bg-glass)] border-t border-[var(--border)]',
+          'backdrop-blur-[20px] bg-[var(--bg-glass)] border-t border-[var(--border)]',
           'pb-[max(0.75rem,env(safe-area-inset-bottom))]',
           'md:hidden'
         )}

@@ -101,7 +101,7 @@
 }
 
 .layout-header__burger:focus-visible {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary, var(--accent)) 20%, transparent);
+  box-shadow: 0 0 0 4px rgba(123, 97, 255, 0.2);
 }
 
 /* TZ-10: иконка бургера 32px (полоски), hit area остаётся 44px */
