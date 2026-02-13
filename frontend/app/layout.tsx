@@ -13,9 +13,9 @@ const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewRem
 export const metadata: Metadata = {
   title: 'LOCUS — AI поиск жилья',
   description: 'Подбор жилья с AI',
-  manifest: '/manifest.json',
+  manifest: '/site.webmanifest',
   icons: {
-    icon: '/favicon.ico',
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }, { url: '/favicon.ico', type: 'image/x-icon' }],
     apple: '/apple-touch-icon.png',
   },
 }
@@ -40,9 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className="light" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="antialiased" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>

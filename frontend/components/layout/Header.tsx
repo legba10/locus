@@ -140,7 +140,7 @@ export function Header() {
               <img
                 src="/logo-dark.svg"
                 alt="LOCUS"
-                className="headerLogo layout-header__logo-img"
+                className="header-logo header-logo-img layout-header__logo-img"
                 width={28}
                 height={28}
                 fetchPriority="high"
