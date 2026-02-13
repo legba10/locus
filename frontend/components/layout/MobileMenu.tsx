@@ -47,7 +47,6 @@ export function MobileMenu({ open, onClose, children }: MobileMenuProps) {
         tabIndex={0}
         aria-label="Закрыть меню"
         className={cn('mobile-menu-overlay', open && 'open')}
-        style={{ background: 'rgba(0,0,0,0.4)' }}
         onClick={handleOverlayClick}
         onKeyDown={(e) => e.key === 'Enter' && onClose()}
         aria-hidden={!open}

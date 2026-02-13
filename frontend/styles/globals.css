@@ -744,19 +744,23 @@ body.modal-open {
   overflow: hidden !important;
 }
 
-/* Overlay: затемнение фона — ТЗ-2, только var(--overlay) */
+/* ТЗ №1: бургер overlay — z-index 10000, меню 10050; overlay не засвечивает; blur 4px */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--overlay);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: var(--z-overlay);
+  background: var(--overlay-bg-light, var(--overlay));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10000;
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
+}
+[data-theme="dark"] .mobile-menu-overlay,
+.dark .mobile-menu-overlay {
+  background: var(--overlay-bg-dark, var(--overlay));
 }
 .mobile-menu-overlay.open {
   opacity: 1;
@@ -779,7 +783,7 @@ body.modal-open {
   border-bottom-right-radius: var(--radius-lg, 20px);
   border-right: 1px solid var(--border-main);
   box-shadow: var(--shadow-1);
-  z-index: var(--z-menu);
+  z-index: 10050;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);

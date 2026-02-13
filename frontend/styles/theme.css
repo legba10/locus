@@ -41,6 +41,9 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
   --overlay: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(0, 0, 0, 0.35);
+  /* ТЗ №1: бургер overlay — light/dark не засвечивать */
+  --overlay-bg-light: rgba(0, 0, 0, 0.45);
+  --overlay-bg-dark: rgba(0, 0, 0, 0.6);
 
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
@@ -92,6 +95,8 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
   --overlay: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(0, 0, 0, 0.35);
+  --overlay-bg-light: rgba(0, 0, 0, 0.45);
+  --overlay-bg-dark: rgba(0, 0, 0, 0.6);
 
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
@@ -139,9 +144,11 @@
   --button-secondary-bg: #1f2937;
 
   --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.6);
-  /* TZ-4: overlay единый — тёмная тема */
+  /* TZ-4 + ТЗ №1: overlay тёмная тема */
   --overlay: rgba(0, 0, 0, 0.55);
   --overlay-bg: rgba(0, 0, 0, 0.55);
+  --overlay-bg-light: rgba(0, 0, 0, 0.45);
+  --overlay-bg-dark: rgba(0, 0, 0, 0.6);
 
   --surface-primary: #161b2e;
   --surface-secondary: #111827;

@@ -52,8 +52,11 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
+  const [logoError, setLogoError] = useState(false)
 
-  const logoIconSrc = resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg'
+  const logoIconSrc = logoError
+    ? '/favicon.svg'
+    : (resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg')
   const authed = isAuthenticated()
 
   useEffect(() => {
@@ -148,6 +151,7 @@ export function Header() {
                 className="layout-header__logo-img"
                 width={28}
                 height={28}
+                onError={() => setLogoError(true)}
               />
               <span className="layout-header__logo-text">LOCUS</span>
             </Link>
