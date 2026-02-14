@@ -71,14 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     apiFetchRaw("/sync-user", { method: "POST" }).catch(() => undefined);
   }, [isInitialized, user]);
 
-  // TZ-2: при 401 после неудачного refresh — logout и редирект на /auth/login
+  // При 401 — logout и редирект на /auth/login, но не если уже на странице входа (убираем redirect loop)
   useEffect(() => {
     setOn401(() => {
+      const pathname = typeof window !== "undefined" ? window.location.pathname : ""
+      if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register") || pathname.startsWith("/auth/telegram")) {
+        return
+      }
       useAuthStore.getState().logout().then(() => {
-        if (typeof window !== "undefined") window.location.href = "/auth/login";
-      });
-    });
-  }, []);
+        if (typeof window !== "undefined") window.location.href = "/auth/login"
+      })
+    })
+  }, [])
 
   // Always render children immediately - don't block on auth
   return <>{children}</>;

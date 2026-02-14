@@ -147,10 +147,10 @@ export function Header() {
             <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
               <Image
                 src={logoIconSrc}
-                alt=""
-                className="layout-header__logo-img"
-                width={28}
-                height={28}
+                alt="LOCUS"
+                className="layout-header__logo-img h-8 w-auto"
+                width={32}
+                height={32}
                 onError={() => setLogoError(true)}
               />
               <span className="layout-header__logo-text">LOCUS</span>
