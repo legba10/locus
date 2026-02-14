@@ -3,59 +3,47 @@
  * фото, тексты, тёмная тема. Только токены, без хардкода.
  */
 
-/* ТЗ-MAIN-REDESIGN: карточка продукта — rounded-2xl bg-[var(--card)] border hover:shadow-2xl */
+/* ТЗ-5: карточка — rounded-2xl bg-card shadow-sm hover:shadow-lg, без тяжёлых границ */
 .listing-card {
   border-radius: 1rem;
   background: var(--card, var(--bg-card));
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-muted, var(--border));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.listing-card:hover {
-  transform: translateY(-2px);
-}
-
-.listing-card:active {
-  transform: translateY(0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .listing-card,
-  .listing-card:hover,
-  .listing-card:active {
-    transition: none;
-  }
-  .listing-card:hover {
-    transform: none;
-  }
+  transition: box-shadow 0.3s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .listing-card:hover {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card {
+    transition: none;
   }
 }
 
 [data-theme="dark"] .listing-card,
 .dark .listing-card {
-  background: var(--card);
-  border-color: var(--border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #0F172A;
+  border-color: var(--border-muted, var(--border));
 }
 
-[data-theme="dark"] .listing-card:hover,
-.dark .listing-card:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .listing-card:hover,
+  .dark .listing-card:hover {
+    background: #111827;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
 }
 
-/* Photo block — ТЗ-1: фиксированный ratio 4:3, фото не растягиваются */
+/* Photo block — ТЗ-5: ratio 4:3, rounded-2xl, hover scale 1.03 */
 .listing-card__image-wrap {
   position: relative;
   width: 100%;
@@ -63,6 +51,7 @@
   min-height: 0;
   flex-shrink: 0;
   overflow: hidden;
+  border-radius: 1rem 1rem 0 0;
   background: var(--color-surface-2, #f2f2f2);
   -webkit-user-select: none;
   user-select: none;
@@ -72,6 +61,22 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .listing-card:hover .listing-card__image-wrap .listing-card__image {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card__image-wrap .listing-card__image {
+    transition: none;
+  }
+  .listing-card:hover .listing-card__image-wrap .listing-card__image {
+    transform: none;
+  }
 }
 
 /* TZ-10: градиент снизу поверх фото */
@@ -100,21 +105,21 @@
   display: block;
 }
 
-/* Info block */
+/* Info block — ТЗ-5: p-3, gap-2 */
 .listing-card__info {
-  padding: 12px 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   min-height: 0;
 }
 
 .listing-card__title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--color-text, var(--text-main));
-  line-height: 1.2;
+  line-height: 1.3;
   line-clamp: 2;
   -webkit-line-clamp: 2;
   display: -webkit-box;
@@ -122,10 +127,34 @@
   overflow: hidden;
 }
 
+/* ТЗ-5: цена — text-lg font-semibold, light #0F172A / dark white */
+.listing-card__price-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
 .listing-card__price {
   font-size: 18px;
-  font-weight: 700;
-  color: var(--color-primary, var(--accent));
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.listing-card__price-suffix {
+  font-size: 14px;
+  opacity: 0.6;
+  color: inherit;
+}
+
+[data-theme="dark"] .listing-card__price-block,
+.dark .listing-card__price-block {
+  color: #fff;
+}
+
+[data-theme="dark"] .listing-card__price,
+.dark .listing-card__price {
+  color: #fff;
 }
 
 .listing-card__address {
@@ -139,16 +168,17 @@
   overflow: hidden;
 }
 
-/* ТЗ-5: рейтинг — единый шаблон фото | цена | город | рейтинг */
+/* ТЗ-5: рейтинг — text-xs opacity 0.7 */
 .listing-card__rating-row {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 .listing-card__rating {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--color-text, var(--text-main));
+  opacity: 0.7;
 }
 .listing-card__rating-star {
   color: #eab308;
@@ -159,12 +189,14 @@
   font-weight: 400;
 }
 .listing-card__title--secondary {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--color-muted, var(--text-secondary));
-  line-clamp: 1;
-  -webkit-line-clamp: 1;
-  margin-top: 2px;
+  color: var(--color-text, var(--text-main));
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Owner: avatar 24px + name only */

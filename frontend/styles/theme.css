@@ -4,10 +4,10 @@
  * Запрет: не использовать #fff, #000, rgba() в компонентах — только var(--token)
  */
 
-/* ТЗ-1 + ТЗ-MAIN-REDESIGN: единый источник токенов. bg-[var(--bg)], text-[var(--text)], border-[var(--border)] */
+/* ТЗ-6: только bg-background, bg-card, bg-secondary, text-primary. Не bg-white/bg-black/bg-gray */
 /* Fallback (SSR / до применения темы) — светлая тема */
 :root {
-  /* DS product tokens (ТЗ-MAIN-REDESIGN) */
+  --background: #ffffff;
   --bg: #ffffff;
   --card: #f8fafc;
   --text: #0f172a;
@@ -59,8 +59,9 @@
   --danger: #dc2626;
 }
 
-/* Light — явно (ТЗ-1 п.4.1) */
+/* Light — явно */
 :root[data-theme="light"] {
+  --background: #ffffff;
   --bg: #ffffff;
   --card: #f8fafc;
   --text: #0f172a;
@@ -108,9 +109,10 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ-1 п.4.2 + ТЗ-MAIN-REDESIGN (никаких белых блоков) */
+/* Dark — никаких белых блоков */
 :root[data-theme="dark"],
 .dark {
+  --background: #0b0f1a;
   --bg: #0b0f1a;
   --card: #111827;
   --text: #ffffff;
@@ -158,4 +160,14 @@
   --bg-input: #111827;
   --icon-primary: #ffffff;
   --danger: #ef4444;
+}
+
+/* ТЗ-6: Footer — light #F8FAFC, dark #020617 */
+.footer-tz6 {
+  background: #F8FAFC;
+}
+
+[data-theme="dark"] .footer-tz6,
+.dark .footer-tz6 {
+  background: #020617;
 }

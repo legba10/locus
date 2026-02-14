@@ -2,20 +2,122 @@
  * TZ-7 + ТЗ-MAIN-REDESIGN: Поиск — Airbnb-style блок (max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl).
  */
 
-/* ТЗ-MAIN-REDESIGN: поисковый блок продукта (центр страницы) */
+/* ТЗ-1: hero-блок — фон (fallback) */
+.hero-section-tz1-bg {
+  background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+}
+
+/* ТЗ-6: hero — только bg-background, без серых подводок и засветов */
+.hero-section-tz4 {
+  background: var(--background);
+  position: relative;
+}
+
+.hero-section-tz4::before {
+  content: none;
+}
+
+.hero-section-tz4-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .hero-section-tz4-title,
+.dark .hero-section-tz4-title {
+  color: var(--text-primary);
+}
+
+.hero-section-tz4-desc {
+  opacity: 0.7;
+}
+
+/* ТЗ-6: карточки главной — bg-card, без gray */
+.home-card-tz4 {
+  border-radius: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .home-card-tz4,
+.dark .home-card-tz4 {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* ТЗ-3: блок статистики — карточка light/dark, анимация появления */
+/* ТЗ-6: Stats — bg-card rounded-2xl shadow-sm */
+.stats-block-tz3,
+.stats-block-tz6 {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .stats-block-tz3,
+.dark .stats-block-tz3,
+[data-theme="dark"] .stats-block-tz6,
+.dark .stats-block-tz6 {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.stats-block-tz3--initial {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.stats-block-tz3--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stats-block-tz3-value {
+  color: #0f172a;
+}
+
+[data-theme="dark"] .stats-block-tz3-value,
+.dark .stats-block-tz3-value {
+  color: #f1f5f9;
+}
+
+.stats-block-tz3-label {
+  color: inherit;
+}
+
+/* ТЗ-6: поисковый блок / фильтры — bg-card rounded-2xl p-4 */
 .search-block-product {
   max-width: 64rem;
   margin-left: auto;
   margin-right: auto;
   border-radius: 1rem;
+  padding: 1rem;
   background: var(--card);
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.2s ease;
 }
+
+[data-theme="dark"] .search-block-product,
+.dark .search-block-product {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .search-block-product,
+.dark .search-block-product {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
 .search-block-product:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .search-block-product:hover,
+.dark .search-block-product:hover {
+  box-shadow: none;
 }
 .search-block-product .search-hero-submit-tz7-compact {
   height: 3rem;

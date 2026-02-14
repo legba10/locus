@@ -71,15 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     apiFetchRaw("/sync-user", { method: "POST" }).catch(() => undefined);
   }, [isInitialized, user]);
 
-  // При 401 — logout и редирект на /auth/login, но не если уже на странице входа (убираем redirect loop)
+  // ТЗ-6: при 401 редирект на login только с защищённых маршрутов. Главная и публичные страницы — без редиректа (нет цикла).
+  const PROTECTED_PATHS = ["/profile", "/owner", "/favorites", "/messages", "/bookings", "/admin"]
   useEffect(() => {
     setOn401(() => {
       const pathname = typeof window !== "undefined" ? window.location.pathname : ""
-      if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register") || pathname.startsWith("/auth/telegram")) {
-        return
-      }
+      if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/register") || pathname.startsWith("/auth/telegram")) return
+      const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p))
       useAuthStore.getState().logout().then(() => {
-        if (typeof window !== "undefined") window.location.href = "/auth/login"
+        if (typeof window !== "undefined" && isProtected) window.location.href = "/auth/login"
       })
     })
   }, [])

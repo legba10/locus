@@ -9,7 +9,6 @@ import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield, User } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { ThemeContext } from '@/providers/ThemeProvider'
 import { MobileMenu } from './MobileMenu'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
@@ -44,21 +43,19 @@ function NavItem({
  * Высота: mobile 64px, desktop 72px. Safe-area. Grid: [burger][logo][bell].
  * Логотип по теме (logo-dark / logo-light). Бургер 24px, колокольчик 22px, badge 8px.
  */
+/** ТЗ-6: один логотип /logo.png, height 32px mobile / 40px desktop, клик на главную без reload */
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
-  const { resolvedTheme } = useContext(ThemeContext)
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
-  const isDarkTheme = resolvedTheme === 'dark'
-  const logoIconSrc = logoError
-    ? '/favicon.svg'
-    : (isDarkTheme ? '/logo-dark.svg' : '/logo-light.svg')
   const authed = isAuthenticated()
+
+  const handleLogoClick = () => setIsMenuOpen(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -118,7 +115,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        'layout-header sticky left-0 right-0 z-[var(--z-header)] min-h-14 h-14 w-full border-b border-white/5 bg-background/80 backdrop-blur',
+        'layout-header sticky left-0 right-0 z-[var(--z-header)] w-full border-b border-white/5 backdrop-blur',
+        'bg-white/90 dark:bg-[#0B1020]/90',
+        'h-16 md:h-[72px] min-h-16 md:min-h-[72px]',
         'transition-[background,border-color] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
@@ -126,8 +125,8 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
-        {/* LEFT: burger + logo — ТЗ-1 единый блок, выравнивание по центру */}
+      <div className="mx-auto max-w-7xl px-4 md:px-6 h-16 md:h-[72px] flex items-center justify-between">
+        {/* LEFT: burger + logo + LOCUS (ТЗ-2: надпись LOCUS всегда, единый блок) */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
@@ -142,16 +141,20 @@ export function Header() {
               <span className="block w-5 h-0.5 bg-current rounded-full" />
             </span>
           </button>
-          <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="LOCUS — на главную">
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 shrink-0"
+            aria-label="LOCUS — на главную"
+          >
             <Image
-              src={logoIconSrc}
-              alt="LOCUS"
-              width={28}
-              height={28}
-              className="h-7 w-auto"
+              src={logoError ? '/favicon.svg' : '/logo.png'}
+              alt=""
+              width={120}
+              height={32}
+              className="h-8 md:h-10 w-auto max-w-[120px] object-contain object-left"
               onError={() => setLogoError(true)}
             />
-            <span className="font-bold text-base tracking-tight text-[var(--text-main)] hidden sm:inline">LOCUS</span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5 ml-2" aria-label="Основная навигация">
             {desktopNavIcons.map((item) => {
@@ -174,10 +177,10 @@ export function Header() {
           </nav>
         </div>
 
-        {/* RIGHT: theme toggle + avatar / login — ТЗ-1 один контейнер, ровно для guest и auth */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* RIGHT: Bell, ThemeToggle, Avatar — ТЗ-2 один контейнер gap-3 для guest и auth */}
+        <div className="flex items-center gap-3 shrink-0">
           {authed && (
-            <div className="flex items-center justify-center w-10 h-10">
+            <div className="flex items-center justify-center w-8 h-8 shrink-0">
               <NotificationsBell compactBadge />
             </div>
           )}
@@ -267,9 +270,6 @@ export function Header() {
             </button>
           </div>
         )}
-        <div className="md:hidden flex items-center justify-start px-1 pb-3">
-          <ThemeToggle />
-        </div>
         <nav className="mobile-menu-nav menu">
           <ul className="menu-list">
             <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />

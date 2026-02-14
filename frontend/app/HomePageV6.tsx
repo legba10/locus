@@ -12,13 +12,13 @@ import { useFilterStore } from '@/core/filters'
 import { FilterPanel, QuickAIModal } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
+import { StatsBlock } from '@/components/home/StatsBlock'
 import { AIPopup } from '@/components/home/AIPopup'
 import { PopularCities } from '@/components/home/PopularCities'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { AIBlock } from '@/components/home/AIBlock'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
-import { CITIES } from '@/shared/data/cities'
 
 interface ListingsResponse {
   items: any[]
@@ -267,20 +267,23 @@ export function HomePageV6() {
   })
 
   return (
-    <div className="min-h-screen font-sans antialiased bg-[var(--bg)]">
-      {/* ТЗ-MAIN-REDESIGN: Hero продукта */}
+    <div className="min-h-screen font-sans antialiased bg-[var(--background)]">
+      {/* ТЗ-4: Hero + светлая страница */}
       <Hero />
 
-      {/* ТЗ-MAIN-REDESIGN: поисковый блок (Airbnb-style) — центр продукта */}
-      <section id="search" className="bg-[var(--bg)] -mt-6 relative z-20">
+      {/* ТЗ-3: блок статистики — сразу после hero */}
+      <StatsBlock />
+
+      {/* ТЗ-4: поисковый блок — карточка rounded-2xl, без серых обводок */}
+      <section id="search" className="bg-transparent -mt-6 relative z-20">
         <div className="market-container">
           {!city && (
-            <p className="text-[14px] text-[var(--sub)] mb-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] px-4 py-3 text-center">
+            <p className="home-card-tz4 text-[14px] text-[var(--sub)] mb-4 rounded-2xl px-4 py-3 text-center">
               Сначала выберите город
             </p>
           )}
-          {/* Desktop: max-w-5xl, rounded-2xl, bg-[var(--card)], shadow-xl */}
-          <div className="hidden md:block search-block-product">
+          {/* Desktop: ТЗ-4 карточка — rounded-2xl, shadow-sm, border 1px rgba */}
+          <div className="hidden md:block home-card-tz4 search-block-product">
             <FilterPanel
               embedded
               wrapInCard={false}
@@ -328,8 +331,8 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* Актуальные предложения */}
-      <section className="bg-[var(--bg)] animate-fade-in">
+      {/* Актуальные предложения — ТЗ-4 воздух и фон страницы */}
+      <section className="bg-transparent animate-fade-in">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">
@@ -358,7 +361,7 @@ export function HomePageV6() {
               ))
             ) : (
               <div className="col-span-full">
-                <div className="glass rounded-[20px] p-6 md:p-8 text-center">
+                <div className="home-card-tz4 rounded-2xl p-6 md:p-8 text-center">
                   <div className="mx-auto mb-3 w-10 h-10 rounded-[10px] bg-[var(--accent-soft)] flex items-center justify-center">
                     <svg className="w-5 h-5 text-[var(--text-main)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7.5h18M6 4.5h12a2 2 0 012 2V18a2 2 0 01-2 2H6a2 2 0 01-2-2V6.5a2 2 0 012-2z" />
@@ -378,7 +381,7 @@ export function HomePageV6() {
       </section>
 
       {/* Рекомендации AI */}
-      <section className="bg-[var(--card)]/30">
+      <section className="bg-transparent">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">Рекомендации AI</h2>
@@ -409,7 +412,7 @@ export function HomePageV6() {
       </section>
 
       {/* Последние просмотренные */}
-      <section className="bg-[var(--bg)]">
+      <section className="bg-transparent">
         <div className="market-container">
           <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-6 md:mb-8">Последние просмотренные</h2>
           <div className="listing-grid">
@@ -445,7 +448,7 @@ export function HomePageV6() {
       <AIBlock />
 
       {/* НОВОСТИ РЫНКА */}
-      <section className="bg-[var(--card)]/50">
+      <section className="bg-transparent">
         <div className="market-container">
           <div className="text-center mb-10">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-2">
@@ -511,32 +514,6 @@ export function HomePageV6() {
                 </p>
               </div>
             </article>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          LOCUS В ЦИФРАХ — компактнее
-          ═══════════════════════════════════════════════════════════════ */}
-      <section className="bg-[var(--bg)] text-[var(--text)]">
-        <div className="market-container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">15K+</p>
-              <p className="text-[var(--sub)] text-[13px]">Объявлений</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">8K+</p>
-              <p className="text-[var(--sub)] text-[13px]">Пользователей</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">{CITIES.length}+</p>
-              <p className="text-[var(--sub)] text-[13px]">Городов</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[32px] md:text-[40px] font-bold text-[var(--text)] mb-1">98%</p>
-              <p className="text-[var(--sub)] text-[13px]">Довольных</p>
-            </div>
           </div>
         </div>
       </section>

@@ -2,16 +2,21 @@
  * ТЗ-8: Единый Header — высота 64/72px, safe-area, grid, фон по теме, glass при скролле.
  */
 
+/* ТЗ-2: фон header — light white/90, dark #0B1020/90, без серого/грязи */
 .layout-header {
   top: 0;
-  /* Фон: светлая тема — white + border; тёмная — rgba(10,12,18,0.9) + blur */
-  background: var(--header-bg);
   border-bottom: 1px solid var(--border);
 }
 
-[data-theme="dark"] .layout-header,
-.dark .layout-header {
-  background: rgba(10, 12, 18, 0.9);
+.layout-header:not([class*="bg-"]) {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .layout-header:not([class*="bg-"]),
+.dark .layout-header:not([class*="bg-"]) {
+  background: rgba(11, 16, 32, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -51,9 +56,9 @@
 
 [data-theme="dark"] .layout-header,
 .dark .layout-header {
-  background: rgba(11, 15, 26, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(11, 16, 32, 0.9); /* #0B1020/90 ТЗ-2 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* ТЗ №1: бургер кликабелен в light и dark */

@@ -1,10 +1,10 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState, useCallback, memo } from 'react'
-import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
-import { formatPrice } from '@/core/i18n/ru'
+import { RU } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { track } from '@/shared/analytics/events'
@@ -53,7 +53,6 @@ function ListingCardComponent({
   className,
   highlight = false,
 }: ListingCardProps) {
-  const router = useRouter()
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
@@ -68,7 +67,7 @@ function ListingCardComponent({
   const displayPhoto = photos[activePhotoIndex] ?? photo ?? null
   const hasMultiplePhotos = photos.length > 1
 
-  const openListing = useCallback(() => {
+  const handleCardClick = useCallback(() => {
     if (typeof window !== 'undefined') {
       const viewed = Number(localStorage.getItem('locus_viewed_count') || '0') + 1
       localStorage.setItem('locus_viewed_count', String(viewed))
@@ -76,8 +75,12 @@ function ListingCardComponent({
       window.dispatchEvent(new Event('locus:listing-viewed'))
     }
     track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
-    router.push(`/listings/${id}`)
-  }, [id, title, city, price, router])
+  }, [id, title, city, price])
+
+  const priceFormatted =
+    price > 0 && Number.isFinite(price)
+      ? new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(price) + ` ${RU.price.currency}`
+      : RU.price.on_request
 
   const handleFavorite = useCallback(
     (e: React.MouseEvent) => {
@@ -122,104 +125,111 @@ function ListingCardComponent({
   const showOwner = owner?.name || owner?.avatar
 
   return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={openListing}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openListing()}
-      className={cn('listing-card', highlight && 'listing-card-glow', className)}
+    <Link
+      href={`/listings/${id}`}
+      className="block"
+      onClick={handleCardClick}
     >
-      {/* TZ-6: фото, placeholder из токенов, свайп + стрелки 32px */}
-      <div
-        className="listing-card__image-wrap"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
+      <article
+        className={cn('listing-card', highlight && 'listing-card-glow', className)}
       >
-        {displayPhoto && !imgError ? (
-          <Image
-            src={displayPhoto}
-            alt={title || 'Фото жилья'}
-            fill
-            className="listing-card__image object-cover"
-            loading="lazy"
-            sizes="(max-width: 768px) 100vw, 320px"
-            onError={() => setImgError(true)}
-            unoptimized={displayPhoto.startsWith('http')}
-          />
-        ) : null}
-        {hasMultiplePhotos && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); goPrev() }}
-              className="listing-card__arrow listing-card__arrow--prev"
-              aria-label="Предыдущее фото"
-            >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); goNext() }}
-              className="listing-card__arrow listing-card__arrow--next"
-              aria-label="Следующее фото"
-            >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </button>
-          </>
-        )}
-        {hasMultiplePhotos && (
-          <div className="listing-card__dots" aria-hidden>
-            {photos.map((_, i) => (
-              <span key={i} className={cn('listing-card__dot', activePhotoIndex === i && 'is-active')} />
-            ))}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={handleFavorite}
-          disabled={isToggling}
-          className={cn(
-            'listing-card__favorite',
-            isSaved && 'is-saved',
-            isToggling && 'is-busy'
-          )}
-          aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
+        {/* TZ-6: фото, placeholder из токенов, свайп + стрелки 32px */}
+        <div
+          className="listing-card__image-wrap"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-        </button>
-      </div>
+          {displayPhoto && !imgError ? (
+            <Image
+              src={displayPhoto}
+              alt={title || 'Фото жилья'}
+              fill
+              className="listing-card__image object-cover"
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, 320px"
+              onError={() => setImgError(true)}
+              unoptimized={displayPhoto.startsWith('http')}
+            />
+          ) : null}
+          {hasMultiplePhotos && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); goPrev() }}
+                className="listing-card__arrow listing-card__arrow--prev"
+                aria-label="Предыдущее фото"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); goNext() }}
+                className="listing-card__arrow listing-card__arrow--next"
+                aria-label="Следующее фото"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </>
+          )}
+          {hasMultiplePhotos && (
+            <div className="listing-card__dots" aria-hidden>
+              {photos.map((_, i) => (
+                <span key={i} className={cn('listing-card__dot', activePhotoIndex === i && 'is-active')} />
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleFavorite}
+            disabled={isToggling}
+            className={cn(
+              'listing-card__favorite',
+              isSaved && 'is-saved',
+              isToggling && 'is-busy'
+            )}
+            aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
+          >
+            <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="listing-card__info">
-        {/* ТЗ-5: единый шаблон — цена, город, рейтинг */}
-        <p className="listing-card__price">{formatPrice(price, 'night')}</p>
-        <p className="listing-card__address">{locationText}</p>
-        <div className="listing-card__rating-row">
-          {rating != null && Number(rating) > 0 ? (
-            <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
-              <span className="listing-card__rating-star" aria-hidden>★</span>
-              {Number(rating).toFixed(1)}
-            </span>
-          ) : (
-            <span className="listing-card__rating listing-card__rating--empty">—</span>
+        <div className="listing-card__info">
+          {/* ТЗ-5: цена крупно + «за ночь» мелко, название, рейтинг */}
+          <p className="listing-card__price-block">
+            <span className="listing-card__price">{priceFormatted}</span>
+            {price > 0 && Number.isFinite(price) && (
+              <span className="listing-card__price-suffix"> за ночь</span>
+            )}
+          </p>
+          <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
+          <div className="listing-card__rating-row">
+            {rating != null && Number(rating) > 0 ? (
+              <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
+                <span className="listing-card__rating-star" aria-hidden>★</span>
+                {Number(rating).toFixed(1)}
+              </span>
+            ) : (
+              <span className="listing-card__rating listing-card__rating--empty">—</span>
+            )}
+          </div>
+          <p className="listing-card__address">{locationText}</p>
+          {showOwner && (
+            <div className="listing-card__owner">
+              <div className="listing-card__owner-avatar">
+                {owner?.avatar ? (
+                  <Image src={owner.avatar} alt="" fill className="object-cover" sizes="24px" />
+                ) : (
+                  <span className="listing-card__owner-initial">{(owner?.name || 'Г').charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
+            </div>
           )}
         </div>
-        <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
-        {showOwner && (
-          <div className="listing-card__owner">
-            <div className="listing-card__owner-avatar">
-              {owner?.avatar ? (
-                <Image src={owner.avatar} alt="" fill className="object-cover" sizes="24px" />
-              ) : (
-                <span className="listing-card__owner-initial">{(owner?.name || 'Г').charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
-          </div>
-        )}
-      </div>
-    </article>
+      </article>
+    </Link>
   )
 }
 

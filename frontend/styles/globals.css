@@ -744,46 +744,39 @@ body.modal-open {
   overflow: hidden !important;
 }
 
-/* ТЗ №1: бургер overlay — z-index 10000, меню 10050; overlay не засвечивает; blur 4px */
+/* ТЗ-6: бургер — overlay bg-black/40 z-40, меню bg-card w-[280px] z-50, без прозрачности */
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--overlay-bg-light, var(--overlay));
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 10000;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
-}
-[data-theme="dark"] .mobile-menu-overlay,
-.dark .mobile-menu-overlay {
-  background: var(--overlay-bg-dark, var(--overlay));
 }
 .mobile-menu-overlay.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* ТЗ-2 п.7: Sidebar — overlay обязателен, панель solid elevated */
-/* TZ-5: sidebar desktop 360px, mobile 100% (или 320px slide-in) */
+/* ТЗ-6: меню — fixed left-0 top-0 h-full w-[280px] z-50, bg-card */
 .drawer.mobile-menu {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   height: 100vh;
-  width: 100%;
-  max-width: 320px;
-  background: var(--surface-primary);
+  width: 280px;
+  max-width: 100%;
+  background: var(--card);
   color: var(--text-primary);
   border-top-right-radius: var(--radius-lg, 20px);
   border-bottom-right-radius: var(--radius-lg, 20px);
-  border-right: 1px solid var(--border-main);
-  box-shadow: var(--shadow-1);
-  z-index: 10050;
+  border-right: 1px solid var(--border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
   overflow: hidden;
   overflow-y: auto;
   transform: translateX(-100%);
@@ -794,7 +787,8 @@ body.modal-open {
 
 @media (min-width: 768px) {
   .drawer.mobile-menu {
-    max-width: 360px;
+    width: 280px;
+    max-width: 280px;
   }
 }
 
@@ -1287,13 +1281,13 @@ body.modal-open {
   box-shadow: 0 0 25px rgba(120, 150, 255, 0.3);
 }
 
-/* Burger/sidebar — ТЗ-2: solid elevated, без прозрачности */
+/* Burger/sidebar — ТЗ-6: bg-card */
 [data-theme="dark"] .sidebar,
 .dark .sidebar,
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: var(--bg-elevated) !important;
-  border-right: 1px solid var(--border-main);
+  background: var(--card) !important;
+  border-right: 1px solid var(--border);
 }
 
 /* Stars */
@@ -1653,9 +1647,9 @@ p, span, small, .text-soft {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Burger menu dark */
+/* Burger menu dark — ТЗ-6: bg-card */
 [data-theme="dark"] .drawer.mobile-menu {
-  background: var(--bg-elevated);
+  background: var(--card);
 }
 
 [data-theme="dark"] .mobile-menu-separator,
@@ -1737,7 +1731,7 @@ select,
 @media (max-width: 767px) {
   .listing-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
 }
 
@@ -1860,12 +1854,12 @@ select,
 }
 
 .drawer.mobile-menu {
-  background: var(--bg-elevated);
+  background: var(--card);
 }
 
 [data-theme="dark"] .drawer.mobile-menu,
 .dark .drawer.mobile-menu {
-  background: var(--bg-elevated);
+  background: var(--card);
 }
 
 .drawer.mobile-menu .menu .menu-item-btn {

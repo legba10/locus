@@ -28,39 +28,40 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
   return (
     <div
       className={cn(
-        'max-w-[320px] w-full',
-        'bg-[var(--bg-card)] rounded-[20px] p-4 md:p-6',
-        'border border-[var(--border)] shadow-[var(--shadow-card)]'
+        'w-full md:max-w-[360px]',
+        'rounded-2xl bg-[var(--card)] md:bg-[var(--bg-card)] shadow-md p-4',
+        'border border-[var(--border)]',
+        'flex flex-col gap-3'
       )}
     >
-      <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Бронирование</h2>
-      <p className="text-[14px] text-[var(--text-secondary)] mb-4">
+      <h2 className="text-[20px] font-bold text-[var(--text-main)]">Бронирование</h2>
+      <p className="text-[14px] text-[var(--text-secondary)]">
         Выберите даты заезда и выезда, количество гостей.
       </p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div>
-          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Заезд</label>
+      <div className="grid grid-cols-2 gap-2 w-full max-w-full">
+        <div className="rounded-xl border border-[var(--border)] p-3 bg-[var(--bg-secondary)] md:bg-[var(--bg-card)]">
+          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Заезд</label>
           <input
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
+            className="w-full min-w-0 rounded-lg px-2 py-2 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-sm"
           />
         </div>
-        <div>
-          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Выезд</label>
+        <div className="rounded-xl border border-[var(--border)] p-3 bg-[var(--bg-secondary)] md:bg-[var(--bg-card)]">
+          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Выезд</label>
           <input
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
             min={checkIn || undefined}
-            className="w-full h-12 rounded-[12px] px-4 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-[14px]"
+            className="w-full min-w-0 rounded-lg px-2 py-2 border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] text-sm"
           />
         </div>
       </div>
-      <div className="mb-4">
-        <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Гости</label>
-        <div className="flex items-center gap-3 h-12 rounded-[12px] border border-[var(--border)] px-4 bg-[var(--bg-card)]">
+      <div>
+        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Гости</label>
+        <div className="flex items-center gap-3 h-12 rounded-xl border border-[var(--border)] px-4 bg-[var(--bg-secondary)] md:bg-[var(--bg-card)]">
           <button
             type="button"
             aria-label="Уменьшить"
@@ -68,7 +69,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.max(1, g - 1))
             }}
-            className="w-9 h-9 rounded-lg border border-[var(--border)] text-[18px] font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-lg border border-[var(--border)] text-lg font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests <= 1}
           >
             −
@@ -81,7 +82,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.min(effectiveMax, g + 1))
             }}
-            className="w-9 h-9 rounded-lg border border-[var(--border)] text-[18px] font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-lg border border-[var(--border)] text-lg font-medium text-[var(--text-main)] hover:bg-[var(--bg-glass)] disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={guests >= effectiveMax}
           >
             +
@@ -89,13 +90,13 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         </div>
       </div>
       {nights > 0 && (
-        <div className="rounded-[12px] bg-[var(--bg-glass)] p-4 mb-4 space-y-1">
-          <p className="text-[14px] text-[var(--text-secondary)]">
+        <div className="rounded-xl bg-[var(--bg-glass)] p-4 space-y-1">
+          <p className="text-sm text-[var(--text-secondary)]">
             {formatPrice(pricePerNight, 'night')} × {nights} ночей
           </p>
           <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border)]">
-            <span className="text-[14px] font-semibold text-[var(--text-main)]">{RU.price.total}</span>
-            <span className="text-[18px] font-bold text-[var(--text-main)]">{formatPrice(total, 'night')}</span>
+            <span className="text-sm font-semibold text-[var(--text-main)]">{RU.price.total}</span>
+            <span className="text-lg font-semibold text-[var(--text-main)]">{formatPrice(total, 'night')}</span>
           </div>
         </div>
       )}
@@ -111,8 +112,10 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         }
         disabled={!canConfirm}
         className={cn(
-          'w-full px-5 py-3 h-12 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]',
-          'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+          'w-full h-12 rounded-xl font-medium text-[var(--button-primary-text)]',
+          'bg-[var(--accent)] md:bg-[var(--accent)]',
+          'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
+          'mb-4 md:mb-0'
         )}
       >
         Забронировать

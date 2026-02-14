@@ -5,7 +5,7 @@ import { ThemeContext } from '@/providers/ThemeProvider'
 import { Moon, Sun } from 'lucide-react'
 
 /**
- * ТЗ-1: единая кнопка темы — w-10 h-10, без margin/absolute.
+ * ТЗ-2: один переключатель темы — только в header, w-9 h-9, иконка 24px.
  * mounted guard убирает прыжок при гидрации.
  */
 export default function ThemeToggle() {
@@ -25,9 +25,9 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
       title={isDark ? 'Светлая тема' : 'Тёмная тема'}
-      className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/5 transition shrink-0"
+      className="w-10 h-6 flex items-center justify-center rounded-full hover:opacity-90 transition shrink-0 text-[var(--text-main)]"
     >
-      <Icon className="w-5 h-5" aria-hidden />
+      <Icon className="w-4 h-4" aria-hidden />
     </button>
   )
 }
