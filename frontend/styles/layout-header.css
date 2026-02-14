@@ -214,13 +214,7 @@
   justify-self: end;
 }
 
-/* Отступ main под sticky header + safe-area (ТЗ-8) */
+/* ТЗ-1: отступ main под header 56px (h-14) + safe-area */
 .main-with-header {
-  padding-top: calc(64px + env(safe-area-inset-top, 0px));
-}
-
-@media (min-width: 768px) {
-  .main-with-header {
-    padding-top: calc(72px + env(safe-area-inset-top, 0px));
-  }
+  padding-top: calc(56px + env(safe-area-inset-top, 0px));
 }

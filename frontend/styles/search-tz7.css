@@ -193,6 +193,109 @@
   border-radius: 999px;
 }
 
+/* ТЗ-4.2: панель фильтров desktop — одна строка, Airbnb-style */
+.filter-bar-tz42 {
+  --filter-bar-bg: #ffffff;
+  --filter-bar-border: #e6e8ee;
+  --filter-bar-text: #121212;
+  --filter-bar-hover: rgba(0, 0, 0, 0.05);
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  height: 64px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  border: 1px solid var(--filter-bar-border);
+  background: var(--filter-bar-bg);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .filter-bar-tz42,
+.dark .filter-bar-tz42 {
+  --filter-bar-bg: rgba(20, 20, 25, 0.9);
+  --filter-bar-border: rgba(255, 255, 255, 0.08);
+  --filter-bar-text: #f2f3f5;
+  --filter-bar-hover: rgba(255, 255, 255, 0.08);
+  background: var(--filter-bar-bg);
+  border-color: var(--filter-bar-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+
+.filter-bar-tz42-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+
+.filter-bar-tz42-btn {
+  height: 40px;
+  border-radius: 10px;
+}
+
+.filter-bar-tz42-input {
+  background: var(--bg-card, #fff);
+  color: var(--text-main, #121212);
+}
+
+[data-theme="dark"] .filter-bar-tz42-input,
+.dark .filter-bar-tz42-input {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f2f3f5;
+}
+
+.filter-bar-tz42-popover--price {
+  min-height: 260px;
+}
+
+/* ТЗ-4.3: мобильная панель фильтров — Bottom Sheet, 70–92vh, светлая/тёмная тема */
+.mobile-filters-tz43-panel {
+  min-height: 70vh;
+  max-height: 92vh;
+  border-radius: 20px 20px 0 0;
+  background: #ffffff;
+  border: none;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .mobile-filters-tz43-panel,
+.dark .mobile-filters-tz43-panel {
+  background: #141418;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-filters-tz43-inner {
+  background: inherit;
+}
+
+.mobile-filters-tz43-header {
+  background: inherit;
+}
+
+.mobile-filters-tz43-close {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-filters-tz43-input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.mobile-filters-tz43-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.mobile-filters-tz43-footer {
+  background: inherit;
+}
+
+.mobile-filters-tz43-apply {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Кнопки фильтра — chip-style, маленькие */
 .search-hero-actions-compact {
   display: flex;

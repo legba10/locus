@@ -12,6 +12,7 @@ import { useFilterStore } from '@/core/filters'
 import { FilterPanel, QuickAIModal } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
+import { AIPopup } from '@/components/home/AIPopup'
 import { PopularCities } from '@/components/home/PopularCities'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { AIBlock } from '@/components/home/AIBlock'
@@ -62,7 +63,8 @@ export function HomePageV6() {
   const handleSearch = () => {
     const params = new URLSearchParams()
     if (city) params.set('city', city)
-    if (type) params.set('type', type)
+    const typeVal = Array.isArray(type) ? type[0] : type
+    if (typeVal) params.set('type', typeVal)
     const { priceMin, priceMax } = getBudgetQuery()
     if (priceMin) params.set('priceMin', priceMin)
     if (priceMax) params.set('priceMax', priceMax)
@@ -87,7 +89,8 @@ export function HomePageV6() {
     const { priceMin, priceMax } = getBudgetQuery()
     if (priceMin) params.set('priceMin', priceMin)
     if (priceMax) params.set('priceMax', priceMax)
-    if (type) params.set('type', type)
+    const typeVal = Array.isArray(type) ? type[0] : type
+    if (typeVal) params.set('type', typeVal)
     if (duration) params.set('rentPeriod', duration)
     setShowQuickFab(false)
     track('smart_match_open', { city })
@@ -96,9 +99,13 @@ export function HomePageV6() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    const aiPopupClosed = localStorage.getItem('ai_popup_closed') === '1'
+    if (aiPopupClosed) {
+      setShowOnboarding(false)
+    }
     const seen = localStorage.getItem('onboarding_seen') === 'true'
     const prefsRaw = localStorage.getItem('user.preferences')
-    if (!seen) {
+    if (!seen && !aiPopupClosed) {
       setShowOnboarding(true)
       return
     }
@@ -590,23 +597,25 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {showOnboarding && (
+      {showOnboarding && onboardingStep === 1 && (
+        <AIPopup
+          open
+          onClose={() => {
+            if (typeof window !== 'undefined') localStorage.setItem('ai_popup_closed', '1')
+            setShowOnboarding(false)
+          }}
+          onStart={() => setOnboardingStep(2)}
+          primaryButtonText="Начать"
+        />
+      )}
+      {showOnboarding && onboardingStep === 2 && (
         <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 'var(--z-overlay)' }}>
           <div className="overlay" onClick={() => setShowOnboarding(false)} aria-hidden />
           <div className="modal-panel relative w-full max-w-[520px] rounded-[20px] p-5 bg-[var(--bg-modal)] border border-[var(--border)]" style={{ zIndex: 'var(--z-modal)' }} onClick={(e) => e.stopPropagation()}>
-            {onboardingStep === 1 ? (
-              <>
-                <h3 className="text-[22px] font-bold text-[var(--text-main)]">Найдём жильё под ваш бюджет</h3>
-                <p className="mt-2 text-[14px] text-[var(--text-secondary)]">AI анализирует рынок и подбирает варианты</p>
-                <button type="button" className="btn btn--primary btn--md mt-5 w-full" onClick={() => setOnboardingStep(2)}>
-                  Начать
-                </button>
-              </>
-            ) : (
               <>
                 <h3 className="text-[18px] font-semibold text-[var(--text-main)]">Ваши параметры</h3>
                 <div className="mt-4 grid gap-3">
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Город" className="hero-search-control px-3" />
+                  <input value={city ?? ''} onChange={(e) => setCity(e.target.value || null)} placeholder="Город" className="hero-search-control px-3" />
                   <select
                     value={budgetMin !== '' && budgetMax !== '' ? `${budgetMin}-${budgetMax}` : ''}
                     onChange={(e) => {
@@ -636,25 +645,24 @@ export function HomePageV6() {
                   Сохранить и запустить AI подбор
                 </button>
               </>
-            )}
           </div>
         </div>
       )}
       {showHelpNudge && (
         <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[320px] z-toast glass rounded-[14px] p-4 safe-area-pb">
           <p className="text-[14px] font-semibold text-[var(--text-main)]">Нужна помощь с подбором?</p>
-          <button type="button" className="text-[13px] text-[var(--accent)] mt-1" onClick={() => setShowOnboarding(true)}>Открыть умный подбор</button>
+          <button type="button" className="text-[13px] text-[var(--accent)] mt-1" onClick={() => { setOnboardingStep(1); setShowOnboarding(true); }}>Открыть умный подбор</button>
         </div>
       )}
       {/* ТЗ-7: Умный подбор — единый QuickAIModal на store */}
       <QuickAIModal
         open={showQuickFab}
         onClose={() => setShowQuickFab(false)}
-        city={city}
+        city={city ?? ''}
         budgetMin={budgetMin}
         budgetMax={budgetMax}
-        type={type}
-        onCityChange={setCity}
+        type={Array.isArray(type) ? type[0] ?? '' : (type ?? '')}
+        onCityChange={(v) => setCity(v || null)}
         onBudgetChange={setBudget}
         onTypeChange={setType}
         onLaunch={handleQuickAILaunch}

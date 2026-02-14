@@ -1,40 +1,41 @@
 'use client'
 
 import Link from 'next/link'
-import { cn } from '@/shared/utils/cn'
-import { DS } from '@/shared/lib/design-system'
+import { Typewriter } from '@/components/ui/Typewriter'
 
 /**
- * ТЗ-MAIN-REDESIGN: Hero уровня продукта.
- * Заголовок, подзаголовок, CTA. Фон: dark gradient / light white.
+ * ТЗ-2: финальный hero — единый текст, градиент, overlay, печатающая анимация, CTA.
+ * Mobile: pt-20 px-4, text-center. Desktop: pt-24 pb-16.
  */
 export function Hero() {
   return (
     <section
-      className={cn(
-        'relative overflow-hidden',
-        'bg-white',
-        'dark:bg-gradient-to-b dark:from-[#0B0F1A] dark:to-[#020617]',
-        '[data-theme="dark"]:bg-gradient-to-b [data-theme="dark"]:from-[#0B0F1A] [data-theme="dark"]:to-[#020617]',
-        'px-4 pt-12 pb-16 md:pt-16 md:pb-20'
-      )}
+      className="relative pt-20 md:pt-24 pb-16 overflow-hidden"
       aria-label="Главный экран"
     >
-      <div className="market-container relative z-10 max-w-4xl mx-auto text-center">
-        <h1 className="text-[28px] md:text-[44px] font-bold text-[var(--text)] mb-4 leading-tight tracking-tight">
-          Найдите жильё, которое идеально подходит вам
+      {/* Фон — градиент + glow */}
+      <div className="absolute inset-0 bg-[#070b18]" aria-hidden />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 via-transparent to-transparent pointer-events-none"
+        aria-hidden
+      />
+
+      {/* Контент */}
+      <div className="relative z-10 mx-auto max-w-4xl px-4 flex flex-col items-center text-center">
+        <h1
+          className="text-3xl md:text-5xl font-semibold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
+        >
+          Найдите жильё, которое подходит вам
         </h1>
-        <p className="text-[16px] md:text-[18px] text-[var(--sub)] mb-8 leading-relaxed max-w-2xl mx-auto">
-          LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш бюджет
+        <div className="h-6 mt-2 text-lg drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+          <Typewriter />
+        </div>
+        <p className="text-white/90 text-base md:text-lg mt-4 max-w-2xl leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+          LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш запрос.
         </p>
         <Link
           href="#search"
-          className={cn(
-            'inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-[16px] font-semibold',
-            'bg-gradient-to-r from-violet-600 to-indigo-600 text-white',
-            DS.transition,
-            'hover:opacity-95 active:scale-[0.98] shadow-lg'
-          )}
+          className="mt-6 px-6 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition inline-flex items-center justify-center"
         >
           Подобрать жильё
         </Link>

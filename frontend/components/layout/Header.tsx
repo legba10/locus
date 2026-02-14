@@ -54,9 +54,10 @@ export function Header() {
   const [isTelegram, setIsTelegram] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
+  const isDarkTheme = resolvedTheme === 'dark'
   const logoIconSrc = logoError
     ? '/favicon.svg'
-    : (resolvedTheme === 'dark' ? '/logo-light.svg' : '/logo-dark.svg')
+    : (isDarkTheme ? '/logo-dark.svg' : '/logo-light.svg')
   const authed = isAuthenticated()
 
   useEffect(() => {
@@ -117,100 +118,95 @@ export function Header() {
   return (
     <header
       className={cn(
-        'layout-header sticky left-0 right-0 z-[var(--z-header)]',
+        'layout-header sticky left-0 right-0 z-[var(--z-header)] min-h-14 h-14 w-full border-b border-white/5 bg-background/80 backdrop-blur',
         'transition-[background,border-color] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
       style={{
-        paddingTop: `max(env(safe-area-inset-top), ${headerTop}px)`,
+        paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="layout-header__inner">
-        <div className="layout-header__grid">
-          {/* Burger — ТЗ-8: 24px, отступ 16px */}
-          <div className="layout-header__cell layout-header__burger-cell md:hidden">
-            <button
-              type="button"
-              className="layout-header__burger"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-              aria-expanded={isMenuOpen}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-          </div>
-
-          {/* ТЗ-4: Logo + Nav — Лого | Поиск | Избранное | Сообщения | Профиль */}
-          <div className="layout-header__center flex items-center gap-4 min-w-0 flex-1">
-            <Link href="/" className="layout-header__logo shrink-0" aria-label="LOCUS — на главную">
-              <Image
-                src={logoIconSrc}
-                alt="LOCUS"
-                className="layout-header__logo-img h-8 w-auto"
-                width={32}
-                height={32}
-                onError={() => setLogoError(true)}
-              />
-              <span className="layout-header__logo-text">LOCUS</span>
-            </Link>
-            <nav className="hidden md:flex items-center gap-0.5 h-full" aria-label="Основная навигация">
-              {desktopNavIcons.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href.split('?')[0])
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-label={item.label}
-                    className={cn(
-                      'layout-header__nav-icon flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
-                      active && 'layout-header__nav-icon--active'
-                    )}
-                  >
-                    <Icon className="w-5 h-5" strokeWidth={1.8} aria-hidden />
-                  </Link>
-                )
-              })}
-            </nav>
-          </div>
-
-          {/* Right: bell, theme, CTA */}
-          <div className="layout-header__cell layout-header__actions-cell">
-            <div className="hidden md:flex items-center gap-3">
-              {authed && (
-                <div className="layout-header__bell-wrap layout-header__nav-icon">
-                  <NotificationsBell compactBadge />
-                </div>
-              )}
-              <div className="layout-header__nav-icon">
-                <ThemeToggle />
-              </div>
-              {canCreateListing && (
+      <div className="mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
+        {/* LEFT: burger + logo — ТЗ-1 единый блок, выравнивание по центру */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/5 transition md:hidden shrink-0"
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            aria-expanded={isMenuOpen}
+          >
+            <span className="flex flex-col gap-1.5" aria-hidden>
+              <span className="block w-5 h-0.5 bg-current rounded-full" />
+              <span className="block w-5 h-0.5 bg-current rounded-full" />
+              <span className="block w-5 h-0.5 bg-current rounded-full" />
+            </span>
+          </button>
+          <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="LOCUS — на главную">
+            <Image
+              src={logoIconSrc}
+              alt="LOCUS"
+              width={28}
+              height={28}
+              className="h-7 w-auto"
+              onError={() => setLogoError(true)}
+            />
+            <span className="font-bold text-base tracking-tight text-[var(--text-main)] hidden sm:inline">LOCUS</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-0.5 ml-2" aria-label="Основная навигация">
+            {desktopNavIcons.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.href.split('?')[0])
+              return (
                 <Link
-                  href={createHref}
-                  className="layout-header__cta-btn"
+                  key={item.href}
+                  href={item.href}
+                  aria-label={item.label}
+                  className={cn(
+                    'flex items-center justify-center w-10 h-10 rounded-xl transition-colors text-[var(--text-secondary)] hover:text-[var(--text-main)]',
+                    active && 'text-[var(--text-main)]'
+                  )}
                 >
-                  Разместить
+                  <Icon className="w-5 h-5" strokeWidth={1.8} aria-hidden />
                 </Link>
-              )}
-              {!authed && (
-                <Link href="/auth/login" className="layout-header__cta-btn">
-                  Войти
-                </Link>
-              )}
-            </div>
+              )
+            })}
+          </nav>
+        </div>
 
-            {/* Mobile: bell only */}
-            <div className="md:hidden flex items-center">
-              {authed && (
-                <div className="layout-header__bell-wrap">
-                  <NotificationsBell compactBadge />
-                </div>
-              )}
+        {/* RIGHT: theme toggle + avatar / login — ТЗ-1 один контейнер, ровно для guest и auth */}
+        <div className="flex items-center gap-2 shrink-0">
+          {authed && (
+            <div className="flex items-center justify-center w-10 h-10">
+              <NotificationsBell compactBadge />
             </div>
-          </div>
+          )}
+          <ThemeToggle />
+          {authed ? (
+            <Link
+              href="/profile"
+              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] shrink-0"
+              aria-label="Профиль"
+            >
+              {displayAvatar ? (
+                <Image src={displayAvatar} alt={displayName || 'Аватар'} width={36} height={36} className="w-9 h-9 object-cover" />
+              ) : (
+                <span className="text-sm font-medium">{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0"
+            >
+              Войти
+            </Link>
+          )}
+          {canCreateListing && (
+            <Link href={createHref} className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0 hidden md:flex">
+              Разместить
+            </Link>
+          )}
         </div>
       </div>
 

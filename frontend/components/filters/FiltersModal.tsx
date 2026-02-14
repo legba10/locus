@@ -51,17 +51,17 @@ export function FiltersModal({ open, onClose, onApply, className }: FiltersModal
         <div className="flex-1 overflow-y-auto p-4 space-y-4 filter-panel-card__inner" data-testid="filters-modal-content">
           <div data-testid="filter-section-city">
             <label className="block text-[12px] font-medium text-[var(--sub)] mb-1.5">Город</label>
-            <CitySelect value={city} onChange={setCity} placeholder="Выберите город" fullscreenOnMobile={false} />
+            <CitySelect value={city ?? ''} onChange={(v) => setCity(v || null)} placeholder="Выберите город" fullscreenOnMobile={false} />
           </div>
           <div data-testid="filter-section-budget">
             <span className="block text-[12px] font-medium text-[var(--sub)] mb-1.5">Бюджет</span>
             <BudgetRange min={budgetMin} max={budgetMax} onChange={setBudget} />
           </div>
-          <FilterChips options={PROPERTY_TYPES} value={type} onChange={setType} label="Тип жилья" />
+          <FilterChips options={PROPERTY_TYPES} value={Array.isArray(type) ? (type[0] ?? '') : (type ?? '')} onChange={setType} label="Тип жилья" />
           <FilterChips options={DURATION_OPTIONS} value={duration} onChange={setDuration} label="Срок" />
           <div data-testid="filter-section-rooms">
             <label className="block text-[12px] font-medium text-[var(--sub)] mb-1.5">Комнаты</label>
-            <FilterChips options={ROOMS_OPTIONS} value={rooms} onChange={setRooms} />
+            <FilterChips options={ROOMS_OPTIONS} value={Array.isArray(rooms) ? (rooms[0]?.toString() ?? '') : (rooms ?? '')} onChange={(v) => setRooms(v)} />
           </div>
           <AIModeSwitch aiMode={aiMode} onChange={setAiMode} />
         </div>

@@ -48,17 +48,17 @@ export function FilterPanel({
     <div className={cn('space-y-4', embedded && 'filter-panel-card__inner', className)}>
       <div>
         <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Город</label>
-        <CitySelect value={city} onChange={setCity} />
+        <CitySelect value={city ?? ''} onChange={(v) => setCity(v || null)} />
       </div>
       <div>
         <span className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Бюджет</span>
         <BudgetRange min={budgetMin} max={budgetMax} onChange={setBudget} />
       </div>
-      <FilterChips options={PROPERTY_TYPES} value={type} onChange={setType} label="Тип жилья" />
+      <FilterChips options={PROPERTY_TYPES} value={Array.isArray(type) ? (type[0] ?? '') : (type ?? '')} onChange={setType} label="Тип жилья" />
       <FilterChips options={DURATION_OPTIONS} value={duration} onChange={setDuration} label="Срок" />
       <div>
         <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Комнаты</label>
-        <FilterChips options={ROOMS_OPTIONS} value={rooms} onChange={setRooms} label="Комнаты" />
+        <FilterChips options={ROOMS_OPTIONS} value={Array.isArray(rooms) ? (rooms[0]?.toString() ?? '') : (rooms ?? '')} onChange={(v) => setRooms(v)} label="Комнаты" />
       </div>
       <AIModeSwitch aiMode={aiMode} onChange={setAiMode} />
       {showSearchButtons && (

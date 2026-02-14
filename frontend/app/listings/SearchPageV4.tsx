@@ -9,13 +9,13 @@ import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
 import { useFilterStore } from '@/core/filters'
 import { FilterPanel, QuickAIModal, FiltersModal } from '@/components/filters'
+import { FilterBar } from '@/components/search/FilterBar'
+import { MobileFilters } from '@/components/search/MobileFilters'
 
 interface SearchResponse {
   items: any[]
   total?: number
 }
-
-type SortOption = 'ai' | 'price_asc' | 'price_desc' | 'newest'
 
 /**
  * SearchPageV4 — Страница поиска жилья
@@ -46,17 +46,28 @@ export function SearchPageV4() {
     setAiMode,
     getBudgetQuery,
     reset,
+    sort,
+    setSort,
   } = useFilterStore()
 
-  const [sort, setSort] = useState<SortOption>((searchParams.get('sort') as SortOption) || 'ai')
   const [aiResults, setAiResults] = useState<{ reason: string; score: number } | null>(null)
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
   const [filtersModalOpen, setFiltersModalOpen] = useState(false)
   const [quickAIOpen, setQuickAIOpen] = useState(false)
+  const [isMobileView, setIsMobileView] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)')
+    setIsMobileView(mq.matches)
+    const fn = () => setIsMobileView(mq.matches)
+    mq.addEventListener('change', fn)
+    return () => mq.removeEventListener('change', fn)
+  }, [])
 
   const priceMin = getBudgetQuery().priceMin
   const priceMax = getBudgetQuery().priceMax
-  const typeParam = type ? type.toUpperCase() : ''
+  const typeStr = Array.isArray(type) ? type[0] : type
+  const typeParam = typeStr ? String(typeStr).toUpperCase() : ''
+  const roomsStr = Array.isArray(rooms) ? rooms.join(',') : (rooms != null && rooms !== '' ? String(rooms) : '')
 
   // Гидрация store из URL при первом рендере
   useEffect(() => {
@@ -68,10 +79,16 @@ export function SearchPageV4() {
     const urlType = searchParams.get('type') || ''
     const urlRooms = searchParams.get('rooms') || ''
     const urlAi = searchParams.get('ai') === 'true'
-    if (urlCity || urlPriceMin || urlPriceMax || urlType || urlRooms) {
-      setCity(urlCity)
+    const urlSort = searchParams.get('sort') as 'popular' | 'price_asc' | 'price_desc' | null
+    if (urlCity || urlPriceMin || urlPriceMax || urlType || urlRooms || urlSort) {
+      setCity(urlCity || null)
       setBudget(urlPriceMin ? Number(urlPriceMin) : '', urlPriceMax ? Number(urlPriceMax) : '')
-      useFilterStore.setState({ type: urlType, rooms: urlRooms, aiMode: urlAi })
+      useFilterStore.getState().setType(urlType)
+      useFilterStore.getState().setRooms(urlRooms)
+      useFilterStore.setState({ aiMode: urlAi })
+      if (urlSort === 'popular' || urlSort === 'price_asc' || urlSort === 'price_desc') {
+        useFilterStore.getState().setSort(urlSort)
+      }
     }
   }, [searchParams, setCity, setBudget])
 
@@ -82,34 +99,34 @@ export function SearchPageV4() {
     if (priceMin) params.set('priceMin', priceMin)
     if (priceMax) params.set('priceMax', priceMax)
     if (typeParam) params.set('type', typeParam)
-    if (rooms) params.set('rooms', rooms)
-    if (sort !== 'ai') params.set('sort', sort)
+    if (roomsStr) params.set('rooms', roomsStr)
+    if (sort && sort !== 'popular') params.set('sort', sort)
     if (aiMode) params.set('ai', 'true')
     router.replace(`/listings${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
-  }, [city, priceMin, priceMax, type, rooms, sort, aiMode, router])
+  }, [city, priceMin, priceMax, typeStr, roomsStr, sort, aiMode, router])
 
   const queryParams = new URLSearchParams()
   if (city) queryParams.set('city', city)
   if (priceMin) queryParams.set('priceMin', priceMin)
   if (priceMax) queryParams.set('priceMax', priceMax)
   if (typeParam) queryParams.set('type', typeParam)
-  if (rooms) queryParams.set('rooms', rooms)
-  if (sort !== 'ai') queryParams.set('sort', sort)
+  if (roomsStr) queryParams.set('rooms', roomsStr)
+  if (sort) queryParams.set('sort', sort)
 
   const { data, isLoading } = useFetch<SearchResponse>(
-    ['search', city, priceMin, priceMax, typeParam, rooms, sort],
+    ['search', city, priceMin, priceMax, typeParam, roomsStr, sort],
     `/api/search?${queryParams.toString()}`
   )
 
   // AI поиск при включенном AI режиме
   useEffect(() => {
-    if (aiMode && (city || priceMin || priceMax || type || rooms)) {
+    if (aiMode && (city || priceMin || priceMax || typeStr || roomsStr)) {
       const params = new URLSearchParams()
       if (city) params.set('city', city)
       if (priceMin) params.set('priceMin', String(priceMin))
       if (priceMax) params.set('priceMax', String(priceMax))
       if (typeParam) params.set('type', typeParam)
-      if (rooms) params.set('rooms', String(rooms))
+      if (roomsStr) params.set('rooms', roomsStr)
       apiFetchJson<{ reason?: string; score?: number; items?: any[]; listings?: any[] }>(`/search?${params.toString()}`)
         .then(data => {
           const items = data.items ?? data.listings ?? []
@@ -131,16 +148,16 @@ export function SearchPageV4() {
     } else {
       setAiResults(null)
     }
-  }, [aiMode, city, priceMin, priceMax, type, typeParam, rooms])
+  }, [aiMode, city, priceMin, priceMax, typeStr, typeParam, roomsStr])
 
   useEffect(() => {
-    if (aiMode && data?.items && (city || priceMin || priceMax || type || rooms)) {
+    if (aiMode && data?.items && (city || priceMin || priceMax || typeStr || roomsStr)) {
       const userParams: UserParams = {
         city: city || undefined,
         priceMin: priceMin ? Number(priceMin) : undefined,
         priceMax: priceMax ? Number(priceMax) : undefined,
-        type: type || undefined,
-        rooms: rooms ? Number(rooms) : undefined,
+        type: typeStr || undefined,
+        rooms: Array.isArray(rooms) ? (rooms[0] ?? undefined) : (rooms != null && rooms !== '' ? Number(rooms) : undefined),
       }
       
       const engineScoresMap = new Map<string, { score: number; reasons: string[] }>()
@@ -174,7 +191,7 @@ export function SearchPageV4() {
         return merged
       })
     }
-  }, [aiMode, data, city, priceMin, priceMax, type, rooms])
+  }, [aiMode, data, city, priceMin, priceMax, typeStr, rooms, roomsStr])
 
   // Преобразуем данные для карточек
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
@@ -253,17 +270,15 @@ export function SearchPageV4() {
     }
   })
 
-  // Сортировка
+  // Сортировка (store: popular | price_asc | price_desc)
   const sortedListings = [...listingCards].sort((a, b) => {
     switch (sort) {
-      case 'ai':
+      case 'popular':
         return (b.aiScore || 0) - (a.aiScore || 0)
       case 'price_asc':
         return a.price - b.price
       case 'price_desc':
         return b.price - a.price
-      case 'newest':
-        return 0 // TODO: добавить сортировку по дате
       default:
         return 0
     }
@@ -279,42 +294,55 @@ export function SearchPageV4() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
       <div className="market-container py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          {/* ПАНЕЛЬ ФИЛЬТРОВ: desktop 280px, mobile — кнопка + модалка */}
-          <aside className="hidden lg:block w-[280px] lg:sticky lg:top-6 self-start">
-            <FilterPanel
-              onSearch={handleSearch}
-              onSmartSearch={handleSmartSearch}
-              showSearchButtons={true}
-            />
-          </aside>
-          {/* Кнопка «Фильтры» на mobile */}
+        {/* ТЗ-4.2: панель фильтров desktop — одна строка, sticky */}
+        <div className="hidden lg:block sticky top-[var(--header-height,56px)] z-10 mb-4">
+          <FilterBar onOpenFilters={() => setFiltersModalOpen(true)} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          {/* ТЗ-4.3: mobile — [Поиск] [⚙ Фильтры], высота 40px */}
           <div className="filters-bar lg:hidden flex items-center gap-3 mb-4">
             <button
               type="button"
               onClick={() => setFiltersModalOpen(true)}
-              className="filters-bar-chip flex-1 min-h-[40px] rounded-[10px] px-4 font-medium text-[14px] flex items-center justify-center gap-2 border border-[var(--border)] bg-[var(--color-surface-2)]"
+              className="filters-bar-chip h-10 min-h-[40px] rounded-[10px] px-4 font-medium text-[14px] flex items-center justify-center gap-2 border border-[var(--border)] bg-[var(--color-surface-2)]"
+              aria-label="Фильтры"
             >
-              <svg className="w-5 h-5 search-tz7-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              <span className="text-[18px]" aria-hidden>⚙</span>
               Фильтры
             </button>
             <button
               type="button"
               onClick={() => setQuickAIOpen(true)}
-              className="search-hero-ai-tz7 min-h-[40px] px-4 rounded-[10px] shrink-0"
+              className="search-hero-ai-tz7 h-10 min-h-[40px] px-4 rounded-[10px] shrink-0"
             >
               Умный подбор
             </button>
           </div>
 
+          {/* ТЗ-4.3: мобильная панель фильтров — Bottom Sheet; desktop — FiltersModal */}
+          {isMobileView ? (
+            <MobileFilters
+              open={filtersModalOpen}
+              onClose={() => setFiltersModalOpen(false)}
+              onApply={() => setFiltersModalOpen(false)}
+              resultCount={sortedListings.length}
+            />
+          ) : (
+            <FiltersModal
+              open={filtersModalOpen}
+              onClose={() => setFiltersModalOpen(false)}
+              onApply={handleSearch}
+            />
+          )}
+
           <QuickAIModal
             open={quickAIOpen}
             onClose={() => setQuickAIOpen(false)}
-            city={city}
+            city={city ?? ''}
             budgetMin={budgetMin}
             budgetMax={budgetMax}
-            type={type}
-            onCityChange={setCity}
+            type={typeStr ?? ''}
+            onCityChange={(v) => setCity(v || null)}
             onBudgetChange={setBudget}
             onTypeChange={setType}
             onLaunch={() => {
@@ -324,7 +352,8 @@ export function SearchPageV4() {
               if (city) params.set('city', city)
               if (priceMin) params.set('priceMin', priceMin)
               if (priceMax) params.set('priceMax', priceMax)
-              if (type) params.set('type', type)
+              if (typeStr) params.set('type', typeStr)
+              if (roomsStr) params.set('rooms', roomsStr)
               router.push(`/listings?${params.toString()}`)
             }}
           />
@@ -370,9 +399,7 @@ export function SearchPageV4() {
               <div className="flex items-center gap-4">
                 <select
                   value={sort}
-                  onChange={(e) => {
-                    setSort(e.target.value as SortOption)
-                  }}
+                  onChange={(e) => setSort(e.target.value as 'popular' | 'price_asc' | 'price_desc')}
                   className={cn(
                     'search-tz7-select rounded-[14px] px-4 py-2.5 min-h-[40px]',
                     'border border-[var(--border)]',
@@ -381,10 +408,9 @@ export function SearchPageV4() {
                     'transition-all cursor-pointer appearance-none'
                   )}
                 >
-                  <option value="ai">AI релевантность</option>
-                  <option value="price_asc">Цена ↑</option>
-                  <option value="price_desc">Цена ↓</option>
-                  <option value="newest">Новые</option>
+                  <option value="popular">Популярные</option>
+                  <option value="price_asc">Дешевле</option>
+                  <option value="price_desc">Дороже</option>
                 </select>
               </div>
             </div>

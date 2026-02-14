@@ -11,6 +11,8 @@ export type BottomSheetProps = {
   /** max height, e.g. 90vh or 400px */
   maxHeight?: string
   className?: string
+  /** ТЗ-4.3: анимация закрытия 300ms (translateY 100% → 0) */
+  animateClose?: boolean
 }
 
 export function BottomSheet({
@@ -19,12 +21,28 @@ export function BottomSheet({
   children,
   maxHeight = '85vh',
   className,
+  animateClose = false,
 }: BottomSheetProps) {
   const [mounted, setMounted] = React.useState(false)
+  const [exiting, setExiting] = React.useState(false)
+  const prevOpen = React.useRef(open)
 
   React.useEffect(() => {
     setMounted(true)
   }, [])
+
+  React.useEffect(() => {
+    if (animateClose && prevOpen.current && !open) {
+      setExiting(true)
+    }
+    prevOpen.current = open
+  }, [open, animateClose])
+
+  React.useEffect(() => {
+    if (!exiting) return
+    const t = setTimeout(() => setExiting(false), 300)
+    return () => clearTimeout(t)
+  }, [exiting])
 
   React.useEffect(() => {
     if (!open) return
@@ -36,13 +54,14 @@ export function BottomSheet({
   }, [open, onClose])
 
   React.useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden'
+    if (open || exiting) document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
     }
-  }, [open])
+  }, [open, exiting])
 
-  if (!open) return null
+  const visible = open || exiting
+  if (!visible) return null
   if (typeof document === 'undefined' || !mounted) return null
 
   const content = (
@@ -57,7 +76,9 @@ export function BottomSheet({
         className={cn(
           'relative flex flex-col rounded-t-[24px] border-t border-[var(--border)] bg-[var(--bg-glass)] shadow-[var(--shadow-modal)]',
           'backdrop-blur-[20px] text-[var(--text-main)] overflow-hidden',
-          'animate-in slide-in-from-bottom duration-300',
+          'transition-transform duration-300 ease-out',
+          open && !exiting && 'animate-in slide-in-from-bottom duration-300',
+          exiting && 'translate-y-full',
           className
         )}
         style={{
