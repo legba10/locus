@@ -7,28 +7,28 @@
 /* ТЗ-6: только bg-background, bg-card, bg-secondary, text-primary. Не bg-white/bg-black/bg-gray */
 /* Fallback (SSR / до применения темы) — светлая тема */
 :root {
-  --background: #ffffff;
-  --bg: #ffffff;
-  --card: #f8fafc;
-  --text: #0f172a;
-  --sub: #64748b;
-  --border: rgba(0, 0, 0, 0.08);
+  --background: #F7F8FA;
+  --bg: #F7F8FA;
+  --card: #ffffff;
+  --text: #111827;
+  --sub: #6B7280;
+  --border: #E5E7EB;
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
-  --bg-main: #ffffff;
-  --bg-secondary: #f6f7fb;
+  --bg-main: #F7F8FA;
+  --bg-secondary: #f3f4f6;
   --bg-surface: #f5f6fa;
-  --bg-card: #f8fafc;
-  --bg-elevated: #ffffff;
-  --bg-modal: #ffffff;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-modal: #FFFFFF;
 
-  --text-primary: #0f172a;
-  --text-main: #0f172a;
-  --text-secondary: #64748b;
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #6B7280;
   --text-muted: #9ca3af;
 
-  --border-main: #e5e7eb;
+  --border-main: #E5E7EB;
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
@@ -59,30 +59,30 @@
   --danger: #dc2626;
 }
 
-/* Light — явно */
+/* Light — явно (ТЗ-6: засветы и контраст) */
 :root[data-theme="light"] {
-  --background: #ffffff;
-  --bg: #ffffff;
-  --card: #f8fafc;
-  --text: #0f172a;
-  --sub: #64748b;
-  --border: rgba(0, 0, 0, 0.08);
+  --background: #F7F8FA;
+  --bg: #F7F8FA;
+  --card: #ffffff;
+  --text: #111827;
+  --sub: #6B7280;
+  --border: #E5E7EB;
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
-  --bg-main: #ffffff;
-  --bg-secondary: #f6f7fb;
+  --bg-main: #F7F8FA;
+  --bg-secondary: #f3f4f6;
   --bg-surface: #f5f6fa;
-  --bg-card: #f8fafc;
-  --bg-elevated: #ffffff;
-  --bg-modal: #ffffff;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-modal: #FFFFFF;
 
-  --text-primary: #0f172a;
-  --text-main: #0f172a;
-  --text-secondary: #64748b;
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #6B7280;
   --text-muted: #9ca3af;
 
-  --border-main: #e5e7eb;
+  --border-main: #E5E7EB;
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
@@ -162,12 +162,14 @@
   --danger: #ef4444;
 }
 
-/* ТЗ-6: Footer — light #F8FAFC, dark #020617 */
+/* ТЗ-6: Footer — light #F3F4F6 + border, dark #020617 */
 .footer-tz6 {
-  background: #F8FAFC;
+  background: #F3F4F6;
+  border-top: 1px solid #E5E7EB;
 }
 
 [data-theme="dark"] .footer-tz6,
 .dark .footer-tz6 {
   background: #020617;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }

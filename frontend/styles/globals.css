@@ -93,6 +93,7 @@ select option {
 /* ════════════════════════════════════════════════════════════════
    GLOBAL UI / COLOR SYSTEM LOCUS (НА ВЕСЬ САЙТ)
    ТЗ: только цвета из логотипа, цвет = смысл
+   ТЗ-9: единая система для уведомлений и переключателя — var везде
    ════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -101,6 +102,8 @@ select option {
   --text: var(--text-primary);
   --card: var(--bg-card);
   --card-bg: var(--bg-card);
+  --border: var(--border-main, #e2e8f0);
+  --input-bg: var(--bg-surface, #ffffff);
   
   /* ═══════════ LOCUS BRAND (из логотипа) ═══════════ */
   --locus-primary: var(--accent);        /* Primary — главные CTA, AI, активные состояния */
@@ -147,6 +150,12 @@ select option {
 .dark,
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --bg: #0f1115;
+  --card-bg: #151821;
+  --text: #f1f5f9;
+  --text-secondary: #9ca3af;
+  --border: #2a2e38;
+  --input-bg: #1c1f27;
   --locus-bg-page: var(--bg-main);
   --locus-bg-card: var(--bg-card);
   --locus-divider: var(--border-main);
@@ -1096,19 +1105,71 @@ body.modal-open {
   opacity: 0.92;
 }
 
-/* TZ-5: Выйти — full width, btn--danger внизу меню */
+/* TZ-8: Блок бронирования — единый контейнер и поля по темам (без белых блоков в dark) */
+.booking-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+.booking-date-input {
+  background: var(--input-bg);
+  color: var(--text);
+}
+.booking-date-field .booking-date-input {
+  height: 48px;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* TZ-10: Выйти — прозрачный фон, красная обводка, hover rgba(239,68,68,.12) */
+.btn-logout-secondary {
+  color: #ef4444;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  transition: background 0.2s ease;
+}
+.btn-logout-secondary:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
 .mobile-menu-logout-wrap {
   margin-top: var(--space-lg, 20px);
   margin-bottom: 90px;
   padding: 0;
   width: 100%;
 }
-.mobile-menu-logout-wrap .btn--danger {
+.mobile-menu-logout-wrap .btn--danger,
+.mobile-menu-logout-wrap .btn-logout-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm, 12px);
 }
+.mobile-menu-logout-wrap .btn-logout-secondary {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ТЗ-7: dropdown профиля — hover по пунктам */
+.profile-dropdown-tz7__item {
+  transition: background 0.15s ease;
+}
+.profile-dropdown-tz7__item:hover {
+  background: var(--bg-glass);
+}
+/* TZ-10: кнопка Выйти в выпадающем профиле — прозрачный фон, красная обводка */
+.profile-dropdown-logout-tz10 {
+  color: #ef4444 !important;
+  background: transparent !important;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  margin: 0 8px;
+  width: calc(100% - 16px);
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.profile-dropdown-logout-tz10:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
 /* Legacy: пункт Выйти со старым классом (если где-то остался) */
 .drawer.mobile-menu .menu-item-btn--logout {
   display: flex;
@@ -1116,11 +1177,11 @@ body.modal-open {
   justify-content: space-between;
   gap: 12px;
   min-height: 44px;
-  color: var(--color-danger, var(--danger));
+  color: var(--text-secondary);
   background: transparent;
 }
 .drawer.mobile-menu .menu-item-btn--logout:hover {
-  background: var(--danger-soft);
+  background: var(--bg-glass);
 }
 
 @media (min-width: 768px) {
@@ -1887,15 +1948,49 @@ select,
 .notifications-badge {
   background: var(--accent);
 }
+/* ТЗ-6: unread badge в header — 8px, синий #3B82F6 */
+.notifications-badge-compact {
+  background: #3B82F6;
+}
 
 /* ТЗ-2 п.7: панель уведомлений — непрозрачная, поверх overlay */
 .notifications-panel {
   z-index: var(--z-notification-panel);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
-  border-radius: 20px;
-  box-shadow: var(--shadow-card);
   color: var(--text-primary);
+}
+
+/* ТЗ-9: панель уведомлений — единый контейнер на var(--card-bg), без белых/серых пятен */
+.notifications-panel-tz6 {
+  max-height: 480px;
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+.notifications-panel-tz6-header,
+.notifications-panel-tz6-footer {
+  background: inherit;
+}
+.notifications-panel-tz6-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border-bottom: none;
+  display: flex;
+  gap: 10px;
+  background: transparent;
+  color: var(--text);
+}
+.notifications-panel-tz6-item:hover {
+  background: rgba(120, 120, 120, 0.08);
+}
+.notifications-panel-tz6-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3B82F6;
+  flex-shrink: 0;
 }
 
 /* TZ-4: overlay единый — var(--overlay) из темы + blur 6px */

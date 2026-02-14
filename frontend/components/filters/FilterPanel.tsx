@@ -13,6 +13,10 @@ export interface FilterPanelProps {
   onSmartSearch?: () => void
   showSearchButtons?: boolean
   className?: string
+  /** ТЗ-2: текст основной кнопки (Подобрать жильё / Показать варианты) */
+  primaryButtonLabel?: string
+  /** Скрыть поле города (если город уже выбран выше на странице) */
+  hideCityRow?: boolean
   /** Встроенный режим (без обёртки колонки) */
   embedded?: boolean
   /** Не оборачивать в .filter-panel-card (для Sheet/модалки) */
@@ -23,6 +27,8 @@ export function FilterPanel({
   onSearch,
   onSmartSearch,
   showSearchButtons = true,
+  primaryButtonLabel = 'Найти жильё',
+  hideCityRow = false,
   className,
   embedded = false,
   wrapInCard = true,
@@ -46,10 +52,12 @@ export function FilterPanel({
 
   const content = (
     <div className={cn('space-y-4', embedded && 'filter-panel-card__inner', className)}>
-      <div>
-        <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Город</label>
-        <CitySelect value={city ?? ''} onChange={(v) => setCity(v || null)} />
-      </div>
+      {!hideCityRow && (
+        <div>
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Город</label>
+          <CitySelect value={city ?? ''} onChange={(v) => setCity(v || null)} />
+        </div>
+      )}
       <div>
         <span className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2 filter-panel-card__label">Бюджет</span>
         <BudgetRange min={budgetMin} max={budgetMax} onChange={setBudget} />
@@ -73,7 +81,7 @@ export function FilterPanel({
             Умный подбор
           </button>
           <button type="button" onClick={onSearch} className="search-hero-submit-tz7-compact">
-            Найти жильё
+            {primaryButtonLabel}
           </button>
         </div>
       )}

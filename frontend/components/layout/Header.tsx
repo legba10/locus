@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield, User } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, PlusCircle, Shield, User, LayoutList, Settings } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { MobileMenu } from './MobileMenu'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
+const iconSm = 'w-[18px] h-[18px] shrink-0'
 
 /** TZ-5: пункт меню — full width, текст слева, иконка справа */
 function NavItem({
@@ -49,11 +50,22 @@ export function Header() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
   const [logoError, setLogoError] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
+
+  useEffect(() => {
+    if (!profileOpen) return
+    const onDocClick = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+    }
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [profileOpen])
 
   const handleLogoClick = () => setIsMenuOpen(false)
 
@@ -67,16 +79,6 @@ export function Header() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  const desktopNavIcons = useMemo(
-    () => [
-      { label: 'Поиск', href: '/listings', icon: Search },
-      { label: 'Избранное', href: '/favorites', icon: Heart },
-      { label: 'Сообщения', href: '/messages', icon: MessageCircle },
-      { label: 'Профиль', href: authed ? '/profile' : '/auth/login', icon: User },
-    ],
-    [authed]
-  )
 
   if (authed && user === undefined) return null
 
@@ -97,8 +99,6 @@ export function Header() {
       100
   )
 
-  const isActive = (path: string) => pathname === path
-
   const handleLogout = async () => {
     await logout()
     setIsMenuOpen(false)
@@ -115,10 +115,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        'layout-header sticky left-0 right-0 z-[var(--z-header)] w-full border-b border-white/5 backdrop-blur',
-        'bg-white/90 dark:bg-[#0B1020]/90',
+        'layout-header sticky left-0 right-0 z-[var(--z-header)] w-full',
         'h-16 md:h-[72px] min-h-16 md:min-h-[72px]',
-        'transition-[background,border-color] duration-200',
+        'transition-[box-shadow,background] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
       style={{
@@ -156,47 +155,55 @@ export function Header() {
               onError={() => setLogoError(true)}
             />
           </Link>
-          <nav className="hidden md:flex items-center gap-0.5 ml-2" aria-label="Основная навигация">
-            {desktopNavIcons.map((item) => {
-              const Icon = item.icon
-              const active = isActive(item.href.split('?')[0])
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={item.label}
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-xl transition-colors text-[var(--text-secondary)] hover:text-[var(--text-main)]',
-                    active && 'text-[var(--text-main)]'
-                  )}
-                >
-                  <Icon className="w-5 h-5" strokeWidth={1.8} aria-hidden />
-                </Link>
-              )
-            })}
-          </nav>
         </div>
 
-        {/* RIGHT: Bell, ThemeToggle, Avatar — ТЗ-2 один контейнер gap-3 для guest и auth */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* ТЗ-3: справа только уведомления | тема | профиль или войти. gap 12px, иконки 22px. */}
+        <div className="layout-header__right flex items-center gap-3 shrink-0">
           {authed && (
-            <div className="flex items-center justify-center w-8 h-8 shrink-0">
+            <div className="layout-header__icon-wrap shrink-0">
               <NotificationsBell compactBadge />
             </div>
           )}
           <ThemeToggle />
           {authed ? (
-            <Link
-              href="/profile"
-              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] shrink-0"
-              aria-label="Профиль"
-            >
-              {displayAvatar ? (
-                <Image src={displayAvatar} alt={displayName || 'Аватар'} width={36} height={36} className="w-9 h-9 object-cover" />
-              ) : (
-                <span className="text-sm font-medium">{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
+            <div className="relative shrink-0" ref={profileRef}>
+              <button
+                type="button"
+                onClick={() => setProfileOpen((o) => !o)}
+                className="layout-header__avatar w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] shrink-0"
+                aria-label="Профиль"
+                aria-expanded={profileOpen}
+              >
+                {displayAvatar ? (
+                  <Image src={displayAvatar} alt={displayName || 'Аватар'} width={36} height={36} className="w-9 h-9 object-cover" />
+                ) : (
+                  <span className="text-sm font-medium">{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
+                )}
+              </button>
+              {profileOpen && (
+                <div
+                  className="profile-dropdown-tz7 absolute right-0 top-full mt-2 w-[220px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] py-2 shadow-lg z-[var(--z-dropdown)]"
+                  role="menu"
+                >
+                  <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                    <User className={iconSm} /> Мой профиль
+                  </Link>
+                  <Link href="/owner/dashboard" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                    <LayoutList className={iconSm} /> Мои объявления
+                  </Link>
+                  <Link href="/messages" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                    <MessageCircle className={iconSm} /> Сообщения
+                  </Link>
+                  <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                    <Settings className={iconSm} /> Настройки
+                  </Link>
+                  <div className="border-t border-[var(--border)] my-1" />
+                  <button type="button" onClick={() => { setProfileOpen(false); handleLogout(); }} className="profile-dropdown-tz7__item profile-dropdown-logout-tz10 w-full flex items-center gap-3 px-4 py-2.5 text-[14px]" role="menuitem">
+                    <LogOut className={iconSm} /> Выйти
+                  </button>
+                </div>
               )}
-            </Link>
+            </div>
           ) : (
             <Link
               href="/auth/login"
@@ -214,39 +221,8 @@ export function Header() {
       </div>
 
       <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
-        <div className="mobile-menu-header-row">
-          <button
-            type="button"
-            onClick={() => handleNavigate('/profile')}
-            className="mobile-menu-profile-block"
-          >
-            <div className="mobile-menu-profile-inner">
-              <div className="mobile-menu-profile-avatar relative overflow-hidden" aria-hidden>
-                {displayAvatar ? (
-                  <Image
-                    src={displayAvatar}
-                    alt={displayName || 'Аватар'}
-                    fill
-                    className="object-cover"
-                    sizes="48px"
-                  />
-                ) : (
-                  <span>{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
-                )}
-              </div>
-              <div className="mobile-menu-profile-text">
-                <div className="mobile-menu-profile-name">
-                  {isAuthenticated() && displayName ? displayName : 'Гость'}
-                </div>
-                <div className="mobile-menu-profile-subtitle">Перейти в профиль</div>
-                {isAuthenticated() && (
-                  <div className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                    Профиль заполнен на {profileCompletion}%
-                  </div>
-                )}
-              </div>
-            </div>
-          </button>
+        {/* ТЗ-7: без большого блока профиля — только кнопка закрыть */}
+        <div className="mobile-menu-header-row flex items-center justify-end">
           <button
             type="button"
             onClick={() => setIsMenuOpen(false)}
@@ -272,6 +248,13 @@ export function Header() {
         )}
         <nav className="mobile-menu-nav menu">
           <ul className="menu-list">
+            {authed && (
+              <>
+                <NavItem icon={<User size={22} strokeWidth={1.8} />} label="Профиль" onClick={() => handleNavigate('/profile')} />
+                <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+                <NavItem icon={<LayoutList size={22} strokeWidth={1.8} />} label="Мои объявления" onClick={() => handleNavigate('/owner/dashboard')} />
+              </>
+            )}
             <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
             {canCreateListing && (
               <NavItem
@@ -281,7 +264,6 @@ export function Header() {
               />
             )}
             <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-            <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
             <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
             {isAdmin && (
               <NavItem icon={<Shield size={22} strokeWidth={1.8} />} label="Админ" onClick={() => handleNavigate('/admin')} />
@@ -294,7 +276,7 @@ export function Header() {
             <button
               type="button"
               onClick={handleLogout}
-              className="btn btn--danger btn--md w-full"
+              className="btn-logout-secondary w-full py-2.5 rounded-xl"
               aria-label="Выйти"
             >
               <LogOut size={20} strokeWidth={1.8} aria-hidden />

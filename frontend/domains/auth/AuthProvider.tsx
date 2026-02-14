@@ -23,6 +23,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const abortRef = useRef<AbortController | null>(null);
   const syncCalled = useRef(false);
 
+  /* ТЗ-9: после логина/загрузки восстанавливать тему из localStorage */
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved && typeof document !== "undefined") {
+      const theme = saved === "dark" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }, []);
+
   useEffect(() => {
     // Guard against multiple calls (strict mode, re-renders)
     if (initCalled.current) {

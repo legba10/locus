@@ -65,11 +65,10 @@ export function Gallery({
         'rounded-[16px]'
       )}
     >
-      {/* TZ-3: height 260px mobile, 420px desktop, border-radius 16px */}
+      {/* TZ-5: aspect-ratio 4/3, object-fit cover, border-radius 16px */}
       <div
         className={cn(
-          'relative w-full select-none',
-          'h-[260px] md:h-[420px] rounded-[16px] overflow-hidden'
+          'relative w-full select-none aspect-[4/3] rounded-[16px] overflow-hidden'
         )}
         onClick={onOpenFullscreen}
         onTouchStart={onTouchStart}

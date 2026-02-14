@@ -9,7 +9,7 @@ import { MarketAnalysisBlock } from '@/shared/ui/MarketAnalysisBlock'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { useAuthStore } from '@/domains/auth'
 import { useFilterStore } from '@/core/filters'
-import { FilterPanel, QuickAIModal } from '@/components/filters'
+import { FilterPanel, QuickAIModal, CitySelect } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
 import { StatsBlock } from '@/components/home/StatsBlock'
@@ -54,11 +54,25 @@ export function HomePageV6() {
   const [showQuickFab, setShowQuickFab] = useState(false)
   const [highlightFirstCard, setHighlightFirstCard] = useState(false)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [showCityHint, setShowCityHint] = useState(false)
+  const [shakeCities, setShakeCities] = useState(false)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
   const isLandlord = user?.role === 'landlord'
   const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
   const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+
+  /** ТЗ-2: если город не выбран — показать подсказку и shake, иначе переход в список */
+  const handlePrimarySearch = () => {
+    if (!city || !city.trim()) {
+      setShowCityHint(true)
+      setShakeCities(true)
+      setTimeout(() => setShakeCities(false), 500)
+      return
+    }
+    setShowCityHint(false)
+    handleSearch()
+  }
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -271,43 +285,75 @@ export function HomePageV6() {
       {/* Hero */}
       <Hero />
 
-      {/* Быстрый поиск */}
-      <section id="search" className="bg-transparent relative z-20">
+      {/* ТЗ-10: порядок Hero → AI подбор → Города → Фильтр → Статистика → Карточки */}
+      {/* 1) AI подбор — CTA открывает умный подбор */}
+      <section className="bg-transparent relative z-20 section-spacing-tz4">
         <div className="market-container">
-          {!city && (
-            <p className="home-card-tz4 text-[14px] text-[var(--sub)] mb-4 rounded-2xl px-4 py-3 text-center">
-              Сначала выберите город
-            </p>
-          )}
-          {/* Desktop: ТЗ-4 карточка — rounded-2xl, shadow-sm, border 1px rgba */}
-          <div className="hidden md:block home-card-tz4 search-block-product">
-            <FilterPanel
-              embedded
-              wrapInCard={false}
-              showSearchButtons={true}
-              onSearch={handleSearch}
-              onSmartSearch={handleSmartSearch}
-            />
-          </div>
-          {/* Mobile: кнопка «Фильтры» открывает Sheet (не на весь экран) */}
-          <div className="md:hidden flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="home-filter-animate-tz10 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5">
+            <p className="text-[14px] text-[var(--text-secondary)] mb-3">Подбор под ваш бюджет и параметры</p>
             <button
               type="button"
-              onClick={() => setFilterSheetOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-medium text-[14px]"
+              onClick={handleSmartSearch}
+              className="search-hero-ai-tz7-compact w-full sm:w-auto min-h-[48px] px-5"
+              aria-label="Умный подбор AI"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              Фильтры
-            </button>
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="search-hero-submit-tz7-compact w-full sm:w-auto min-h-[44px]"
-            >
-              Найти жильё
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+              Умный подбор AI
             </button>
           </div>
-          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" className="bg-[var(--card)] border-t border-[var(--border)]">
+        </div>
+      </section>
+
+      {/* 2) Популярные города */}
+      <section className="bg-transparent">
+        <div className="market-container">
+          <PopularCities shake={shakeCities} />
+        </div>
+      </section>
+
+      {/* 3) Фильтр — город, кнопки, панель. ТЗ-10: кнопка «Подобрать жильё» открывает AI, не скролл к фильтру */}
+      <section id="search" className="bg-transparent relative z-20 section-spacing-tz4">
+        <div className="market-container">
+          <div className={cn('home-filter-animate-tz10', shakeCities && 'search-flow-shake')}>
+            <div className="mb-3">
+              <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Город</label>
+              <CitySelect value={city ?? ''} onChange={(v) => { setCity(v || null); setShowCityHint(false) }} placeholder="Выберите город" className="w-full" />
+            </div>
+            {showCityHint && (
+              <p className="text-[14px] text-[var(--sub)] mb-3 rounded-xl px-4 py-2 bg-[var(--bg-secondary)] text-center" role="alert">
+                Сначала выберите город
+              </p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
+              <button
+                type="button"
+                onClick={city?.trim() ? handlePrimarySearch : handleSmartSearch}
+                className="search-hero-submit-tz7-compact w-full sm:flex-1 min-h-[48px] order-1"
+              >
+                {city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterSheetOpen(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text)] font-medium text-[14px] order-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                Фильтры
+              </button>
+            </div>
+            <div className="hidden md:block home-card-tz4 search-block-product mt-4">
+              <FilterPanel
+                embedded
+                wrapInCard={false}
+                showSearchButtons={true}
+                onSearch={handlePrimarySearch}
+                onSmartSearch={handleSmartSearch}
+                primaryButtonLabel={city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
+                hideCityRow
+              />
+            </div>
+          </div>
+          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" animateClose className="bg-[var(--card)] border-t border-[var(--border)]">
             <div className="rounded-t-2xl border-0 max-w-none mx-0 p-4 pb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
@@ -319,17 +365,20 @@ export function HomePageV6() {
                 embedded
                 wrapInCard={false}
                 showSearchButtons={true}
-                onSearch={() => { handleSearch(); setFilterSheetOpen(false); }}
+                onSearch={() => { handlePrimarySearch(); setFilterSheetOpen(false); }}
                 onSmartSearch={() => { handleSmartSearch(); setFilterSheetOpen(false); }}
+                primaryButtonLabel={city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
               />
             </div>
           </BottomSheet>
-          <PopularCities />
         </div>
       </section>
 
-      {/* Актуальные предложения — ТЗ-4 воздух и фон страницы */}
-      <section className="bg-transparent animate-fade-in">
+      {/* 4) Статистика — после фильтра, перед карточками */}
+      <StatsBlock />
+
+      {/* 5) Актуальные предложения */}
+      <section className="bg-transparent animate-fade-in section-spacing-tz4">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">
@@ -377,11 +426,8 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ТЗ-1: блок статистики доверия — после «Актуальные предложения», вторичный блок */}
-      <StatsBlock />
-
       {/* Рекомендации AI */}
-      <section className="bg-transparent">
+      <section className="bg-transparent section-spacing-tz4">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">Рекомендации AI</h2>
@@ -412,7 +458,7 @@ export function HomePageV6() {
       </section>
 
       {/* Последние просмотренные */}
-      <section className="bg-transparent">
+      <section className="bg-transparent section-spacing-tz4">
         <div className="market-container">
           <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-6 md:mb-8">Последние просмотренные</h2>
           <div className="listing-grid">

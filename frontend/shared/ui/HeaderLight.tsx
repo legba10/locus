@@ -150,11 +150,7 @@ export function HeaderLight() {
             {isAuthenticated() ? (
               <button
                 onClick={logout}
-                className={cn(
-                  'px-3.5 py-2 text-[13px] font-medium rounded-xl',
-                  'text-[var(--danger)] hover:opacity-80',
-                  'transition-colors'
-                )}
+                className="btn-logout-secondary px-3.5 py-2 text-[13px] font-medium rounded-xl transition-colors"
               >
                 Выйти
               </button>
@@ -172,9 +168,9 @@ export function HeaderLight() {
             )}
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-3">
             {authed && <NotificationsBell />}
-            {!authed && <div className="w-10 h-10 mr-3" aria-hidden />}
+            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -232,9 +228,6 @@ export function HeaderLight() {
               </button>
             </div>
           )}
-          <div className="md:hidden flex items-center justify-start px-1 pb-3">
-            <ThemeToggle />
-          </div>
           <nav className="mobile-menu-nav menu">
             <ul className="menu-list">
               <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />

@@ -40,7 +40,7 @@ export function BottomSheet({
 
   React.useEffect(() => {
     if (!exiting) return
-    const t = setTimeout(() => setExiting(false), 300)
+    const t = setTimeout(() => setExiting(false), 200)
     return () => clearTimeout(t)
   }, [exiting])
 
@@ -66,19 +66,22 @@ export function BottomSheet({
 
   const content = (
     <div
-      className="fixed inset-0 flex flex-col justify-end"
+      className={cn(
+        'fixed inset-0 flex flex-col justify-end bottom-sheet-tz2',
+        (open || exiting) && 'bottom-sheet-tz2-visible'
+      )}
       style={{ zIndex: 'var(--z-overlay)' }}
       role="dialog"
       aria-modal="true"
     >
-      <div className="overlay" onClick={onClose} aria-hidden />
+      <div className="bottom-sheet-tz2-overlay" onClick={onClose} aria-hidden />
       <div
         className={cn(
           'relative flex flex-col rounded-t-[24px] border-t border-[var(--border)] bg-[var(--bg-glass)] shadow-[var(--shadow-modal)]',
           'backdrop-blur-[20px] text-[var(--text-main)] overflow-hidden',
-          'transition-transform duration-300 ease-out',
-          open && !exiting && 'animate-in slide-in-from-bottom duration-300',
-          exiting && 'translate-y-full',
+          'bottom-sheet-tz2-panel',
+          open && !exiting && 'bottom-sheet-tz2-panel--open',
+          exiting && 'bottom-sheet-tz2-panel--exiting',
           className
         )}
         style={{

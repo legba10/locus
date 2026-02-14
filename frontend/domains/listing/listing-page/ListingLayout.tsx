@@ -154,9 +154,9 @@ export function ListingLayout(props: ListingLayoutProps) {
           />
         </div>
 
-        <div className="grid md:grid-cols-[1fr_320px] gap-6 md:gap-8">
+        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:gap-[24px] md:items-start">
           {/* Основной контент */}
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-6 md:space-y-[24px]">
             {/* 3. Основной инфо-блок */}
             <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
               <p className="text-[28px] font-bold text-[var(--text-main)]">{formatPrice(price)} ₽ <span className="text-[14px] font-normal text-[var(--text-secondary)]">/ ночь</span></p>
@@ -217,8 +217,8 @@ export function ListingLayout(props: ListingLayoutProps) {
               </div>
             )}
 
-            {/* Бронирование в потоке (для скролла с кнопки) */}
-            <div id="listing-booking" className="md:hidden">
+            {/* Бронирование в потоке (мобильный): не sticky, отступ сверху 20px */}
+            <div id="listing-booking" className="md:hidden mt-5">
               <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
             </div>
 
@@ -307,9 +307,9 @@ export function ListingLayout(props: ListingLayoutProps) {
             )}
           </div>
 
-          {/* Правая колонка: StickyActions (desktop) — кнопки Написать, Забронировать, ❤️; бронирование в потоке слева */}
-          <div className="hidden md:block">
-            <StickyActions price={price} onWrite={onWrite} onBook={onBook} onSave={onFavoriteToggle} isSaved={isFavorite} writeLoading={writeLoading} />
+          {/* Правая колонка (ПК): блок бронирования sticky, max-width 360px, top 90px */}
+          <div className="hidden md:block w-full max-w-[360px] sticky top-[90px] self-start">
+            <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
           </div>
         </div>
       </div>

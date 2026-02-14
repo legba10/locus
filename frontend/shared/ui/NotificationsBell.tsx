@@ -187,18 +187,19 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'notifications-bell-btn relative rounded-[12px] hover:bg-[var(--accent-soft)] transition-colors',
+          'notifications-bell-btn relative w-10 h-10 flex items-center justify-center rounded-[12px] hover:bg-[var(--accent-soft)] transition-colors shrink-0',
           badgePop && 'shake',
-          isMobile ? 'w-10 h-10 flex items-center justify-center mr-3' : 'p-2'
+          isMobile && 'mr-1'
         )}
         aria-label="Уведомления"
       >
-        <Bell className={cn(isMobile && !compactBadge ? 'w-6 h-6' : 'w-[22px] h-[22px]')} strokeWidth={1.8} />
+        <Bell className="w-5 h-5" strokeWidth={1.8} aria-hidden />
         {unreadCount > 0 && (
           <span
             className={cn(
-              'notifications-badge absolute top-0.5 right-0.5 rounded-full text-[var(--button-primary-text)] font-bold flex items-center justify-center transition-transform duration-200 bg-[var(--accent)]',
-              compactBadge ? 'min-w-[8px] w-[8px] h-[8px] text-[0]' : 'min-w-[18px] h-[18px] px-1 text-[11px]',
+              'notifications-badge absolute top-0.5 right-0.5 rounded-full font-bold flex items-center justify-center transition-transform duration-200',
+              compactBadge && 'notifications-badge-compact min-w-[8px] w-[8px] h-[8px] text-[0]',
+              !compactBadge && 'min-w-[18px] h-[18px] px-1 text-[11px] text-white',
               badgePop && 'scale-110'
             )}
             title={unreadCount > 0 ? `${unreadCount} непрочитанных` : undefined}

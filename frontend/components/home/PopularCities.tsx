@@ -1,38 +1,50 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { DS } from '@/shared/lib/design-system'
+import { useFilterStore } from '@/core/filters'
 
 const CITIES = [
-  { name: 'Москва', href: '/listings?city=Москва' },
-  { name: 'Санкт-Петербург', href: '/listings?city=Санкт-Петербург' },
-  { name: 'Сочи', href: '/listings?city=Сочи' },
-  { name: 'Казань', href: '/listings?city=Казань' },
+  { name: 'Москва' },
+  { name: 'Санкт-Петербург' },
+  { name: 'Сочи' },
+  { name: 'Казань' },
 ]
 
 /**
- * ТЗ-MAIN-REDESIGN: Популярные города — grid 2/4, карточки rounded-xl bg-[var(--card)] hover:scale-105.
+ * ТЗ-2: клик по городу задаёт город и ведёт в список. Опционально shake при подсказке «Сначала выберите город».
  */
-export function PopularCities() {
+export function PopularCities({ shake = false }: { shake?: boolean }) {
+  const router = useRouter()
+  const setCity = useFilterStore((s) => s.setCity)
+
+  const handleCity = (name: string) => {
+    setCity(name)
+    const params = new URLSearchParams()
+    params.set('city', name)
+    router.push(`/listings?${params.toString()}`)
+  }
+
   return (
-    <section className="py-6" aria-label="Популярные города">
+    <section className={cn('py-6', shake && 'search-flow-shake')} aria-label="Популярные города">
       <h2 className="text-[18px] md:text-[20px] font-semibold text-[var(--text)] mb-4">
         Популярные города
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {CITIES.map(({ name, href }) => (
-          <Link
+        {CITIES.map(({ name }) => (
+          <button
             key={name}
-            href={href}
+            type="button"
+            onClick={() => handleCity(name)}
             className={cn(
               'rounded-xl bg-[var(--card)] border border-[var(--border)] p-4 text-center',
               DS.transition,
-              'hover:scale-105 hover:shadow-lg'
+              'hover:scale-105 hover:shadow-lg text-[15px] font-medium text-[var(--text)]'
             )}
           >
-            <span className="text-[15px] font-medium text-[var(--text)]">{name}</span>
-          </Link>
+            {name}
+          </button>
         ))}
       </div>
     </section>

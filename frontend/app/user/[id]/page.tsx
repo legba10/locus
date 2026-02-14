@@ -92,46 +92,46 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="profile-header-tz9 p-5 mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="profile-header-tz9__avatar relative w-20 h-20 flex-shrink-0">
-              {profile.avatar ? (
-                <Image src={profile.avatar} alt={profile.name} fill className="object-cover" sizes="80px" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[var(--color-muted)]">
-                  {(profile.name ?? '?').charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="profile-header-tz9__name">{profile.name}</h1>
-              {ratingVal != null && (
-                <p className="profile-rating-tz9">
-                  <svg viewBox="0 0 24 24" aria-hidden><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                  <span>{(Number(ratingVal)).toFixed(1)}</span>
-                  {reviewsCount > 0 && <span className="text-[var(--color-muted)] ml-1">{reviewsCount} отзывов</span>}
-                </p>
-              )}
-            </div>
+      <div className="max-w-[900px] mx-auto px-6 py-6">
+        {/* ТЗ-7: верх профиля — flex gap 20px, аватар 80px, имя 22px */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
+          <div className="profile-header-tz9__avatar relative w-20 h-20 flex-shrink-0 rounded-full overflow-hidden bg-[var(--bg-card)] border border-[var(--border)]">
+            {profile.avatar ? (
+              <Image src={profile.avatar} alt={profile.name} fill className="object-cover" sizes="80px" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-[var(--text-secondary)]">
+                {(profile.name ?? '?').charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
-          <div className="profile-stats-tz9 mt-5">
-            <div className="profile-stats-tz9__item">
-              <div className="profile-stats-tz9__value">{profile.listingsCount}</div>
-              <div className="profile-stats-tz9__label">объявления</div>
-            </div>
-            <div className="profile-stats-tz9__item">
-              <div className="profile-stats-tz9__value">{reviewsCount}</div>
-              <div className="profile-stats-tz9__label">отзывы</div>
-            </div>
-            <div className="profile-stats-tz9__item">
-              <div className="profile-stats-tz9__value">{ratingVal != null ? (Number(ratingVal)).toFixed(1) : '—'}</div>
-              <div className="profile-stats-tz9__label">рейтинг</div>
-            </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-semibold text-[var(--text-main)]">{profile.name}</h1>
+            {ratingVal != null && (
+              <p className="profile-rating-tz9 mt-1">
+                <svg viewBox="0 0 24 24" aria-hidden><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <span>{(Number(ratingVal)).toFixed(1)}</span>
+                {reviewsCount > 0 && <span className="text-[var(--text-secondary)] ml-1">{reviewsCount} отзывов</span>}
+              </p>
+            )}
+          </div>
+        </div>
+        {/* ТЗ-7: блок статистики — grid 3 cols, карточки padding 14px border-radius 14px */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] p-3.5 text-center">
+            <div className="text-[18px] font-bold text-[var(--text-main)]">{profile.listingsCount}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">объявления</div>
+          </div>
+          <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] p-3.5 text-center">
+            <div className="text-[18px] font-bold text-[var(--text-main)]">{reviewsCount}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">отзывы</div>
+          </div>
+          <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] p-3.5 text-center">
+            <div className="text-[18px] font-bold text-[var(--text-main)]">{ratingVal != null ? (Number(ratingVal)).toFixed(1) : '—'}</div>
+            <div className="text-[13px] text-[var(--text-secondary)] mt-1">рейтинг</div>
           </div>
         </div>
 
-        <h2 className="text-[20px] font-bold text-[var(--color-text)] mb-4">Объявления</h2>
+        <h2 className="text-[20px] font-bold text-[var(--text-main)] mb-4">Объявления</h2>
         {!(profile.listings?.length) ? (
           <p className="text-[var(--text-secondary)]">Пока нет опубликованных объявлений</p>
         ) : (

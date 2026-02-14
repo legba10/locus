@@ -30,6 +30,47 @@
   opacity: 0.7;
 }
 
+/* ТЗ-2: shake при клике «Найти» без выбора города */
+@keyframes search-flow-shake-kf {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.search-flow-shake {
+  animation: search-flow-shake-kf 0.5s ease-in-out;
+}
+
+/* ТЗ-2: модалка фильтров — анимация 200ms translateY + opacity, затемнение */
+.bottom-sheet-tz2-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.bottom-sheet-tz2 .bottom-sheet-tz2-overlay {
+  pointer-events: auto;
+}
+.bottom-sheet-tz2-panel {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+.bottom-sheet-tz2-panel--open {
+  transform: translateY(0);
+  opacity: 1;
+}
+.bottom-sheet-tz2-panel--exiting {
+  transform: translateY(100%);
+  opacity: 0;
+}
+.bottom-sheet-tz2-visible .bottom-sheet-tz2-overlay {
+  opacity: 1;
+}
+
 /* ТЗ-6: карточки главной — bg-card, без gray */
 .home-card-tz4 {
   border-radius: 1rem;
@@ -85,7 +126,7 @@
   color: inherit;
 }
 
-/* ТЗ-1: блок статистики — вторичный, после «Актуальные предложения». Не липнет к hero. */
+/* ТЗ-1: блок статистики — вторичный */
 .stats-block-tz1-wrap {
   margin-top: 32px;
   margin-bottom: 32px;
@@ -102,6 +143,45 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: none;
+}
+
+/* ТЗ-4: отступы между блоками — 48px сверху (нижний отступ у предыдущего не дублируем) */
+.section-spacing-tz4 {
+  margin-top: 48px;
+}
+
+/* ТЗ-4: блок статистики — после AI рекомендаций. Вторичный: мягкий фон, меньше padding, цифры спокойные. */
+.stats-block-tz4-wrap {
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+.stats-block-tz4 {
+  background: rgba(0, 0, 0, 0.02);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .stats-block-tz4,
+.dark .stats-block-tz4 {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.stats-block-tz4-value {
+  color: var(--text-main);
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+[data-theme="dark"] .stats-block-tz4-value,
+.dark .stats-block-tz4-value {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stats-block-tz4-label {
+  color: var(--text-secondary);
 }
 
 /* ТЗ-6: поисковый блок / фильтры — bg-card rounded-2xl p-4 */
@@ -315,11 +395,12 @@
 }
 
 /* ТЗ-4.2: панель фильтров desktop — одна строка, Airbnb-style */
+/* ТЗ-6: светлая тема — фильтры background #FFFFFF, border #E5E7EB */
 .filter-bar-tz42 {
-  --filter-bar-bg: #ffffff;
-  --filter-bar-border: #e6e8ee;
-  --filter-bar-text: #121212;
-  --filter-bar-hover: rgba(0, 0, 0, 0.05);
+  --filter-bar-bg: #FFFFFF;
+  --filter-bar-border: #E5E7EB;
+  --filter-bar-text: #111827;
+  --filter-bar-hover: rgba(0, 0, 0, 0.04);
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
@@ -354,6 +435,13 @@
 .filter-bar-tz42-btn {
   height: 40px;
   border-radius: 10px;
+  transition: transform 0.2s ease;
+}
+.filter-bar-tz42-btn:hover {
+  transform: translateY(-1px);
+}
+.filter-bar-tz42-btn:active {
+  transform: scale(1.02);
 }
 
 .filter-bar-tz42-input {
