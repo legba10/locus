@@ -268,14 +268,11 @@ export function HomePageV6() {
 
   return (
     <div className="min-h-screen font-sans antialiased bg-[var(--background)]">
-      {/* ТЗ-4: Hero + светлая страница */}
+      {/* Hero */}
       <Hero />
 
-      {/* ТЗ-3: блок статистики — сразу после hero */}
-      <StatsBlock />
-
-      {/* ТЗ-4: поисковый блок — карточка rounded-2xl, без серых обводок */}
-      <section id="search" className="bg-transparent -mt-6 relative z-20">
+      {/* Быстрый поиск */}
+      <section id="search" className="bg-transparent relative z-20">
         <div className="market-container">
           {!city && (
             <p className="home-card-tz4 text-[14px] text-[var(--sub)] mb-4 rounded-2xl px-4 py-3 text-center">
@@ -379,6 +376,9 @@ export function HomePageV6() {
           </div>
         </div>
       </section>
+
+      {/* ТЗ-1: блок статистики доверия — после «Актуальные предложения», вторичный блок */}
+      <StatsBlock />
 
       {/* Рекомендации AI */}
       <section className="bg-transparent">

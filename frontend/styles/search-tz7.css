@@ -85,6 +85,25 @@
   color: inherit;
 }
 
+/* ТЗ-1: блок статистики — вторичный, после «Актуальные предложения». Не липнет к hero. */
+.stats-block-tz1-wrap {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.stats-block-tz1 {
+  background: #F6F7FB;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .stats-block-tz1,
+.dark .stats-block-tz1 {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
 /* ТЗ-6: поисковый блок / фильтры — bg-card rounded-2xl p-4 */
 .search-block-product {
   max-width: 64rem;

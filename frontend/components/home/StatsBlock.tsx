@@ -11,8 +11,8 @@ const STATS = [
 ] as const
 
 /**
- * ТЗ-3: блок статистики — премиальная карточка, сетка 2×2 / 4 колонки,
- * адаптация light/dark, микро-анимация появления.
+ * ТЗ-1: блок статистики доверия — после «Актуальные предложения».
+ * Вторичный блок: не перетягивает внимание. mt-8 mb-8, 2 колонки на мобиле.
  */
 export function StatsBlock() {
   const [mounted, setMounted] = useState(false)
@@ -23,11 +23,11 @@ export function StatsBlock() {
   }, [])
 
   return (
-    <section className="px-4 mt-6" aria-label="LOCUS в цифрах">
+    <section className="stats-block-tz1-wrap px-4 mt-8 mb-8" aria-label="LOCUS в цифрах">
       <div
         className={cn(
-          'stats-block-tz6 mx-auto max-w-6xl rounded-2xl shadow-sm p-6 md:p-12 lg:p-16',
-          'grid grid-cols-2 md:grid-cols-3 gap-6',
+          'stats-block-tz1 mx-auto max-w-6xl rounded-[20px] p-5 md:p-6',
+          'grid grid-cols-2 md:grid-cols-4 gap-6',
           'transition-all duration-500 ease-out',
           mounted ? 'stats-block-tz3--visible' : 'stats-block-tz3--initial'
         )}
