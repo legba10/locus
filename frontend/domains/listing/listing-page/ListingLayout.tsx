@@ -140,9 +140,9 @@ export function ListingLayout(props: ListingLayoutProps) {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-4 md:py-6">
-        {/* 1. Header — только кнопка «назад» в контенте не дублируем, она в галерее */}
-
-        {/* 2. Галерея */}
+        {/* ТЗ-17: контейнер объявления — border-radius 24px, padding 24px, grid 2 колонки (фото/контент 65%, бронирование 35%) */}
+        <div className="md:rounded-[24px] md:border md:border-[var(--border)] md:bg-[var(--bg-card)] md:p-6 md:shadow-[var(--shadow-card)] overflow-hidden">
+        {/* 1. Галерея */}
         <div className="mb-4 md:mb-6">
           <Gallery
             photos={photos}
@@ -154,7 +154,7 @@ export function ListingLayout(props: ListingLayoutProps) {
           />
         </div>
 
-        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:gap-[24px] md:items-start">
+        <div className="grid md:grid-cols-[65fr_35fr] gap-6 md:gap-6 md:items-start">
           {/* Основной контент */}
           <div className="space-y-6 md:space-y-[24px]">
             {/* 3. Основной инфо-блок */}
@@ -307,10 +307,11 @@ export function ListingLayout(props: ListingLayoutProps) {
             )}
           </div>
 
-          {/* Правая колонка (ПК): блок бронирования sticky, max-width 360px, top 90px */}
-          <div className="hidden md:block w-full max-w-[360px] sticky top-[90px] self-start">
+          {/* Правая колонка (ПК): блок бронирования 35%, sticky */}
+          <div className="hidden md:block w-full min-w-0 sticky top-[90px] self-start">
             <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
           </div>
+        </div>
         </div>
       </div>
 

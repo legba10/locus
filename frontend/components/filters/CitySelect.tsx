@@ -11,6 +11,8 @@ export interface CitySelectProps {
   className?: string
   /** Mobile: открывать fullscreen модалку */
   fullscreenOnMobile?: boolean
+  /** ТЗ-20: автофокус поля (рекомендуется только на desktop) */
+  autoFocus?: boolean
 }
 
 const LIST_CLASS = 'city-select-item w-full text-left px-4 py-3 text-[14px] transition-colors border-b border-[var(--border)] last:border-0 bg-transparent hover:bg-[var(--accent-soft)]'
@@ -21,6 +23,7 @@ export function CitySelect({
   placeholder = 'Выберите город',
   className,
   fullscreenOnMobile = false,
+  autoFocus = false,
 }: CitySelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value)
@@ -123,6 +126,7 @@ export function CitySelect({
               autoComplete="off"
               aria-expanded={open}
               aria-haspopup="listbox"
+              autoFocus={autoFocus && !isMobile}
             />
             {open && !useFullscreen && (
               <div key="city-dropdown" className="city-select-dropdown-tz7 absolute left-0 right-0 top-full z-20 mt-1 rounded-[12px] border border-[var(--border)] shadow-[var(--shadow-1)] max-h-[280px] overflow-y-auto py-1">

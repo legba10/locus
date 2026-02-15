@@ -3,7 +3,7 @@
  * фото, тексты, тёмная тема. Только токены, без хардкода.
  */
 
-/* ТЗ-5: карточка — rounded-2xl bg-card shadow-sm hover:shadow-lg, без тяжёлых границ */
+/* ТЗ-5 + TZ-16: карточка — transition в motion-tz16 (transform + shadow), здесь только база */
 .listing-card {
   border-radius: 1rem;
   background: var(--card, var(--bg-card));
@@ -14,12 +14,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: box-shadow 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .listing-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -285,14 +286,16 @@
   height: 16px;
 }
 
-/* Favorite: top-right, stopPropagation in JS */
+/* Favorite: top-right, TZ-20 min tap 44px */
 .listing-card__favorite {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   z-index: 2;
-  width: 36px;
-  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.3);
   color: #fff;
@@ -303,6 +306,10 @@
   cursor: pointer;
   transition: background 160ms ease, color 160ms ease;
   -webkit-tap-highlight-color: transparent;
+}
+.listing-card__favorite svg {
+  width: 20px;
+  height: 20px;
 }
 
 .listing-card__favorite:hover {
@@ -342,7 +349,7 @@
   transform: scale(1.15);
 }
 
-/* Skeleton TZ-6: один цвет, aspect-ratio 4/3 */
+/* Skeleton TZ-6 + TZ-20: shimmer анимация */
 .listing-card-skeleton {
   border-radius: 16px;
   background: var(--color-surface, var(--bg-card));
@@ -355,13 +362,15 @@
 .listing-card-skeleton__photo {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #f2f2f2;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes listing-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-[data-theme="dark"] .listing-card-skeleton__photo,
-.dark .listing-card-skeleton__photo {
-  background: #1c1c22;
-}
 
 .listing-card-skeleton__info {
   padding: 12px 14px;
@@ -373,12 +382,23 @@
 .listing-card-skeleton__line {
   height: 14px;
   border-radius: 6px;
-  background: #f2f2f2;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
 [data-theme="dark"] .listing-card-skeleton__line,
 .dark .listing-card-skeleton__line {
-  background: #2a2a32;
+  background: linear-gradient(90deg, #2a2a32 25%, #333 50%, #2a2a32 75%);
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+[data-theme="dark"] .listing-card-skeleton__photo,
+.dark .listing-card-skeleton__photo {
+  background: linear-gradient(90deg, #1c1c22 25%, #2a2a32 50%, #1c1c22 75%);
+  background-size: 200% 100%;
+  animation: listing-skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
 .listing-card-skeleton__line--price {

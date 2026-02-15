@@ -8,6 +8,7 @@ import { RU } from '@/core/i18n/ru'
 import { isValidImageUrl } from '@/shared/utils/imageUtils'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { track } from '@/shared/analytics/events'
+import { useToast } from '@/shared/contexts/ToastContext'
 
 export interface ListingCardOwner {
   id: string
@@ -53,6 +54,7 @@ function ListingCardComponent({
   className,
   highlight = false,
 }: ListingCardProps) {
+  const { toast } = useToast()
   const [imgError, setImgError] = useState(false)
   const [isSaved, setIsSaved] = useState(isFavorite)
   const [isToggling, setIsToggling] = useState(false)
@@ -92,11 +94,17 @@ function ListingCardComponent({
       setIsSaved(newState)
       if (newState) track('favorite_add', { listingId: id })
       apiFetch(`/favorites/${id}/toggle`, { method: 'POST' })
-        .then(() => onFavoriteToggle?.())
-        .catch(() => setIsSaved(!newState))
+        .then(() => {
+          onFavoriteToggle?.()
+          toast({ type: 'success', message: newState ? 'Добавлено' : 'Удалено' })
+        })
+        .catch(() => {
+          setIsSaved(!newState)
+          toast({ type: 'error', message: 'Что-то пошло не так' })
+        })
         .finally(() => setIsToggling(false))
     },
-    [id, isSaved, isToggling, onFavoriteToggle]
+    [id, isSaved, isToggling, onFavoriteToggle, toast]
   )
 
   const goPrev = useCallback(() => {

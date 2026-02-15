@@ -1,0 +1,244 @@
+/**
+ * TZ-18: Финальная UI-стабилизация главной
+ * Единая сетка, ритм, типографика, без ломки логики.
+ */
+
+/* ═══ 1. Единая сетка и контейнеры ═══ */
+.home-tz18 .market-container,
+.home-tz18 .home-section-tz18 .market-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (max-width: 767px) {
+  .home-tz18 .market-container,
+  .home-tz18 .home-section-tz18 .market-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Вертикальный ритм: между крупными секциями 80px, средними 48px */
+.home-section-tz18 {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+@media (min-width: 768px) {
+  .home-section-tz18 {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+}
+
+.home-section-tz18--medium {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+/* ═══ 2. Hero типографика (дополнение к компоненту) ═══ */
+.hero-tz18-title {
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .hero-tz18-title {
+    font-size: 52px;
+    line-height: 1.15;
+    max-width: 900px;
+  }
+}
+
+.hero-tz18-typing {
+  font-size: 16px;
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .hero-tz18-typing {
+    font-size: 20px;
+  }
+}
+
+.hero-tz18-subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-tz18-cta {
+  margin-top: 32px;
+  height: 52px;
+  width: 100%;
+  padding: 0 36px;
+  font-size: 18px;
+  border-radius: 14px;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.hero-tz18-cta:hover {
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.4);
+}
+
+@media (min-width: 768px) {
+  .hero-tz18-cta {
+    width: auto;
+    height: 56px;
+  }
+}
+
+/* ═══ 3. AI-блок под hero ═══ */
+.hero-ai-panel-tz18 {
+  margin-top: 48px;
+  min-height: 80px;
+  border-radius: 20px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-ai-panel-tz18:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .hero-ai-panel-tz18:hover,
+.dark .hero-ai-panel-tz18:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* ═══ 4. Популярные города TZ-18 ═══ */
+.popular-cities-tz18 {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .popular-cities-tz18 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.popular-cities-tz18__card {
+  height: 60px;
+  border-radius: 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .popular-cities-tz18__card:hover {
+    transform: scale(1.02);
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* ═══ 5. Блок фильтра TZ-18 ═══ */
+.home-search-wrap-tz18 {
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 60px;
+}
+
+.search-btn-show-tz18 {
+  height: 54px;
+  border-radius: 14px;
+  font-size: 16px;
+}
+
+.search-btn-filters-tz18 {
+  height: 44px;
+  border-radius: 14px;
+}
+
+/* ═══ 6. Блок статистики TZ-18 ═══ */
+.stats-block-tz18-wrap {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.stats-block-tz18 {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .stats-block-tz18 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+  }
+}
+
+.stats-block-tz18__value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .stats-block-tz18__value {
+    font-size: 32px;
+  }
+}
+
+.stats-block-tz18__label {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* ═══ 7. Карточки объявлений на главной TZ-18 ═══ */
+.home-tz18 .listing-grid {
+  gap: 24px;
+}
+
+.home-tz18 .listing-card-tz18 {
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.home-tz18 .listing-card-tz18 .listing-card__image-wrap {
+  height: 260px;
+  aspect-ratio: auto;
+  border-radius: 24px 24px 0 0;
+}
+
+[data-theme="dark"] .home-tz18 .listing-card-tz18,
+.dark .home-tz18 .listing-card-tz18 {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* TZ-19: единый размер заголовков секций — H2 28px desktop, 24px mobile */
+.home-tz18 .section-title-tz19 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+@media (min-width: 768px) {
+  .home-tz18 .section-title-tz19 {
+    font-size: 28px;
+  }
+}
+
+/* ═══ Плавный скролл ═══ */
+@media (prefers-reduced-motion: no-preference) {
+  .home-tz18 {
+    scroll-behavior: smooth;
+  }
+}

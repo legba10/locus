@@ -8,6 +8,15 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
+/* ТЗ-13: высота 60px mobile / 64px desktop, тонкая граница, иконки через var(--text-main) */
+.layout-header-tz13.layout-header {
+  border-bottom-width: 1px;
+}
+.layout-header-tz13 .layout-header__right a,
+.layout-header-tz13 .layout-header__right button {
+  color: var(--text-main);
+}
+
 [data-theme="dark"] .layout-header,
 .dark .layout-header {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);

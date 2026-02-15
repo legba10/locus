@@ -15,6 +15,8 @@
 @import './search-tz7.css';
 @import './profile-tz9.css';
 @import './homepage-tz10.css';
+@import './home-tz18.css';
+@import './motion-tz16.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -22,6 +24,13 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(123, 74, 226, 0.3) transparent;
+}
+
+/* TZ-18: плавный скролл без перегрузки */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 *::-webkit-scrollbar {

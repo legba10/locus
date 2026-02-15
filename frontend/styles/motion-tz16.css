@@ -1,0 +1,229 @@
+/**
+ * TZ-16: Финальная полировка UX — единый motion-стиль, плавность, ощущение продукта.
+ * duration 0.18–0.25s, ease cubic-bezier(0.4,0,0.2,1). Без тяжёлых библиотек.
+ */
+
+:root {
+  --motion-duration: 0.22s;
+  --motion-duration-slow: 0.25s;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration: 0.01s;
+    --motion-duration-slow: 0.01s;
+  }
+}
+
+/* ═══ Плавная смена темы ═══ */
+html,
+body {
+  transition: background-color var(--motion-duration-slow) var(--motion-ease),
+    color var(--motion-duration-slow) var(--motion-ease);
+}
+
+/* ═══ Карточки объявлений — hover: подъём + тень + pointer ═══ */
+.listing-card {
+  transition: transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .listing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+  }
+}
+
+[data-theme="dark"] .listing-card:hover,
+.dark .listing-card:hover {
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4);
+}
+
+/* ═══ Кнопки — hover scale 1.02, active 0.98, лёгкое свечение ═══ */
+button:not([disabled]):not(.no-motion-tz16),
+.btn:not([disabled]),
+[class*="search-hero-submit"]:not([disabled]),
+[class*="search-hero-ai"]:not([disabled]),
+.layout-header__cta-btn {
+  transition: transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease),
+    opacity var(--motion-duration) var(--motion-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:not([disabled]):not(.no-motion-tz16):hover,
+  .btn:not([disabled]):hover,
+  [class*="search-hero-submit"]:not([disabled]):hover,
+  [class*="search-hero-ai"]:not([disabled]):hover,
+  .layout-header__cta-btn:hover {
+    transform: scale(1.02);
+  }
+}
+
+button:not([disabled]):not(.no-motion-tz16):active,
+.btn:not([disabled]):active,
+[class*="search-hero-submit"]:not([disabled]):active,
+[class*="search-hero-ai"]:not([disabled]):active,
+.layout-header__cta-btn:active {
+  transform: scale(0.98);
+}
+
+/* ═══ Иконки в хедере — hover opacity + scale ═══ */
+.layout-header__right a[href]:hover,
+.layout-header__right button:not([disabled]):hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.layout-header__right a[href],
+.layout-header__right button {
+  transition: opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+/* ═══ Бургер: overlay — backdrop blur + затемнение, 0.25s ═══ */
+.mobile-menu-overlay {
+  transition: opacity var(--motion-duration-slow) var(--motion-ease);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ═══ Drawer бургера — slide 0.25s ═══ */
+.drawer.mobile-menu {
+  transition: transform var(--motion-duration-slow) var(--motion-ease);
+}
+
+/* ═══ Модалки / всплывающие окна — scale from center 0.95 → 1 ═══ */
+.modal-panel,
+[class*="modal"] .relative.w-full.max-w-\[520px\],
+.profile-dropdown-tz7,
+.profile-dropdown-tz13 {
+  animation: motion-tz16-scale-in var(--motion-duration-slow) var(--motion-ease) forwards;
+}
+
+@keyframes motion-tz16-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* dropdown уже позиционирован, не применять к profile dropdown если ломает */
+.profile-dropdown-tz7,
+.profile-dropdown-tz13 {
+  animation: none;
+  transition: opacity var(--motion-duration) var(--motion-ease);
+}
+
+/* ═══ Появление страницы — мягкий fade (без slide при каждой навигации) ═══ */
+.main-with-header {
+  animation: motion-tz16-page-in var(--motion-duration-slow) var(--motion-ease);
+}
+
+@keyframes motion-tz16-page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ═══ Фильтры — подсветка выбранного, плавный переход ═══ */
+.filter-chip,
+.filters-pill-tz10 button {
+  transition: transform var(--motion-duration) var(--motion-ease),
+    background-color var(--motion-duration) var(--motion-ease),
+    border-color var(--motion-duration) var(--motion-ease),
+    color var(--motion-duration) var(--motion-ease);
+}
+
+.filter-chip:active,
+.filters-pill-tz10 button:active {
+  transform: scale(0.97);
+}
+
+/* ═══ Переключатель темы — плавная смена ═══ */
+.layout-header__theme-toggle,
+.theme-toggle-tz9 {
+  transition: transform var(--motion-duration) var(--motion-ease),
+    background-color var(--motion-duration-slow) var(--motion-ease),
+    border-color var(--motion-duration-slow) var(--motion-ease),
+    color var(--motion-duration-slow) var(--motion-ease);
+}
+
+.layout-header__theme-toggle:active,
+.theme-toggle-tz9:active {
+  transform: scale(0.97);
+}
+
+/* ═══ Карточки на главной / в каталоге — мягкое появление при скролле (опционально) ═══ */
+.listing-grid > * {
+  animation: motion-tz16-fade-up var(--motion-duration-slow) var(--motion-ease) backwards;
+}
+
+.listing-grid > *:nth-child(1) { animation-delay: 0ms; }
+.listing-grid > *:nth-child(2) { animation-delay: 30ms; }
+.listing-grid > *:nth-child(3) { animation-delay: 60ms; }
+.listing-grid > *:nth-child(4) { animation-delay: 90ms; }
+.listing-grid > *:nth-child(5) { animation-delay: 120ms; }
+.listing-grid > *:nth-child(6) { animation-delay: 150ms; }
+.listing-grid > *:nth-child(n+7) { animation-delay: 180ms; }
+
+@keyframes motion-tz16-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-grid > * {
+    animation: none;
+  }
+}
+
+/* ═══ Bottom Sheet — плавное появление панели ═══ */
+.bottom-sheet-tz2-panel {
+  transition: transform var(--motion-duration-slow) var(--motion-ease),
+    opacity var(--motion-duration-slow) var(--motion-ease);
+}
+
+.bottom-sheet-tz2-overlay {
+  transition: opacity var(--motion-duration-slow) var(--motion-ease);
+}
+
+/* ═══ Уведомления / тосты — slide сверху + fade ═══ */
+.notifications-panel-tz6,
+[class*="notifications-panel"] {
+  animation: motion-tz16-notif-in var(--motion-duration) var(--motion-ease);
+}
+
+@keyframes motion-tz16-notif-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══ Tap feedback (mobile) — активное состояние карточек ═══ */
+@media (hover: none) and (pointer: coarse) {
+  .listing-card:active {
+    transform: scale(0.99);
+    transition: transform 0.1s var(--motion-ease);
+  }
+}

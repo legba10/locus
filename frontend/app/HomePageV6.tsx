@@ -9,6 +9,7 @@ import { MarketAnalysisBlock } from '@/shared/ui/MarketAnalysisBlock'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { useAuthStore } from '@/domains/auth'
 import { useFilterStore } from '@/core/filters'
+import { BUDGET_PRESETS, PROPERTY_TYPES } from '@/core/filters'
 import { FilterPanel, QuickAIModal, CitySelect } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
@@ -45,7 +46,7 @@ interface ListingsResponse {
 export function HomePageV6() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { city, budgetMin, budgetMax, type, duration, aiMode, setCity, setBudget, setType, setDuration, getBudgetQuery } = useFilterStore()
+  const { city, budgetMin, budgetMax, type, duration, aiMode, setCity, setBudget, setType, setDuration, getBudgetQuery, reset: resetFilters } = useFilterStore()
   const [aiPreparing, setAiPreparing] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
@@ -56,6 +57,8 @@ export function HomePageV6() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [showCityHint, setShowCityHint] = useState(false)
   const [shakeCities, setShakeCities] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [ctaLoading, setCtaLoading] = useState(false)
 
   const { data, isLoading } = useFetch<ListingsResponse>(['listings-home'], '/api/listings?limit=12')
   const isLandlord = user?.role === 'landlord'
@@ -75,6 +78,7 @@ export function HomePageV6() {
   }
 
   const handleSearch = () => {
+    setSearching(true)
     const params = new URLSearchParams()
     if (city) params.set('city', city)
     const typeVal = Array.isArray(type) ? type[0] : type
@@ -90,13 +94,12 @@ export function HomePageV6() {
       track('search_first', { city, priceMin, priceMax, duration, type })
     }
     router.push(`/listings?${params.toString()}`)
+    setTimeout(() => setSearching(false), 2000)
   }
 
+  /** ТЗ-20: при нажатии «Подобрать жильё» — loader в кнопке, затем переход к результатам с ai=true */
   const handleSmartSearch = () => {
-    setShowQuickFab(true)
-  }
-
-  const handleQuickAILaunch = () => {
+    setCtaLoading(true)
     const params = new URLSearchParams()
     params.set('ai', 'true')
     if (city) params.set('city', city)
@@ -106,9 +109,14 @@ export function HomePageV6() {
     const typeVal = Array.isArray(type) ? type[0] : type
     if (typeVal) params.set('type', typeVal)
     if (duration) params.set('rentPeriod', duration)
-    setShowQuickFab(false)
     track('smart_match_open', { city })
     router.push(`/listings?${params.toString()}`)
+    setTimeout(() => setCtaLoading(false), 1200)
+  }
+
+  const handleQuickAILaunch = () => {
+    setShowQuickFab(false)
+    handleSmartSearch()
   }
 
   useEffect(() => {
@@ -139,6 +147,14 @@ export function HomePageV6() {
     const firstMatchSeen = localStorage.getItem('locus_first_match_seen') === 'true'
     setHighlightFirstCard(!firstMatchSeen)
   }, [])
+
+  /** ТЗ-20: закрытие фильтра по Escape */
+  useEffect(() => {
+    if (!filterSheetOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFilterSheetOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [filterSheetOpen])
 
   useEffect(() => {
     const onCardViewed = () => {
@@ -281,85 +297,144 @@ export function HomePageV6() {
   })
 
   return (
-    <div className="min-h-screen font-sans antialiased bg-[var(--background)]">
-      {/* Hero */}
-      <Hero />
+    <div className="home-tz18 min-h-screen font-sans antialiased bg-[var(--background)]">
+      {/* ═══ TZ-19 UI-freeze: порядок блоков не менять. 1.Header 2.Hero 3.AI-подбор(в Hero) 4.Популярные города 5.Фильтр 6.Лента 7.Статистика 8.Футер ═══ */}
+      {/* 2. HERO (включает AI-панель — пункт 3) */}
+      <Hero onCtaClick={handleSmartSearch} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} />
 
-      {/* ТЗ-10: порядок Hero → AI подбор → Города → Фильтр → Статистика → Карточки */}
-      {/* 1) AI подбор — CTA открывает умный подбор */}
-      <section className="bg-transparent relative z-20 section-spacing-tz4">
-        <div className="market-container">
-          <div className="home-filter-animate-tz10 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5">
-            <p className="text-[14px] text-[var(--text-secondary)] mb-3">Подбор под ваш бюджет и параметры</p>
-            <button
-              type="button"
-              onClick={handleSmartSearch}
-              className="search-hero-ai-tz7-compact w-full sm:w-auto min-h-[48px] px-5"
-              aria-label="Умный подбор AI"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-              Умный подбор AI
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 2) Популярные города */}
-      <section className="bg-transparent">
+      {/* 4. Популярные города — строго перед фильтром */}
+      <section className="bg-transparent home-section-tz18--medium" aria-label="Популярные города">
         <div className="market-container">
           <PopularCities shake={shakeCities} />
         </div>
       </section>
 
-      {/* 3) Фильтр — город, кнопки, панель. ТЗ-10: кнопка «Подобрать жильё» открывает AI, не скролл к фильтру */}
-      <section id="search" className="bg-transparent relative z-20 section-spacing-tz4">
-        <div className="market-container">
-          <div className={cn('home-filter-animate-tz10', shakeCities && 'search-flow-shake')}>
-            <div className="mb-3">
-              <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Город</label>
-              <CitySelect value={city ?? ''} onChange={(v) => { setCity(v || null); setShowCityHint(false) }} placeholder="Выберите город" className="w-full" />
+      {/* 5. Фильтр / поиск — max-width 1000px, кнопки 54px / 44px */}
+      <section id="search" className="bg-transparent relative z-20" aria-label="Поиск и фильтры">
+        <div className="market-container home-search-wrap-tz12 home-search-wrap-tz18">
+          <div className={cn('home-search-block-tz12 home-filter-animate-tz10 rounded-2xl md:rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5', shakeCities && 'search-flow-shake')}>
+            {/* Строка: Город | Бюджет | Тип (desktop) или столбик (mobile) */}
+            <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 mb-3">
+              <div className="flex-1 min-w-0">
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Город</label>
+                <CitySelect value={city ?? ''} onChange={(v) => { setCity(v || null); setShowCityHint(false) }} placeholder="Выберите город" className="w-full" autoFocus />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Бюджет</label>
+                <select
+                  value={budgetMin !== '' && budgetMax !== '' ? `${budgetMin}-${budgetMax}` : ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (!v) setBudget('', '')
+                    else {
+                      const preset = BUDGET_PRESETS.find((p) => `${p.min}-${p.max}` === v)
+                      if (preset) setBudget(preset.min, preset.max)
+                    }
+                  }}
+                  className="w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] px-3 text-[14px] text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                >
+                  <option value="">Любой бюджет</option>
+                  {BUDGET_PRESETS.map((p) => (
+                    <option key={p.label} value={`${p.min}-${p.max}`}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Тип жилья</label>
+                <select
+                  value={Array.isArray(type) ? type[0] ?? '' : (type ?? '')}
+                  onChange={(e) => setType(e.target.value || '')}
+                  className="w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] px-3 text-[14px] text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                >
+                  {PROPERTY_TYPES.map((o) => (
+                    <option key={o.value || 'any'} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             {showCityHint && (
               <p className="text-[14px] text-[var(--sub)] mb-3 rounded-xl px-4 py-2 bg-[var(--bg-secondary)] text-center" role="alert">
                 Сначала выберите город
               </p>
             )}
-            <div className="flex flex-col sm:flex-row gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
-                onClick={city?.trim() ? handlePrimarySearch : handleSmartSearch}
-                className="search-hero-submit-tz7-compact w-full sm:flex-1 min-h-[48px] order-1"
+                onClick={handlePrimarySearch}
+                disabled={searching}
+                className="search-btn-show-tz18 search-hero-submit-tz7-compact w-full sm:flex-1 order-1 flex items-center justify-center gap-2"
               >
-                {city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
+                {searching ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
+                    Загрузка…
+                  </>
+                ) : (
+                  city?.trim() ? 'Показать варианты' : 'Подобрать жильё'
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setFilterSheetOpen(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[48px] px-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text)] font-medium text-[14px] order-2"
+                className="search-btn-filters-tz18 w-full sm:w-auto flex items-center justify-center gap-2 px-4 border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text)] font-medium text-[14px] order-2"
+                aria-label="Открыть фильтры"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
                 Фильтры
               </button>
             </div>
-            <div className="hidden md:block home-card-tz4 search-block-product mt-4">
-              <FilterPanel
-                embedded
-                wrapInCard={false}
-                showSearchButtons={true}
-                onSearch={handlePrimarySearch}
-                onSmartSearch={handleSmartSearch}
-                primaryButtonLabel={city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
-                hideCityRow
-              />
-            </div>
           </div>
-          <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" animateClose className="bg-[var(--card)] border-t border-[var(--border)]">
+
+          {/* ТЗ-12: Desktop — dropdown панель под поиском, с анимацией и затемнением фона */}
+          {filterSheetOpen && (
+            <>
+              <div
+                className="home-filter-overlay-tz12 fixed inset-0 bg-black/40 transition-opacity hidden md:block"
+                style={{ zIndex: 899 }}
+                aria-hidden
+                onClick={() => setFilterSheetOpen(false)}
+              />
+              <div className="home-filter-dropdown-tz12 hidden md:block fixed left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[1100px] rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] shadow-xl p-5 pb-6 overflow-y-auto"
+                style={{ top: 'var(--home-search-dropdown-top, 320px)', zIndex: 900, maxHeight: '70vh' }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => resetFilters()} className="text-[13px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-main)] transition-colors">
+                      Сбросить
+                    </button>
+                    <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                </div>
+                <FilterPanel
+                  embedded
+                  wrapInCard={false}
+                  showSearchButtons={true}
+                  onSearch={() => { handlePrimarySearch(); setFilterSheetOpen(false); }}
+                  onSmartSearch={() => { handleSmartSearch(); setFilterSheetOpen(false); }}
+                  primaryButtonLabel="Показать варианты"
+                  hideCityRow
+                />
+              </div>
+            </>
+          )}
+
+          {/* ТЗ-12: Mobile — bottom sheet фильтров; на desktop показывается только dropdown выше */}
+          <div className="md:hidden">
+            <BottomSheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} maxHeight="78vh" animateClose className="bg-[var(--card-bg)] border-t border-[var(--border)]">
             <div className="rounded-t-2xl border-0 max-w-none mx-0 p-4 pb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
-                <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => resetFilters()} className="text-[13px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-main)]">
+                    Сбросить
+                  </button>
+                  <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
               <FilterPanel
                 embedded
@@ -367,21 +442,19 @@ export function HomePageV6() {
                 showSearchButtons={true}
                 onSearch={() => { handlePrimarySearch(); setFilterSheetOpen(false); }}
                 onSmartSearch={() => { handleSmartSearch(); setFilterSheetOpen(false); }}
-                primaryButtonLabel={city?.trim() ? 'Показать варианты' : 'Подобрать жильё'}
+                primaryButtonLabel="Показать варианты"
               />
             </div>
-          </BottomSheet>
+            </BottomSheet>
+          </div>
         </div>
       </section>
 
-      {/* 4) Статистика — после фильтра, перед карточками */}
-      <StatsBlock />
-
-      {/* 5) Актуальные предложения */}
-      <section className="bg-transparent animate-fade-in section-spacing-tz4">
+      {/* 6. Лента объявлений — актуальные предложения */}
+      <section className="bg-transparent home-section-tz18 animate-fade-in">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">
+            <h2 className="section-title-tz19">
               Актуальные предложения
             </h2>
             <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">
@@ -389,7 +462,7 @@ export function HomePageV6() {
             </Link>
           </div>
           <div className="listing-grid">
-            {isLoading || aiPreparing ? (
+            {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
               listingCards.map((listing) => (
@@ -403,6 +476,7 @@ export function HomePageV6() {
                   district={listing.district || undefined}
                   rating={listing.rating}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
+                  className="listing-card-tz18"
                 />
               ))
             ) : (
@@ -415,7 +489,7 @@ export function HomePageV6() {
                     </svg>
                   </div>
                   <p className="text-[16px] font-semibold text-[var(--text)]">Пока нет объявлений</p>
-                  <p className="mt-2 text-[14px] text-[var(--sub)]">Подберите параметры и попробуйте расширить поиск.</p>
+                  <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Попробуйте изменить фильтры.</p>
                   <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
                     Смотреть все объявления
                   </Link>
@@ -426,11 +500,14 @@ export function HomePageV6() {
         </div>
       </section>
 
+      {/* 7. Статистика — после ленты объявлений (TZ-19 порядок) */}
+      <StatsBlock />
+
       {/* Рекомендации AI */}
-      <section className="bg-transparent section-spacing-tz4">
+      <section className="bg-transparent home-section-tz18">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)]">Рекомендации AI</h2>
+            <h2 className="section-title-tz19">Рекомендации AI</h2>
             <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">Смотреть все →</Link>
           </div>
           <div className="listing-grid">
@@ -444,6 +521,7 @@ export function HomePageV6() {
                 city={listing.city}
                 district={listing.district || undefined}
                 rating={listing.rating}
+                className="listing-card-tz18"
               />
             )) : !isLoading ? (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
@@ -458,9 +536,9 @@ export function HomePageV6() {
       </section>
 
       {/* Последние просмотренные */}
-      <section className="bg-transparent section-spacing-tz4">
+      <section className="bg-transparent home-section-tz18">
         <div className="market-container">
-          <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-6 md:mb-8">Последние просмотренные</h2>
+          <h2 className="section-title-tz19 mb-6 md:mb-8">Последние просмотренные</h2>
           <div className="listing-grid">
             {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 3).map((listing) => (
               <ListingCard
@@ -472,6 +550,7 @@ export function HomePageV6() {
                 city={listing.city}
                 district={listing.district || undefined}
                 rating={listing.rating}
+                className="listing-card-tz18"
               />
             )) : (
               <div className="col-span-full glass rounded-[20px] p-6 text-center">
@@ -497,7 +576,7 @@ export function HomePageV6() {
       <section className="bg-transparent">
         <div className="market-container">
           <div className="text-center mb-10">
-            <h2 className="text-[24px] md:text-[28px] font-bold text-[var(--text)] mb-2">
+            <h2 className="section-title-tz19 mb-2">
               Новости рынка
             </h2>
             <p className="text-[var(--sub)] max-w-md mx-auto text-[15px]">

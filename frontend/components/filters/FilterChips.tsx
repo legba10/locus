@@ -26,7 +26,10 @@ export function FilterChips({ options, value, onChange, label, className }: Filt
           <button
             key={`filter-chip-${opt.value === '' ? '_any' : opt.value}-${index}`}
             type="button"
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10)
+              onChange(opt.value)
+            }}
             className={cn(
               'filter-chip rounded-full px-3 py-1.5 min-h-[36px] text-[13px] font-medium transition-colors border',
               value === opt.value && 'selected',

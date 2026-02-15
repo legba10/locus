@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState } from 'react'
 import { AuthProvider } from '@/domains/auth/AuthProvider'
 import { ModalProvider } from '@/shared/contexts/ModalContext'
+import { ToastProvider } from '@/shared/contexts/ToastContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const safeMode = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
@@ -28,18 +29,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ModalProvider>
-        {safeMode ? (
-          <>{children}</>
-        ) : (
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        )}
-        {process.env.NODE_ENV === 'development' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
-      </ModalProvider>
+      <ToastProvider>
+        <ModalProvider>
+          {safeMode ? (
+            <>{children}</>
+          ) : (
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          )}
+          {process.env.NODE_ENV === 'development' && (
+            <ReactQueryDevtools initialIsOpen={false} />
+          )}
+        </ModalProvider>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

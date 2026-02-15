@@ -9,6 +9,7 @@ import ModalRoot from './ModalRoot'
 import '../styles/globals.css'
 
 const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewReminderPopup').then((m) => ({ default: m.ReviewReminderPopup })), { ssr: false })
+const AppPreloader = dynamic(() => import('@/components/ui/AppPreloader').then((m) => ({ default: m.AppPreloader })), { ssr: false })
 
 export const metadata: Metadata = {
   title: 'LOCUS — Поиск жилья',
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Providers>
             <ErrorBoundaryWrapper>
+              <AppPreloader />
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-1 main-with-header">{children}</main>

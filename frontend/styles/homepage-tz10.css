@@ -186,3 +186,45 @@
 .dark .filters-pill-tz10 button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ═══ TZ-12: Поиск и фильтры — UX уровня Airbnb/Циан ═══ */
+.home-search-wrap-tz12 {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (min-width: 768px) {
+  .home-search-wrap-tz12 {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+.home-search-block-tz12 {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+[data-theme="dark"] .home-search-block-tz12,
+.dark .home-search-block-tz12 {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+.home-filter-overlay-tz12 {
+  animation: homeFilterOverlayFadeTz12 200ms ease-out;
+}
+@keyframes homeFilterOverlayFadeTz12 {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.home-filter-dropdown-tz12 {
+  animation: homeFilterDropdownInTz12 220ms ease-out;
+}
+@keyframes homeFilterDropdownInTz12 {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

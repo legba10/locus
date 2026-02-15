@@ -2,18 +2,17 @@
 
 import { useState, useEffect, useRef, memo } from 'react'
 
+/** ТЗ-20: финальные фразы, скорость не быстрее 60ms, курсор стабильный */
 const PHRASES = [
-  'Быстрее с AI',
-  'Без риелторов',
   'Под ваш бюджет',
-  'Проверенные объявления',
   'В нужном районе',
-  'Без переплат',
+  'Без риелторов',
+  'Быстрее с AI',
 ]
 
-const SPEED_MS = 40
-const PAUSE_MS = 1200
-const DELETE_SPEED_MS = 25
+const SPEED_MS = 60
+const PAUSE_MS = 1800
+const DELETE_SPEED_MS = 35
 
 /**
  * ТЗ-1: печать подзаголовка в hero — тип → пауза → удаление → следующая фраза.
@@ -70,9 +69,9 @@ function HeroTypingInner() {
   }, [])
 
   return (
-    <span className="text-[var(--color-primary,#8B5CF6)] font-medium tracking-wide">
-      {text}
-      <span className="animate-pulse" aria-hidden>|</span>
+    <span className="hero-typing-tz20 inline-flex items-center justify-center gap-0.5 text-[var(--accent)] font-medium tracking-wide">
+      <span className="min-w-[2ch] text-left">{text}</span>
+      <span className="hero-typing-cursor inline-block w-[2px] h-[1em] bg-[var(--accent)] animate-pulse shrink-0" aria-hidden />
     </span>
   )
 }

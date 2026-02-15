@@ -3,9 +3,16 @@
 import { HeroSection } from './HeroSection'
 
 /**
- * ТЗ-1: Hero главной — обёртка над HeroSection (стабильный текст, печать, визуал).
- * Header, фильтры, auth не трогаем.
+ * ТЗ-17 + ТЗ-20: Hero — заголовок, печатная строка, подзаголовок, CTA (с loading), AI-панель.
  */
-export function Hero() {
-  return <HeroSection />
+export function Hero({
+  onCtaClick,
+  onOpenFilters,
+  ctaLoading,
+}: {
+  onCtaClick?: () => void
+  onOpenFilters?: () => void
+  ctaLoading?: boolean
+}) {
+  return <HeroSection onCtaClick={onCtaClick} onOpenFilters={onOpenFilters} ctaLoading={ctaLoading} />
 }

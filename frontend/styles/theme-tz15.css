@@ -1,0 +1,198 @@
+/**
+ * ТЗ-15: Глобальная система тем — палитра, кнопки, карточки, переключатель, фильтры.
+ * Подключается после tokens.css, переопределяет палитру для единого стиля.
+ */
+
+/* ═══ ПАЛИТРА ТЗ-15 (переопределяет tokens) ═══ */
+:root,
+:root[data-theme="light"] {
+  --background: #FFFFFF;
+  --bg: #FFFFFF;
+  --bg-main: #FFFFFF;
+  --bg-block: #F6F7F9;
+  --bg-secondary: #F6F7F9;
+  --bg-surface: #F6F7F9;
+  --card: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --surface: #FFFFFF;
+  --text-main: #111827;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9ca3af;
+  --border: #E5E7EB;
+  --border-main: #E5E7EB;
+  --header-bg: #F6F7F9;
+  --input-bg: #F6F7F9;
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --card-hover: #f8fafc;
+  --icon-primary: #111827;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-gradient: linear-gradient(to right, #7c3aed, #4f46e5);
+  --button-primary: linear-gradient(to right, #7c3aed, #4f46e5);
+  --button-primary-text: #ffffff;
+}
+
+:root[data-theme="dark"],
+.dark {
+  --background: #0B0F19;
+  --bg: #0B0F19;
+  --bg-main: #0B0F19;
+  --bg-block: #111827;
+  --bg-secondary: #111827;
+  --bg-surface: #111827;
+  --card: #0F172A;
+  --bg-card: #0F172A;
+  --bg-elevated: #1F2937;
+  --surface: #111827;
+  --text-main: #F9FAFB;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6f7685;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-main: rgba(255, 255, 255, 0.06);
+  --header-bg: rgba(11, 15, 25, 0.97);
+  --input-bg: #111827;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.4);
+  --card-hover: #1F2937;
+  --icon-primary: #F9FAFB;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-gradient: linear-gradient(to right, #7c3aed, #4f46e5);
+  --button-primary: linear-gradient(to right, #7c3aed, #4f46e5);
+  --button-primary-text: #ffffff;
+}
+
+/* ═══ Кнопки: Primary, Secondary, Ghost ═══ */
+.btn-tz15-primary {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  border: none;
+  background: var(--accent-gradient);
+  color: var(--button-primary-text);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+.btn-tz15-primary:hover {
+  filter: brightness(1.05);
+}
+.btn-tz15-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-tz15-secondary {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.btn-tz15-secondary:hover {
+  background: var(--bg-block);
+}
+[data-theme="dark"] .btn-tz15-secondary:hover,
+.dark .btn-tz15-secondary:hover {
+  background: var(--card-hover);
+}
+
+.btn-tz15-ghost {
+  height: auto;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.btn-tz15-ghost:hover {
+  background: var(--bg-block);
+}
+[data-theme="dark"] .btn-tz15-ghost:hover,
+.dark .btn-tz15-ghost:hover {
+  background: var(--card-hover);
+}
+
+/* ═══ Карточки: единый стиль — radius 20, padding 20, без двойных рамок ═══ */
+.card-tz15 {
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .card-tz15,
+.dark .card-tz15 {
+  border-color: var(--border);
+}
+
+/* ═══ Переключатель темы — круглая кнопка, иконка солнце/луна, hover ═══ */
+.theme-toggle-tz15,
+.layout-header .theme-toggle-tz9 {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--icon-primary);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle-tz15:hover,
+.layout-header .theme-toggle-tz9:hover {
+  background: var(--bg-block);
+}
+[data-theme="dark"] .theme-toggle-tz15,
+[data-theme="dark"] .layout-header .theme-toggle-tz9,
+.dark .theme-toggle-tz15,
+.dark .layout-header .theme-toggle-tz9 {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--icon-primary);
+}
+[data-theme="dark"] .theme-toggle-tz15:hover,
+[data-theme="dark"] .layout-header .theme-toggle-tz9:hover,
+.dark .theme-toggle-tz15:hover,
+.dark .layout-header .theme-toggle-tz9:hover {
+  background: var(--card-hover);
+}
+
+/* ═══ Фильтры: контейнер чётко отличается от фона страницы ═══ */
+.filter-container-tz15 {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+/* ═══ Hero: глубокий градиент в dark, не чёрная яма ═══ */
+.hero-bg-tz15 {
+  background: var(--background);
+}
+[data-theme="dark"] .hero-bg-tz15,
+.dark .hero-bg-tz15 {
+  background: linear-gradient(180deg, #0B0F19 0%, #111827 50%, #0B0F19 100%);
+}
