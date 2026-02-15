@@ -375,7 +375,7 @@ export function HomePageV6() {
       cleanliness: cache?.cleanliness ?? null,
       noise: cache?.noise ?? null,
     }
-  })
+  });
 
   return (
     <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
