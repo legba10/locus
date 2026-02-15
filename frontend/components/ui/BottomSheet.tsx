@@ -79,17 +79,19 @@ export function BottomSheet({
         className={cn(
           'relative flex flex-col rounded-t-[24px] border-t border-[var(--border)] bg-[var(--bg-glass)] shadow-[var(--shadow-modal)]',
           'backdrop-blur-[20px] text-[var(--text-main)] overflow-hidden',
-          'bottom-sheet-tz2-panel',
+          'bottom-sheet-tz2-panel bottom-sheet-tz5',
           open && !exiting && 'bottom-sheet-tz2-panel--open',
           exiting && 'bottom-sheet-tz2-panel--exiting',
           className
         )}
         style={{
           maxHeight,
+          height: open ? maxHeight : undefined,
           zIndex: 'var(--z-modal)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* ТЗ-5: при height = maxHeight контент внутри (flex-1 overflow-y-auto) скроллится */}
         {children}
       </div>
     </div>

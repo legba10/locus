@@ -243,6 +243,14 @@ export function SearchPageV4() {
     }
 
     const cache = listing.ratingCache as { rating?: number; positive_ratio?: number; cleanliness?: number; noise?: number } | null | undefined
+    const scoreNum = typeof aiScore === 'number' ? aiScore : (aiScore as any)?.score ?? listing.score ?? 50
+    const badgeList: ('verified' | 'ai' | 'top' | 'new')[] = []
+    if (isVerified) badgeList.push('verified')
+    if (aiMode && scoreNum >= 60) badgeList.push('ai')
+    if (scoreNum >= 75) badgeList.push('top')
+    if (isNew) badgeList.push('new')
+    const badges = badgeList.slice(0, 2)
+    const rentalType = (listing.rentPeriod || listing.rentType || '').toString().toLowerCase().includes('month') ? 'month' : 'night'
     return {
       id: listing.id,
       photo,
@@ -250,10 +258,13 @@ export function SearchPageV4() {
       price: listing.pricePerNight || listing.basePrice || 0,
       city: listing.city || 'Не указан',
       district,
-      rooms: listing.bedrooms || listing.rooms || 1,
-      area: listing.area || 40,
-      floor: listing.floor || 1,
-      totalFloors: listing.totalFloors || 5,
+      metro: listing.metro || listing.metroStation || null,
+      rentalType,
+      rooms: listing.bedrooms ?? listing.rooms ?? 1,
+      area: listing.area ?? 40,
+      guests: listing.maxGuests ?? listing.guests ?? null,
+      floor: listing.floor ?? null,
+      totalFloors: listing.totalFloors ?? null,
       views,
       isNew,
       isVerified,
@@ -262,7 +273,8 @@ export function SearchPageV4() {
       reasons: aiReasons,
       tags: tags.length > 0 ? tags : [],
       aiScore: aiScore,
-      aiReasons: aiReasons,
+      aiReasons: aiReasons.length > 0 ? aiReasons : (listing.verdict ? [listing.verdict] : null),
+      badges,
       rating: cache?.rating ?? null,
       reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
       cleanliness: cache?.cleanliness ?? null,
@@ -273,8 +285,11 @@ export function SearchPageV4() {
   // Сортировка (store: popular | price_asc | price_desc)
   const sortedListings = [...listingCards].sort((a, b) => {
     switch (sort) {
-      case 'popular':
-        return (b.aiScore || 0) - (a.aiScore || 0)
+      case 'popular': {
+        const aS = typeof a.aiScore === 'number' ? a.aiScore : (a.aiScore as any)?.score ?? 0
+        const bS = typeof b.aiScore === 'number' ? b.aiScore : (b.aiScore as any)?.score ?? 0
+        return bS - aS
+      }
       case 'price_asc':
         return a.price - b.price
       case 'price_desc':
@@ -426,7 +441,7 @@ export function SearchPageV4() {
 
             {/* Сетка объявлений */}
             {!isLoading && sortedListings.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+              <div className="listing-grid listing-grid-tz4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedListings.map((listing) => (
                   <ListingCard
                     key={listing.id}
@@ -436,6 +451,15 @@ export function SearchPageV4() {
                     price={listing.price}
                     city={listing.city}
                     district={listing.district || undefined}
+                    metro={listing.metro || undefined}
+                    rentalType={listing.rentalType}
+                    rooms={listing.rooms}
+                    area={listing.area}
+                    guests={listing.guests ?? undefined}
+                    floor={listing.floor ?? undefined}
+                    totalFloors={listing.totalFloors ?? undefined}
+                    aiReasons={listing.aiReasons}
+                    badges={listing.badges}
                     rating={listing.rating}
                   />
                 ))}

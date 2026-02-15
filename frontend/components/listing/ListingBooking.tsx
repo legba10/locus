@@ -39,29 +39,39 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
       <p className="text-[14px] text-[var(--text-secondary)]">
         Выберите даты заезда и выезда, количество гостей.
       </p>
-      <div className="booking-dates grid grid-cols-2 gap-2.5 w-full min-w-0">
-        <div className="booking-date-field flex flex-col min-w-0">
-          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Заезд</label>
+      <div className="booking-dates w-full min-w-0" role="group" aria-label="Даты заезда и выезда">
+        <div className="booking-date-field booking-date--checkin">
+          <label id="booking-checkin-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkin-input">
+            Заезд
+          </label>
           <input
+            id="booking-checkin-input"
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="booking-date-input w-full min-w-0 h-12 rounded-[12px] px-2.5 py-2 border border-[var(--border)] text-[var(--text)] text-sm box-border"
+            aria-label="Дата заезда"
+            aria-describedby="booking-checkin-label"
+            className="booking-date-input w-full min-w-0 box-border"
           />
         </div>
-        <div className="booking-date-field flex flex-col min-w-0">
-          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Выезд</label>
+        <div className="booking-date-field booking-date--checkout">
+          <label id="booking-checkout-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkout-input">
+            Выезд
+          </label>
           <input
+            id="booking-checkout-input"
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
             min={checkIn || undefined}
-            className="booking-date-input w-full min-w-0 h-12 rounded-[12px] px-2.5 py-2 border border-[var(--border)] text-[var(--text)] text-sm box-border"
+            aria-label="Дата выезда"
+            aria-describedby="booking-checkout-label"
+            className="booking-date-input w-full min-w-0 box-border"
           />
         </div>
       </div>
-      <div className="min-w-0">
-        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Гости</label>
+      <div className="guests-control min-w-0">
+        <label id="booking-guests-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Гости</label>
         <div className="flex items-center gap-3 h-12 rounded-[12px] border border-[var(--border)] px-4 bg-[var(--input-bg)]">
           <button
             type="button"
@@ -96,6 +106,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           <span>{formatPrice(total, 'night')}</span>
         </div>
       )}
+      <div className="booking-actions">
       <button
         type="button"
         onClick={() =>
@@ -107,15 +118,18 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           })
         }
         disabled={!canConfirm}
+        aria-disabled={!canConfirm}
+        aria-label="Забронировать"
         className={cn(
-          'booking-btn w-full min-w-0 h-[50px] md:h-[52px] rounded-[14px] font-semibold text-[16px] border-0 mt-3',
+          'booking-btn w-full min-w-0 h-[50px] md:h-[52px] rounded-[14px] font-semibold text-[16px] border-0',
           'bg-[var(--accent)] text-white',
-          'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
-          'transition-opacity duration-200'
+          'hover:opacity-90 disabled:cursor-not-allowed',
+          'transition-opacity duration-200 focus-visible:outline-none'
         )}
       >
         Забронировать
       </button>
+      </div>
     </div>
   )
 }

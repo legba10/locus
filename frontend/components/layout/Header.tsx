@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { MobileMenu } from './MobileMenu'
@@ -106,8 +106,8 @@ export function Header() {
   return (
     <header
       className={cn(
-        'layout-header layout-header-tz13 sticky left-0 right-0 z-[var(--z-header)] w-full',
-        'h-[60px] md:h-16 min-h-[60px] md:min-h-16',
+        'layout-header layout-header-tz13 layout-header-tz2 sticky left-0 right-0 z-[var(--z-header)] w-full',
+        'h-16 md:h-[72px] min-h-16 md:min-h-[72px]',
         'transition-[box-shadow,background] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
@@ -115,7 +115,7 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6 h-[60px] md:h-16 flex items-center justify-between">
+      <div className="layout-header__inner-tz2 mx-auto max-w-7xl h-full flex items-center justify-between">
         {/* ТЗ-13: Слева — бургер, логотип. Одна точка входа в профиль — аватар справа. */}
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -148,8 +148,8 @@ export function Header() {
           </Link>
         </div>
 
-        {/* ТЗ-17: [messages] [favorites] [bell] [theme] [avatar] [разместить]. Иконки 20–22px, gap 16px. */}
-        <div className="layout-header__right flex items-center gap-4 shrink-0">
+        {/* ТЗ-2 + ТЗ-17: справа [messages] [favorites] [bell] [theme] [avatar] [разместить]; gap 12px; мобила — уведомления, тема, профиль. */}
+        <div className="layout-header__right flex items-center gap-3 shrink-0">
           <Link href="/messages" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-[var(--text-main)] hover:bg-[var(--bg-secondary)] transition hidden md:flex shrink-0" aria-label="Сообщения">
             <MessageCircle size={22} strokeWidth={1.8} />
           </Link>
@@ -197,6 +197,11 @@ export function Header() {
                   <Link href="/pricing" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <CreditCard className={iconSm} /> Тарифы
                   </Link>
+                  {canCreateListing && (
+                    <Link href={createHref} className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] md:hidden" onClick={() => setProfileOpen(false)} role="menuitem">
+                      <Plus className={iconSm} /> Разместить объявление
+                    </Link>
+                  )}
                   <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] md:hidden" onClick={() => setProfileOpen(false)} role="menuitem">
                     <Settings className={iconSm} /> Настройки
                   </Link>

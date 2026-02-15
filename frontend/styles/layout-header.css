@@ -1,6 +1,7 @@
 /**
- * ТЗ-3: Header — единая структура, без дублей. Чистый фон, меньше линий, мягкие тени.
- * Справа: уведомления | тема | профиль или войти. gap 12px, иконки 22px.
+ * ТЗ-3: Header — единая структура, без дублей.
+ * ТЗ-2: единая система для ПК и мобилы — высоты 64/72px, отступы 16px, gap 12px.
+ * Светлая тема: чистый белый. Тёмная: глубокий синий. При скролле 90% opacity.
  */
 
 .layout-header {
@@ -8,7 +9,14 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* ТЗ-13: высота 60px mobile / 64px desktop, тонкая граница, иконки через var(--text-main) */
+/* ТЗ-2: отступы 16px слева/справа, высота контейнера 100% от header */
+.layout-header__inner-tz2 {
+  padding-left: 16px;
+  padding-right: 16px;
+  height: 100%;
+}
+
+/* ТЗ-13: тонкая граница, иконки через var(--text-main) */
 .layout-header-tz13.layout-header {
   border-bottom-width: 1px;
 }
@@ -22,28 +30,29 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* ТЗ-3: чистый фон, без тёмно-серого шума; контраст для светлой темы (WCAG 4.5:1) */
+/* ТЗ-2: светлая тема — чистый белый; тёмная — глубокий синий. Одинаковые отступы. */
 .layout-header {
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.97);
+  background: #ffffff;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 [data-theme="dark"] .layout-header,
 .dark .layout-header {
-  background: rgba(11, 16, 32, 0.97);
-  border-bottom-color: var(--border);
+  background: #0B1020;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
+/* ТЗ-2: при скролле — 90% opacity, без скачков */
 .layout-header--scrolled {
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="dark"] .layout-header--scrolled,
 .dark .layout-header--scrolled {
-  background: rgba(10, 12, 18, 0.98);
+  background: rgba(11, 16, 32, 0.9);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
@@ -158,16 +167,11 @@
   color: var(--text-main);
 }
 
-/* ТЗ-3: справа gap 12px, иконки 22px, вертикальное выравнивание. ТЗ-9: мобильный gap 8px */
+/* ТЗ-2: между иконками 12px на всех breakpoints */
 .layout-header__right {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-@media (max-width: 767px) {
-  .layout-header__right {
-    gap: 8px;
-  }
 }
 
 .layout-header__icon-wrap {
@@ -294,7 +298,12 @@
   justify-self: end;
 }
 
-/* ТЗ-1: отступ main под header 56px (h-14) + safe-area */
+/* ТЗ-2: отступ main под header — 64px mobile, 72px desktop + safe-area */
 .main-with-header {
-  padding-top: calc(56px + env(safe-area-inset-top, 0px));
+  padding-top: calc(64px + env(safe-area-inset-top, 0px));
+}
+@media (min-width: 768px) {
+  .main-with-header {
+    padding-top: calc(72px + env(safe-area-inset-top, 0px));
+  }
 }

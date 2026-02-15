@@ -12,6 +12,8 @@
 @import './typography.css';
 @import './buttons-tz5.css';
 @import './listing-card-tz6.css';
+@import './listing-card-tz4.css';
+@import './listing-booking-tz1.css';
 @import './search-tz7.css';
 @import './profile-tz9.css';
 @import './homepage-tz10.css';
@@ -1114,20 +1116,11 @@ body.modal-open {
   opacity: 0.92;
 }
 
-/* TZ-8: Блок бронирования — единый контейнер и поля по темам (без белых блоков в dark) */
+/* TZ-8 + ТЗ №1: блок бронирования — контейнер по темам; поля дат и кнопка в listing-booking-tz1.css */
 .booking-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-.booking-date-input {
-  background: var(--input-bg);
-  color: var(--text);
-}
-.booking-date-field .booking-date-input {
-  height: 48px;
-  border-radius: 12px;
-  padding: 10px;
 }
 
 /* TZ-10: Выйти — прозрачный фон, красная обводка, hover rgba(239,68,68,.12) */

@@ -1,0 +1,103 @@
+/**
+ * ТЗ №1 — Бронирование: выравнивание полей даты (Заезд/Выезд) и кнопки брони.
+ * Flex-верстка, единые бордеры, gap 12px, mobile column, кнопка не перекрывается.
+ */
+
+.booking-card {
+  --booking-border: var(--border);
+  --booking-border-focus: var(--accent);
+}
+
+[data-theme="dark"] .booking-card,
+.dark .booking-card {
+  --booking-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Контейнер полей дат: flex, gap 12px, на мобиле — колонка */
+.booking-dates {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .booking-dates {
+    flex-direction: column;
+  }
+}
+
+/* Обёртка каждого поля: равная ширина, min-width 0 для обрезки текста */
+.booking-date-field {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 480px) {
+  .booking-date-field {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+/* Инпут даты: единый бордер, радиус, отступы */
+.booking-date-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 12px;
+  border: 1px solid var(--booking-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-date-input:hover {
+  border-color: var(--border-primary, var(--booking-border));
+}
+
+.booking-date-input:focus {
+  outline: none;
+  border-color: var(--booking-border-focus);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+.booking-date-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Гости: класс для отступов */
+.booking-card .guests-control {
+  margin-top: 0;
+}
+
+/* Кнопка Забронировать: отступ сверху 20px, явный disabled */
+.booking-card .booking-btn {
+  margin-top: 20px;
+}
+
+.booking-card .booking-btn:disabled {
+  opacity: 0.6;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.booking-card .booking-btn:not(:disabled):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--booking-border-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-date-input,
+  .booking-card .booking-btn {
+    transition: none;
+  }
+}

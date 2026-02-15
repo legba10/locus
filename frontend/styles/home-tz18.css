@@ -242,3 +242,35 @@
     scroll-behavior: smooth;
   }
 }
+
+/* ═══ ТЗ-3: отступы между блоками 32px, макс 48px — без пустых экранов ═══ */
+.home-tz3 .home-tz3-block {
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .home-tz3 .home-tz3-block {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+}
+
+.home-tz3 .home-tz3-ai-card {
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ТЗ-3: убрать лишний margin над карточкой поиска */
+.home-tz3 .home-search-wrap-tz18 {
+  margin-top: 0;
+}
+
+/* ТЗ-5: sticky поиск — под шапкой, высота 72px */
+.home-search-sticky-tz5 {
+  top: var(--header-height, 64px);
+}
+.home-search-sticky-tz5__city,
+.home-search-sticky-tz5__budget {
+  min-height: 36px;
+}

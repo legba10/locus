@@ -1,5 +1,5 @@
 export { ListingCard, ListingCardSkeleton } from './ListingCard'
-export type { ListingCardProps, ListingCardOwner } from './ListingCard'
+export type { ListingCardProps, ListingCardOwner, ListingCardBadge } from './ListingCard'
 export { ListingGallery } from './ListingGallery'
 export { ListingHeader } from './ListingHeader'
 export { ListingOwner } from './ListingOwner'

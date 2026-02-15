@@ -17,26 +17,57 @@ export interface ListingCardOwner {
   rating?: number | null
 }
 
+/** ТЗ-4: бейджи — максимум 2, фиолетовые/синие */
+export type ListingCardBadge = 'verified' | 'ai' | 'top' | 'new' | 'discount' | 'rare'
+
 export interface ListingCardProps {
   id: string
-  /** Single photo URL or first of photos */
   photo?: string | null
-  /** Multiple photos (optional); if present, used for swipe/gallery */
   photos?: Array<{ url: string }>
   title: string
   price: number
   city: string
   district?: string | null
+  /** Метро (показывается на фото и в локации) */
+  metro?: string | null
+  /** Тип аренды: Посуточно, Долгосрочно, Комната, Студия */
+  rentalType?: 'night' | 'month' | 'room' | 'studio' | string
+  /** Комнаты, площадь, гостей, этаж — для метрик */
+  rooms?: number
+  area?: number
+  guests?: number
+  floor?: number
+  totalFloors?: number
+  /** AI: одна строка пояснения или массив причин (склеиваем в одну строку) */
+  aiReasons?: string | string[] | null
+  /** Бейджи (макс 2 показываем): Проверено, Подобрано AI, Топ, Новое, Скидка, Редкое */
+  badges?: ListingCardBadge[]
   owner?: ListingCardOwner | null
-  /** Listing rating (stars) */
   rating?: number | null
   isFavorite?: boolean
   onFavoriteToggle?: () => void
   className?: string
   highlight?: boolean
+  /** ТЗ-4: компактный вид без кнопок и AI (только фото, бейджи, цена, локация) */
+  compact?: boolean
 }
 
-/** TZ-3: единый ratio 4:3, desktop 320px, mobile 100% */
+const BADGE_LABELS: Record<ListingCardBadge, string> = {
+  verified: 'Проверено LOCUS',
+  ai: 'Подобрано AI',
+  top: 'Топ вариант',
+  new: 'Новое',
+  discount: 'Скидка',
+  rare: 'Редкое',
+}
+
+const RENTAL_LABELS: Record<string, string> = {
+  night: 'Посуточно',
+  month: 'Долгосрочно',
+  room: 'Комната',
+  studio: 'Студия',
+}
+
 const SWIPE_THRESHOLD = 50
 
 function ListingCardComponent({
@@ -47,12 +78,22 @@ function ListingCardComponent({
   price,
   city,
   district,
+  metro,
+  rentalType = 'night',
+  rooms,
+  area,
+  guests,
+  floor,
+  totalFloors,
+  aiReasons,
+  badges = [],
   owner,
   rating,
   isFavorite = false,
   onFavoriteToggle,
   className,
   highlight = false,
+  compact = false,
 }: ListingCardProps) {
   const { toast } = useToast()
   const [imgError, setImgError] = useState(false)
@@ -83,6 +124,23 @@ function ListingCardComponent({
     price > 0 && Number.isFinite(price)
       ? new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(price) + ` ${RU.price.currency}`
       : RU.price.on_request
+  const priceSuffix = rentalType === 'month' ? RU.price.per_month : RU.price.per_night
+  const rentalLabel = RENTAL_LABELS[rentalType] || (rentalType === 'month' ? 'Долгосрочно' : 'Посуточно')
+
+  const displayBadges = badges.slice(0, 2)
+  const locationText = [city, district].filter(Boolean).join(' • ') || city
+  const aiLine = Array.isArray(aiReasons)
+    ? aiReasons.slice(0, 2).join('. ')
+    : typeof aiReasons === 'string'
+      ? aiReasons
+      : null
+  const metrics: string[] = []
+  if (rooms != null && rooms > 0) metrics.push(`${rooms} ${rooms === 1 ? 'комната' : 'комн.'}`)
+  if (area != null && area > 0) metrics.push(`${area} м²`)
+  if (guests != null && guests > 0) metrics.push(`${guests} гостей`)
+  if (floor != null && floor > 0) metrics.push(`${floor} этаж`)
+  const metricsText = metrics.join(' · ')
+  const showOwner = owner?.name || owner?.avatar
 
   const handleFavorite = useCallback(
     (e: React.MouseEvent) => {
@@ -129,9 +187,6 @@ function ListingCardComponent({
     [touchStartX, goPrev, goNext]
   )
 
-  const locationText = district ? `${city} · ${district}` : city
-  const showOwner = owner?.name || owner?.avatar
-
   return (
     <Link
       href={`/listings/${id}`}
@@ -139,9 +194,14 @@ function ListingCardComponent({
       onClick={handleCardClick}
     >
       <article
-        className={cn('listing-card', highlight && 'listing-card-glow', className)}
+        className={cn(
+          'listing-card listing-card-tz4',
+          highlight && 'listing-card-glow',
+          compact && 'listing-card-tz4--compact',
+          className
+        )}
       >
-        {/* TZ-6: фото, placeholder из токенов, свайп + стрелки 32px */}
+        {/* ТЗ-4: фото — слева сверху бейдж (Проверено/Подобрано AI), справа избранное, снизу район + метро */}
         <div
           className="listing-card__image-wrap"
           onTouchStart={onTouchStart}
@@ -158,7 +218,40 @@ function ListingCardComponent({
               onError={() => setImgError(true)}
               unoptimized={displayPhoto.startsWith('http')}
             />
-          ) : null}
+          ) : (
+            <div className="listing-card__image-placeholder" aria-hidden>
+              <span className="listing-card__image-placeholder-text">Нет фото</span>
+            </div>
+          )}
+          {/* ТЗ-4: бейдж слева сверху на фото — один: «Подобрано AI» или «Проверено» */}
+          {displayBadges.length > 0 && (
+            <span className="listing-card-tz4__photo-badge listing-card-tz4__photo-badge--left">
+              {displayBadges.includes('ai') ? BADGE_LABELS.ai : displayBadges.includes('verified') ? BADGE_LABELS.verified : BADGE_LABELS[displayBadges[0]]}
+            </span>
+          )}
+          {/* Избранное справа сверху */}
+          <button
+            type="button"
+            onClick={handleFavorite}
+            disabled={isToggling}
+            className={cn(
+              'listing-card__favorite',
+              isSaved && 'is-saved',
+              isToggling && 'is-busy'
+            )}
+            aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
+          >
+            <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
+          {/* Снизу на фото: район, метро */}
+          {(district || metro) && (
+            <div className="listing-card-tz4__photo-footer">
+              {district && <span>📍 {district}</span>}
+              {metro && <span>🚇 {metro}</span>}
+            </div>
+          )}
           {hasMultiplePhotos && (
             <>
               <button
@@ -186,43 +279,52 @@ function ListingCardComponent({
               ))}
             </div>
           )}
-          <button
-            type="button"
-            onClick={handleFavorite}
-            disabled={isToggling}
-            className={cn(
-              'listing-card__favorite',
-              isSaved && 'is-saved',
-              isToggling && 'is-busy'
-            )}
-            aria-label={isSaved ? 'Удалить из избранного' : 'В избранное'}
-          >
-            <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
         </div>
 
-        <div className="listing-card__info">
-          {/* ТЗ-5: цена крупно + «за ночь» мелко, название, рейтинг */}
-          <p className="listing-card__price-block">
-            <span className="listing-card__price">{priceFormatted}</span>
+        <div className="listing-card__info listing-card-tz4__info">
+          {/* ТЗ-4: бейджи под фото (макс 2) */}
+          {displayBadges.length > 0 && (
+            <div className="listing-card-tz4__badges">
+              {displayBadges.map((b) => (
+                <span key={b} className="listing-card-tz4__badge">{BADGE_LABELS[b]}</span>
+              ))}
+            </div>
+          )}
+
+          {/* ТЗ-4: цена — главный акцент, формат "3 000 ₽ / ночь" */}
+          <p className="listing-card__price-block listing-card-tz4__price-block">
+            <span className="listing-card__price listing-card-tz4__price">{priceFormatted}</span>
             {price > 0 && Number.isFinite(price) && (
-              <span className="listing-card__price-suffix"> за ночь</span>
+              <span className="listing-card__price-suffix listing-card-tz4__price-suffix">{priceSuffix}</span>
             )}
           </p>
-          <h3 className="listing-card__title listing-card__title--secondary">{title || 'Без названия'}</h3>
-          <div className="listing-card__rating-row">
-            {rating != null && Number(rating) > 0 ? (
+
+          {/* Тип аренды */}
+          <p className="listing-card-tz4__rental-type">{rentalLabel}</p>
+
+          {/* Локация: Москва • Таганская */}
+          <p className="listing-card__address listing-card-tz4__location">{locationText}</p>
+
+          {/* Метрики: 2 комнаты · 45 м² · 4 гостей · 7 этаж */}
+          {metricsText && <p className="listing-card-tz4__metrics">{metricsText}</p>}
+
+          {/* AI пояснение — одна строка */}
+          {!compact && aiLine && (
+            <p className="listing-card-tz4__ai">
+              <span className="listing-card-tz4__ai-label">AI рекомендует:</span> {aiLine}
+            </p>
+          )}
+
+          {/* Рейтинг (если есть) */}
+          {rating != null && Number(rating) > 0 && (
+            <div className="listing-card__rating-row">
               <span className="listing-card__rating" aria-label={`Рейтинг ${rating}`}>
                 <span className="listing-card__rating-star" aria-hidden>★</span>
                 {Number(rating).toFixed(1)}
               </span>
-            ) : (
-              <span className="listing-card__rating listing-card__rating--empty">—</span>
-            )}
-          </div>
-          <p className="listing-card__address">{locationText}</p>
+            </div>
+          )}
+
           {showOwner && (
             <div className="listing-card__owner">
               <div className="listing-card__owner-avatar">
@@ -235,6 +337,13 @@ function ListingCardComponent({
               <span className="listing-card__owner-name">{owner?.name || 'Владелец'}</span>
             </div>
           )}
+
+          {/* ТЗ-4: кнопка внизу — Смотреть (или Написать / Забронировать) */}
+          {!compact && (
+            <div className="listing-card-tz4__actions">
+              <span className="listing-card-tz4__btn listing-card-tz4__btn--primary">Смотреть</span>
+            </div>
+          )}
         </div>
       </article>
     </Link>
@@ -243,19 +352,22 @@ function ListingCardComponent({
 
 export const ListingCard = memo(ListingCardComponent)
 
-/** TZ-6: skeleton — один цвет, aspect-ratio 4/3 */
+/** ТЗ-4: скелетон — структура как у карточки (фото, бейджи, цена, локация, метрики, AI, кнопка), без дёргания */
 export function ListingCardSkeleton() {
   return (
-    <div className="listing-card-skeleton">
-      <div className="listing-card-skeleton__photo" />
-      <div className="listing-card-skeleton__info">
-        <div className="listing-card-skeleton__line listing-card-skeleton__line--price" />
-        <div className="listing-card-skeleton__line listing-card-skeleton__line--address" />
-        <div className="listing-card-skeleton__line listing-card-skeleton__line--rating" />
-        <div className="listing-card-skeleton__owner">
-          <div className="listing-card-skeleton__avatar" />
-          <div className="listing-card-skeleton__name" />
+    <div className="listing-card-skeleton listing-card-skeleton-tz4">
+      <div className="listing-card-skeleton__photo listing-card-skeleton-tz4__photo" />
+      <div className="listing-card-skeleton__info listing-card-skeleton-tz4__info">
+        <div className="listing-card-skeleton-tz4__badges">
+          <span className="listing-card-skeleton-tz4__badge" />
+          <span className="listing-card-skeleton-tz4__badge" />
         </div>
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--price listing-card-skeleton-tz4__price" />
+        <div className="listing-card-skeleton-tz4__line listing-card-skeleton-tz4__rental" />
+        <div className="listing-card-skeleton__line listing-card-skeleton__line--address listing-card-skeleton-tz4__location" />
+        <div className="listing-card-skeleton-tz4__line listing-card-skeleton-tz4__metrics" />
+        <div className="listing-card-skeleton-tz4__line listing-card-skeleton-tz4__ai" />
+        <div className="listing-card-skeleton-tz4__btn" />
       </div>
     </div>
   )
