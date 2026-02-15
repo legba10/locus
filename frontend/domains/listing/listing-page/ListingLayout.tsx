@@ -217,7 +217,7 @@ export function ListingLayout(props: ListingLayoutProps) {
               </div>
             )}
 
-            {/* Бронирование в потоке (мобильный): не sticky, отступ сверху 20px */}
+            {/* ТЗ-8: Бронирование в потоке (мобильный) — ровный блок, отступы 12–16px */}
             <div id="listing-booking" className="md:hidden mt-5">
               <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
             </div>
@@ -307,8 +307,8 @@ export function ListingLayout(props: ListingLayoutProps) {
             )}
           </div>
 
-          {/* Правая колонка (ПК): блок бронирования 35%, sticky */}
-          <div className="hidden md:block w-full min-w-0 sticky top-[90px] self-start">
+          {/* ТЗ-8: Правая колонка (ПК) — блок бронирования 360px, sticky top 100px */}
+          <div className="listing-layout-booking-wrap-tz8 hidden md:block w-full min-w-0 max-w-[360px]">
             <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
           </div>
         </div>

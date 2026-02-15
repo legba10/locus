@@ -1,0 +1,293 @@
+/**
+ * ТЗ-10: Карточки объявлений — полная переработка UI
+ * Структура: [фото 4:3] [метки pill] [цена] [название] [район] [рейтинг] [характеристики] [AI]
+ * Фото не растягивать, вся карточка кликабельна, hover scale + тень, тёмная тема.
+ */
+
+/* ═══ Фото: строго 4:3, object-fit cover ═══ */
+.listing-card-tz10 .listing-card__image-wrap,
+.listing-card-tz10 .listing-card-tz7__image-wrap {
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  background: var(--card-bg, #f3f4f6);
+}
+
+.listing-card-tz10 .listing-card__image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+[data-theme="dark"] .listing-card-tz10 .listing-card__image-wrap,
+.dark .listing-card-tz10 .listing-card__image-wrap {
+  background: var(--bg-secondary);
+}
+
+/* ═══ Метки на фото: верхний левый угол, маленькие pill, полупрозрачные ═══ */
+.listing-card-tz10__photo-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.listing-card-tz10__photo-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+[data-theme="dark"] .listing-card-tz10__photo-pill,
+.dark .listing-card-tz10__photo-pill {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* ═══ Блок инфо: порядок и отступы ═══ */
+.listing-card-tz10__info {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 767px) {
+  .listing-card-tz10__info {
+    padding: 12px 16px;
+  }
+}
+
+/* ═══ Цена: жирная, крупная — «4 500 ₽ / ночь» ═══ */
+.listing-card-tz10__price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.listing-card-tz10__price-block {
+  margin: 0;
+}
+
+.listing-card-tz10__price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.listing-card-tz10__price-suffix {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
+[data-theme="dark"] .listing-card-tz10__price,
+.dark .listing-card-tz10__price {
+  color: var(--text-main);
+}
+
+/* Под ценой: «от 1 ночи» / «от 3 ночей» */
+.listing-card-tz10__min-nights {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: -4px 0 0 0;
+  width: 100%;
+}
+
+/* ═══ Название: макс 2 строки, ellipsis ═══ */
+.listing-card-tz10__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="dark"] .listing-card-tz10__title,
+.dark .listing-card-tz10__title {
+  color: var(--text-main);
+}
+
+/* ═══ Район и город: «Москва · Сокол», мелкий текст ═══ */
+.listing-card-tz10__location {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* ═══ Рейтинг справа: ★ 4.8 или «новое» ═══ */
+.listing-card-tz10__rating {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.listing-card-tz10__rating .listing-card__rating-star {
+  color: #eab308;
+}
+
+.listing-card-tz10__new {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ═══ Характеристики: «2 гостя · 1 комната · 35 м²» ═══ */
+.listing-card-tz10__characteristics {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* Скрыть дублирующие строки (type-line, address) в визуале */
+.listing-card-tz10__type-line,
+.listing-card-tz10__address {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ═══ AI объяснение: маленький серый текст ═══ */
+.listing-card-tz10__ai {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ═══ Hover (ПК): лёгкий scale, тень, без лагов ═══ */
+.listing-card-tz10 {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .listing-card-tz10:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  }
+}
+
+[data-theme="dark"] .listing-card-tz10,
+.dark .listing-card-tz10 {
+  background: var(--card-bg);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] .listing-card-tz10:hover,
+  .dark .listing-card-tz10:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card-tz10 {
+    transition: none;
+  }
+}
+
+/* ═══ Мобильная: 100% ширины, отступы контейнера 16px (сетка) ═══ */
+@media (max-width: 767px) {
+  .listing-card-tz10 {
+    width: 100%;
+  }
+}
+
+/* Кнопка «Смотреть» не нужна — вся карточка кликабельна */
+.listing-card-tz10 .listing-card-tz4__actions {
+  display: none;
+}
+
+/* ═══ Сетка карточек: отступ 24px между карточками (добавить класс listing-grid-tz10 к .listing-grid) ═══ */
+.listing-grid.listing-grid-tz10 {
+  gap: 24px;
+}
+
+/* ═══ Skeleton ТЗ-10: 4:3 фото, структура как у карточки ═══ */
+.listing-card-skeleton-tz10 {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.listing-card-skeleton-tz10 .listing-card-skeleton__photo {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+}
+
+.listing-card-skeleton-tz10 .listing-card-skeleton__info {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.listing-card-skeleton-tz10 .listing-card-skeleton__line--price {
+  height: 24px;
+  width: 45%;
+  border-radius: 8px;
+}
+
+.listing-card-skeleton-tz10 .listing-card-skeleton__line--address {
+  height: 14px;
+  width: 70%;
+  border-radius: 6px;
+}
+
+.listing-card-skeleton-tz10 .listing-card-skeleton__line {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .listing-card-skeleton-tz10 .listing-card-skeleton__photo,
+.dark .listing-card-skeleton-tz10 .listing-card-skeleton__photo,
+[data-theme="dark"] .listing-card-skeleton-tz10 .listing-card-skeleton__line,
+.dark .listing-card-skeleton-tz10 .listing-card-skeleton__line {
+  background: rgba(255, 255, 255, 0.06);
+}

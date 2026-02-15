@@ -101,3 +101,109 @@
     transition: none;
   }
 }
+
+/* ═══ ТЗ-8: блок бронирования — ровные даты, sticky, темы, без переполнений ═══ */
+
+/* Даты: grid 1fr 1fr, gap 8px, карточки 56px, border-radius 12px */
+.booking-dates-tz8 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .booking-dates-tz8 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.booking-dates-tz8 .booking-date-field {
+  flex: none;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-dates-tz8 .booking-date-input {
+  height: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
+.booking-dates-tz8 .booking-date-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+[data-theme="dark"] .booking-dates-tz8 .booking-date-input,
+.dark .booking-dates-tz8 .booking-date-input {
+  background: var(--card-bg);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+}
+
+/* Карточка бронирования: 360px, 20px radius, 20px padding, sticky */
+.booking-card-tz8 {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 12px;
+  overflow: visible;
+}
+
+/* Светлая тема — белый фон, мягкая тень */
+.booking-card-tz8 {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Тёмная тема — glass dark, мягкая граница */
+[data-theme="dark"] .booking-card-tz8,
+.dark .booking-card-tz8 {
+  background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.booking-price-block-tz8 {
+  margin-top: 4px;
+}
+
+.booking-price-breakdown-tz8 {
+  margin-top: 12px;
+}
+
+.booking-card-tz8 .booking-actions {
+  margin-top: 16px;
+}
+
+.booking-card-tz8 .booking-btn {
+  height: 52px;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+
+/* Контейнер sticky на странице объявления (ПК) */
+.listing-layout-booking-wrap-tz8 {
+  position: sticky;
+  top: 100px;
+  align-self: start;
+}

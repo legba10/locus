@@ -441,7 +441,7 @@ export function SearchPageV4() {
 
             {/* Сетка объявлений */}
             {!isLoading && sortedListings.length > 0 && (
-              <div className="listing-grid listing-grid-tz4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="listing-grid listing-grid-tz4 listing-grid-tz10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedListings.map((listing) => (
                   <ListingCard
                     key={listing.id}

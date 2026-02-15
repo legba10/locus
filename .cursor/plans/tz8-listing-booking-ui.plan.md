@@ -1,37 +1,43 @@
-# ТЗ-8: Блок бронирования в объявлении
+# ТЗ-8: Блок бронирования в объявлении (критический UX-фикс)
 
 ## Статус: выполнен
 
 ## Сделано
 
-### 1. Контейнер (.booking-card)
-- width 100%, max-width 360px, border-radius 18px, padding 20px
-- background: var(--card-bg), border: 1px solid var(--border)
-- box-shadow: 0 10px 30px rgba(0,0,0,0.08)
-- Sticky на ПК задаётся обёрткой в ListingLayout (top 90px)
+### 1. Контейнер (.booking-card-tz8)
+- width 100%, max-width 360px, border-radius 20px, padding 20px
+- Светлая тема: background var(--card-bg), мягкая тень
+- Тёмная тема: glass dark, border rgba(255,255,255,0.08)
+- Sticky на ПК: обёртка `.listing-layout-booking-wrap-tz8`, top 100px
 
-### 2. Даты
-- grid grid-template-columns: 1fr 1fr, gap 10px
-- Поле: height 48px, border-radius 12px, padding 10px, background var(--input-bg), border var(--border), color var(--text)
+### 2. Даты (.booking-dates-tz8)
+- display: grid, grid-template-columns: 1fr 1fr, gap 8px
+- На узких экранах (≤480px): одна колонка
+- Поле ввода: height 56px, border-radius 12px, background var(--card-bg), border var(--border), color var(--text-main)
+- Без переполнений (min-width: 0, box-sizing: border-box)
 
-### 3. Цена
-- flex justify-between, font-size 18px, font-weight 600, margin-top 12px
+### 3. Цена и итог
+- Крупно: цена за ночь (20px, bold)
+- Разбивка: цена × ночи, сервис (если есть), итог (border-top, semibold)
 
 ### 4. Кнопка «Забронировать»
-- width 100%, height 50px (мобильная 52px), border-radius 14px
-- background var(--accent), color #fff, font-weight 600, font-size 16px, margin-top 12px, hover opacity .9
+- height 52px, border-radius 14px, width 100%, не выходит за блок
 
-### 5. Тёмная тема
-- Все поля через var(--input-bg), var(--border), var(--text) — без белых блоков
+### 5. Тема
+- Все поля через var(--card-bg), var(--border), var(--text-main) — без белых квадратов в тёмной теме
 
-### 6. Мобильная версия
-- Блок в потоке: position static, margin-top 20px (mt-5 у #listing-booking)
-- Кнопка height 52px, даты grid 1fr 1fr
+### 6. Удобства
+- Показ первых 6 пунктов; кнопка «Все» / «Свернуть» для остальных
+
+### 7. Мобильная версия
+- Блок в потоке (#listing-booking), mt-5
+- Фикс снизу: StickyActions (цена, Написать, Забронировать, избранное)
 
 ## Файлы
-- `frontend/components/listing/ListingBooking.tsx`
-- `frontend/styles/globals.css` (booking-card, booking-date-input)
-- `frontend/domains/listing/listing-page/ListingLayout.tsx` (колонка 360px, mt-5 мобильный)
+- `frontend/components/listing/ListingBooking.tsx` (классы -tz8)
+- `frontend/styles/listing-booking-tz1.css` (стили .booking-dates-tz8, .booking-card-tz8, .listing-layout-booking-wrap-tz8)
+- `frontend/domains/listing/listing-page/ListingLayout.tsx` (sticky top 100px, max-w-[360px])
+- `frontend/domains/listing/listing-page/Amenities.tsx` (6 + «Все»)
 
 ## Коммит
-fix/listing-booking-ui-alignment
+fix: listing page booking layout + dates UI

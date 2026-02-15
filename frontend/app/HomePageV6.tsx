@@ -5,19 +5,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
-import { MarketAnalysisBlock } from '@/shared/ui/MarketAnalysisBlock'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { useAuthStore } from '@/domains/auth'
 import { useFilterStore } from '@/core/filters'
-import { BUDGET_PRESETS, PROPERTY_TYPES } from '@/core/filters'
-import { FilterPanel, QuickAIModal, CitySelect } from '@/components/filters'
+import { BUDGET_PRESETS, PROPERTY_TYPES, ROOMS_OPTIONS } from '@/core/filters'
+import { FilterPanel, QuickAIModal, CitySelect, AIWizardModal } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
 import { StatsBlock } from '@/components/home/StatsBlock'
 import { AIPopup } from '@/components/home/AIPopup'
 import { PopularCities } from '@/components/home/PopularCities'
-import { HowItWorks } from '@/components/home/HowItWorks'
-import { AIBlock } from '@/components/home/AIBlock'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
 
@@ -46,7 +43,7 @@ interface ListingsResponse {
 export function HomePageV6() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { city, budgetMin, budgetMax, type, duration, aiMode, setCity, setBudget, setType, setDuration, setAiMode, getBudgetQuery, reset: resetFilters } = useFilterStore()
+  const { city, budgetMin, budgetMax, type, duration, aiMode, rooms, setCity, setBudget, setType, setDuration, setAiMode, setRooms, getBudgetQuery, reset: resetFilters } = useFilterStore()
   const [aiPreparing, setAiPreparing] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
@@ -55,6 +52,7 @@ export function HomePageV6() {
   const [showQuickFab, setShowQuickFab] = useState(false)
   const [highlightFirstCard, setHighlightFirstCard] = useState(false)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [showAIWizard, setShowAIWizard] = useState(false)
   const [showCityHint, setShowCityHint] = useState(false)
   const [shakeCities, setShakeCities] = useState(false)
   const [searching, setSearching] = useState(false)
@@ -108,8 +106,7 @@ export function HomePageV6() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const handleSearch = () => {
-    setSearching(true)
+  const buildSearchParams = () => {
     const params = new URLSearchParams()
     if (city) params.set('city', city)
     const typeVal = Array.isArray(type) ? type[0] : type
@@ -119,13 +116,26 @@ export function HomePageV6() {
     if (priceMax) params.set('priceMax', priceMax)
     if (duration) params.set('rentPeriod', duration)
     if (aiMode) params.set('ai', 'true')
+    return params
+  }
+
+  const handleSearch = () => {
+    setSearching(true)
+    const params = buildSearchParams()
     const hasSeenSearch = typeof window !== 'undefined' && localStorage.getItem('locus_first_search_done') === 'true'
     if (!hasSeenSearch && typeof window !== 'undefined') {
       localStorage.setItem('locus_first_search_done', 'true')
-      track('search_first', { city, priceMin, priceMax, duration, type })
+      track('search_first', { city, priceMin: params.get('priceMin'), priceMax: params.get('priceMax'), duration, type })
     }
     router.push(`/listings?${params.toString()}`)
     setTimeout(() => setSearching(false), 2000)
+  }
+
+  /** ТЗ-9: из модалки фильтра — переход на страницу поиска с выбранными параметрами */
+  const handleFilterApplyAndGo = () => {
+    const params = buildSearchParams()
+    router.push(`/listings?${params.toString()}`)
+    setFilterSheetOpen(false)
   }
 
   /** ТЗ-20: при нажатии «Подобрать жильё» — loader в кнопке, затем переход к результатам с ai=true */
@@ -272,6 +282,17 @@ export function HomePageV6() {
     track('onboarding_complete', prefs)
   }
 
+  function mapAmenities(arr: unknown): ('wifi' | 'parking' | 'center' | 'metro')[] {
+    if (!Array.isArray(arr)) return []
+    const out: ('wifi' | 'parking' | 'center' | 'metro')[] = []
+    const s = arr.join(' ').toLowerCase()
+    if (s.includes('wifi') || s.includes('wi-fi') || s.includes('интернет')) out.push('wifi')
+    if (s.includes('parking') || s.includes('парковк')) out.push('parking')
+    if (s.includes('center') || s.includes('центр')) out.push('center')
+    if (s.includes('metro') || s.includes('метро')) out.push('metro')
+    return out.slice(0, 3)
+  }
+
   // Используем данные напрямую из API (они уже содержат все нужные поля)
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
   const listingCards = (data?.items || []).map((listing: any, index: number) => {
@@ -348,13 +369,16 @@ export function HomePageV6() {
       aiReasons: (listing.reasons || []).length > 0 ? listing.reasons : (listing.verdict ? [listing.verdict] : null),
       rating: cache?.rating ?? null,
       reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
+      reviewCount: listing.reviewCount ?? listing.reviewsCount ?? null,
+      propertyType: (listing.type || 'apartment').toString().toLowerCase(),
+      amenities: mapAmenities(listing.amenities),
       cleanliness: cache?.cleanliness ?? null,
       noise: cache?.noise ?? null,
     }
   })
 
   return (
-    <div className="home-tz18 home-tz3 min-h-screen font-sans antialiased bg-[var(--background)]">
+    <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
       {/* ТЗ-5: sticky поиск — фикс. сверху 72px при скролле вниз */}
       {stickySearchVisible && (
         <div className="home-search-sticky-tz5 fixed left-0 right-0 z-[80] h-[72px] flex items-center gap-3 px-4 md:px-6 bg-[var(--card-bg)] border-b border-[var(--border)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
@@ -387,37 +411,12 @@ export function HomePageV6() {
         </div>
       )}
 
-      {/* ═══ ТЗ-3: порядок 1.Hero 2.Умный подбор 3.Быстрый поиск 4.Популярные города 5.Объявления 6.Новости 7.Статистика ═══ */}
-      {/* 1. Hero — приветствие, печатная строка, кнопка «Подобрать жильё» (скролл к поиску или переход при готовых параметрах) */}
-      <Hero onCtaClick={handleHeroCta} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} />
+      {/* ═══ ТЗ-6: порядок 1.Hero 2.Быстрый поиск 3.Города 4.Расширенный поиск 5.Объявления 6.AI 7.Новости 8.Статистика ═══ */}
+      {/* 1. Hero — кнопка скроллит к поиску, под кнопкой сразу поиск */}
+      <Hero onCtaClick={handleHeroCta} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} selectedCity={city ?? ''} />
 
-      {/* 2. Умный подбор (AI) — сразу под hero, клик открывает модалку/подбор */}
-      <section className="home-tz3-block" aria-label="Умный подбор">
-        <div className="market-container">
-          <button
-            type="button"
-            onClick={() => setFilterSheetOpen(true)}
-            className="home-tz3-ai-card w-full max-w-[900px] mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-shadow"
-            aria-label="Открыть умный подбор"
-          >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-[15px] md:text-[16px] font-medium text-[var(--text-main)]">AI подберёт жильё под бюджет и район</p>
-                <p className="text-[13px] md:text-[14px] text-[var(--text-secondary)] mt-0.5">Откройте подбор и укажите параметры</p>
-              </div>
-            </div>
-            <span className="text-[14px] md:text-[15px] font-semibold text-[var(--accent)] shrink-0">Открыть подбор →</span>
-          </button>
-        </div>
-      </section>
-
-      {/* 3. Быстрый поиск — ТЗ-5: табы Умный/Ручной, без больших отступов */}
-      <section id="search" className="home-tz3-block relative z-20" aria-label="Поиск жилья">
+      {/* 2. Быстрый поиск — сразу под hero, без пустых зон (ТЗ-6 экран 1) */}
+      <section id="search" className="home-tz6-block relative z-20" aria-label="Поиск жилья">
         <div className="market-container home-search-wrap-tz12 home-search-wrap-tz18">
           {/* ТЗ-5: табы Умный подбор / Ручной поиск */}
           <div className="flex rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-1 mb-4 max-w-[400px]">
@@ -493,8 +492,11 @@ export function HomePageV6() {
                     <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
                     Загрузка…
                   </>
-                ) : (
-                  city?.trim() ? 'Показать варианты' : 'Подобрать жильё'
+                ) : listingCount > 0 && searchApplied && city?.trim()
+                  ? `Показать ${listingCount} вариантов`
+                  : city?.trim()
+                    ? 'Показать варианты'
+                    : 'Подобрать жильё'
                 )}
               </button>
               <button
@@ -518,24 +520,24 @@ export function HomePageV6() {
                 aria-hidden
                 onClick={() => setFilterSheetOpen(false)}
               />
-              <div className="home-filter-dropdown-tz12 home-filter-modal-tz5 hidden md:flex flex-col fixed left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[1100px] rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] shadow-xl"
-                style={{ top: 'var(--home-search-dropdown-top, 120px)', zIndex: 900, maxHeight: '80vh', height: '80vh' }}
+              <div className="home-filter-dropdown-tz12 home-filter-modal-tz9 hidden md:flex flex-col fixed left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[1100px] rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] shadow-xl text-[var(--text-main)]"
+                style={{ top: 'var(--home-search-dropdown-top, 120px)', zIndex: 900, maxHeight: '90vh', height: '90vh' }}
               >
                 <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-[var(--border)]">
-                  <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
+                  <h2 className="text-[16px] font-bold text-[var(--text-main)]">Фильтры</h2>
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => resetFilters()} className="text-[13px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-main)] transition-colors">Сбросить</button>
-                    <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
+                    <button type="button" onClick={() => setFilterSheetOpen(false)} className="p-2 rounded-full text-[var(--text-secondary)] hover:bg-[var(--border)]" aria-label="Закрыть">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                   </div>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto p-5">
+                <div className="flex-1 min-h-0 overflow-y-auto p-5 home-filter-modal-tz9__body">
                   <FilterPanel embedded wrapInCard={false} showSearchButtons={false} hideCityRow />
                 </div>
                 <div className="flex-shrink-0 flex gap-3 p-4 border-t border-[var(--border)] bg-[var(--card-bg)]">
                   <button type="button" onClick={() => { resetFilters(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl border border-[var(--border)] text-[var(--text-main)] font-medium text-[14px]">Сбросить</button>
-                  <button type="button" onClick={() => { handlePrimarySearch(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">Применить</button>
+                  <button type="button" onClick={() => { handleFilterApplyAndGo(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">Применить</button>
                 </div>
               </div>
             </>
@@ -567,7 +569,7 @@ export function HomePageV6() {
                   <button type="button" onClick={() => { resetFilters(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl border border-[var(--border)] text-[var(--text-main)] font-medium text-[14px]">
                     Сбросить
                   </button>
-                  <button type="button" onClick={() => { handlePrimarySearch(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">
+                  <button type="button" onClick={() => { handleFilterApplyAndGo(); }} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">
                     Применить
                   </button>
                 </div>
@@ -577,15 +579,15 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* 4. Популярные города — сразу под поиском; клик по городу = выбор + можно нажать «Показать варианты» */}
-      <section className="home-tz3-block" aria-label="Популярные города">
+      {/* 3. Популярные города — ТЗ-9: без огромных пустот, grid 2x2 / 4 */}
+      <section className="home-tz6-block home-tz6-cities home-tz9-cities" aria-label="Популярные города">
         <div className="market-container">
           <PopularCities shake={shakeCities} />
         </div>
       </section>
 
-      {/* 5. Актуальные объявления — ТЗ-5: scroll target после «Показать варианты» */}
-      <section id="listings" className="home-tz3-block bg-transparent animate-fade-in scroll-mt-4">
+      {/* 4. Актуальные объявления — ТЗ-6 экран 4, scroll target после «Показать варианты» */}
+      <section id="listings" className="home-tz6-block bg-transparent animate-fade-in scroll-mt-4">
         <div className="market-container">
           <div className="flex items-center justify-between mb-6 md:mb-8">
             <h2 className="section-title-tz19">
@@ -595,7 +597,7 @@ export function HomePageV6() {
               Смотреть все →
             </Link>
           </div>
-          <div className="listing-grid listing-grid-tz4">
+          <div className="listing-grid listing-grid-tz4 listing-grid-tz10">
             {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
@@ -618,6 +620,9 @@ export function HomePageV6() {
                   aiReasons={listing.aiReasons}
                   badges={listing.badges}
                   rating={listing.rating}
+                  reviewCount={listing.reviewCount ?? undefined}
+                  propertyType={listing.propertyType}
+                  amenities={listing.amenities?.length ? listing.amenities : undefined}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
                   className="listing-card-tz18"
                 />
@@ -643,100 +648,35 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* 7. Статистика — после ленты объявлений (TZ-19 порядок) */}
-      <StatsBlock />
-
-      {/* Рекомендации AI */}
-      <section className="bg-transparent home-section-tz18">
+      {/* ТЗ-9: AI подбор — кнопка открывает wizard (не фильтр) */}
+      <section className="home-tz6-block" aria-label="Умный подбор">
         <div className="market-container">
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="section-title-tz19">Рекомендации AI</h2>
-            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">Смотреть все →</Link>
-          </div>
-          <div className="listing-grid">
-            {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 6).map((listing) => (
-              <ListingCard
-                key={listing.id}
-                id={listing.id}
-                photo={listing.photo || undefined}
-                title={listing.title}
-                price={listing.price}
-                city={listing.city}
-                district={listing.district || undefined}
-                metro={listing.metro || undefined}
-                rentalType={listing.rentalType}
-                rooms={listing.rooms}
-                area={listing.area}
-                guests={listing.guests ?? undefined}
-                floor={listing.floor ?? undefined}
-                totalFloors={listing.totalFloors ?? undefined}
-                aiReasons={listing.aiReasons}
-                badges={listing.badges}
-                rating={listing.rating}
-                className="listing-card-tz18"
-              />
-            )) : !isLoading ? (
-              <div className="col-span-full glass rounded-[20px] p-6 text-center">
-                <p className="text-[var(--text)] font-semibold">Нет рекомендаций</p>
-                <p className="text-[var(--sub)] text-[14px] mt-1">Подберите параметры в умном подборе</p>
+          <button
+            type="button"
+            onClick={() => setShowAIWizard(true)}
+            className="home-tz3-ai-card w-full max-w-[900px] mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-shadow"
+            aria-label="Подобрать жильё с AI"
+          >
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-[15px] md:text-[16px] font-medium text-[var(--text-main)]">Подобрать жильё с AI</p>
+                <p className="text-[13px] md:text-[14px] text-[var(--text-secondary)] mt-0.5">Пошаговый подбор: город, даты, бюджет, цель — и топ-5 вариантов с объяснением</p>
               </div>
-            ) : (
-              Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
-            )}
-          </div>
+            </div>
+            <span className="text-[14px] md:text-[15px] font-semibold text-[var(--accent)] shrink-0">Открыть подбор →</span>
+          </button>
         </div>
       </section>
 
-      {/* Последние просмотренные */}
-      <section className="bg-transparent home-section-tz18">
+      {/* 7. Новости рынка — ТЗ-6 экран 6: цены, тренды, районы */}
+      <section className="home-tz6-block" aria-label="Новости рынка">
         <div className="market-container">
-          <h2 className="section-title-tz19 mb-6 md:mb-8">Последние просмотренные</h2>
-          <div className="listing-grid">
-            {!isLoading && listingCards.length > 0 ? listingCards.slice(0, 3).map((listing) => (
-              <ListingCard
-                key={listing.id}
-                id={listing.id}
-                photo={listing.photo || undefined}
-                title={listing.title}
-                price={listing.price}
-                city={listing.city}
-                district={listing.district || undefined}
-                metro={listing.metro || undefined}
-                rentalType={listing.rentalType}
-                rooms={listing.rooms}
-                area={listing.area}
-                guests={listing.guests ?? undefined}
-                floor={listing.floor ?? undefined}
-                totalFloors={listing.totalFloors ?? undefined}
-                aiReasons={listing.aiReasons}
-                badges={listing.badges}
-                rating={listing.rating}
-                className="listing-card-tz18"
-              />
-            )) : (
-              <div className="col-span-full glass rounded-[20px] p-6 text-center">
-                <p className="text-[var(--sub)] text-[14px]">Просматривайте объявления — они появятся здесь</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* НОВЫЙ ПРОДУКТОВЫЙ БЛОК — доверие после объявлений */}
-      <div className="border-t border-[var(--border)]">
-        <MarketAnalysisBlock />
-      </div>
-
-      {/* ТЗ-2: Как работает — 3 карточки */}
-      <HowItWorks />
-
-      {/* ТЗ-MAIN-REDESIGN: AI-блок */}
-      <AIBlock />
-
-      {/* НОВОСТИ РЫНКА */}
-      <section className="bg-transparent">
-        <div className="market-container">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <h2 className="section-title-tz19 mb-2">
               Новости рынка
             </h2>
@@ -803,6 +743,9 @@ export function HomePageV6() {
           </div>
         </div>
       </section>
+
+      {/* 8. Статистика — ТЗ-6 экран 7: почти в конце, после новостей */}
+      <StatsBlock />
 
       {/* ═══════════════════════════════════════════════════════════════
           СДАТЬ ЖИЛЬЁ — по ТЗ v4 (glass card, product benefit)
@@ -929,6 +872,19 @@ export function HomePageV6() {
         onBudgetChange={setBudget}
         onTypeChange={setType}
         onLaunch={handleQuickAILaunch}
+      />
+      {/* ТЗ-9: AI wizard — 5 шагов, затем выдача 5 вариантов с «Почему подходит» */}
+      <AIWizardModal
+        open={showAIWizard}
+        onClose={() => setShowAIWizard(false)}
+        onComplete={(params) => {
+          const p = new URLSearchParams()
+          p.set('ai', 'true')
+          if (params.city) p.set('city', params.city)
+          if (params.budgetMin) p.set('priceMin', String(params.budgetMin))
+          if (params.budgetMax) p.set('priceMax', String(params.budgetMax))
+          router.push(`/listings?${p.toString()}`)
+        }}
       />
     </div>
   )

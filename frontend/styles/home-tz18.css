@@ -274,3 +274,49 @@
 .home-search-sticky-tz5__budget {
   min-height: 36px;
 }
+
+/* ═══ ТЗ-6: вертикальный ритм главной — между блоками макс 64px ═══ */
+.home-tz6 .home-tz6-block {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+@media (min-width: 768px) {
+  .home-tz6 .home-tz6-block {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+}
+
+.home-tz6 .home-tz6-cities {
+  padding-top: 48px;
+}
+
+/* ═══ ТЗ-9: фильтры поиска + AI — UX ═══ */
+.home-tz9-cities .popular-cities-tz18 {
+  margin-top: 24px;
+}
+.home-tz9-cities {
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+@media (min-width: 768px) {
+  .home-tz9-cities {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+}
+.home-filter-modal-tz9__body {
+  overflow-y: auto;
+  max-height: 100%;
+}
+.home-filter-modal-tz9,
+.home-filter-modal-tz9 .filter-panel-card__inner {
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+[data-theme="dark"] .home-filter-modal-tz9,
+.dark .home-filter-modal-tz9 {
+  background: var(--card-bg);
+  border-color: rgba(255, 255, 255, 0.08);
+}

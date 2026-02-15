@@ -4,16 +4,18 @@ import { HeroTyping } from './HeroTyping'
 
 /**
  * ТЗ-3: Hero — только приветствие: заголовок, печатная строка, подзаголовок, CTA «Подобрать жильё».
- * Умный подбор вынесен в отдельный блок под Hero (на главной).
+ * ТЗ-9: при выбранном городе показываем «Подбор для вас в {город}».
  */
 export function HeroSection({
   onCtaClick,
   onOpenFilters,
   ctaLoading = false,
+  selectedCity = '',
 }: {
   onCtaClick?: () => void
   onOpenFilters?: () => void
   ctaLoading?: boolean
+  selectedCity?: string
 }) {
   return (
     <section
@@ -24,10 +26,16 @@ export function HeroSection({
         <h1 className="hero-tz18-title text-[var(--text-main)] tracking-tight">
           Найдите жильё, которое подходит вам
         </h1>
-        <div className="hero-tz18-typing min-h-[1.5em] flex items-center justify-center">
-          <HeroTyping />
-        </div>
-        <p className="hero-tz18-subtitle leading-relaxed">
+        {selectedCity?.trim() ? (
+          <p className="hero-tz18-subtitle text-[var(--text-secondary)] mt-1">
+            Подбор для вас в {selectedCity.trim()}
+          </p>
+        ) : (
+          <div className="hero-tz18-typing min-h-[1.5em] flex items-center justify-center">
+            <HeroTyping />
+          </div>
+        )}
+        <p className="hero-tz18-subtitle leading-relaxed mt-1">
           LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш запрос
         </p>
         <button
