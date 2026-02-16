@@ -112,7 +112,11 @@ export class AuthController {
     }
 
     const session = { access_token: at, refresh_token: rt };
-    const { data, error } = await supabase.auth.getUser(at);
+    const sb = supabase;
+    if (!sb) {
+      throw new UnauthorizedException("Auth service unavailable");
+    }
+    const { data, error } = await sb.auth.getUser(at);
     if (error || !data.user) {
       throw new UnauthorizedException("Invalid or expired access token");
     }
