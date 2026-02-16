@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { PrismaService } from "../../../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 import { JwtAuthService } from "../jwt-auth.service";
 import { SupabaseAuthGuard } from "./supabase-auth.guard";
 
