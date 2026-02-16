@@ -65,12 +65,24 @@ export class PrismaService
       throw new Error("DATABASE_URL is not defined");
     }
 
-    try {
-      await this.$connect();
-      this.logger.log("Connected to database");
-    } catch (error) {
-      this.logger.error("Failed to connect to database", error);
-      process.exit(1);
+    const maxAttempts = 5;
+    const delayMs = 2000;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this.$connect();
+        this.logger.log("Connected to database");
+        return;
+      } catch (error) {
+        this.logger.warn(
+          `Database connection attempt ${attempt}/${maxAttempts} failed: ${error instanceof Error ? error.message : error}`
+        );
+        if (attempt === maxAttempts) {
+          this.logger.error("Failed to connect to database after retries", error);
+          process.exit(1);
+        }
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
     }
   }
 

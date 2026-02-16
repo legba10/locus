@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { MeResponse, LoginRequest, RegisterRequest, UserRole } from "./auth-types";
 import type { UserContract } from "@/shared/contracts";
-import { AuthApiError, me as fetchMe } from "./auth-api";
+import { AuthApiError, me as fetchMe, setSession } from "./auth-api";
 import { supabase } from "@/shared/supabase-client";
 import { clearTokens, getAccessToken, setTokens } from "@/shared/auth/token-storage";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
@@ -104,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const email = typeof data.email === "string" ? data.email.trim() : data.email;
+          const email = typeof data.email === "string" ? data.email.trim().toLowerCase() : data.email;
           const { data: authData, error } = await supabase.auth.signInWithPassword({
             email,
             password: data.password,
@@ -113,8 +113,7 @@ export const useAuthStore = create<AuthState>()(
           const session = authData.session;
           if (!session) throw new AuthApiError("Нет сессии после входа", 401);
 
-          setTokens(session.access_token, session.refresh_token);
-          const backendResponse = await fetchMe();
+          const backendResponse = await setSession(session.access_token, session.refresh_token);
           const meUser = userFromBackend(backendResponse, session.user.email ?? null);
           set({
             user: meUser,
@@ -132,7 +131,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const email = typeof data.email === "string" ? data.email.trim() : data.email;
+          const email = typeof data.email === "string" ? data.email.trim().toLowerCase() : data.email;
           const { data: authData, error } = await supabase.auth.signUp({
             email,
             password: data.password,
@@ -146,7 +145,6 @@ export const useAuthStore = create<AuthState>()(
           if (error) throw new AuthApiError(error.message, 400);
           let session = authData.session;
           if (!session) {
-            // ТЗ-3: авто-вход после регистрации. Supabase может не вернуть session (настройки проекта).
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
               email,
               password: data.password,
@@ -156,8 +154,7 @@ export const useAuthStore = create<AuthState>()(
             }
           }
           if (session) {
-            setTokens(session.access_token, session.refresh_token);
-            const backendResponse = await fetchMe();
+            const backendResponse = await setSession(session.access_token, session.refresh_token);
             const meUser = userFromBackend(backendResponse, session.user.email ?? null);
             set({
               user: meUser,
@@ -167,7 +164,6 @@ export const useAuthStore = create<AuthState>()(
             });
             await dispatchAuth("register", meUser);
           } else {
-            // Нет сессии (например, обязательное подтверждение email) — редирект на логин с ?registered=true.
             set({
               user: null,
               accessToken: null,
@@ -234,17 +230,6 @@ export const useAuthStore = create<AuthState>()(
         const AUTH_TIMEOUT_MS = 5000;
         const MAX_ATTEMPTS = 3;
 
-        const tryGetSession = async (): Promise<void> => {
-          try {
-            const { data } = await supabase.auth.getSession();
-            if (data?.session?.access_token && data?.session?.refresh_token) {
-              setTokens(data.session.access_token, data.session.refresh_token);
-            }
-          } catch {
-            /* ignore */
-          }
-        };
-
         const runFetchMe = async (): Promise<MeResponse> => {
           const mePromise = fetchMe();
           const meTimeout = new Promise<never>((_, reject) =>
@@ -256,13 +241,11 @@ export const useAuthStore = create<AuthState>()(
         let lastError: unknown;
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
           try {
-            await tryGetSession();
             const backendResponse = await runFetchMe();
             const meUser = userFromBackend(backendResponse);
-            const nextToken = getAccessToken();
             set({
               user: meUser,
-              accessToken: nextToken ?? null,
+              accessToken: null,
               isLoading: false,
               isInitialized: true,
             });
@@ -281,7 +264,7 @@ export const useAuthStore = create<AuthState>()(
         }
         set({
           user: isUnauthed ? null : prevUser ?? null,
-          accessToken: isUnauthed ? null : get().accessToken,
+          accessToken: null,
           isLoading: false,
           isInitialized: true,
           error: isUnauthed ? null : null,

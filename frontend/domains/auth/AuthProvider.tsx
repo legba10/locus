@@ -5,7 +5,7 @@ import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
 import { apiFetchRaw, setOn401 } from "@/shared/api/client";
 import { supabase } from "@/shared/supabase-client";
-import { setTokens, clearTokens } from "@/shared/auth/token-storage";
+import { clearTokens } from "@/shared/auth/token-storage";
 
 /**
  * AuthProvider — CLIENT-ONLY auth initialization
@@ -34,14 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  /* ТЗ-1: один listener onAuthStateChange — синхронизация сессии с нашим хранилищем, без reload/refresh */
+  /* ТЗ auth: сессия в cookie; при SIGNED_OUT очищаем legacy storage */
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        if (session?.access_token && session?.refresh_token) {
-          setTokens(session.access_token, session.refresh_token);
-        }
-      } else if (event === "SIGNED_OUT") {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
         clearTokens();
       }
     });

@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Post, Req, UseGuards, InternalServerErrorException, Body, Res } from "@nestjs/common";
+import { BadRequestException, Controller, Get, Post, Req, UseGuards, Body, Res, UnauthorizedException } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
@@ -23,7 +23,7 @@ export class AuthController {
   @Get("me")
   @UseGuards(SupabaseAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Get current user. Supabase access_token required." })
+  @ApiOperation({ summary: "Get current user. Bearer token or cookie." })
   @ApiResponse({ status: 200, description: "Current user" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async me(
@@ -36,98 +36,26 @@ export class AuthController {
         phone: string | null;
         role: "user" | "landlord";
         roles: string[];
-        profile?: {
-          full_name: string | null;
-          phone: string | null;
-          telegram_id: string | null;
-          role: string | null;
-          tariff: string | null;
-          email?: string | null;
-        } | null;
+        profile?: unknown;
       };
     },
   ) {
-    // Prefer profile synced by guard; fallback to fetch; never hard-fail login if profile row is missing.
-    let profile = (req.user.profile as any) ?? null;
-    if (!profile) {
-      profile = await this.supabaseAuth.getProfile(req.user.id);
-    }
-    if (!profile) {
-      // Attempt to create minimal profile (requires service-role key); ignore errors.
-      profile = await this.supabaseAuth
-        .upsertProfile({ id: req.user.id, email: req.user.email ?? null, phone: req.user.phone ?? null, user_metadata: null })
-        .catch(() => null);
-    }
-
-    // Root logic: listings depend on listing limits, not on role.
-    const rawProfileRole = profile?.role ?? null;
-    const role = ((rawProfileRole ?? "user") as string).toLowerCase() === "landlord" ? "landlord" : "user";
-    const tariff = ((profile?.tariff ?? profile?.plan ?? "free") as "free" | "landlord_basic" | "landlord_pro");
-    const email = profile?.email ?? req.user.email ?? null;
-
-    // Ensure listing defaults exist in Supabase profile
-    const defaults = await this.supabaseAuth.ensureListingDefaults(req.user.id).catch(() => null);
-    const listingLimit = Number((defaults as any)?.listing_limit ?? (profile as any)?.listing_limit ?? 1);
-    const listingUsed = Number((defaults as any)?.listing_used ?? (profile as any)?.listing_used ?? 0);
-    const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? tariff ?? "free");
-
-    const isAdmin =
-      Boolean((profile as any)?.is_admin) ||
-      Boolean((defaults as any)?.is_admin) ||
-      (await this.supabaseAuth.ensureAdminFlag({
-        id: req.user.id,
-        telegram_id: profile?.telegram_id ?? null,
-        is_admin: (profile as any)?.is_admin ?? null,
-      }).catch(() => false));
-
-    // Ensure Neon user exists (sets appRole ADMIN for root email) and keep plan/limit in sync
-    await this.neonUser.ensureUserExists(req.user.id, email);
-    const derived = planFromLegacyTariff(planRaw);
-    const userRow = await this.prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        plan: derived.plan,
-        listingLimit: listingLimit || derived.listingLimit,
-      },
-      select: { plan: true, listingLimit: true, appRole: true },
-    });
-
-    // Root/Admin: Neon appRole is source of truth for legba086@mail.ru (set in ensureUserExists)
-    const isAdminNeon = userRow.appRole === "ADMIN" || userRow.appRole === "ROOT";
-    const isAdminFinal = isAdmin || isAdminNeon;
-
-    const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
-
-    return {
-      id: req.user.id,
-      email: email ?? "",
-      role: isAdminFinal ? "admin" : role,
-      plan: userRow.plan,
-      listingLimit: userRow.listingLimit,
-      listingUsed,
-      isAdmin: isAdminFinal,
-      profileCompleted,
-      // Extra fields for existing UI (profile page, avatar/menu)
-      full_name: String(profile?.full_name ?? ""),
-      phone: String(profile?.phone ?? req.user.phone ?? ""),
-      telegram_id: String(profile?.telegram_id ?? ""),
-      avatar_url: String((profile as any)?.avatar_url ?? ""),
-      username: String((profile as any)?.username ?? ""),
-    };
+    return this.buildMePayload(req.user);
   }
 
   @Post("refresh")
-  @ApiOperation({ summary: "Refresh Supabase access token using refresh_token." })
+  @ApiOperation({ summary: "Refresh Supabase access token using refresh_token (body or cookie)." })
   @ApiResponse({ status: 200, description: "New access and refresh tokens" })
+  @ApiResponse({ status: 401, description: "Refresh token missing or invalid" })
   async refresh(
     @Body("refresh_token") refreshToken: string | undefined,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response
   ) {
     const tokenFromCookie = readRefreshTokenFromCookie(req);
-    const token = refreshToken || tokenFromCookie;
+    const token = (typeof refreshToken === "string" && refreshToken.trim()) || tokenFromCookie;
     if (!token) {
-      throw new BadRequestException("Refresh token is required");
+      throw new UnauthorizedException("Refresh token is required");
     }
 
     const session = await this.supabaseAuth.refreshSession(token);
@@ -160,6 +88,129 @@ export class AuthController {
     }
     clearAuthCookies(res, req);
     return { ok: true };
+  }
+
+  /**
+   * POST /auth/session — устанавливает cookie из Supabase токенов (после логина/регистрации на фронте).
+   * Цепочка: REGISTER/LOGIN (Supabase) → session (set cookies) → /me (читает cookie) → OK.
+   * После вызова НЕ нужен refresh; все запросы идут с credentials: "include".
+   */
+  @Post("session")
+  @ApiOperation({ summary: "Set auth cookies from Supabase tokens (call after frontend login/register)." })
+  @ApiResponse({ status: 200, description: "User payload + Set-Cookie" })
+  @ApiResponse({ status: 401, description: "Invalid tokens" })
+  async session(
+    @Body("access_token") accessToken: string | undefined,
+    @Body("refresh_token") refreshToken: string | undefined,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const at = typeof accessToken === "string" && accessToken.trim() ? accessToken.trim() : null;
+    const rt = typeof refreshToken === "string" && refreshToken.trim() ? refreshToken.trim() : null;
+    if (!at || !rt) {
+      throw new UnauthorizedException("access_token and refresh_token are required");
+    }
+
+    const session = { access_token: at, refresh_token: rt };
+    const { data, error } = await supabase.auth.getUser(at);
+    if (error || !data.user) {
+      throw new UnauthorizedException("Invalid or expired access token");
+    }
+
+    setAuthCookies(res, req, session);
+    await this.sessions.storeRefreshSession(data.user.id, rt, req).catch(() => undefined);
+
+    const telegramId = data.user.user_metadata?.telegram_id as string | undefined;
+    const userInfo = await this.supabaseAuth.syncUser(
+      {
+        id: data.user.id,
+        email: data.user.email ?? null,
+        phone: data.user.phone ?? null,
+        user_metadata: data.user.user_metadata,
+      },
+      telegramId
+    );
+
+    const reqUser = {
+      id: userInfo.id,
+      supabaseId: userInfo.supabaseId,
+      email: userInfo.email,
+      phone: userInfo.phone,
+      role: userInfo.role,
+      roles: userInfo.roles,
+      profile: userInfo.profile,
+    };
+    const mePayload = await this.buildMePayload(reqUser);
+    return mePayload;
+  }
+
+  private async buildMePayload(reqUser: {
+    id: string;
+    email: string;
+    phone: string | null;
+    role: string;
+    roles: string[];
+    profile?: unknown;
+  }) {
+    let profile = (reqUser.profile as any) ?? null;
+    if (!profile) {
+      profile = await this.supabaseAuth.getProfile(reqUser.id);
+    }
+    if (!profile) {
+      profile = await this.supabaseAuth
+        .upsertProfile({ id: reqUser.id, email: reqUser.email ?? null, phone: reqUser.phone ?? null, user_metadata: null })
+        .catch(() => null);
+    }
+
+    const rawProfileRole = profile?.role ?? null;
+    const role = ((rawProfileRole ?? "user") as string).toLowerCase() === "landlord" ? "landlord" : "user";
+    const tariff = ((profile?.tariff ?? profile?.plan ?? "free") as "free" | "landlord_basic" | "landlord_pro");
+    const email = profile?.email ?? reqUser.email ?? null;
+
+    const defaults = await this.supabaseAuth.ensureListingDefaults(reqUser.id).catch(() => null);
+    const listingLimit = Number((defaults as any)?.listing_limit ?? (profile as any)?.listing_limit ?? 1);
+    const listingUsed = Number((defaults as any)?.listing_used ?? (profile as any)?.listing_used ?? 0);
+    const planRaw = String((defaults as any)?.plan ?? (profile as any)?.plan ?? tariff ?? "free");
+
+    const isAdmin =
+      Boolean((profile as any)?.is_admin) ||
+      Boolean((defaults as any)?.is_admin) ||
+      (await this.supabaseAuth.ensureAdminFlag({
+        id: reqUser.id,
+        telegram_id: profile?.telegram_id ?? null,
+        is_admin: (profile as any)?.is_admin ?? null,
+      }).catch(() => false));
+
+    await this.neonUser.ensureUserExists(reqUser.id, email);
+    const derived = planFromLegacyTariff(planRaw);
+    const userRow = await this.prisma.user.update({
+      where: { id: reqUser.id },
+      data: {
+        plan: derived.plan,
+        listingLimit: listingLimit || derived.listingLimit,
+      },
+      select: { plan: true, listingLimit: true, appRole: true },
+    });
+
+    const isAdminNeon = userRow.appRole === "ADMIN" || userRow.appRole === "ROOT";
+    const isAdminFinal = isAdmin || isAdminNeon;
+    const profileCompleted = Boolean((profile?.full_name ?? "").trim()) && Boolean((profile?.phone ?? "").trim());
+
+    return {
+      id: reqUser.id,
+      email: email ?? "",
+      role: isAdminFinal ? "admin" : role,
+      plan: userRow.plan,
+      listingLimit: userRow.listingLimit,
+      listingUsed,
+      isAdmin: isAdminFinal,
+      profileCompleted,
+      full_name: String(profile?.full_name ?? ""),
+      phone: String(profile?.phone ?? reqUser.phone ?? ""),
+      telegram_id: String(profile?.telegram_id ?? ""),
+      avatar_url: String((profile as any)?.avatar_url ?? ""),
+      username: String((profile as any)?.username ?? ""),
+    };
   }
 
   @Post("login")

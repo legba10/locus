@@ -15,11 +15,34 @@ export class AuthApiError extends Error {
 }
 
 /**
- * Fetch current user from backend (Railway).
- * Token is automatically injected from Supabase session via apiFetchRaw.
+ * Установить cookie-сессию на бэкенде из Supabase токенов (после логина/регистрации).
+ * Цепочка: Supabase login/register → session → cookies → дальше /me с credentials.
+ */
+export async function setSession(accessToken: string, refreshToken: string): Promise<MeResponse> {
+  const res = await apiFetchRaw("/api/auth/session", {
+    method: "POST",
+    body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
+    credentials: "include",
+  });
+  const text = await res.text();
+  let payload: unknown;
+  try {
+    payload = text ? JSON.parse(text) : undefined;
+  } catch {
+    payload = { message: text || `Request failed: ${res.status}` };
+  }
+  if (!res.ok) {
+    const msg = (payload as { message?: string })?.message ?? "Ошибка установки сессии";
+    throw new AuthApiError(msg, res.status, payload);
+  }
+  return payload as MeResponse;
+}
+
+/**
+ * Fetch current user from backend. Authorization from cookie (proxy) or from storage.
  */
 export async function me(): Promise<MeResponse> {
-  const res = await apiFetchRaw("/api/auth/me", { method: "GET" });
+  const res = await apiFetchRaw("/api/auth/me", { method: "GET", credentials: "include" });
 
   const text = await res.text();
   let payload: unknown;

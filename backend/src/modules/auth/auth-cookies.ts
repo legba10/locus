@@ -20,11 +20,13 @@ function getCookieDomain(): string | undefined {
 function baseOptions(req?: Request) {
   const domain = getCookieDomain();
   const secure = isHttps(req);
+  // Cross-origin (frontend vercel.app, backend railway.app): CROSS_ORIGIN_AUTH_COOKIE=1 → sameSite "none" + secure.
+  const sameSite: SameSite = process.env.CROSS_ORIGIN_AUTH_COOKIE === "1" ? "none" : "lax";
 
   return {
     httpOnly: true,
-    secure,
-    sameSite: "lax" as SameSite,
+    secure: sameSite === "none" ? true : secure,
+    sameSite,
     path: "/",
     ...(domain ? { domain } : {}),
   };

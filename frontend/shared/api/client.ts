@@ -100,8 +100,7 @@ async function tryRefreshToken(): Promise<boolean> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      // If refresh token exists in storage → legacy flow.
-      // If not → cookie-based session (httpOnly refresh cookie).
+      // Storage token (email flow) or empty body for cookie-based session (Telegram)
       body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
     });
 
@@ -111,11 +110,9 @@ async function tryRefreshToken(): Promise<boolean> {
     }
 
     const payload = (await res.json()) as { access_token?: string; refresh_token?: string };
-    // For legacy storage-based auth, keep local tokens updated.
     if (refreshToken && payload.access_token && payload.refresh_token) {
       setTokens(payload.access_token, payload.refresh_token);
     }
-    // For cookie-based auth we rely on Set-Cookie from backend/proxy.
     return true;
   } catch {
     if (refreshToken) clearTokens();
