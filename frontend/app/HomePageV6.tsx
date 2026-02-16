@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
@@ -17,10 +17,18 @@ import { AIPopup } from '@/components/home/AIPopup'
 import { PopularCities } from '@/components/home/PopularCities'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
+import { useHomeListingCards } from './home/useHomeListingCards'
 
 interface ListingsResponse {
   items: any[]
 }
+
+interface UserPrefs {
+  city?: string
+  budget?: string
+  period?: string
+}
+
 
 /**
  * HomePageV6 — Real Estate Marketplace v4
@@ -186,14 +194,14 @@ export function HomePageV6() {
     }
     if (prefsRaw) {
       try {
-        const prefs = JSON.parse(prefsRaw) as { city?: string; budget?: string; period?: string }
+        const prefs = JSON.parse(prefsRaw) as UserPrefs
         if (prefs.city) useFilterStore.getState().setCity(prefs.city)
         if (prefs.budget) {
           const [min, max] = (prefs.budget || '').split('-').map((x) => (x ? Number(x.replace(/\s/g, '')) : ''))
           useFilterStore.getState().setBudget(min === undefined || min === '' ? '' : min, max === undefined || max === '' ? '' : max)
         }
         if (prefs.period) useFilterStore.setState({ duration: prefs.period === 'long' ? 'long' : prefs.period === 'short' ? 'short' : '' })
-      } catch {}
+      } catch (_) {}
     }
     const viewed = Number(localStorage.getItem('locus_viewed_count') || '0')
     setViewsCount(Number.isFinite(viewed) ? viewed : 0)
@@ -282,104 +290,10 @@ export function HomePageV6() {
     track('onboarding_complete', prefs)
   }
 
-  function mapAmenities(arr: unknown): ('wifi' | 'parking' | 'center' | 'metro')[] {
-    if (!Array.isArray(arr)) return []
-    const out: ('wifi' | 'parking' | 'center' | 'metro')[] = []
-    const s = arr.join(' ').toLowerCase()
-    if (s.includes('wifi') || s.includes('wi-fi') || s.includes('интернет')) out.push('wifi')
-    if (s.includes('parking') || s.includes('парковк')) out.push('parking')
-    if (s.includes('center') || s.includes('центр')) out.push('center')
-    if (s.includes('metro') || s.includes('метро')) out.push('metro')
-    return out.slice(0, 3)
-  }
+  const listingCards = useHomeListingCards(data);
 
-  // Используем данные напрямую из API (они уже содержат все нужные поля)
-  // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
-  const listingCards = useMemo(() => (data?.items || []).map((listing: any, index: number) => {
-    // Извлекаем фото (backend отправляет photos, но legacy может быть images)
-    const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url || null
-    
-    // District из API
-    const district = listing.district || null
-    
-    // Views из API (backend отправляет viewsCount)
-    const views = listing.viewsCount || listing.views || 0
-    
-    // isNew из API (backend должен присылать)
-    const isNew = listing.isNew || false
-    
-    // Определяем isVerified (высокий score = проверено)
-    const isVerified = (listing.score || 0) >= 70
-    
-    // Генерируем tags из reasons
-    const tags = (listing.reasons || []).slice(0, 2).map((reason: string) => {
-      if (reason.includes('ниже рынка') || reason.includes('Выгодная')) return 'Выгодная цена'
-      if (reason.includes('метро') || reason.includes('транспорт')) return 'Рядом метро'
-      if (reason.includes('спрос') || reason.includes('Популярное')) return 'Популярное'
-      return null
-    }).filter(Boolean) as string[]
-
-    // Очищаем заголовок от лишних надписей
-    let cleanTitle = listing.title || 'Без названия'
-    cleanTitle = cleanTitle
-      .replace(/квартира рядом с метро #?\d*/gi, '')
-      .replace(/тихая квартира #?\d*/gi, '')
-      .replace(/рядом с метро #?\d*/gi, '')
-      .replace(/метро #?\d*/gi, '')
-      .replace(/квартира #?\d*/gi, '')
-      .trim()
-    
-    // Если заголовок стал пустым, используем дефолтный
-    if (!cleanTitle || cleanTitle.length < 3) {
-      cleanTitle = `Квартира ${listing.city || ''}`.trim() || 'Без названия'
-    }
-
-    const cache = listing.ratingCache as { rating?: number; positive_ratio?: number; cleanliness?: number; noise?: number } | null | undefined
-    const score = listing.score || 50
-    // ТЗ-4: бейджи макс 2 — Проверено, Подобрано AI, Топ, Новое
-    const badgeList: ('verified' | 'ai' | 'top' | 'new')[] = []
-    if (isVerified) badgeList.push('verified')
-    if (listing.aiRecommended || listing.isAiMatch) badgeList.push('ai')
-    if (score >= 75) badgeList.push('top')
-    if (isNew) badgeList.push('new')
-    const badges = badgeList.slice(0, 2)
-    const rentalType = (listing.rentPeriod || listing.rentType || '').toString().toLowerCase().includes('month') ? 'month' : 'night'
-    return {
-      id: listing.id ?? `listing-${index}`,
-      photo,
-      title: cleanTitle,
-      price: listing.pricePerNight || listing.basePrice || 0,
-      city: listing.city || 'Не указан',
-      district,
-      metro: listing.metro || listing.metroStation || null,
-      rentalType,
-      rooms: listing.bedrooms ?? listing.rooms ?? 1,
-      area: listing.area ?? 40,
-      guests: listing.maxGuests ?? listing.guests ?? null,
-      floor: listing.floor ?? null,
-      totalFloors: listing.totalFloors ?? null,
-      views,
-      isNew,
-      isVerified,
-      score,
-      verdict: listing.verdict || 'Средний вариант',
-      reasons: listing.reasons || [],
-      tags: tags.length > 0 ? tags : (score >= 70 ? ['Рекомендуем'] : []),
-      badges,
-      aiReasons: (listing.reasons || []).length > 0 ? listing.reasons : (listing.verdict ? [listing.verdict] : null),
-      rating: cache?.rating ?? null,
-      reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
-      reviewCount: listing.reviewCount ?? listing.reviewsCount ?? null,
-      propertyType: (listing.type || 'apartment').toString().toLowerCase(),
-      amenities: mapAmenities(listing.amenities),
-      cleanliness: cache?.cleanliness ?? null,
-      noise: cache?.noise ?? null,
-    }
-  }), [data?.items]);
-
-  const Root = 'div';
   return (
-    <Root className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
+    <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
       {/* ТЗ-5: sticky поиск — фикс. сверху 72px при скролле вниз */}
       {stickySearchVisible && (
         <div className="home-search-sticky-tz5 fixed left-0 right-0 z-[80] h-[72px] flex items-center gap-3 px-4 md:px-6 bg-[var(--card-bg)] border-b border-[var(--border)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
@@ -887,6 +801,6 @@ export function HomePageV6() {
           router.push(`/listings?${p.toString()}`)
         }}
       />
-    </Root>
+    </div>
   )
 }
