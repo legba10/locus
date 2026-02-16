@@ -65,6 +65,7 @@ export function HomePageV6() {
   const [shakeCities, setShakeCities] = useState(false)
   const [searching, setSearching] = useState(false)
   const [ctaLoading, setCtaLoading] = useState(false)
+  const [showDiffPopup, setShowDiffPopup] = useState(false)
   /** ТЗ-5: на главной после «Показать варианты» показываем результаты на той же странице (scroll к #listings) */
   const [searchApplied, setSearchApplied] = useState(false)
   /** ТЗ-5: sticky поиск — показывать при скролле вниз (высота 72px) */
@@ -330,27 +331,10 @@ export function HomePageV6() {
       {/* 1. Hero — кнопка скроллит к поиску, под кнопкой сразу поиск */}
       <Hero onCtaClick={handleHeroCta} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} selectedCity={city ?? ''} />
 
-      {/* 2. Быстрый поиск — сразу под hero, без пустых зон (ТЗ-6 экран 1) */}
+      {/* 2. Быстрый поиск — сразу под hero: фильтр цельным блоком, затем Умный/Ручной */}
       <section id="search" className="home-tz6-block relative z-20" aria-label="Поиск жилья">
         <div className="market-container home-search-wrap-tz12 home-search-wrap-tz18">
-          {/* ТЗ-5: табы Умный подбор / Ручной поиск */}
-          <div className="flex rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-1 mb-4 max-w-[400px]">
-            <button
-              type="button"
-              onClick={() => setAiMode(true)}
-              className={cn('flex-1 py-2 px-3 rounded-lg text-[14px] font-medium transition-colors', aiMode ? 'bg-[var(--card-bg)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-secondary)]')}
-            >
-              Умный подбор
-            </button>
-            <button
-              type="button"
-              onClick={() => setAiMode(false)}
-              className={cn('flex-1 py-2 px-3 rounded-lg text-[14px] font-medium transition-colors', !aiMode ? 'bg-[var(--card-bg)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-secondary)]')}
-            >
-              Ручной поиск
-            </button>
-          </div>
-          <div className={cn('home-search-block-tz12 home-filter-animate-tz10 rounded-2xl md:rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5', shakeCities && 'search-flow-shake')}>
+          <div className={cn('home-search-block-tz12 home-filter-animate-tz10 rounded-2xl md:rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)]', shakeCities && 'search-flow-shake')}>
             {/* Строка: Город | Бюджет | Тип (desktop) или столбик (mobile) */}
             <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 mb-3">
               <div className="flex-1 min-w-0">
@@ -405,11 +389,7 @@ export function HomePageV6() {
                 {searching ? (
                   <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
                 ) : (
-                  listingCount > 0 && searchApplied && city?.trim()
-                    ? `Показать ${listingCount} вариантов`
-                    : city?.trim()
-                    ? 'Показать варианты'
-                    : 'Подобрать жильё'
+                  'Найти жильё'
                 )}
               </button>
               <button
@@ -422,6 +402,33 @@ export function HomePageV6() {
                 Фильтры
               </button>
             </div>
+          </div>
+
+          {/* Умный / Ручной подбор + ссылка «В чём разница?» */}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="flex rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-1 max-w-[400px]">
+              <button
+                type="button"
+                onClick={() => setAiMode(true)}
+                className={cn('flex-1 py-2 px-3 rounded-lg text-[14px] font-medium transition-colors', aiMode ? 'bg-[var(--card-bg)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-secondary)]')}
+              >
+                Умный подбор AI
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiMode(false)}
+                className={cn('flex-1 py-2 px-3 rounded-lg text-[14px] font-medium transition-colors', !aiMode ? 'bg-[var(--card-bg)] text-[var(--accent)] shadow-sm' : 'text-[var(--text-secondary)]')}
+              >
+                Ручной поиск
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDiffPopup(true)}
+              className="text-[13px] text-[var(--text-secondary)] hover:text-[var(--accent)] underline underline-offset-2"
+            >
+              В чём разница?
+            </button>
           </div>
 
           {/* ТЗ-12: Desktop — dropdown панель под поиском, с анимацией и затемнением фона */}
@@ -499,15 +506,20 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* 4. Актуальные объявления — ТЗ-6 экран 4, scroll target после «Показать варианты» */}
+      {/* 4. Актуальные объявления */}
       <section id="listings" className="home-tz6-block bg-transparent animate-fade-in scroll-mt-4">
         <div className="market-container">
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="section-title-tz19">
-              Актуальные предложения
-            </h2>
-            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent1)] hover:opacity-90 transition-all duration-200">
-              Смотреть все →
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6 md:mb-8">
+            <div>
+              <h2 className="section-title-tz19">
+                Актуальные предложения
+              </h2>
+              <p className="text-[var(--text-secondary)] text-[15px] mt-1">
+                Лучшие варианты прямо сейчас
+              </p>
+            </div>
+            <Link href="/listings" className="text-[14px] font-medium text-[var(--accent)] hover:opacity-90 transition-all duration-200 shrink-0">
+              Смотреть все объявления
             </Link>
           </div>
           <div className="listing-grid listing-grid-tz4 listing-grid-tz10">
@@ -657,9 +669,6 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* 8. Статистика — ТЗ-6 экран 7: почти в конце, после новостей */}
-      <StatsBlock />
-
       {/* ═══════════════════════════════════════════════════════════════
           СДАТЬ ЖИЛЬЁ — по ТЗ v4 (glass card, product benefit)
           ═══════════════════════════════════════════════════════════════ */}
@@ -715,6 +724,9 @@ export function HomePageV6() {
           </div>
         </div>
       </section>
+
+      {/* Статистика — внизу перед футером */}
+      <StatsBlock />
 
       {showOnboarding && onboardingStep === 1 && (
         <AIPopup
@@ -799,6 +811,25 @@ export function HomePageV6() {
           router.push(`/listings?${p.toString()}`)
         }}
       />
+
+      {/* Попап «В чём разница?» — Умный подбор vs Ручной поиск */}
+      {showDiffPopup && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[var(--z-modal)]" aria-modal="true" role="dialog">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDiffPopup(false)} aria-hidden />
+          <div className="relative w-full max-w-[400px] rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h3 className="text-[18px] font-semibold text-[var(--text-main)]">В чём разница?</h3>
+              <button type="button" onClick={() => setShowDiffPopup(false)} className="p-1 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]" aria-label="Закрыть">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="space-y-4 text-[14px] text-[var(--text-secondary)]">
+              <p><strong className="text-[var(--text-main)]">Умный подбор</strong> — AI анализирует рынок и подбирает лучшие варианты под ваш запрос.</p>
+              <p><strong className="text-[var(--text-main)]">Ручной поиск</strong> — вы сами выбираете город, бюджет и тип жилья.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

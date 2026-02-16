@@ -19,7 +19,7 @@ export function HeroSection({
 }) {
   return (
     <section
-      className="hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 relative overflow-hidden pt-[80px] pb-10 md:pt-[100px] md:pb-12 bg-[var(--background)]"
+      className="hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 relative overflow-hidden pt-8 pb-12 md:pt-8 md:pb-12 bg-[var(--background)]"
       aria-label="Главный экран"
     >
       <div className="relative z-10 mx-auto max-w-[1100px] px-4 md:px-6 flex flex-col items-center text-center">
@@ -42,7 +42,7 @@ export function HeroSection({
           type="button"
           onClick={onCtaClick}
           disabled={ctaLoading}
-          className="hero-tz18-cta hero-cta-tz11 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none"
+          className="hero-tz18-cta hero-cta-tz11 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none mt-5"
         >
           {ctaLoading ? (
             <>
