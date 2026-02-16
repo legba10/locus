@@ -17,6 +17,7 @@ import { AIPopup } from '@/components/home/AIPopup'
 import { PopularCities } from '@/components/home/PopularCities'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
+import { cityIn } from '@/shared/lib/cityDeclension'
 import { useHomeListingCards } from './home/useHomeListingCards'
 
 interface ListingsResponse {
@@ -304,7 +305,7 @@ export function HomePageV6() {
     const minStr = budgetMin !== '' ? Number(budgetMin).toLocaleString('ru') : ''
     const maxStr = budgetMax !== '' ? `${Number(budgetMax).toLocaleString('ru')} ₽` : ''
     const budgetLabel = hasBudget ? ` до ${minStr}${minStr && maxStr ? ' — ' : ''}${maxStr}` : ''
-    return `Подбор для вас в ${city || 'вашем городе'}${budgetLabel}`
+    return `Подбор для вас ${city ? cityIn(city) : 'в вашем городе'}${budgetLabel}`
   }, [city, budgetMin, budgetMax])
 
   const saveOnboarding = () => {

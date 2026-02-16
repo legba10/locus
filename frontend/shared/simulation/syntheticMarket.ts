@@ -7,6 +7,7 @@
 import type { ListingCard } from '../domain/listing.model'
 import type { UserProfile } from '../domain/userProfile.model'
 import type { RawEvent } from '../events/event.types'
+import { cityIn } from '@/shared/lib/cityDeclension'
 
 export interface SyntheticMarketConfig {
   city: string
@@ -30,7 +31,7 @@ export function createSyntheticListings(
     const roomsCount = rooms[Math.floor(random() * rooms.length)]
     listings.push({
       id: `listing_${config.city}_${i}`,
-      title: `Квартира ${roomsCount}к в ${config.city}`,
+      title: `Квартира ${roomsCount}к ${cityIn(config.city)}`,
       price,
       city: config.city,
       district: random() > 0.7 ? `Район ${Math.ceil(random() * 5)}` : undefined,

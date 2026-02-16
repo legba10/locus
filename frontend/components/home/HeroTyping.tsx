@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect, memo } from 'react'
+import { cityIn } from '@/shared/lib/cityDeclension'
 
-/** Жёсткое ТЗ: массив полных фраз, {city} подставляется выбранным городом */
+/** Жёсткое ТЗ: массив полных фраз, {city} подставляется склонённым городом (в Москве, в Сургуте). */
 const PHRASE_TEMPLATES = [
-  'Найдите жильё, подобранное для вас в {city}',
-  'Найдите жильё с AI в {city}',
-  'Найдите жильё без риэлторов в {city}',
-  'Найдите жильё рядом с вами в {city}',
-  'Найдите жильё быстрее в {city}',
-  'Найдите жильё под ваш бюджет в {city}',
+  'Найдите жильё, подобранное для вас {city}',
+  'Найдите жильё с AI {city}',
+  'Найдите жильё без риэлторов {city}',
+  'Найдите жильё рядом с вами {city}',
+  'Найдите жильё быстрее {city}',
+  'Найдите жильё под ваш бюджет {city}',
 ]
 
 const TYPE_SPEED_MS = 70
@@ -27,8 +28,8 @@ function HeroTypingInner({ city = '' }: HeroTypingProps) {
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const cityName = city?.trim() || 'вашем городе'
-  const fullString = PHRASE_TEMPLATES[phraseIndex % PHRASE_TEMPLATES.length].replace('{city}', cityName)
+  const cityPhrase = city?.trim() ? cityIn(city.trim()) : 'в вашем городе'
+  const fullString = PHRASE_TEMPLATES[phraseIndex % PHRASE_TEMPLATES.length].replace('{city}', cityPhrase)
 
   useEffect(() => {
     setText('')

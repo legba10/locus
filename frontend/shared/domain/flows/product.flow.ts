@@ -9,6 +9,7 @@
 
 import type { UserProfile } from '../userProfile.model'
 import type { User } from '../user.model'
+import { cityIn } from '@/shared/lib/cityDeclension'
 
 /**
  * Product engagement states
@@ -230,7 +231,7 @@ function getRecommendationsForState(
           id: 'city_filter',
           priority: 2,
           type: 'feature',
-          message: `Смотрите объявления в ${profile.intent.city}`,
+          message: `Смотрите объявления ${cityIn(profile.intent.city)}`,
           action: `/listings?city=${profile.intent.city}`,
         })
       }
