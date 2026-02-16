@@ -73,6 +73,19 @@
   }
 }
 
+/* ТЗ-1: hero-заголовок не прыгает — фиксированная высота, одна строка, max-width */
+.hero-title-tz1 {
+  min-height: 72px;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 768px) {
+  .hero-title-tz1 {
+    min-height: 84px;
+  }
+}
+
 .hero-tz18-typing {
   font-size: 16px;
   margin-top: 12px;

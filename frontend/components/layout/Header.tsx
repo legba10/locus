@@ -170,15 +170,29 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setProfileOpen((o) => !o)}
-                className="layout-header__avatar w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] shrink-0 border border-[var(--border)]"
+                className="layout-header__avatar flex shrink-0 p-0 border-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 aria-label="Профиль"
                 aria-expanded={profileOpen}
               >
-                {displayAvatar ? (
-                  <Image src={displayAvatar} alt={displayName || 'Аватар'} width={36} height={36} className="w-9 h-9 object-cover" />
-                ) : (
-                  <span className="text-sm font-medium">{(displayName?.trim().charAt(0) || 'Г').toUpperCase()}</span>
-                )}
+                {/* ТЗ-3: ровный круглый аватар — контейнер 36×36, overflow hidden, object-fit cover, без белых краёв */}
+                <span
+                  className="header-avatar-wrapper relative inline-block w-9 h-9 max-w-9 max-h-9 rounded-full overflow-hidden flex items-center justify-center bg-transparent flex-shrink-0"
+                  style={{ minWidth: 36, minHeight: 36 }}
+                >
+                  {displayAvatar ? (
+                    <Image
+                      src={displayAvatar}
+                      alt={displayName || 'Аватар'}
+                      fill
+                      sizes="36px"
+                      className="object-cover object-center"
+                    />
+                  ) : (
+                    <span className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] text-sm font-medium">
+                      {(displayName?.trim().charAt(0) || 'Г').toUpperCase()}
+                    </span>
+                  )}
+                </span>
               </button>
               {profileOpen && (
                 <div

@@ -375,7 +375,18 @@ export function SearchPageV4() {
 
           {/* Основной контент */}
           <div className="min-w-0">
-            {/* AI панель — если включён Умный подбор */}
+            {/* ТЗ-5: при переходе из AI-подбора показываем блок «Мы подобрали жильё под вас» */}
+            {aiMode && (
+              <div className="rounded-[18px] border border-[var(--border)] bg-[var(--color-surface-2)] p-4 mb-6">
+                <h2 className="text-[16px] font-semibold text-[var(--text-main)]">
+                  Мы подобрали жильё под вас
+                </h2>
+                <p className="text-[14px] text-[var(--text-secondary)] mt-1">
+                  Ниже — варианты по вашим параметрам. Можете изменить фильтры в панели выше.
+                </p>
+              </div>
+            )}
+            {/* AI панель — если включён Умный подбор и есть результаты */}
             {/* ТЗ-20: блок «Подобрано AI» + текст про лучшие варианты */}
             {aiMode && !isLoading && sortedListings.length > 0 && (
               <div className="search-tz7-ai-panel rounded-[18px] border border-[var(--border)] p-5 mb-6 bg-[var(--color-surface-2)]">

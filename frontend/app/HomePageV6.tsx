@@ -247,6 +247,13 @@ export function HomePageV6() {
     return () => window.removeEventListener('keydown', onKey)
   }, [filterSheetOpen])
 
+  /** ТЗ-4: открытие выбора города по событию от GeoInit (Выбрать другой) */
+  useEffect(() => {
+    const onOpen = () => setFilterSheetOpen(true)
+    window.addEventListener('locus-open-city-picker', onOpen)
+    return () => window.removeEventListener('locus-open-city-picker', onOpen)
+  }, [])
+
   useEffect(() => {
     const onCardViewed = () => {
       if (typeof window === 'undefined') return
@@ -696,28 +703,25 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ТЗ-9: AI подбор — кнопка открывает wizard (не фильтр) */}
+      {/* ТЗ-5: блок «Подберём жильё за 10 секунд» — открывает модалку пошагового подбора, не переход на поиск */}
       <section className="home-tz6-block" aria-label="Умный подбор">
         <div className="market-container">
-          <button
-            type="button"
-            onClick={() => setShowAIWizard(true)}
-            className="home-tz3-ai-card w-full max-w-[900px] mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-shadow"
-            aria-label="Подобрать жильё с AI"
-          >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-[15px] md:text-[16px] font-medium text-[var(--text-main)]">Подобрать жильё с AI</p>
-                <p className="text-[13px] md:text-[14px] text-[var(--text-secondary)] mt-0.5">Пошаговый подбор: город, даты, бюджет, цель — и топ-5 вариантов с объяснением</p>
-              </div>
-            </div>
-            <span className="text-[14px] md:text-[15px] font-semibold text-[var(--accent)] shrink-0">Открыть подбор →</span>
-          </button>
+          <div className="w-full max-w-[900px] mx-auto rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)]">
+            <h2 className="text-[20px] md:text-[22px] font-bold text-[var(--text-main)]">
+              Подберём жильё за 10 секунд
+            </h2>
+            <p className="text-[14px] md:text-[15px] text-[var(--text-secondary)] mt-1">
+              AI найдёт лучшие варианты под вас
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAIWizard(true)}
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 bg-[var(--accent)] text-white font-semibold text-[15px] hover:opacity-95 transition-opacity"
+              aria-label="Начать подбор"
+            >
+              Начать подбор
+            </button>
+          </div>
         </div>
       </section>
 
@@ -930,18 +934,20 @@ export function HomePageV6() {
         onLaunch={handleQuickAILaunch}
       />
       {/* ТЗ-9: AI wizard — 5 шагов, затем выдача 5 вариантов с «Почему подходит» */}
-      {/* ТЗ-20: AI-подбор — модал, после «Подобрать» переход на /listings с фильтрами */}
+      {/* ТЗ-2: AI-помощник «Подберём жильё за 10 секунд» — bottom sheet, initialCity из фильтра */}
       <AIWizardModal
         open={showAIWizard}
         onClose={() => setShowAIWizard(false)}
+        initialCity={city ?? ''}
         onComplete={(params) => {
           const p = new URLSearchParams()
           p.set('ai', 'true')
           if (params.city) p.set('city', params.city)
           if (params.budgetMin != null) p.set('priceMin', String(params.budgetMin))
           if (params.budgetMax != null) p.set('priceMax', String(params.budgetMax))
-          if (params.propertyType) p.set('type', params.propertyType)
-          if (params.when) p.set('date', params.when)
+          if (params.propertyTypes?.length) p.set('type', params.propertyTypes[0])
+          if (params.dateFrom) p.set('dateFrom', params.dateFrom)
+          if (params.dateTo) p.set('dateTo', params.dateTo)
           router.push(`/listings?${p.toString()}`)
         }}
       />

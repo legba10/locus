@@ -2,62 +2,79 @@
 
 import { useState, useEffect, memo } from 'react'
 
-/** ТЗ-16/ТЗ-21: фразы только хвост после «Найдите жильё,» — спокойная печать, читабельно */
+/** ТЗ-1: 6 фраз, после фразы — « в {город}». Premium-анимация, без прыжков. */
 const PHRASES = [
-  'которое подходит вам.',
-  'быстрее с AI.',
-  'без риэлторов.',
-  'под ваш бюджет.',
-  'рядом с работой.',
-  'для отдыха.',
-  'на любой срок.',
+  'подобранное для вас',
+  'с AI',
+  'без риэлторов',
+  'быстрее',
+  'в вашем районе',
+  'по вашим параметрам',
 ]
 
 const TYPE_SPEED_MS = 45
+const PAUSE_AFTER_LINE_MS = 1600
 const DELETE_SPEED_MS = 25
-const PAUSE_MS = 1400
+const PAUSE_BEFORE_NEW_MS = 400
 
-function HeroTypingInner() {
+interface HeroTypingProps {
+  city?: string
+}
+
+function HeroTypingInner({ city = '' }: HeroTypingProps) {
   const [text, setText] = useState('')
-  const [index, setIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const citySuffix = city?.trim() ? ` в ${city.trim()}` : ''
+  const fullString = PHRASES[phraseIndex % PHRASES.length] + citySuffix
+
+  /** ТЗ-1: при смене города — перезапуск текущей фразы с новым суффиксом */
   useEffect(() => {
-    const current = PHRASES[phraseIndex % PHRASES.length]
-    if (!current) return
+    setText('')
+    setCharIndex(0)
+    setIsDeleting(false)
+  }, [city?.trim()])
+
+  useEffect(() => {
+    if (!fullString) return
 
     let timeout: ReturnType<typeof setTimeout>
 
     if (!isDeleting) {
-      if (index < current.length) {
+      if (charIndex < fullString.length) {
         timeout = setTimeout(() => {
-          setText(current.substring(0, index + 1))
-          setIndex(index + 1)
+          setText(fullString.substring(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
         }, TYPE_SPEED_MS)
       } else {
-        timeout = setTimeout(() => setIsDeleting(true), PAUSE_MS)
+        timeout = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_LINE_MS)
       }
     } else {
-      if (index > 0) {
+      if (charIndex > 0) {
         timeout = setTimeout(() => {
-          setText(current.substring(0, index - 1))
-          setIndex(index - 1)
+          setText(fullString.substring(0, charIndex - 1))
+          setCharIndex(charIndex - 1)
         }, DELETE_SPEED_MS)
       } else {
         timeout = setTimeout(() => {
           setText('')
           setIsDeleting(false)
           setPhraseIndex((phraseIndex + 1) % PHRASES.length)
-          setIndex(0)
-        }, DELETE_SPEED_MS)
+          setCharIndex(0)
+        }, PAUSE_BEFORE_NEW_MS)
       }
     }
 
     return () => clearTimeout(timeout)
-  }, [index, isDeleting, phraseIndex])
+  }, [charIndex, isDeleting, phraseIndex, fullString])
 
-  return <span className="hero-typing-tz12 typing min-w-[2ch] text-left">{text}</span>
+  return (
+    <span className="hero-typing-tz12 hero-typing-tz1 typing inline-block min-w-[2ch] text-left align-baseline">
+      {text}
+    </span>
+  )
 }
 
 export const HeroTyping = memo(HeroTypingInner)

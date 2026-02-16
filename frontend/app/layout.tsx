@@ -10,6 +10,7 @@ import '../styles/globals.css'
 
 const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewReminderPopup').then((m) => ({ default: m.ReviewReminderPopup })), { ssr: false })
 const AppPreloader = dynamic(() => import('@/components/ui/AppPreloader').then((m) => ({ default: m.AppPreloader })), { ssr: false })
+const GeoInit = dynamic(() => import('@/components/geo/GeoInit').then((m) => ({ default: m.GeoInit })), { ssr: false })
 
 export const metadata: Metadata = {
   title: 'LOCUS — Поиск жилья',
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Footer />
                 <ModalRoot />
                 <ReviewReminderPopup />
+                <GeoInit />
               </div>
             </ErrorBoundaryWrapper>
           </Providers>

@@ -320,3 +320,27 @@
     padding-top: calc(72px + env(safe-area-inset-top, 0px));
   }
 }
+
+/* ТЗ-3: аватар в шапке — ровный круг, без белых краёв, object-fit cover */
+.header-avatar-wrapper {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.header-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
