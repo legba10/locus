@@ -1,28 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "./auth-store";
 import { logger } from "@/shared/utils/logger";
 import { apiFetchRaw, setOn401 } from "@/shared/api/client";
 import { supabase } from "@/shared/supabase-client";
 import { clearTokens } from "@/shared/auth/token-storage";
+import { initAuth } from "./initAuth";
+import type { Session } from "@supabase/supabase-js";
 
 /**
- * AuthProvider — CLIENT-ONLY auth initialization
- * 
- * RULES:
- * - Auth is CLIENT ONLY (no SSR)
- * - Session loading pipeline: mount → getSession → /auth/me → update store
- * - Never blocks render
- * - Single initialization (ref guard)
- * - Abort controller for cleanup
+ * AuthProvider — блокирующая инициализация auth.
+ * Пока authReady === false — контент не рендерится, запросы к backend не делаются.
+ * После initAuth() → initialize() только при наличии session; без таймаутов.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const initialize = useAuthStore((s) => s.initialize);
   const user = useAuthStore((s) => s.user);
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const initCalled = useRef(false);
-  const abortRef = useRef<AbortController | null>(null);
   const syncCalled = useRef(false);
 
   /* ТЗ-9: после логина/загрузки восстанавливать тему из localStorage */
@@ -48,44 +46,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { if (typeof unsub === "function") unsub(); };
   }, []);
 
+  /* Блокирующая инициализация: сначала getSession, потом рендер контента. */
   useEffect(() => {
-    // Guard against multiple calls (strict mode, re-renders)
-    if (initCalled.current) {
-      logger.debug('Auth', 'Initialize already called, skipping');
-      return;
-    }
-    initCalled.current = true;
-    
-    // Create abort controller for cleanup
-    abortRef.current = new AbortController();
-    const { signal } = abortRef.current;
-
-    // Non-blocking initialize with timeout
-    const timeoutId = setTimeout(() => {
-      if (!signal.aborted) {
-        logger.warn('Auth', 'Initialize timeout (5s), proceeding without auth');
-      }
-    }, 5000);
-
-    initialize()
-      .then(() => {
-        clearTimeout(timeoutId);
-        if (!signal.aborted) {
-          logger.debug('Auth', 'Initialize complete');
-        }
+    initAuth()
+      .then((s) => {
+        setSession(s);
+        setAuthReady(true);
       })
       .catch((err) => {
-        clearTimeout(timeoutId);
-        if (!signal.aborted) {
-          logger.error('Auth', 'Initialize error', err);
-        }
+        logger.error("Auth", "initAuth failed", err);
+        setAuthReady(true);
       });
+  }, []);
 
-    // Cleanup on unmount
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, [initialize]);
+  /* initialize() только после authReady; вызов /me только при session (внутри store). Без таймаутов. */
+  useEffect(() => {
+    if (!authReady) return;
+    if (initCalled.current) return;
+    initCalled.current = true;
+    initialize()
+      .then(() => logger.debug("Auth", "Initialize complete"))
+      .catch((err) => logger.error("Auth", "Initialize error", err));
+  }, [authReady, initialize]);
 
   // Sync user on each visit when session exists (best-effort, non-blocking).
   useEffect(() => {
@@ -109,6 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  // Always render children immediately - don't block on auth
+  /* Пока authReady === false — не делаем запросы к backend (контент не монтируется). */
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-main)]" aria-busy="true">
+        <span className="text-[var(--text-secondary)]">Загрузка...</span>
+      </div>
+    );
+  }
   return <>{children}</>;
 }

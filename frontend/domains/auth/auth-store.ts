@@ -213,16 +213,7 @@ export const useAuthStore = create<AuthState>()(
         const prevUser = get().user;
         set({ isLoading: true, error: null });
 
-        const AUTH_TIMEOUT_MS = 5000;
         const MAX_ATTEMPTS = 3;
-
-        const runFetchMe = async (): Promise<MeResponse> => {
-          const mePromise = fetchMe();
-          const meTimeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("fetchMe timeout")), AUTH_TIMEOUT_MS)
-          );
-          return Promise.race([mePromise, meTimeout]);
-        };
 
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
@@ -231,10 +222,11 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
+        /* Вызов /me только при наличии session; без таймаутов. */
         let lastError: unknown;
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
           try {
-            const backendResponse = await runFetchMe();
+            const backendResponse = await fetchMe();
             const meUser = userFromBackend(backendResponse);
             set({
               user: meUser,

@@ -7,6 +7,12 @@
 - SupabaseAuthGuard: только Bearer + supabase.auth.getUser(token), ошибка "No token".
 - Frontend: onAuthStateChange — при session вызывается refresh(), при !session очищается user в store.
 
+## ТЗ-3: Финальная стабилизация
+- initAuth(): блокирующая инициализация getSession() при старте (domains/auth/initAuth.ts).
+- AuthProvider: пока authReady === false показывается loader, запросы к backend не делаются; после initAuth() рендер children, затем initialize() только при session.
+- Убран таймаут 5s и "proceeding without auth"; убран таймаут в runFetchMe (fetchMe без race).
+- /me вызывается только при наличии session (в initialize и после login/register).
+
 ## Выполнено
 
 ### Backend
