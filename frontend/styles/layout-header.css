@@ -16,6 +16,19 @@
   height: 100%;
 }
 
+/* ТЗ-14: логотип + надпись LOCUS — один источник, без смены по теме */
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-text {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+}
+
 /* ТЗ-13: тонкая граница, иконки через var(--text-main) */
 .layout-header-tz13.layout-header {
   border-bottom-width: 1px;

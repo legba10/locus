@@ -376,6 +376,7 @@ export function SearchPageV4() {
           {/* Основной контент */}
           <div className="min-w-0">
             {/* AI панель — если включён Умный подбор */}
+            {/* ТЗ-20: блок «Подобрано AI» + текст про лучшие варианты */}
             {aiMode && !isLoading && sortedListings.length > 0 && (
               <div className="search-tz7-ai-panel rounded-[18px] border border-[var(--border)] p-5 mb-6 bg-[var(--color-surface-2)]">
                 <div className="flex items-center gap-2 mb-3">
@@ -383,22 +384,17 @@ export function SearchPageV4() {
                     <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                   </svg>
                   <h3 className="text-[16px] font-semibold text-[var(--text-main)]">
-                    AI подобрал для вас
+                    Подобрано AI
                   </h3>
                 </div>
-                {aiResults && (
-                  <div className="mb-3">
-                    <p className="text-[14px] text-[var(--text-main)] mb-1">
-                      <strong>Почему эти варианты подходят:</strong> {aiResults.reason}
-                    </p>
-                    <p className="text-[13px] text-[var(--text-secondary)]">
-                      Основные критерии совпадения: город, бюджет, тип жилья
-                    </p>
-                  </div>
-                )}
-                <p className="text-[13px] text-[var(--text-secondary)]">
-                  Для каждого объявления показаны рекомендации LOCUS с объяснением, почему оно вам подходит
+                <p className="text-[14px] text-[var(--text-main)] mb-2">
+                  Мы выбрали лучшие варианты по цене, рейтингу и локации
                 </p>
+                {aiResults && (
+                  <p className="text-[13px] text-[var(--text-secondary)]">
+                    Почему подходят: {aiResults.reason}
+                  </p>
+                )}
               </div>
             )}
 
@@ -442,7 +438,7 @@ export function SearchPageV4() {
             {/* Сетка объявлений */}
             {!isLoading && sortedListings.length > 0 && (
               <div className="listing-grid listing-grid-tz4 listing-grid-tz10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedListings.map((listing) => (
+                {sortedListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
                     id={listing.id}
@@ -461,6 +457,7 @@ export function SearchPageV4() {
                     aiReasons={listing.aiReasons}
                     badges={listing.badges}
                     rating={listing.rating}
+                    aiRecommendTooltip={aiMode && index === 0 ? 'Лучшее соотношение цена/качество' : undefined}
                   />
                 ))}
               </div>

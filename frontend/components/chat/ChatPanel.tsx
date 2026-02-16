@@ -14,13 +14,13 @@ export type Message = {
   sender?: { profile?: { name?: string | null } }
 }
 
-/** ТЗ-5: быстрые подсказки для первого сообщения */
+/** ТЗ-8: быстрые фразы-чипы над полем ввода (вставляют текст при нажатии) */
 const QUICK_SUGGESTIONS_BASE = [
   'Здравствуйте! Можно забронировать?',
+  'Свободно ли на эти даты?',
+  'Можно посмотреть сегодня?',
   'Интересует квартира',
   'Какие даты свободны?',
-  'Свободно ли на эти даты?',
-  'Можно посмотреть квартиру сегодня?',
   'Подскажите, какая окончательная цена?',
 ]
 
@@ -47,11 +47,12 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  /** Скроллить вниз только при открытии и после отправки */
+  /** ТЗ-8: скролл вниз только 1 раз при открытии диалога, не при каждом ререндере */
+  const initialScrollDoneRef = useRef(false)
   const shouldScrollToBottomRef = useRef(true)
 
   /** ТЗ-12: подсказки показывать, пока пользователь ещё не отправлял сообщений в этом чате */
-  const hasUserSent = messages.some((m) => m.senderId === myId)
+  const hasUserSent = (messages ?? []).some((m) => m.senderId === myId)
   const showSuggestions = !loading && !hasUserSent
 
   /** ТЗ-12: список подсказок — базовые + динамическая с датами при переходе из объявления */
@@ -76,29 +77,43 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
 
   const fetchMessages = useCallback(() => {
     if (!chatId || !isAuthenticated()) return
-    apiFetchJson<{ messages: Message[]; hasMore: boolean }>(`/chats/${chatId}/messages`)
+    apiFetchJson<{ messages?: Message[]; hasMore?: boolean }>(`/chats/${chatId}/messages`)
       .then((res) => {
-        setMessages(res.messages ?? [])
-        setHasMore(res.hasMore ?? false)
+        const list = Array.isArray(res?.messages) ? res.messages : []
+        setMessages(list)
+        setHasMore(Boolean(res?.hasMore))
       })
-      .catch(() => setMessages([]))
+      .catch((e) => {
+        console.warn('chat poll error', e)
+        setMessages((prev) => prev ?? [])
+      })
   }, [chatId, isAuthenticated])
 
+  /** ТЗ-15: один запрос при монтировании, mounted-флаг — без двойного рендера и падений */
   useEffect(() => {
     if (!chatId || !isAuthenticated()) return
-    let cancelled = false
+    let mounted = true
+    initialScrollDoneRef.current = false
     setLoading(true)
     shouldScrollToBottomRef.current = true
-    apiFetchJson<{ messages: Message[]; hasMore: boolean }>(`/chats/${chatId}/messages`)
-      .then((res) => {
-        if (!cancelled) {
-          setMessages(res.messages ?? [])
-          setHasMore(res.hasMore ?? false)
-        }
-      })
-      .catch(() => { if (!cancelled) setMessages([]) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+
+    const load = async () => {
+      try {
+        const res = await apiFetchJson<{ messages?: Message[]; hasMore?: boolean }>(`/chats/${chatId}/messages`)
+        if (!mounted) return
+        const list = Array.isArray(res?.messages) ? res.messages : []
+        setMessages(list)
+        setHasMore(Boolean(res?.hasMore))
+      } catch (e) {
+        if (!mounted) return
+        console.warn('chat load error', e)
+        setMessages([])
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
   }, [chatId, isAuthenticated])
 
   useEffect(() => {
@@ -107,16 +122,17 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
     return () => clearInterval(interval)
   }, [chatId, isAuthenticated, fetchMessages])
 
-  /** ТЗ-5: сначала render, потом scroll — убираем дергание; setTimeout 50ms */
+  /** ТЗ-15: автоскролл только раз после загрузки, по messages.length — не при каждом ререндере */
+  const messagesLength = messages?.length ?? 0
   useEffect(() => {
-    if (!loading && shouldScrollToBottomRef.current) {
-      const t = setTimeout(() => {
-        scrollToBottom('auto')
-        shouldScrollToBottomRef.current = false
-      }, 50)
-      return () => clearTimeout(t)
-    }
-  }, [loading, scrollToBottom])
+    if (!messagesLength || loading || initialScrollDoneRef.current) return
+    const t = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+      initialScrollDoneRef.current = true
+      shouldScrollToBottomRef.current = false
+    }, 80)
+    return () => clearTimeout(t)
+  }, [messagesLength, loading])
 
   useEffect(() => {
     if (!chatId || !isAuthenticated()) return
@@ -133,15 +149,19 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
         method: 'POST',
         body: JSON.stringify({ text }),
       })
-      setMessages((prev) => [...prev, msg])
+      if (msg && typeof msg === 'object' && msg.id) {
+        setMessages((prev) => Array.isArray(prev) ? [...prev, msg] : [msg])
+      }
       shouldScrollToBottomRef.current = true
-      setTimeout(() => scrollToBottom('smooth'), 50)
+      setTimeout(() => scrollToBottom('smooth'), 80)
+    } catch (e) {
+      console.warn('chat send error', e)
     } finally {
       setSending(false)
     }
   }
 
-  const title = conv?.listingTitle ?? 'Чат'
+  const title = (conv && typeof conv === 'object' && conv.listingTitle) ? conv.listingTitle : 'Чат'
 
   /** ТЗ-5: safe-guards после всех хуков — не падать при отсутствии user/chatId */
   if (!user) {
@@ -183,11 +203,11 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
         <span className="flex-1 font-semibold text-[var(--text-main)] truncate">{title}</span>
       </header>
 
-      {/* Область сообщений: фиксированная высота, скролл только внутри */}
+      {/* ТЗ-15: контейнер сообщений — overflow-y auto, height 100%, без overflow hidden */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3"
-        style={{ height: '100%', minHeight: 0 }}
+        className="chat-list flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3"
+        style={{ minHeight: 0 }}
       >
         {loading ? (
           <div className="space-y-3 animate-pulse" data-testid="chat-skeleton">
@@ -201,25 +221,27 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
               />
             ))}
           </div>
-        ) : messages.length === 0 ? (
-          <p className="text-[14px] text-[var(--text-secondary)] text-center py-8">Пока нет сообщений. Напишите первым.</p>
+        ) : (messages?.length ?? 0) === 0 ? (
+          <p className="text-[14px] text-[var(--text-secondary)] text-center py-8">Напишите первым</p>
         ) : (
-          messages.map((m) => (
-            <div
-              key={m.id}
-              className={cn(
-                'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px] transition-opacity duration-200',
-                m.senderId === myId
-                  ? 'ml-auto bg-[var(--accent)] text-[var(--button-primary-text)]'
-                  : 'mr-auto bg-[var(--bg-secondary)] text-[var(--text-main)] border border-[var(--border)]'
-              )}
-            >
-              <div>{m.text}</div>
-              <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-white/80' : 'text-[var(--text-secondary)]')}>
-                {new Date(m.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          (messages ?? [])
+            .filter((m) => m && typeof m === 'object' && m.id)
+            .map((m) => (
+              <div
+                key={m.id}
+                className={cn(
+                  'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px] transition-opacity duration-200',
+                  m.senderId === myId
+                    ? 'ml-auto bg-[var(--accent)] text-[var(--button-primary-text)]'
+                    : 'mr-auto bg-[var(--bg-secondary)] text-[var(--text-main)] border border-[var(--border)]'
+                )}
+              >
+                <div>{m?.text ?? ''}</div>
+                <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-white/80' : 'text-[var(--text-secondary)]')}>
+                  {m?.createdAt ? new Date(m.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                </div>
               </div>
-            </div>
-          ))
+            ))
         )}
         <div ref={messagesEndRef} />
       </div>

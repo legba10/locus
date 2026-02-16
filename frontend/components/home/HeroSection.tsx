@@ -19,22 +19,17 @@ export function HeroSection({
 }) {
   return (
     <section
-      className="hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 relative overflow-hidden pt-8 pb-12 md:pt-8 md:pb-12 bg-[var(--background)]"
+      className="hero hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 hero-tz16 relative overflow-hidden bg-[var(--background)]"
       aria-label="Главный экран"
     >
-      <div className="relative z-10 mx-auto max-w-[1100px] px-4 md:px-6 flex flex-col items-center text-center">
-        <h1 className="hero-tz18-title text-[var(--text-main)] tracking-tight">
-          Найдите жильё, которое подходит вам
+      <div className="hero-container relative z-10 mx-auto max-w-[1200px] px-5 md:px-6 flex flex-col items-center text-center">
+        <h1 className="hero-tz18-title hero-tz12-title text-[var(--text-main)] tracking-tight">
+          {selectedCity?.trim() ? (
+            <>Найдите жильё — подбор для вас в {selectedCity.trim()}</>
+          ) : (
+            <>Найдите жильё, <HeroTyping /></>
+          )}
         </h1>
-        {selectedCity?.trim() ? (
-          <p className="hero-tz18-subtitle text-[var(--text-secondary)] mt-1">
-            Подбор для вас в {selectedCity.trim()}
-          </p>
-        ) : (
-          <div className="hero-tz18-typing min-h-[1.5em] flex items-center justify-center">
-            <HeroTyping />
-          </div>
-        )}
         <p className="hero-tz18-subtitle leading-relaxed mt-1">
           LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш запрос
         </p>

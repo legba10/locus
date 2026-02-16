@@ -2,11 +2,10 @@ LOCUS — требуемые файлы в /public (подключены в ко
 
 Добавьте в эту папку изображения с ТОЧНО такими именами:
 
-  logo-locus.png         — лого в бургер-меню и hero (140px / 120px)
-  logo-locus-header.png  — лого в хедере (высота 32px)
-  logo-locus-icon.png    — apple-touch-icon (PWA)
-  favicon.ico            — иконка вкладки
-  favicon-32.png         — 32×32 PNG
-  favicon-16.png         — 16×16 PNG
+  logo.png     — логотип в шапке (рекомендуется 28×28 или больше, прозрачный PNG)
+  logo-icon.png — иконка PWA / manifest / apple-touch (192×192 или 512×512 PNG)
+  favicon.ico  — иконка вкладки (опционально; можно сгенерировать из logo-icon.png)
+
+Устаревшие имена (не использовать): logo-locus.png, logo-locus-icon.png, logo_new.png.
 
 После добавления файлов перезапустите dev-сервер при необходимости.

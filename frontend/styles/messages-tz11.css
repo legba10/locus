@@ -7,8 +7,17 @@
   --header-height: 64px;
 }
 
+/* ТЗ-8: чат — фиксированная высота, скролл только внутри; страница не скроллится */
 .messages-chat-tz11 {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.messages-chat-tz11 .flex-1.min-h-0 {
+  -webkit-overflow-scrolling: touch;
 }
 
 [data-theme="dark"] .messages-page-tz11,
@@ -25,10 +34,19 @@
   --header-height: 64px;
 }
 
-/* Поле ввода не прыгает — flex-shrink-0 в ChatPanel */
+/* ТЗ-8: поле ввода фикс снизу, не прыгает */
 .messages-chat-tz11 footer {
   flex-shrink: 0;
 }
+
+/* ТЗ-15: контейнер сообщений — overflow-y auto, height 100%, без overflow hidden */
+.chat-list {
+  overflow-y: auto;
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ТЗ-8: мобилка — чат занимает доступную высоту, input всегда виден (flex-shrink-0) */
 
 /* ТЗ-12: быстрые подсказки — чипы, горизонтальный скролл на мобилке, тёмная тема, анимация */
 .chat-suggestions-tz12 {

@@ -123,20 +123,21 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
     return () => document.body.classList.remove('modal-open')
   }, [open])
 
-  useEffect(() => {
-    let sse: EventSource | null = null
-    try {
-      const streamUrl = `${API_BASE || ''}/api/notifications/stream`
-      sse = new EventSource(streamUrl, { withCredentials: true })
-      sse.onmessage = () => {
-        fetchCount()
-        fetchList()
-      }
-    } catch {}
-    return () => {
-      if (sse) sse.close()
-    }
-  }, [])
+  // Временно отключено: 401 на /api/notifications/stream ломает консоль на /messages
+  // useEffect(() => {
+  //   let sse: EventSource | null = null
+  //   try {
+  //     const streamUrl = `${API_BASE || ''}/api/notifications/stream`
+  //     sse = new EventSource(streamUrl, { withCredentials: true })
+  //     sse.onmessage = () => {
+  //       fetchCount()
+  //       fetchList()
+  //     }
+  //   } catch {}
+  //   return () => {
+  //     if (sse) sse.close()
+  //   }
+  // }, [])
 
   useEffect(() => {
     apiFetch('/notifications/presence', {

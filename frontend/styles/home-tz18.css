@@ -39,6 +39,24 @@
   padding-bottom: 48px;
 }
 
+/* ТЗ-16: hero — убрать огромный отступ, не 100vh, компактный контейнер */
+.hero.hero-tz16 {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 768px) {
+  .hero.hero-tz16 {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+}
+.hero-tz16 .hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 /* ═══ 2. Hero типографика (дополнение к компоненту) ═══ */
 .hero-tz18-title {
   font-size: 32px;
@@ -64,6 +82,29 @@
   .hero-tz18-typing {
     font-size: 20px;
   }
+}
+
+/* ТЗ-12 / ТЗ-16: печатающийся хвост — одна строка «Найдите жильё, {фраза» + курсор */
+.hero-tz12-title .hero-typing-tz12 {
+  display: inline;
+  color: var(--text-main);
+}
+
+.typing::after {
+  content: '|';
+  margin-left: 4px;
+  animation: hero-typing-blink 1s infinite;
+}
+
+@keyframes hero-typing-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.hero-typing-cursor {
+  margin-left: 4px;
+  animation: hero-typing-blink 1s infinite;
 }
 
 .hero-tz18-subtitle {
@@ -150,11 +191,15 @@
 }
 
 /* ═══ 5. Блок фильтра TZ-18 ═══ */
+/* ТЗ-9: без больших пустых полей — margin-top 0 (дублируем для надёжности) */
+.home-tz18 .home-search-wrap-tz18,
+.home-tz3 .home-search-wrap-tz18 {
+  margin-top: 0;
+}
 .home-search-wrap-tz18 {
   max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 60px;
 }
 
 .search-btn-show-tz18 {
@@ -213,9 +258,10 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
+/* ТЗ-7: фото карточек 4:3, не фиксированная высота */
 .home-tz18 .listing-card-tz18 .listing-card__image-wrap {
-  height: 260px;
-  aspect-ratio: auto;
+  aspect-ratio: 4 / 3;
+  height: auto;
   border-radius: 24px 24px 0 0;
 }
 
@@ -306,9 +352,63 @@
     padding-bottom: 40px;
   }
 }
+/* ТЗ-9: контейнер фильтра — не залипает, скролл внутри; внутренний список max 60vh */
+.home-filter-section-tz9 {
+  position: relative;
+  overflow: visible;
+  z-index: 10;
+}
+
+/* ТЗ-17: отступы блоков — Hero→Filter 24px, Filter→Cities 40px, Cities→Listings 40px */
+.home-tz17-filter-spacing {
+  padding-top: 24px !important;
+  padding-bottom: 24px !important;
+}
+.home-tz17-cities-spacing {
+  margin-top: 40px;
+}
+.home-tz17-listings-spacing {
+  margin-top: 40px;
+}
+
+/* ТЗ-18: блок «Все объявления» — отступ от Актуальных 48px, до Новостей 64px */
+.home-tz18-all-section {
+  margin-top: 48px;
+  padding-bottom: 48px;
+}
+
+/* ТЗ-21: Популярные города — после блока «Все объявления», отступ сверху */
+.home-tz21-cities-spacing {
+  margin-top: 0;
+  padding-top: 48px;
+}
+.home-filter-dropdown-tz12 .home-filter-modal-tz9__body {
+  max-height: 60vh;
+}
+
+/* ТЗ-13: подсказка под табами Умный подбор / Ручной поиск */
+.search-hint-tz13 {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 8px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* ТЗ-19: pill переключатель Ручной / AI-подбор — 40px height, radius 20px, gap 8px */
+.home-tz19-pill {
+  gap: 8px;
+}
+.search-hint-tz19 {
+  opacity: 0.9;
+}
+
+/* ТЗ-6: скролл фильтра — десктоп модалка и мобильный sheet */
 .home-filter-modal-tz9__body {
   overflow-y: auto;
   max-height: 100%;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 .home-filter-modal-tz9,
 .home-filter-modal-tz9 .filter-panel-card__inner {

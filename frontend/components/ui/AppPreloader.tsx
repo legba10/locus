@@ -33,12 +33,12 @@ export function AppPreloader() {
       <div className="flex flex-col items-center gap-6">
         <Image
           src="/logo.png"
-          alt=""
+          alt="LOCUS"
           width={140}
           height={40}
           className="h-10 w-auto object-contain opacity-95"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = '/favicon.svg'
+            (e.target as HTMLImageElement).src = '/logo-icon.png'
           }}
         />
         <div

@@ -58,23 +58,26 @@ export function Gallery({
   )
 
   return (
-    <div
-      className={cn(
-        'relative w-full overflow-hidden',
-        'bg-[var(--bg-card)]',
-        'rounded-[16px]'
-      )}
-    >
-      {/* TZ-5: aspect-ratio 4/3, object-fit cover, border-radius 16px */}
+    <div className="w-full lg:max-w-[1100px] lg:mx-auto">
       <div
         className={cn(
-          'relative w-full select-none aspect-[4/3] rounded-[16px] overflow-hidden'
+          'relative w-full overflow-hidden',
+          'bg-[var(--bg-card)]',
+          'rounded-[16px]'
         )}
-        onClick={onOpenFullscreen}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        role={hasPhotos ? 'button' : undefined}
       >
+        {/* TZ-10: desktop — фикс. соотношение 16/9, max-height, без скачков; mobile без изменений */}
+        <div
+          className={cn(
+            'relative w-full select-none rounded-2xl overflow-hidden',
+            'aspect-[4/3]',
+            'lg:aspect-[16/9] lg:max-h-[520px] xl:max-h-[600px]'
+          )}
+          onClick={onOpenFullscreen}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          role={hasPhotos ? 'button' : undefined}
+        >
         {hasPhotos && cover ? (
           <>
             <Image
@@ -85,7 +88,7 @@ export function Gallery({
               priority
               loading="lazy"
               unoptimized={cover.startsWith('http')}
-              sizes="(max-width: 768px) 100vw, 800px"
+              sizes="(max-width: 768px) 100vw, 1000px"
               draggable={false}
             />
             {/* Кнопка назад — overlay слева сверху */}
@@ -150,24 +153,25 @@ export function Gallery({
         )}
       </div>
 
-      {/* TZ-3: миниатюры — горизонтальный скролл, активная рамка, без дерганий */}
-      {hasPhotos && count > 1 && (
-        <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
-          {photos.slice(0, 6).map((p, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
-              className={cn(
-                'relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-colors',
-                activeIndex === i ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-transparent hover:border-[var(--border)]'
-              )}
-            >
-              <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="80px" loading="lazy" unoptimized={p.url.startsWith('http')} />
-            </button>
-          ))}
-        </div>
-      )}
+        {/* TZ-3 / TZ-10: миниатюры — aspect-square object-cover (desktop стабильно) */}
+        {hasPhotos && count > 1 && (
+          <div className="flex gap-2 p-3 border-t border-[var(--border)] overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-thin">
+            {photos.slice(0, 6).map((p, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setActiveIndex(i) }}
+                className={cn(
+                  'relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 aspect-square rounded-xl overflow-hidden border-2 transition-colors',
+                  activeIndex === i ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-transparent hover:border-[var(--border)]'
+                )}
+              >
+                <Image src={p.url} alt={p.alt ?? `${title} ${i + 1}`} fill className="object-cover" sizes="80px" loading="lazy" unoptimized={p.url.startsWith('http')} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

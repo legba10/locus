@@ -5,13 +5,17 @@
  */
 
 /* ═══ Фото: строго 4:3, object-fit cover ═══ */
+/* ТЗ-7: контейнер фото — width 100%, height auto, 4:3, border-radius 16px, overflow hidden */
 .listing-card-tz10 .listing-card__image-wrap,
 .listing-card-tz10 .listing-card-tz7__image-wrap {
+  position: relative;
+  width: 100%;
+  height: auto;
   aspect-ratio: 4 / 3;
   min-height: 0;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px;
   background: var(--card-bg, #f3f4f6);
 }
 
@@ -103,12 +107,44 @@
   color: var(--text-main);
 }
 
-/* Под ценой: «от 1 ночи» / «от 3 ночей» */
+/* Под ценой: «от 1 ночи» / «долгосрочно» */
 .listing-card-tz10__min-nights {
   font-size: 13px;
   color: var(--text-secondary);
   margin: -4px 0 0 0;
   width: 100%;
+}
+
+/* ТЗ-7: под ценой мелко «от X ₽ за месяц» */
+.listing-card-tz10__price-monthly {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: -4px 0 0 0;
+  width: 100%;
+}
+
+/* ТЗ-7: бейджи под локацией — Проверено, AI подбор, Популярно (без эмодзи) */
+.listing-card-tz10__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.listing-card-tz10__badge-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+[data-theme="dark"] .listing-card-tz10__badge-pill,
+.dark .listing-card-tz10__badge-pill {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.2);
 }
 
 /* ═══ Название: макс 2 строки, ellipsis ═══ */
@@ -231,14 +267,14 @@
   }
 }
 
-/* Кнопка «Смотреть» не нужна — вся карточка кликабельна */
+/* ТЗ-7: кнопка «Смотреть» — показываем, вся карточка тоже кликабельна */
 .listing-card-tz10 .listing-card-tz4__actions {
-  display: none;
+  display: block;
 }
 
-/* ═══ Сетка карточек: отступ 24px между карточками (добавить класс listing-grid-tz10 к .listing-grid) ═══ */
+/* ТЗ-7: между карточками gap 16px */
 .listing-grid.listing-grid-tz10 {
-  gap: 24px;
+  gap: 16px;
 }
 
 /* ═══ Skeleton ТЗ-10: 4:3 фото, структура как у карточки ═══ */

@@ -56,6 +56,8 @@ export interface ListingCardProps {
   reviewCount?: number | null
   /** ТЗ-7: быстрые иконки внизу — макс 3: wifi, parking, center, metro */
   amenities?: ('wifi' | 'parking' | 'center' | 'metro')[]
+  /** ТЗ-20: для первой карточки в AI-выдаче — бейдж «AI рекомендует» с tooltip */
+  aiRecommendTooltip?: string
 }
 
 const BADGE_LABELS: Record<ListingCardBadge, string> = {
@@ -67,11 +69,11 @@ const BADGE_LABELS: Record<ListingCardBadge, string> = {
   rare: 'Редкое',
 }
 
-/** ТЗ-7: короткие подписи для бейджа на фото (левый верх) */
+/** ТЗ-7: короткие подписи бейджей без эмодзи — на фото и в блоке (Проверено, AI подбор, Популярно) */
 const BADGE_PHOTO_LABELS: Record<ListingCardBadge, string> = {
   verified: 'Проверено',
-  ai: 'Подобрано AI',
-  top: 'Топ',
+  ai: 'AI подбор',
+  top: 'Популярно',
   new: 'Новое',
   discount: 'Скидка',
   rare: 'Редкое',
@@ -152,6 +154,7 @@ function ListingCardComponent({
   propertyType,
   reviewCount,
   amenities = [],
+  aiRecommendTooltip,
 }: ListingCardProps) {
   const { toast } = useToast()
   const [imgError, setImgError] = useState(false)
@@ -184,10 +187,22 @@ function ListingCardComponent({
       : RU.price.on_request
   const priceSuffix = rentalType === 'month' ? RU.price.per_month : RU.price.per_night
   const rentalLabel = RENTAL_LABELS[rentalType] || (rentalType === 'month' ? 'Долгосрочно' : 'Посуточно')
+  /** ТЗ-7: под ценой мелко «от X ₽ за месяц» при початочной аренде */
+  const priceMonthlyLine =
+    rentalType === 'night' &&
+    price > 0 &&
+    Number.isFinite(price)
+      ? `от ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(price * 30))} ${RU.price.currency} за месяц`
+      : null
 
   const displayBadges = badges.slice(0, 2)
   /** ТЗ-10: Москва · Сокол */
   const locationText = [city, district].filter(Boolean).join(' · ') || city
+  /** ТЗ-7: одна строка — город · комнаты · гости (Берлин · 2 комнаты · до 4 гостей) */
+  const infoLineParts: string[] = [city]
+  if (rooms != null && rooms > 0) infoLineParts.push(`${rooms} ${rooms === 1 ? 'комната' : 'комнаты'}`)
+  if (guests != null && guests > 0) infoLineParts.push(`до ${guests} гостей`)
+  const infoLine = infoLineParts.join(' · ')
   const aiLine = Array.isArray(aiReasons)
     ? aiReasons.slice(0, 2).join('. ')
     : typeof aiReasons === 'string'
@@ -213,8 +228,9 @@ function ListingCardComponent({
   const typeLine = typeLineParts.join(' • ')
   const addressText = district ? `${city}, ${district}` : city
   const displayAmenities = amenities.slice(0, 3)
-  /** ТЗ-10: бейджи на фото — pill, полупрозрачные (Проверено, Подобрано AI, Топ) */
-  const photoBadgesList = displayBadges.map((b) => BADGE_PHOTO_LABELS[b])
+  /** ТЗ-10: бейджи на фото — pill; ТЗ-20: для первой карточки AI — «AI рекомендует» + tooltip */
+  const getBadgeLabel = (b: ListingCardBadge) => (b === 'ai' && aiRecommendTooltip ? 'AI рекомендует' : BADGE_PHOTO_LABELS[b])
+  const photoBadgesList = displayBadges.map((b) => ({ label: getBadgeLabel(b), title: b === 'ai' ? aiRecommendTooltip : undefined }))
 
   const handleFavorite = useCallback(
     (e: React.MouseEvent) => {
@@ -300,8 +316,8 @@ function ListingCardComponent({
           {/* ТЗ-7: бейдж слева сверху на фото — короткие: Проверено, Подобрано AI, Новое, Топ */}
           {photoBadgesList.length > 0 && (
             <div className="listing-card-tz10__photo-badges">
-              {photoBadgesList.map((label, i) => (
-                <span key={i} className="listing-card-tz10__photo-pill">{label}</span>
+              {photoBadgesList.map((item, i) => (
+                <span key={i} className="listing-card-tz10__photo-pill" title={item.title}>{item.label}</span>
               ))}
             </div>
           )}
@@ -368,16 +384,26 @@ function ListingCardComponent({
                 )}
               </span>
             ) : (
-              <span className="listing-card-tz10__new">новое</span>
+              <span className="listing-card-tz10__new">Новое объявление</span>
             )}
           </div>
-          {price > 0 && (
+          {price > 0 && priceMonthlyLine && (
+            <p className="listing-card-tz10__price-monthly">{priceMonthlyLine}</p>
+          )}
+          {price > 0 && !priceMonthlyLine && (
             <p className="listing-card-tz10__min-nights">
               {rentalType === 'month' ? 'долгосрочно' : 'от 1 ночи'}
             </p>
           )}
           <h3 className="listing-card-tz10__title" title={title}>{title}</h3>
-          <p className="listing-card-tz10__location">{locationText}</p>
+          <p className="listing-card-tz10__location listing-card-tz7__info-line">{infoLine}</p>
+          {displayBadges.length > 0 && (
+            <div className="listing-card-tz7__badges listing-card-tz10__badges" aria-hidden>
+              {displayBadges.map((b) => (
+                <span key={b} className="listing-card-tz10__badge-pill" title={b === 'ai' ? aiRecommendTooltip : undefined}>{getBadgeLabel(b)}</span>
+              ))}
+            </div>
+          )}
           {characteristicsText && (
             <p className="listing-card-tz10__characteristics">{characteristicsText}</p>
           )}

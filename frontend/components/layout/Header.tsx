@@ -44,7 +44,7 @@ function NavItem({
  * Высота: mobile 64px, desktop 72px. Safe-area. Grid: [burger][logo][bell].
  * Логотип по теме (logo-dark / logo-light). Бургер 24px, колокольчик 22px, badge 8px.
  */
-/** ТЗ-6: один логотип /logo.png, height 32px mobile / 40px desktop, клик на главную без reload */
+/** ТЗ-14: один логотип /logo.svg + надпись LOCUS, без смены по теме, стабильно везде */
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
@@ -53,7 +53,6 @@ export function Header() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
-  const [logoError, setLogoError] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
@@ -134,17 +133,21 @@ export function Header() {
           <Link
             href="/"
             onClick={handleLogoClick}
-            className="flex items-center gap-2 shrink-0"
+            className="logo-wrap shrink-0"
             aria-label="LOCUS — на главную"
           >
             <Image
-              src={logoError ? '/favicon.svg' : '/logo.png'}
-              alt=""
-              width={120}
-              height={32}
-              className="h-8 md:h-10 w-auto max-w-[120px] object-contain object-left"
-              onError={() => setLogoError(true)}
+              src="/logo.svg"
+              alt="LOCUS"
+              width={36}
+              height={36}
+              priority
+              className="logo-img-tz14 object-contain shrink-0 w-8 h-8 md:w-9 md:h-9"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
             />
+            <span className="logo-text">LOCUS</span>
           </Link>
         </div>
 

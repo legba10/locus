@@ -1,14 +1,11 @@
-import { Suspense } from 'react'
 import MessagesClient from './MessagesClient'
 
-export default function MessagesPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[var(--card-bg)]">
-        <div className="text-[14px] text-[var(--text-secondary)]">Загрузка…</div>
-      </div>
-    }>
-      <MessagesClient />
-    </Suspense>
-  )
+export const dynamic = 'force-dynamic'
+
+/**
+ * ТЗ-11: Server component — без useSearchParams/useRouter.
+ * Suspense boundary внутри MessagesClient оборачивает MessagesInner.
+ */
+export default function Page() {
+  return <MessagesClient />
 }
