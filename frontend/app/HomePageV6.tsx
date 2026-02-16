@@ -295,7 +295,7 @@ export function HomePageV6() {
 
   // Используем данные напрямую из API (они уже содержат все нужные поля)
   // HYDRATION-SAFE: No Math.random() or Date.now() - use data from API only
-  const listingCards = (data?.items || []).map((listing: any, index: number) => {
+  const listingCards = useMemo(() => (data?.items || []).map((listing: any, index: number) => {
     // Извлекаем фото (backend отправляет photos, но legacy может быть images)
     const photo = listing.photos?.[0]?.url || listing.images?.[0]?.url || null
     
@@ -375,7 +375,7 @@ export function HomePageV6() {
       cleanliness: cache?.cleanliness ?? null,
       noise: cache?.noise ?? null,
     }
-  });
+  }), [data?.items]);
 
   return (
     <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
