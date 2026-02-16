@@ -1,18 +1,14 @@
 /**
  * LOCUS API Client
- * 
- * ARCHITECTURE:
- * - Auth & Profiles live in Supabase
- * - Business data lives in Neon (via Railway backend)
- * - Frontend NEVER talks to Railway directly
- * - All API calls go through Next.js API proxy to avoid CORS
- * 
- * Flow: Browser → /api/* (Next.js proxy) → Railway → Neon
+ *
+ * Auth: только Supabase. Токен берётся из supabase.auth.getSession().
+ * Backend проверяет только Supabase JWT (Authorization: Bearer).
  */
 
 import { getApiUrl } from "@/shared/config/api";
 import { getApiErrorMessage } from "@/shared/utils/apiError";
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/shared/auth/token-storage";
+import { clearTokens } from "@/shared/auth/token-storage";
+import { supabase } from "@/shared/supabase-client";
 
 /**
  * Normalize path to ensure it starts with /api/
@@ -32,24 +28,32 @@ function normalizePath(path: string): string {
   return p;
 }
 
+async function getSupabaseAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Low-level fetch — returns raw Response
- * Use for cases where you need status/headers (like auth/me)
+ * Low-level fetch — returns raw Response.
+ * Authorization: Bearer из supabase.auth.getSession().
  */
 export async function apiFetchRaw(path: string, options?: RequestInit): Promise<Response> {
   const fullPath = normalizePath(path);
   const url = fullPath.startsWith("http") ? fullPath : getApiUrl(fullPath);
-  
+
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string>),
   };
-  
-  // Set Content-Type for JSON (not for FormData)
   if (!(options?.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
-  const accessToken = getAccessToken();
+  const accessToken = await getSupabaseAccessToken();
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
   const response = await fetch(url, {
@@ -59,23 +63,22 @@ export async function apiFetchRaw(path: string, options?: RequestInit): Promise<
   });
 
   if (response.status === 401 && !fullPath.includes("/auth/refresh")) {
-    const refreshed = await tryRefreshToken();
-    if (refreshed) {
-      const retryHeaders: Record<string, string> = {
-        ...(options?.headers as Record<string, string>),
-      };
-      if (!(options?.body instanceof FormData)) {
-        retryHeaders["Content-Type"] = "application/json";
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const { error } = await supabase.auth.refreshSession();
+        if (!error) {
+          const { data: d2 } = await supabase.auth.getSession();
+          const retryToken = d2.session?.access_token;
+          if (retryToken) {
+            const retryHeaders = { ...headers, Authorization: `Bearer ${retryToken}` };
+            return fetch(url, { credentials: "include", ...options, headers: retryHeaders });
+          }
+        }
       }
-      const nextToken = getAccessToken();
-      if (nextToken) retryHeaders["Authorization"] = `Bearer ${nextToken}`;
-      return fetch(url, {
-        credentials: "include",
-        ...options,
-        headers: retryHeaders,
-      });
+    } catch {
+      /* ignore */
     }
-    // TZ-2: после неудачного refresh — очистить токены и редирект на логин
     clearTokens();
     if (typeof window !== "undefined" && on401Handler) {
       on401Handler();
@@ -89,36 +92,6 @@ let on401Handler: (() => void) | null = null;
 /** TZ-2: регистрация обработчика 401 (logout + redirect). Вызвать из корня приложения. */
 export function setOn401(handler: () => void) {
   on401Handler = handler;
-}
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-
-  try {
-    const refreshUrl = getApiUrl("/api/auth/refresh");
-    const res = await fetch(refreshUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      // Storage token (email flow) or empty body for cookie-based session (Telegram)
-      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
-    });
-
-    if (!res.ok) {
-      if (refreshToken) clearTokens();
-      return false;
-    }
-
-    const payload = (await res.json()) as { access_token?: string; refresh_token?: string };
-    if (refreshToken && payload.access_token && payload.refresh_token) {
-      setTokens(payload.access_token, payload.refresh_token);
-    }
-    return true;
-  } catch {
-    if (refreshToken) clearTokens();
-  }
-
-  return false;
 }
 
 /**

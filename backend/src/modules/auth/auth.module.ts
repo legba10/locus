@@ -11,26 +11,19 @@ import { AdminGuard } from "./guards/admin.guard";
 import { ModerationGuard } from "./guards/moderation.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
-import { JwtOrSupabaseAuthGuard } from "./guards/jwt-or-supabase.guard";
 import { TariffGuard } from "./guards/tariff.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
-import { JwtAuthService } from "./jwt-auth.service";
 import { AuthSessionsService } from "./auth-sessions.service";
 
 /**
- * AuthModule — handles authentication via Supabase
- * 
- * Architecture:
- * - Auth: Supabase Auth (JWT validation)
- * - Profiles: Supabase public.profiles table
- * - Roles: Stored in profiles.role column
- * - Telegram: Bot-based login with phone + policy (auth-telegram)
+ * AuthModule — единый auth через Supabase.
+ * Backend не логинит — только проверяет JWT (GET /me, refresh, session, logout).
  */
 @Global()
 @Module({
   imports: [ConfigModule, PrismaModule, UsersModule],
   controllers: [AuthController, MeController, SyncUserController, TelegramAuthController, AuthTelegramController],
-  providers: [AdminGuard, ModerationGuard, RolesGuard, SupabaseAuthGuard, JwtOrSupabaseAuthGuard, TariffGuard, SupabaseAuthService, JwtAuthService, AuthSessionsService],
-  exports: [AdminGuard, ModerationGuard, RolesGuard, SupabaseAuthGuard, JwtOrSupabaseAuthGuard, TariffGuard, SupabaseAuthService, JwtAuthService, AuthSessionsService],
+  providers: [AdminGuard, ModerationGuard, RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
+  exports: [AdminGuard, ModerationGuard, RolesGuard, SupabaseAuthGuard, TariffGuard, SupabaseAuthService, AuthSessionsService],
 })
 export class AuthModule {}

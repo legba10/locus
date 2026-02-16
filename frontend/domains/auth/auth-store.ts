@@ -4,9 +4,9 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { MeResponse, LoginRequest, RegisterRequest, UserRole } from "./auth-types";
 import type { UserContract } from "@/shared/contracts";
-import { AuthApiError, me as fetchMe, loginApi, registerApi } from "./auth-api";
+import { AuthApiError, me as fetchMe } from "./auth-api";
 import { supabase } from "@/shared/supabase-client";
-import { clearTokens, getAccessToken, setTokens } from "@/shared/auth/token-storage";
+import { clearTokens } from "@/shared/auth/token-storage";
 import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
 import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
@@ -104,17 +104,23 @@ export const useAuthStore = create<AuthState>()(
       login: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const backendResponse = await loginApi(data.email, data.password);
-          const meUser = userFromBackend(backendResponse);
-          set({
-            user: meUser,
-            accessToken: null,
-            isLoading: false,
+          const { data: signInData, error } = await supabase.auth.signInWithPassword({
+            email: data.email.trim().toLowerCase(),
+            password: data.password,
           });
+          if (error) {
+            set({ isLoading: false, error: error.message ?? "Неверный email или пароль" });
+            throw new AuthApiError(error.message ?? "Invalid login credentials", 401);
+          }
+          // Сессия сохранена в Supabase (localStorage). Дёргаем /me для полного профиля.
+          const backendResponse = await fetchMe();
+          const meUser = userFromBackend(backendResponse);
+          set({ user: meUser, accessToken: null, isLoading: false, error: null });
           await dispatchAuth("login", meUser);
         } catch (e) {
-          const msg = e instanceof AuthApiError ? e.message : "Ошибка входа";
-          set({ isLoading: false, error: msg });
+          if (!(e instanceof AuthApiError)) {
+            set({ isLoading: false, error: "Ошибка входа" });
+          }
           throw e;
         }
       },
@@ -122,23 +128,42 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const backendResponse = await registerApi({
-            email: data.email,
+          const { data: signUpData, error } = await supabase.auth.signUp({
+            email: data.email.trim().toLowerCase(),
             password: data.password,
-            name: data.name,
-            role: data.role,
+            options: {
+              data: {
+                full_name: data.name?.trim() || undefined,
+                role: data.role === "landlord" ? "landlord" : "user",
+              },
+            },
           });
-          const meUser = userFromBackend(backendResponse);
-          set({
-            user: meUser,
-            accessToken: null,
-            isLoading: false,
-            error: null,
-          });
-          await dispatchAuth("register", meUser);
+          if (error) {
+            set({ isLoading: false, error: error.message ?? "Ошибка регистрации" });
+            throw new AuthApiError(error.message ?? "Registration failed", 400);
+          }
+          // Если Supabase вернул session (например, без подтверждения email) — сразу считаем вход выполненным.
+          let session = signUpData.session;
+          if (!session && signUpData.user) {
+            const { data: signInData } = await supabase.auth.signInWithPassword({
+              email: data.email.trim().toLowerCase(),
+              password: data.password,
+            });
+            session = signInData?.session ?? null;
+          }
+          if (session) {
+            const backendResponse = await fetchMe();
+            const meUser = userFromBackend(backendResponse);
+            set({ user: meUser, accessToken: null, isLoading: false, error: null });
+            await dispatchAuth("register", meUser);
+          } else {
+            set({ isLoading: false, error: null });
+            await dispatchAuth("register", null);
+          }
         } catch (e) {
-          const msg = e instanceof AuthApiError ? e.message : "Ошибка регистрации";
-          set({ isLoading: false, error: msg });
+          if (!(e instanceof AuthApiError)) {
+            set({ isLoading: false, error: "Ошибка регистрации" });
+          }
           throw e;
         }
       },
@@ -166,11 +191,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse);
-          const nextToken = getAccessToken();
-          set({
-            user: meUser,
-            accessToken: nextToken ?? null,
-          });
+          set({ user: meUser, accessToken: null });
           return true;
         } catch (e) {
           if (e instanceof AuthApiError && e.status === 401) {
@@ -202,6 +223,13 @@ export const useAuthStore = create<AuthState>()(
           );
           return Promise.race([mePromise, meTimeout]);
         };
+
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          set({ user: null, accessToken: null, isLoading: false, isInitialized: true });
+          clearTokens();
+          return;
+        }
 
         let lastError: unknown;
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {

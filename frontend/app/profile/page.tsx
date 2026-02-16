@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
-import { getAccessToken } from '@/shared/auth/token-storage'
+import { supabase } from '@/shared/supabase-client'
 import { cn } from '@/shared/utils/cn'
 
 export default function ProfilePage() {
@@ -124,7 +124,8 @@ export default function ProfilePage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const token = getAccessToken()
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
       const headers: HeadersInit = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
       const res = await fetch('/api/users/avatar', { method: 'POST', body: fd, credentials: 'include', headers })
