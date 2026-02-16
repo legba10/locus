@@ -403,13 +403,11 @@ export function HomePageV6() {
                 className="search-btn-show-tz18 search-hero-submit-tz7-compact w-full sm:flex-1 order-1 flex items-center justify-center gap-2"
               >
                 {searching ? (
-                  <>
-                    <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
-                    Загрузка…
-                  </>
-                ) : listingCount > 0 && searchApplied && city?.trim()
-                  ? `Показать ${listingCount} вариантов`
-                  : city?.trim()
+                  <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
+                ) : (
+                  listingCount > 0 && searchApplied && city?.trim()
+                    ? `Показать ${listingCount} вариантов`
+                    : city?.trim()
                     ? 'Показать варианты'
                     : 'Подобрать жильё'
                 )}
