@@ -2,6 +2,11 @@
 
 **Цель:** Supabase — единственный auth provider. Backend только проверяет JWT.
 
+## ТЗ-2: Стабилизация (дополнение)
+- Backend: удалён POST /auth/refresh. Остаются GET /me, POST /logout, POST /session.
+- SupabaseAuthGuard: только Bearer + supabase.auth.getUser(token), ошибка "No token".
+- Frontend: onAuthStateChange — при session вызывается refresh(), при !session очищается user в store.
+
 ## Выполнено
 
 ### Backend

@@ -44,38 +44,6 @@ export class AuthController {
     return this.buildMePayload(req.user);
   }
 
-  @Post("refresh")
-  @ApiOperation({ summary: "Refresh Supabase session (refresh_token in body or cookie)." })
-  @ApiResponse({ status: 200, description: "New access and refresh tokens" })
-  @ApiResponse({ status: 401, description: "Refresh token missing or invalid" })
-  async refresh(
-    @Body("refresh_token") refreshToken: string | undefined,
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response
-  ) {
-    const tokenFromCookie = readRefreshTokenFromCookie(req);
-    const token = (typeof refreshToken === "string" && refreshToken.trim()) || tokenFromCookie;
-    if (!token) {
-      throw new UnauthorizedException("Refresh token is required");
-    }
-
-    const session = await this.supabaseAuth.refreshSession(token);
-    setAuthCookies(res, req, session);
-    try {
-      const sb = supabase;
-      if (sb) {
-        const { data } = await sb.auth.getUser(session.access_token);
-        const userId = data?.user?.id;
-        if (userId) {
-          await this.sessions.rotateRefreshSession(userId, token, session.refresh_token, req);
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return session;
-  }
-
   @Post("logout")
   @ApiOperation({ summary: "Logout: clears auth cookies (cookie-based sessions)" })
   @ApiResponse({ status: 200, description: "Logged out" })

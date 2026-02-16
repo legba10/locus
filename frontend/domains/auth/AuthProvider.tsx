@@ -34,11 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  /* ТЗ auth: сессия в cookie; при SIGNED_OUT очищаем legacy storage */
+  /* Единый источник auth: при смене сессии Supabase синхронизируем store. */
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        useAuthStore.getState().refresh();
+      } else {
         clearTokens();
+        useAuthStore.setState({ user: null, accessToken: null });
       }
     });
     const unsub = (sub as { data?: { subscription?: { unsubscribe?: () => void } } })?.data?.subscription?.unsubscribe;

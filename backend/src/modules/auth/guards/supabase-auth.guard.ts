@@ -22,15 +22,12 @@ export class SupabaseAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const authHeader = req.headers["authorization"] as string | undefined;
 
-    if (!authHeader) {
-      throw new UnauthorizedException("No authorization header");
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new UnauthorizedException("No token");
     }
-
-    const [scheme, rawToken] = authHeader.split(" ");
-    const token = scheme?.toLowerCase() === "bearer" ? rawToken : undefined;
-    
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
     if (!token) {
-      throw new UnauthorizedException("Invalid authorization format. Use: Bearer <token>");
+      throw new UnauthorizedException("No token");
     }
 
     if (!supabase) {
