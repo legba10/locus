@@ -1,14 +1,18 @@
 import { BadRequestException, Controller, Get, Post, Req, UseGuards, Body, Res, UnauthorizedException } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
+import { JwtOrSupabaseAuthGuard } from "./guards/jwt-or-supabase.guard";
 import { SupabaseAuthService } from "./supabase-auth.service";
+import { JwtAuthService } from "./jwt-auth.service";
 import type { Request, Response } from "express";
 import { clearAuthCookies, readRefreshTokenFromCookie, setAuthCookies } from "./auth-cookies";
 import { PrismaService } from "../prisma/prisma.service";
 import { NeonUserService } from "../users/neon-user.service";
+import { UsersService } from "../users/users.service";
 import { planFromLegacyTariff } from "./plan";
 import { AuthSessionsService } from "./auth-sessions.service";
 import { supabase } from "../../shared/lib/supabase";
+import bcrypt from "bcryptjs";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -17,13 +21,15 @@ export class AuthController {
     private readonly supabaseAuth: SupabaseAuthService,
     private readonly prisma: PrismaService,
     private readonly neonUser: NeonUserService,
-    private readonly sessions: AuthSessionsService
+    private readonly sessions: AuthSessionsService,
+    private readonly jwtAuth: JwtAuthService,
+    private readonly usersService: UsersService
   ) {}
 
   @Get("me")
-  @UseGuards(SupabaseAuthGuard)
+  @UseGuards(JwtOrSupabaseAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Get current user. Bearer token or cookie." })
+  @ApiOperation({ summary: "Get current user. Bearer token (JWT or Supabase) or cookie." })
   @ApiResponse({ status: 200, description: "Current user" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async me(
@@ -37,14 +43,18 @@ export class AuthController {
         role: "user" | "landlord";
         roles: string[];
         profile?: unknown;
+        fromPrisma?: boolean;
       };
     },
   ) {
+    if ((req.user as any)?.fromPrisma) {
+      return this.buildMePayloadFromPrisma(req.user.id);
+    }
     return this.buildMePayload(req.user);
   }
 
   @Post("refresh")
-  @ApiOperation({ summary: "Refresh Supabase access token using refresh_token (body or cookie)." })
+  @ApiOperation({ summary: "Refresh access token (backend JWT or Supabase refresh_token in body/cookie)." })
   @ApiResponse({ status: 200, description: "New access and refresh tokens" })
   @ApiResponse({ status: 401, description: "Refresh token missing or invalid" })
   async refresh(
@@ -58,11 +68,20 @@ export class AuthController {
       throw new UnauthorizedException("Refresh token is required");
     }
 
-    const session = await this.supabaseAuth.refreshSession(token);
-    // Keep cookie session in sync (Telegram + any cookie-based auth)
-    setAuthCookies(res, req, session);
+    if (this.jwtAuth.isOurToken(token)) {
+      const payload = this.jwtAuth.verify(token);
+      if (payload.type !== "refresh") {
+        throw new UnauthorizedException("Invalid token type");
+      }
+      const accessToken = this.jwtAuth.signAccess(payload.sub);
+      const newRefresh = this.jwtAuth.signRefresh(payload.sub);
+      setAuthCookies(res, req, { access_token: accessToken, refresh_token: newRefresh });
+      await this.sessions.rotateRefreshSession(payload.sub, token, newRefresh, req).catch(() => undefined);
+      return { access_token: accessToken, refresh_token: newRefresh };
+    }
 
-    // Multi-device sessions: store/rotate refresh token for current device without deleting other devices.
+    const session = await this.supabaseAuth.refreshSession(token);
+    setAuthCookies(res, req, session);
     try {
       const sb = supabase;
       if (sb) {
@@ -73,7 +92,7 @@ export class AuthController {
         }
       }
     } catch {
-      // ignore session store issues
+      // ignore
     }
     return session;
   }
@@ -217,12 +236,96 @@ export class AuthController {
     };
   }
 
-  @Post("login")
-  @ApiOperation({ summary: "Login is via Supabase on frontend; this route returns 400." })
-  @ApiResponse({ status: 400, description: "Use Supabase client for login" })
-  login() {
-    throw new BadRequestException({
-      message: "Use Supabase client for login. Backend accepts only Authorization: Bearer <supabase_access_token>.",
+  private async buildMePayloadFromPrisma(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true, roles: { include: { role: true } } },
     });
+    if (!user) throw new UnauthorizedException("User not found");
+    const roleName = user.roles?.[0]?.role?.name ?? "user";
+    const role = roleName === "landlord" ? "landlord" : "user";
+    const isAdmin = user.appRole === "ADMIN" || user.appRole === "ROOT";
+    const derived = planFromLegacyTariff(user.plan);
+    const email = user.profile?.email ?? user.email ?? "";
+    await this.neonUser.ensureUserExists(user.id, email).catch(() => undefined);
+    return {
+      id: user.id,
+      email: email ?? "",
+      role: isAdmin ? "admin" : role,
+      plan: derived.plan,
+      listingLimit: user.listingLimit ?? derived.listingLimit,
+      listingUsed: 0,
+      isAdmin,
+      profileCompleted: Boolean((user.profile?.name ?? "").trim()) && Boolean((user.profile?.phone ?? "").trim()),
+      full_name: String(user.profile?.name ?? ""),
+      phone: String(user.profile?.phone ?? user.phone ?? ""),
+      telegram_id: "",
+      avatar_url: String(user.profile?.avatarUrl ?? ""),
+      username: String(user.profile?.username ?? ""),
+    };
+  }
+
+  @Post("login")
+  @ApiOperation({ summary: "Login with email + password (backend JWT, cookies)." })
+  @ApiResponse({ status: 200, description: "User + Set-Cookie" })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  async login(
+    @Body("email") email: string | undefined,
+    @Body("password") password: string | undefined,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const em = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const pw = typeof password === "string" ? password : "";
+    if (!em || !pw) {
+      throw new UnauthorizedException("Email and password are required");
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { email: em },
+      include: { profile: true, roles: { include: { role: true } } },
+    });
+    if (!user?.passwordHash) {
+      throw new UnauthorizedException("Invalid login credentials");
+    }
+    const valid = await bcrypt.compare(pw, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException("Invalid login credentials");
+    }
+    const accessToken = this.jwtAuth.signAccess(user.id);
+    const refreshToken = this.jwtAuth.signRefresh(user.id);
+    setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
+    await this.sessions.storeRefreshSession(user.id, refreshToken, req).catch(() => undefined);
+    return this.buildMePayloadFromPrisma(user.id);
+  }
+
+  @Post("register")
+  @ApiOperation({ summary: "Register with email + password, then auto-login (backend JWT, cookies)." })
+  @ApiResponse({ status: 201, description: "User + Set-Cookie" })
+  @ApiResponse({ status: 400, description: "Email already registered" })
+  async register(
+    @Body("email") email: string | undefined,
+    @Body("password") password: string | undefined,
+    @Body("name") name: string | undefined,
+    @Body("role") role: string | undefined,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const em = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const pw = typeof password === "string" ? password : "";
+    if (!em || !pw) {
+      throw new BadRequestException("Email and password are required");
+    }
+    const roleVal = (role === "landlord" ? "landlord" : "user") as "user" | "landlord";
+    const user = await this.usersService.register({
+      email: em,
+      password: pw,
+      name: typeof name === "string" ? name.trim() || undefined : undefined,
+      role: roleVal,
+    });
+    const accessToken = this.jwtAuth.signAccess(user.id);
+    const refreshToken = this.jwtAuth.signRefresh(user.id);
+    setAuthCookies(res, req, { access_token: accessToken, refresh_token: refreshToken });
+    await this.sessions.storeRefreshSession(user.id, refreshToken, req).catch(() => undefined);
+    return this.buildMePayloadFromPrisma(user.id);
   }
 }

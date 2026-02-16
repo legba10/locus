@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/logo-icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/placeholder.svg', sizes: 'any', type: 'image/svg+xml' },
     ],
-    apple: '/logo-icon.png',
+    apple: '/placeholder.svg',
   },
 }
 
@@ -46,8 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru" className="light" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="icon" href="/logo-icon.png" type="image/png" sizes="192x192" />
-        <link rel="apple-touch-icon" href="/logo-icon.png" />
+        <link rel="icon" href="/placeholder.svg" type="image/svg+xml" sizes="any" />
+        <link rel="apple-touch-icon" href="/placeholder.svg" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="antialiased" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
