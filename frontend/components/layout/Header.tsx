@@ -53,6 +53,7 @@ export function Header() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
+  const [avatarLoadError, setAvatarLoadError] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
@@ -88,6 +89,11 @@ export function Header() {
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
   const displayName = user?.full_name ?? user?.username ?? null
   const displayAvatar = user?.avatar_url ?? null
+  const hasValidAvatar = typeof displayAvatar === 'string' && displayAvatar.trim() !== ''
+
+  useEffect(() => {
+    setAvatarLoadError(false)
+  }, [displayAvatar])
 
   const handleLogout = async () => {
     await logout()
@@ -136,17 +142,7 @@ export function Header() {
             className="logo-wrap shrink-0"
             aria-label="LOCUS — на главную"
           >
-            <Image
-              src="/logo.svg"
-              alt="LOCUS"
-              width={36}
-              height={36}
-              priority
-              className="logo-img-tz14 object-contain shrink-0 w-8 h-8 md:w-9 md:h-9"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
+            {/* ТЗ-1 (жёсткое): без img/Image в лого — только текст; исключаем битую иконку при загрузке */}
             <span className="logo-text">LOCUS</span>
           </Link>
         </div>
@@ -174,18 +170,19 @@ export function Header() {
                 aria-label="Профиль"
                 aria-expanded={profileOpen}
               >
-                {/* ТЗ-3: ровный круглый аватар — контейнер 36×36, overflow hidden, object-fit cover, без белых краёв */}
+                {/* ТЗ-3: аватар без битой картинки — Image только при валидном src; при ошибке загрузки показываем fallback (div). */}
                 <span
                   className="header-avatar-wrapper relative inline-block w-9 h-9 max-w-9 max-h-9 rounded-full overflow-hidden flex items-center justify-center bg-transparent flex-shrink-0"
                   style={{ minWidth: 36, minHeight: 36 }}
                 >
-                  {displayAvatar ? (
+                  {hasValidAvatar && !avatarLoadError ? (
                     <Image
-                      src={displayAvatar}
+                      src={displayAvatar!}
                       alt={displayName || 'Аватар'}
                       fill
                       sizes="36px"
                       className="object-cover object-center"
+                      onError={() => setAvatarLoadError(true)}
                     />
                   ) : (
                     <span className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] text-sm font-medium">

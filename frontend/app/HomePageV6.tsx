@@ -195,19 +195,9 @@ export function HomePageV6() {
     handleSmartSearch()
   }
 
-  /** ТЗ-19: «Подобрать жильё» — в режиме AI открываем wizard; в Ручном — скролл к списку/фильтру */
+  /** ТЗ-2 (жёсткое): кнопка «Подобрать жильё» только открывает модал подбора. Без редиректа, без проверки авторизации. */
   const handleHeroCta = () => {
-    if (aiMode) {
-      setShowAIWizard(true)
-      return
-    }
-    if (city?.trim()) {
-      setCtaLoading(true)
-      handlePrimarySearch()
-      setTimeout(() => setCtaLoading(false), 1500)
-      return
-    }
-    handleScrollToFilter()
+    setShowAIWizard(true)
   }
 
   useEffect(() => {
