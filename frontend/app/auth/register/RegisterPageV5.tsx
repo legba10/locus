@@ -58,7 +58,13 @@ export function RegisterPageV5() {
         name,
         role: selectedRole,
       })
-      router.push('/')
+      // ТЗ-1: редирект только при реальной сессии (пользователь залогинен). Иначе — на вход с флагом registered.
+      const currentUser = useAuthStore.getState().user
+      if (currentUser?.id) {
+        router.push('/')
+      } else {
+        router.push('/auth/login?registered=true')
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {

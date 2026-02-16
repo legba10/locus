@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
@@ -14,7 +14,9 @@ import TelegramStatus from '@/components/lottie/TelegramStatus'
  */
 export default function PageClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login, isLoading, error, clearError } = useAuthStore()
+  const fromRegistered = searchParams.get('registered') === 'true'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -49,6 +51,11 @@ export default function PageClient() {
               <p className="text-[14px] text-[#6B7280]">
                 Войдите в аккаунт LOCUS
               </p>
+              {fromRegistered && (
+                <p className="mt-2 text-[13px] text-green-600 font-medium">
+                  Аккаунт создан. Войдите с вашим email и паролем.
+                </p>
+              )}
             </div>
 
             {/* Error */}

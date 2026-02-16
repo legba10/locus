@@ -55,7 +55,7 @@ export function QuickAIModal(props: QuickAIModalProps) {
 
   const content = (
     <div
-      className="fixed inset-0 flex items-end md:items-center justify-center p-0 md:p-4"
+      className="fixed inset-0 flex items-end md:items-center justify-center p-0 md:p-4 pointer-events-auto"
       style={{ zIndex: 'var(--z-overlay)' }}
       aria-modal="true"
       role="dialog"

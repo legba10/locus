@@ -104,9 +104,8 @@ export default function ProfilePage() {
             : null,
         }))
       }
-      // Затем запрашиваем свежие данные профиля с бэкенда и обновляем страницу
+      // ТЗ-3: не вызывать router.refresh() — ломает auth state. Обновляем только store через refresh().
       await refresh()
-      router.refresh()
       setSuccess(true)
       setToast(true)
     } catch (err) {

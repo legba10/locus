@@ -36,6 +36,7 @@ export interface AIWizardModalProps {
 
 /**
  * ТЗ-5: AI-подбор — overlay/modal, пошаговые шаги, body scroll lock, только скролл внутри модалки.
+ * ТЗ-4: работает для всех (гость и авторизованный). Submit → onComplete(params) → родитель делает router.push(/listings?…). Никакого перехода в объявление, без loading state чтобы не зависать.
  * Закрытие: крестик, Esc, клик по overlay.
  */
 export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: AIWizardModalProps) {
@@ -102,7 +103,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
 
   const content = (
     <div
-      className="fixed inset-0 flex items-end md:items-center justify-center z-[var(--z-overlay)]"
+      className="fixed inset-0 flex items-end md:items-center justify-center z-[var(--z-overlay)] pointer-events-auto"
       aria-modal="true"
       role="dialog"
       aria-label="Подбор жилья с AI"

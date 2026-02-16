@@ -924,7 +924,7 @@ export function HomePageV6() {
         onLaunch={handleQuickAILaunch}
       />
       {/* ТЗ-9: AI wizard — 5 шагов, затем выдача 5 вариантов с «Почему подходит» */}
-      {/* ТЗ-2: AI-помощник «Подберём жильё за 10 секунд» — bottom sheet, initialCity из фильтра */}
+      {/* ТЗ-2/ТЗ-4: AI-подбор доступен всем (неавторизован и авторизован). Только переход в /listings (список результатов). Никаких блокировок по user, редиректа на login, перехода в объявление. */}
       <AIWizardModal
         open={showAIWizard}
         onClose={() => setShowAIWizard(false)}

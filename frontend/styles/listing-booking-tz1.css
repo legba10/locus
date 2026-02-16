@@ -44,17 +44,19 @@
   }
 }
 
-/* Инпут даты: единый бордер, радиус, отступы */
+/* ТЗ-5: инпут даты — единые в light/dark: width 100%, height 52px, border-radius 14px, padding 0 16px */
 .booking-date-input {
   box-sizing: border-box;
-  width: 100%;
+  width: 100% !important;
   min-width: 0;
+  max-width: 100%;
   height: 52px;
-  padding: 12px;
+  min-height: 52px;
+  padding: 0 16px;
   border: 1px solid var(--booking-border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--card-bg);
-  color: var(--text);
+  color: var(--text-main);
   font-size: 14px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -104,11 +106,11 @@
 
 /* ═══ ТЗ-8: блок бронирования — ровные даты, sticky, темы, без переполнений ═══ */
 
-/* Даты: grid 1fr 1fr, gap 8px, карточки 56px, border-radius 12px */
+/* ТЗ-5: даты — единый контейнер, одинаковая ширина полей; на desktop 2 колонки, на mobile 1 */
 .booking-dates-tz8 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
 }
@@ -122,16 +124,17 @@
 .booking-dates-tz8 .booking-date-field {
   flex: none;
   min-width: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .booking-dates-tz8 .booking-date-input {
-  height: 56px;
-  min-height: 56px;
-  border-radius: 12px;
-  padding: 10px 12px;
+  height: 52px;
+  min-height: 52px;
+  border-radius: 14px;
+  padding: 0 16px;
   font-size: 14px;
   width: 100%;
   max-width: 100%;
@@ -149,6 +152,8 @@
 
 [data-theme="dark"] .booking-dates-tz8 .booking-date-input,
 .dark .booking-dates-tz8 .booking-date-input {
+  width: 100%;
+  max-width: 100%;
   background: var(--card-bg);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--text-main);

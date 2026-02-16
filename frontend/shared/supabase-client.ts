@@ -52,11 +52,12 @@ function getOrCreateClient(): SupabaseClient {
     throw new Error('Supabase configuration missing')
   }
 
-  // Create and cache the singleton
+  // Create and cache the singleton.
+  // ТЗ-1: persistSession: true — сессия сохраняется, вход после регистрации и после refresh работает.
   supabaseInstance = createClient(url, key, {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+      persistSession: true,
+      autoRefreshToken: true,
       detectSessionInUrl: false,
     },
   })

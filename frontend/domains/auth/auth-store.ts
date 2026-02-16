@@ -104,8 +104,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (data) => {
         set({ isLoading: true, error: null });
         try {
+          const email = typeof data.email === "string" ? data.email.trim() : data.email;
           const { data: authData, error } = await supabase.auth.signInWithPassword({
-            email: data.email,
+            email,
             password: data.password,
           });
           if (error) throw new AuthApiError(error.message, 401);
@@ -131,8 +132,9 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
+          const email = typeof data.email === "string" ? data.email.trim() : data.email;
           const { data: authData, error } = await supabase.auth.signUp({
-            email: data.email,
+            email,
             password: data.password,
             options: {
               data: {
@@ -142,7 +144,17 @@ export const useAuthStore = create<AuthState>()(
             },
           });
           if (error) throw new AuthApiError(error.message, 400);
-          const session = authData.session;
+          let session = authData.session;
+          if (!session) {
+            // ТЗ-3: авто-вход после регистрации. Supabase может не вернуть session (настройки проекта).
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password: data.password,
+            });
+            if (!signInError && signInData?.session) {
+              session = signInData.session;
+            }
+          }
           if (session) {
             setTokens(session.access_token, session.refresh_token);
             const backendResponse = await fetchMe();
@@ -151,35 +163,16 @@ export const useAuthStore = create<AuthState>()(
               user: meUser,
               accessToken: session.access_token,
               isLoading: false,
+              error: null,
             });
             await dispatchAuth("register", meUser);
           } else {
-            // No session = email confirmation required
+            // Нет сессии (например, обязательное подтверждение email) — редирект на логин с ?registered=true.
             set({
-              user: {
-                id: "",
-                supabaseId: "",
-                email: data.email,
-                phone: null,
-                telegram_id: null,
-                full_name: data.name ?? null,
-                role: data.role,
-                roles: [data.role],
-                tariff: "free",
-              },
+              user: null,
               accessToken: null,
               isLoading: false,
-            });
-            await dispatchAuth("register", {
-              id: "",
-              supabaseId: "",
-              email: data.email,
-              phone: null,
-              telegram_id: null,
-              full_name: data.name ?? null,
-              role: data.role,
-              roles: [data.role],
-              tariff: "free",
+              error: null,
             });
           }
         } catch (e) {
