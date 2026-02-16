@@ -4,7 +4,7 @@ import { HeroTyping } from './HeroTyping'
 
 /**
  * ТЗ-3: Hero — приветствие, печатная строка, CTA.
- * ТЗ-1: всегда печатающийся текст — «Найдите жильё, [фраза] в [город]», город из selectedCity.
+ * Жёсткое ТЗ: без img/Image/background-image/logo в Hero; фиксированная высота блока заголовка.
  */
 export function HeroSection({
   onCtaClick,
@@ -23,9 +23,11 @@ export function HeroSection({
       aria-label="Главный экран"
     >
       <div className="hero-container relative z-10 mx-auto max-w-[1200px] px-5 md:px-6 flex flex-col items-center text-center">
-        <h1 className="hero-tz18-title hero-tz12-title hero-title-tz1 text-[var(--text-main)] tracking-tight">
-          Найдите жильё, <HeroTyping city={selectedCity} />
-        </h1>
+        <div className="hero-title-wrapper w-full flex flex-col items-center justify-center">
+          <h1 className="hero-tz18-title hero-tz12-title hero-title-tz1 text-[var(--text-main)] tracking-tight">
+            <HeroTyping city={selectedCity} />
+          </h1>
+        </div>
         <p className="hero-tz18-subtitle leading-relaxed mt-1">
           LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш запрос
         </p>

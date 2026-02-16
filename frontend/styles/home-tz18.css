@@ -73,16 +73,27 @@
   }
 }
 
-/* ТЗ-1: hero-заголовок не прыгает — фиксированная высота, одна строка, max-width */
+/* Жёсткое ТЗ: фиксированная высота hero-заголовка — typing не двигает layout */
+.hero-title-wrapper {
+  min-height: 140px;
+  height: 140px;
+}
+@media (min-width: 768px) {
+  .hero-title-wrapper {
+    min-height: clamp(120px, 16vh, 180px);
+    height: clamp(120px, 16vh, 180px);
+  }
+}
+
+/* ТЗ-1: hero-заголовок, max-width */
 .hero-title-tz1 {
-  min-height: 72px;
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
 }
 @media (min-width: 768px) {
   .hero-title-tz1 {
-    min-height: 84px;
+    max-width: 900px;
   }
 }
 

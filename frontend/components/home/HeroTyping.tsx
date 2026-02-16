@@ -2,20 +2,20 @@
 
 import { useState, useEffect, memo } from 'react'
 
-/** ТЗ-1: 6 фраз, после фразы — « в {город}». Premium-анимация, без прыжков. */
-const PHRASES = [
-  'подобранное для вас',
-  'с AI',
-  'без риэлторов',
-  'быстрее',
-  'в вашем районе',
-  'по вашим параметрам',
+/** Жёсткое ТЗ: массив полных фраз, {city} подставляется выбранным городом */
+const PHRASE_TEMPLATES = [
+  'Найдите жильё, подобранное для вас в {city}',
+  'Найдите жильё с AI в {city}',
+  'Найдите жильё без риэлторов в {city}',
+  'Найдите жильё рядом с вами в {city}',
+  'Найдите жильё быстрее в {city}',
+  'Найдите жильё под ваш бюджет в {city}',
 ]
 
-const TYPE_SPEED_MS = 45
-const PAUSE_AFTER_LINE_MS = 1600
-const DELETE_SPEED_MS = 25
-const PAUSE_BEFORE_NEW_MS = 400
+const TYPE_SPEED_MS = 70
+const PAUSE_AFTER_LINE_MS = 2000
+const DELETE_SPEED_MS = 40
+const PAUSE_BEFORE_NEW_MS = 800
 
 interface HeroTypingProps {
   city?: string
@@ -27,10 +27,9 @@ function HeroTypingInner({ city = '' }: HeroTypingProps) {
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const citySuffix = city?.trim() ? ` в ${city.trim()}` : ''
-  const fullString = PHRASES[phraseIndex % PHRASES.length] + citySuffix
+  const cityName = city?.trim() || 'вашем городе'
+  const fullString = PHRASE_TEMPLATES[phraseIndex % PHRASE_TEMPLATES.length].replace('{city}', cityName)
 
-  /** ТЗ-1: при смене города — перезапуск текущей фразы с новым суффиксом */
   useEffect(() => {
     setText('')
     setCharIndex(0)
@@ -61,7 +60,7 @@ function HeroTypingInner({ city = '' }: HeroTypingProps) {
         timeout = setTimeout(() => {
           setText('')
           setIsDeleting(false)
-          setPhraseIndex((phraseIndex + 1) % PHRASES.length)
+          setPhraseIndex((phraseIndex + 1) % PHRASE_TEMPLATES.length)
           setCharIndex(0)
         }, PAUSE_BEFORE_NEW_MS)
       }
