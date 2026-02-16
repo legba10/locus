@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -20,6 +21,7 @@ type ChatItem = {
 }
 
 export default function MessagesClient() {
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeChatId = searchParams.get('chat') ?? ''
@@ -28,6 +30,14 @@ export default function MessagesClient() {
   const { isAuthenticated, user } = useAuthStore()
   const { data: chats, isLoading } = useFetch<ChatItem[]>(['chats'], '/chats', { enabled: isAuthenticated() })
   const currentUserId = user?.id ?? ''
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   const openChat = (chatId: string) => {
     router.replace(`/messages?chat=${encodeURIComponent(chatId)}`)
@@ -45,6 +55,17 @@ export default function MessagesClient() {
           <Link href="/auth/login" className="text-[var(--accent)] hover:underline text-[14px]">
             Войти в аккаунт
           </Link>
+        </div>
+      </div>
+    )
+  }
+
+  /** ТЗ-5: skeleton пока грузится user (избегаем console error при undefined user) */
+  if (user === undefined) {
+    return (
+      <div className="flex flex-col bg-[var(--card-bg)] h-full min-h-0" style={{ top: 'var(--header-height, 64px)', height: 'calc(100vh - var(--header-height, 64px))' }}>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="h-8 w-8 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin" aria-hidden />
         </div>
       </div>
     )
@@ -142,13 +163,15 @@ export default function MessagesClient() {
       {/* Правая колонка (ПК) или полноэкранный чат (мобилка при открытом диалоге) */}
       <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
         {activeChatId ? (
-          <ChatPanel
-            chatId={activeChatId}
-            onBack={goBack}
-            embedded
-            suggestedCheckIn={suggestedCheckIn}
-            suggestedCheckOut={suggestedCheckOut}
-          />
+          <div className="flex flex-col h-full min-h-0">
+            <ChatPanel
+              chatId={activeChatId}
+              onBack={goBack}
+              embedded
+              suggestedCheckIn={suggestedCheckIn}
+              suggestedCheckOut={suggestedCheckOut}
+            />
+          </div>
         ) : (
           <div className="flex-1 flex items-center justify-center p-8 text-center">
             <p className="text-[15px] text-[var(--text-secondary)]">Выберите диалог или начните новый</p>

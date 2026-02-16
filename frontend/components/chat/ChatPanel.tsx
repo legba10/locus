@@ -14,15 +14,14 @@ export type Message = {
   sender?: { profile?: { name?: string | null } }
 }
 
-/** ТЗ-12: базовые шаблоны подсказок (без эмодзи, стиль сайта) */
+/** ТЗ-5: быстрые подсказки для первого сообщения */
 const QUICK_SUGGESTIONS_BASE = [
-  'Здравствуйте! Можно забронировать жильё?',
+  'Здравствуйте! Можно забронировать?',
+  'Интересует квартира',
+  'Какие даты свободны?',
   'Свободно ли на эти даты?',
   'Можно посмотреть квартиру сегодня?',
   'Подскажите, какая окончательная цена?',
-  'Можно заселиться раньше?',
-  'Есть ли парковка?',
-  'Подходит ли для долгого проживания?',
 ]
 
 export interface ChatPanelProps {
@@ -39,6 +38,8 @@ export interface ChatPanelProps {
 /** ТЗ-11: автоскролл только при первой загрузке и после отправки; при листании вверх не скроллить */
 export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, suggestedCheckOut }: ChatPanelProps) {
   const { isAuthenticated, user } = useAuthStore()
+  const myId = user?.id ?? ''
+
   const [messages, setMessages] = useState<Message[]>([])
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -68,7 +69,6 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
     host?: { id: string }
     guest?: { id: string }
   }>(['chat-meta', chatId], `/chats/${chatId}`, { enabled: !!chatId && isAuthenticated() })
-  const myId = user?.id
 
   const scrollToBottom = useCallback((behavior: 'smooth' | 'auto' = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior })
@@ -107,11 +107,14 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
     return () => clearInterval(interval)
   }, [chatId, isAuthenticated, fetchMessages])
 
-  /** ТЗ-11: автоскролл только после первой загрузки и после отправки; не при каждом обновлении messages */
+  /** ТЗ-5: сначала render, потом scroll — убираем дергание; setTimeout 50ms */
   useEffect(() => {
     if (!loading && shouldScrollToBottomRef.current) {
-      scrollToBottom('auto')
-      shouldScrollToBottomRef.current = false
+      const t = setTimeout(() => {
+        scrollToBottom('auto')
+        shouldScrollToBottomRef.current = false
+      }, 50)
+      return () => clearTimeout(t)
     }
   }, [loading, scrollToBottom])
 
@@ -140,6 +143,24 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
 
   const title = conv?.listingTitle ?? 'Чат'
 
+  /** ТЗ-5: safe-guards после всех хуков — не падать при отсутствии user/chatId */
+  if (!user) {
+    return (
+      <div className="flex flex-col bg-[var(--card-bg)] h-full min-h-0 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="h-8 w-8 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin" aria-hidden />
+        </div>
+      </div>
+    )
+  }
+  if (!chatId) {
+    return (
+      <div className="flex flex-col bg-[var(--card-bg)] h-full min-h-0 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-4 text-[var(--text-secondary)] text-[14px]">Выберите диалог</div>
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -162,13 +183,14 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
         <span className="flex-1 font-semibold text-[var(--text-main)] truncate">{title}</span>
       </header>
 
-      {/* Область сообщений: скролл только здесь */}
+      {/* Область сообщений: фиксированная высота, скролл только внутри */}
       <div
         ref={scrollContainerRef}
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3"
+        style={{ height: '100%', minHeight: 0 }}
       >
         {loading ? (
-          <div className="space-y-3" data-testid="chat-skeleton">
+          <div className="space-y-3 animate-pulse" data-testid="chat-skeleton">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
@@ -186,7 +208,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
             <div
               key={m.id}
               className={cn(
-                'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px]',
+                'max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px] transition-opacity duration-200',
                 m.senderId === myId
                   ? 'ml-auto bg-[var(--accent)] text-[var(--button-primary-text)]'
                   : 'mr-auto bg-[var(--bg-secondary)] text-[var(--text-main)] border border-[var(--border)]'
@@ -222,24 +244,24 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
         </div>
       )}
 
-      {/* Поле ввода: sticky bottom, не прыгает */}
-      <footer className="flex-shrink-0 border-t border-[var(--border)] bg-[var(--card-bg)] p-3 safe-area-pb">
+      {/* ТЗ-5: поле ввода фиксировано снизу, padding 16px, кнопка справа */}
+      <footer className="flex-shrink-0 border-t border-[var(--border)] bg-[var(--card-bg)] p-4 safe-area-pb">
         <form
           onSubmit={(e) => { e.preventDefault(); send() }}
-          className="flex gap-2"
+          className="flex gap-2 items-center"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Сообщение..."
-            className="flex-1 rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-main)] px-4 py-3 text-[14px] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
+            className="flex-1 min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-main)] px-4 py-3 text-[14px] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
             disabled={sending}
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] px-5 py-3 font-semibold text-[14px] disabled:opacity-50"
+            className="flex-shrink-0 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] px-5 py-3 font-semibold text-[14px] disabled:opacity-50"
           >
             {sending ? '…' : 'Отправить'}
           </button>
