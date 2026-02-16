@@ -377,8 +377,9 @@ export function HomePageV6() {
     }
   }), [data?.items]);
 
+  const Root = 'div';
   return (
-    <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
+    <Root className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
       {/* ТЗ-5: sticky поиск — фикс. сверху 72px при скролле вниз */}
       {stickySearchVisible && (
         <div className="home-search-sticky-tz5 fixed left-0 right-0 z-[80] h-[72px] flex items-center gap-3 px-4 md:px-6 bg-[var(--card-bg)] border-b border-[var(--border)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
@@ -886,6 +887,6 @@ export function HomePageV6() {
           router.push(`/listings?${p.toString()}`)
         }}
       />
-    </div>
+    </Root>
   )
 }
