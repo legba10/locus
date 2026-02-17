@@ -2,11 +2,10 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useRef, useContext } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { ThemeContext } from '@/providers/ThemeProvider'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus, Moon, Sun } from 'lucide-react'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
@@ -57,8 +56,6 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
-  const themeContext = useContext(ThemeContext)
-  const isDark = themeContext?.resolvedTheme === 'dark'
   const openSearchOverlay = useSearchOverlayStore((s) => s.open)
 
   useEffect(() => {
@@ -149,22 +146,25 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Справа: по ТЗ — Desktop: search input, favorites, messages, notifications, theme, avatar. Tablet: search icon, notifications, avatar. Mobile: search icon, avatar. */}
-        <div className="layout-header__right header-actions flex items-center shrink-0 gap-3 xl:gap-3 xl:ml-6">
-          {/* Поиск: клик по иконке или отправка формы открывает единый fullscreen search overlay. */}
+        {/* Справа: ТЗ — порядок [поиск] [сердце] [сообщения] [колокол] [аватар]; mobile и desktop. Уведомления всегда в шапке при authed. */}
+        <div className="layout-header__right header-actions flex items-center shrink-0 gap-2 sm:gap-3 xl:gap-3 xl:ml-6">
           <IconButton onClick={() => openSearchOverlay()} ariaLabel="Поиск" className="flex xl:hidden">
             <Search className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
           <form className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value?.trim() ?? ''; openSearchOverlay(q); }}>
             <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
           </form>
-          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden xl:flex">
+          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="flex">
             <Heart className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden xl:flex">
+          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="flex">
             <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          {authed && <div className="flex"><NotificationsBell compactBadge /></div>}
+          {authed && (
+            <div className="flex shrink-0" aria-label="Уведомления">
+              <NotificationsBell compactBadge />
+            </div>
+          )}
           {authed ? (
             <div className="profile-dropdown-wrap relative shrink-0" ref={profileRef}>
               <UserAvatar
@@ -184,10 +184,6 @@ export function Header() {
                   <Link href="/owner/dashboard" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <LayoutList className={iconSm} /> Мои объявления
                   </Link>
-                  <button type="button" onClick={() => { themeContext?.toggle(); setProfileOpen(false); }} className="profile-dropdown-tz7__item w-full flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] text-left" role="menuitem">
-                    {isDark ? <Sun className={iconSm} /> : <Moon className={iconSm} />}
-                    <span>Тема</span>
-                  </button>
                   <Link href="/pricing" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <CreditCard className={iconSm} /> Тарифы
                   </Link>
