@@ -39,10 +39,7 @@
   }
 }
 
-/* ТЗ overflow: контейнер не переполняется, иконки не залезают на лого */
-.layout-header-overflow-fix .layout-header__inner-tz2 {
-  overflow: hidden;
-}
+/* ТЗ overflow: иконки не залезают на лого. Не ставим overflow: hidden на inner — иначе dropdown обрезается и не открывается. */
 .layout-header-overflow-fix .logo-wrap {
   flex-shrink: 0;
   max-width: 120px;
@@ -51,6 +48,21 @@
 .layout-header-overflow-fix .header-actions {
   flex-shrink: 0;
   gap: 12px;
+}
+
+/* ТЗ-1: аватар и меню профиля — выше остального, клик срабатывает, dropdown не обрезается */
+.layout-header .profile-dropdown-wrap {
+  position: relative;
+  z-index: 50;
+}
+.layout-header .profile-dropdown-tz13.profile-dropdown-tz17,
+.layout-header .profile-dropdown-tz17 {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 8px;
+  z-index: 100;
+  touch-action: manipulation;
 }
 .layout-header__search-input {
   outline: none;

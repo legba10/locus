@@ -65,8 +65,11 @@ export function Header() {
     const onDocClick = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
     }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
+    const t = setTimeout(() => document.addEventListener('click', onDocClick), 0)
+    return () => {
+      clearTimeout(t)
+      document.removeEventListener('click', onDocClick)
+    }
   }, [profileOpen])
 
   const handleLogoClick = () => setIsMenuOpen(false)
@@ -163,7 +166,7 @@ export function Header() {
           {authed && <div className="hidden md:flex"><NotificationsBell compactBadge /></div>}
           <div className="hidden xl:flex"><ThemeToggle /></div>
           {authed ? (
-            <div className="relative shrink-0" ref={profileRef}>
+            <div className="profile-dropdown-wrap relative shrink-0" ref={profileRef}>
               <UserAvatar
                 user={{ avatar_url: displayAvatar, full_name: displayName, username: user?.username }}
                 onClick={() => setProfileOpen((o) => !o)}
@@ -172,7 +175,7 @@ export function Header() {
               />
               {profileOpen && (
                 <div
-                  className="profile-dropdown-tz13 profile-dropdown-tz17 absolute right-0 top-full mt-2 w-[260px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] py-2 shadow-xl z-[var(--z-dropdown)]"
+                  className="profile-dropdown-tz13 profile-dropdown-tz17 w-[260px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] py-2 shadow-xl"
                   role="menu"
                 >
                   <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
