@@ -1,0 +1,87 @@
+/**
+ * ТЗ-3: Админ-панель — единый dark-token слой.
+ * Фон #0b1020, карточки полупрозрачные, таблицы без белого фона.
+ */
+
+.admin-panel {
+  --admin-bg: #0b1020;
+  --admin-card-bg: rgba(255, 255, 255, 0.03);
+  --admin-card-border: rgba(255, 255, 255, 0.06);
+  --admin-text-primary: #ffffff;
+  --admin-text-secondary: rgba(255, 255, 255, 0.65);
+  --admin-text-muted: rgba(255, 255, 255, 0.45);
+  --admin-row-hover: rgba(255, 255, 255, 0.04);
+  --admin-input-bg: rgba(255, 255, 255, 0.06);
+  --admin-input-border: rgba(255, 255, 255, 0.1);
+
+  background: var(--admin-bg);
+  color: var(--admin-text-primary);
+  min-height: 100vh;
+}
+
+/* БЛОК 4: единая система контейнеров */
+.admin-panel .admin-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px;
+}
+@media (max-width: 767px) {
+  .admin-panel .admin-container {
+    padding: 12px;
+  }
+}
+
+/* Карточки */
+.admin-panel .admin-card {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-card-border);
+  border-radius: 14px;
+}
+
+/* Таблицы: прозрачный фон, hover, границы */
+.admin-panel .admin-table,
+.admin-panel table.admin-table {
+  background: transparent;
+  width: 100%;
+}
+.admin-panel .admin-table thead th,
+.admin-panel table.admin-table thead th {
+  background: transparent;
+  color: var(--admin-text-muted);
+  font-weight: 500;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-card-border);
+  text-align: left;
+}
+.admin-panel .admin-table tbody tr,
+.admin-panel table.admin-table tbody tr {
+  background: transparent;
+  border-bottom: 1px solid var(--admin-card-border);
+  transition: background 0.15s;
+}
+.admin-panel .admin-table tbody tr:hover,
+.admin-panel table.admin-table tbody tr:hover {
+  background: var(--admin-row-hover);
+}
+.admin-panel .admin-table tbody td,
+.admin-panel table.admin-table tbody td {
+  padding: 12px 16px;
+  color: var(--admin-text-secondary);
+}
+.admin-panel .admin-table tbody td:first-child,
+.admin-panel table.admin-table tbody td:first-child {
+  color: var(--admin-text-primary);
+}
+
+/* Кнопки табов и ссылки в админке */
+.admin-panel .admin-tab-active {
+  background: var(--accent, #7c3aed) !important;
+  color: white !important;
+}
+.admin-panel .admin-tab-inactive {
+  color: var(--admin-text-secondary) !important;
+}
+.admin-panel .admin-tab-inactive:hover {
+  background: var(--admin-row-hover) !important;
+  color: var(--admin-text-primary) !important;
+}

@@ -10,7 +10,7 @@ export default function AdminModerationPage() {
   }, [router])
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-[14px] text-[#6B7280]">Перенаправление в модерацию…</p>
+      <p className="text-[14px] text-[var(--admin-text-secondary)]">Перенаправление в модерацию…</p>
     </div>
   )
 }
