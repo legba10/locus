@@ -14,6 +14,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
 import { StatsBlock } from '@/components/home/StatsBlock'
 import { AIPopup } from '@/components/home/AIPopup'
+import { ModeSwitchBlock } from '@/components/home/ModeSwitchBlock'
 import { PopularCities } from '@/components/home/PopularCities'
 import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
@@ -66,7 +67,6 @@ export function HomePageV6() {
   const [shakeCities, setShakeCities] = useState(false)
   const [searching, setSearching] = useState(false)
   const [ctaLoading, setCtaLoading] = useState(false)
-  const [showDiffPopup, setShowDiffPopup] = useState(false)
   /** ТЗ-5: на главной после «Показать варианты» показываем результаты на той же странице (scroll к #listings) */
   const [searchApplied, setSearchApplied] = useState(false)
   /** ТЗ-5: sticky поиск — показывать при скролле вниз (высота 72px) */
@@ -431,52 +431,9 @@ export function HomePageV6() {
             </div>
           </div>
 
-          {/* ТЗ-19: переключатель Ручной / AI-подбор — pill 40px, radius 20px, подсказка под ним, (i) → tooltip */}
+          {/* ТЗ-2: единый segment Ручной | AI-подбор + подсказка ? (tooltip/popover) */}
           <div className="mt-4">
-            <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              <div className="home-tz19-pill flex w-full md:w-auto md:max-w-[400px] rounded-[20px] border border-[var(--border)] bg-[var(--bg-secondary)] p-1 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAiMode(false)}
-                  className={cn(
-                    'home-tz19-pill-btn flex-1 h-10 min-h-[40px] rounded-[20px] text-[14px] font-medium transition-all duration-150 border',
-                    !aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
-                  )}
-                >
-                  Ручной
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAiMode(true)}
-                  className={cn(
-                    'home-tz19-pill-btn flex-1 h-10 min-h-[40px] rounded-[20px] text-[14px] font-medium transition-all duration-150 border',
-                    aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
-                  )}
-                >
-                  AI-подбор
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowDiffPopup(true)}
-                className="home-tz19-question flex-shrink-0 w-9 h-9 rounded-full border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors flex items-center justify-center text-[13px] font-semibold"
-                aria-label="В чём разница?"
-                title="В чём разница?"
-              >
-                i
-              </button>
-            </div>
-            {/* ТЗ-19: подсказка под переключателем + fade 150ms */}
-            <div
-              className="search-hint-tz13 search-hint-tz19 mt-2 text-[13px] text-[var(--text-secondary)] leading-relaxed max-w-[480px] md:max-w-none text-center md:text-left line-clamp-2 md:line-clamp-none transition-opacity duration-150"
-              key={aiMode ? 'ai' : 'manual'}
-            >
-              {aiMode ? (
-                'AI подберёт лучшие варианты под ваш бюджет и даты'
-              ) : (
-                'Настройте фильтры сами и получите точные результаты'
-              )}
-            </div>
+            <ModeSwitchBlock aiMode={aiMode} onChange={setAiMode} />
           </div>
 
           {/* ТЗ-12: Desktop — dropdown панель под поиском, с анимацией и затемнением фона */}
@@ -942,24 +899,6 @@ export function HomePageV6() {
         }}
       />
 
-      {/* ТЗ-19: tooltip «В чём разница?» — Ручной vs AI-подбор */}
-      {showDiffPopup && (
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-[var(--z-modal)]" aria-modal="true" role="dialog">
-          <div className="absolute inset-0 bg-[var(--overlay-bg)]" onClick={() => setShowDiffPopup(false)} aria-hidden />
-          <div className="relative w-full max-w-[400px] rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <h3 className="text-[18px] font-semibold text-[var(--text-main)]">В чём разница?</h3>
-              <button type="button" onClick={() => setShowDiffPopup(false)} className="p-1 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]" aria-label="Закрыть">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="space-y-3 text-[14px] text-[var(--text-secondary)]">
-              <p><strong className="text-[var(--text-main)]">Ручной поиск</strong> — вы выбираете фильтры сами.</p>
-              <p><strong className="text-[var(--text-main)]">AI-подбор</strong> — система анализирует бюджет, даты и предпочтения и показывает лучшие варианты.</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

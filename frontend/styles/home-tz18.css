@@ -445,12 +445,18 @@
   color: var(--text-secondary);
 }
 
-/* ТЗ-19: pill переключатель Ручной / AI-подбор — 40px height, radius 20px, gap 8px */
-.home-tz19-pill {
-  gap: 8px;
+/* ТЗ-2: mode-switch — segment 44px, radius 14px, gradient active, tooltip 260px */
+.mode-switch__segment {
+  background: rgba(255, 255, 255, 0.05);
 }
-.search-hint-tz19 {
-  opacity: 0.9;
+[data-theme="dark"] .mode-switch__segment,
+.dark .mode-switch__segment {
+  background: rgba(255, 255, 255, 0.06);
+}
+.mode-switch__tooltip {
+  padding: 12px;
+  font-size: 13px;
+  max-width: 260px;
 }
 
 /* ТЗ-6: скролл фильтра — десктоп модалка и мобильный sheet */
