@@ -9,7 +9,7 @@ import { useAuthStore } from "@/domains/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { PhotoUploader } from "@/components/listing/PhotoUploader";
 import type { ListingPhotoTag } from "@/components/listing/photo-upload-types";
-import { REQUIRED_TAGS } from "@/components/listing/photo-upload-types";
+import { hasRequiredRoomAndToilet } from "@/components/listing/photo-upload-types";
 import { ModeSelect, type ListingMode } from "@/components/listing/ModeSelect";
 import { AiLoader } from "@/components/listing/AiLoader";
 import { mockAnalyzePhotos } from "@/components/listing/mockAi";
@@ -105,10 +105,10 @@ function validateStep(step: WizardStep, d: WizardData, isEdit: boolean, mode: Li
     if (photoCount < 5) return "Добавьте минимум 5 фото (комната и санузел обязательны)";
     const tags = [
       ...d.newPhotos.map((p) => p.tag),
-      ...d.existingPhotos.map((p) => p.tag ?? "other"),
+      ...d.existingPhotos.map((p) => (p.tag ?? "other") as ListingPhotoTag),
     ];
-    if (!REQUIRED_TAGS.every((t) => tags.includes(t)))
-      return "Добавьте минимум 5 фото (комната и санузел обязательны)";
+    if (!hasRequiredRoomAndToilet(tags))
+      return "Добавьте фото комнаты и санузла";
   }
   if (step === 2) {
     if (!d.city.trim()) return "Выберите город";
@@ -328,16 +328,20 @@ export function ListingWizard({
 
   function addFiles(files: File[]) {
     const safe = clampFiles(files);
-    const mapped: NewPhoto[] = safe.map((f) => ({
-      id: uuid(),
-      file: f,
-      previewUrl: URL.createObjectURL(f),
-      tag: "other",
-    }));
-    setData((prev) => ({
-      ...prev,
-      newPhotos: [...prev.newPhotos, ...mapped].slice(0, 12),
-    }));
+    const fastTags: ListingPhotoTag[] = ["kitchen", "living", "toilet"];
+    setData((prev) => {
+      const start = prev.newPhotos.length;
+      const mapped: NewPhoto[] = safe.map((f, i) => ({
+        id: uuid(),
+        file: f,
+        previewUrl: URL.createObjectURL(f),
+        tag: mode === "fast" && i < fastTags.length ? fastTags[i] : ("other" as ListingPhotoTag),
+      }));
+      return {
+        ...prev,
+        newPhotos: [...prev.newPhotos, ...mapped].slice(0, 12),
+      };
+    });
   }
 
   function reorderNew(from: number, to: number) {

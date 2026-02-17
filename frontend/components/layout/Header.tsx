@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useState, useEffect, useRef, useContext } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus } from 'lucide-react'
+import { ThemeContext } from '@/providers/ThemeProvider'
+import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus, Moon, Sun } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import IconButton from '@/components/ui/IconButton'
@@ -47,7 +48,6 @@ function NavItem({
  */
 /** ТЗ-14: один логотип /logo.svg + надпись LOCUS, без смены по теме, стабильно везде */
 export function Header() {
-  const pathname = usePathname()
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -57,6 +57,8 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
+  const themeContext = useContext(ThemeContext)
+  const isDark = themeContext?.resolvedTheme === 'dark'
 
   useEffect(() => {
     if (!profileOpen) return
@@ -103,11 +105,12 @@ export function Header() {
 
   const headerTop = isTelegram ? 48 : 0
 
+  /* Режимы header по ТЗ: Desktop ≥1280 — всё; Tablet 768–1279 — menu, logo, search icon, notifications, avatar; Mobile <768 — menu, logo (центр), search icon, avatar */
   return (
     <header
       className={cn(
-        'layout-header layout-header-tz13 layout-header-tz2 sticky left-0 right-0 z-[var(--z-header)] w-full',
-        'h-16 md:h-[72px] min-h-16 md:min-h-[72px]',
+        'layout-header layout-header-tz13 layout-header-tz2 layout-header-overflow-fix sticky left-0 right-0 z-[var(--z-header)] w-full',
+        'h-16 xl:h-[72px] min-h-16 xl:min-h-[72px]',
         'transition-[box-shadow,background] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
@@ -116,12 +119,11 @@ export function Header() {
       }}
     >
       <div className="layout-header__inner-tz2 h-full">
-        {/* Слева: на ПК только логотип; на мобиле — бургер + логотип. Бургер только mobile. */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Слева: бургер только < 1280px (xl:hidden). Desktop — без бургера. */}
+        <div className="flex items-center shrink-0 xl:hidden">
           <IconButton
             onClick={() => setIsMenuOpen((prev) => !prev)}
             ariaLabel={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            className="md:!hidden"
           >
             <span className="flex flex-col gap-1.5" aria-hidden>
               <span className="block w-5 h-0.5 bg-current rounded-full" />
@@ -129,29 +131,37 @@ export function Header() {
               <span className="block w-5 h-0.5 bg-current rounded-full" />
             </span>
           </IconButton>
+        </div>
+
+        {/* Центр/лого: на mobile лого по центру (flex-1 justify-center), на md+ лого слева */}
+        <div className="flex-1 flex justify-center min-w-0 md:flex-initial md:justify-start">
           <Link
             href="/"
             onClick={handleLogoClick}
-            className="logo-wrap shrink-0"
+            className="logo-wrap"
             aria-label="LOCUS — на главную"
           >
             <span className="logo-text">LOCUS</span>
           </Link>
         </div>
 
-        {/* Справа ПК: поиск, сердце, сообщения, уведомления, тема, аватар, разместить. Отступ от логотипа. */}
-        <div className="layout-header__right header-actions flex items-center shrink-0 md:ml-6">
-          <IconButton as="a" href="/search" ariaLabel="Поиск" className="hidden md:flex">
+        {/* Справа: по ТЗ — Desktop: search input, favorites, messages, notifications, theme, avatar. Tablet: search icon, notifications, avatar. Mobile: search icon, avatar. */}
+        <div className="layout-header__right header-actions flex items-center shrink-0 gap-3 xl:gap-3 xl:ml-6">
+          {/* Поиск: на mobile/tablet — только иконка (fullscreen через переход на /search). На desktop — поле ввода. */}
+          <IconButton as="a" href="/search" ariaLabel="Поиск" className="flex xl:hidden">
             <Search className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden md:flex">
+          <form action="/search" method="get" className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value; if (q?.trim()) { e.preventDefault(); router.push(`/search?q=${encodeURIComponent(q.trim())}`); } }}>
+            <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
+          </form>
+          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden xl:flex">
             <Heart className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden md:flex">
+          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden xl:flex">
             <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          {authed && <NotificationsBell compactBadge />}
-          <ThemeToggle />
+          {authed && <div className="hidden md:flex"><NotificationsBell compactBadge /></div>}
+          <div className="hidden xl:flex"><ThemeToggle /></div>
           {authed ? (
             <div className="relative shrink-0" ref={profileRef}>
               <UserAvatar
@@ -177,6 +187,10 @@ export function Header() {
                   <Link href="/favorites" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <Heart className={iconSm} /> Избранное
                   </Link>
+                  <button type="button" onClick={() => { themeContext?.toggle(); setProfileOpen(false); }} className="profile-dropdown-tz7__item w-full flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] text-left" role="menuitem">
+                    {isDark ? <Sun className={iconSm} /> : <Moon className={iconSm} />}
+                    <span>Тема</span>
+                  </button>
                   <Link href="/pricing" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <CreditCard className={iconSm} /> Тарифы
                   </Link>
@@ -209,7 +223,7 @@ export function Header() {
             </Link>
           )}
           {canCreateListing && (
-            <Link href={createHref} className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0 hidden md:flex" aria-label="Разместить объявление">
+            <Link href={createHref} className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0 hidden xl:flex" aria-label="Разместить объявление">
               Разместить
             </Link>
           )}

@@ -23,20 +23,41 @@
 
 @media (max-width: 767px) {
   .layout-header {
-    height: 60px;
-    min-height: 60px;
+    height: 64px;
+    min-height: 64px;
   }
   .layout-header__inner-tz2 {
     padding: 0 16px;
-    height: 60px;
-    min-height: 60px;
+    height: 64px;
+    min-height: 64px;
   }
-  /* ТЗ восстановление: мобильный header — лого фиксировано слева, без сдвигов */
+  /* ТЗ восстановление: мобильный header — лого фиксировано, без сдвигов */
   .layout-header .logo-wrap {
     position: relative;
     left: 0;
     transform: none;
   }
+}
+
+/* ТЗ overflow: контейнер не переполняется, иконки не залезают на лого */
+.layout-header-overflow-fix .layout-header__inner-tz2 {
+  overflow: hidden;
+}
+.layout-header-overflow-fix .logo-wrap {
+  flex-shrink: 0;
+  max-width: 120px;
+}
+.layout-header-overflow-fix .layout-header__right,
+.layout-header-overflow-fix .header-actions {
+  flex-shrink: 0;
+  gap: 12px;
+}
+.layout-header__search-input {
+  outline: none;
+}
+.layout-header__search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.2);
 }
 
 /* ТЗ-14: логотип + надпись LOCUS — один источник, без смены по теме */
@@ -208,19 +229,12 @@
   color: var(--text-main);
 }
 
-/* ТЗ восстановление: иконки справа — gap 18px desktop, 14px mobile, ровное выравнивание */
+/* Иконки справа: базовый gap; overflow-fix переопределяет на 12px */
 .header-actions,
 .layout-header__right {
   display: flex;
   align-items: center;
-  gap: 18px;
-}
-
-@media (max-width: 767px) {
-  .header-actions,
-  .layout-header__right {
-    gap: 14px;
-  }
+  gap: 12px;
 }
 /* ТЗ №2: выравнивание по вертикали — header одна линия 64px */
 .layout-header {
