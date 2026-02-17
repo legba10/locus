@@ -445,18 +445,33 @@
   color: var(--text-secondary);
 }
 
-/* ТЗ-2: mode-switch — segment 44px, radius 14px, gradient active, tooltip 260px */
+/* ТЗ: mode-switch — без question, засвет исправлен (light/dark явные цвета) */
 .mode-switch__segment {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.04);
+  gap: 8px;
+  padding: 4px;
 }
 [data-theme="dark"] .mode-switch__segment,
 .dark .mode-switch__segment {
   background: rgba(255, 255, 255, 0.06);
 }
-.mode-switch__tooltip {
-  padding: 12px;
-  font-size: 13px;
-  max-width: 260px;
+/* Неактивная кнопка: light #475569, dark #94A3B8 — без opacity */
+.mode-switch__segment-btn--inactive {
+  color: #475569;
+  font-weight: 500;
+}
+[data-theme="dark"] .mode-switch__segment-btn--inactive,
+.dark .mode-switch__segment-btn--inactive {
+  color: #94A3B8;
+}
+/* Активный текст на градиенте уже white. Подпись под переключателем */
+.mode-switch__hint {
+  color: #475569;
+  margin-top: 8px;
+}
+[data-theme="dark"] .mode-switch__hint,
+.dark .mode-switch__hint {
+  color: #94A3B8;
 }
 
 /* ТЗ-6: скролл фильтра — десктоп модалка и мобильный sheet */
