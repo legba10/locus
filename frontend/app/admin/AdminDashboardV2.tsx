@@ -83,12 +83,28 @@ export function AdminDashboardV2() {
     { id: 'settings' as AdminTab, label: 'Настройки', icon: <SettingsIcon /> },
   ]
 
+  const tabButton = (tab: (typeof tabs)[0]) => (
+    <button
+      key={tab.id}
+      type="button"
+      onClick={() => setActiveTab(tab.id)}
+      className={cn(
+        'w-full lg:w-auto px-4 py-2.5 rounded-[12px] text-[14px] font-medium transition-all whitespace-nowrap flex items-center gap-2',
+        activeTab === tab.id ? 'admin-tab-active' : 'admin-tab-inactive'
+      )}
+    >
+      {tab.icon}
+      {tab.label}
+    </button>
+  )
+
   return (
-    <div className="min-h-screen">
-      <div className="admin-container py-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+    <div className="min-h-screen flex flex-col">
+      {/* ТЗ-4: admin header — full width, inner 1280px */}
+      <header className="admin-header">
+        <div className="admin-header__inner">
           <div>
-            <h1 className="text-[28px] font-bold text-[var(--admin-text-primary)] mb-1">Панель администратора</h1>
+            <h1 className="text-[24px] sm:text-[28px] font-bold text-[var(--admin-text-primary)] mb-0.5">Панель администратора</h1>
             <p className="text-[14px] text-[var(--admin-text-secondary)]">Управление платформой LOCUS</p>
           </div>
           <div className="flex gap-2">
@@ -100,35 +116,37 @@ export function AdminDashboardV2() {
             </Link>
           </div>
         </div>
+      </header>
 
-        <div className={cn('admin-card rounded-[18px] p-4 sm:p-6')}>
-          <div className="flex gap-2 border-b border-[var(--admin-card-border)] pb-4 mb-6 overflow-x-auto">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'px-4 py-2 rounded-[12px] text-[14px] font-medium transition-all whitespace-nowrap flex items-center gap-2',
-                  activeTab === tab.id ? 'admin-tab-active' : 'admin-tab-inactive'
-                )}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+      <div className="admin-layout flex-1">
+        {/* ТЗ-4: sidebar desktop 240px — вертикальные табы */}
+        <aside className="admin-sidebar">
+          <nav className="flex flex-col gap-1 px-3">
+            {tabs.map(tab => tabButton(tab))}
+          </nav>
+        </aside>
+
+        <main className="admin-main">
+          {/* Mobile: табы горизонтально */}
+          <div className="lg:hidden border-b border-[var(--admin-card-border)] px-4 py-3 overflow-x-auto">
+            <div className="flex gap-2 min-w-max">
+              {tabs.map(tab => tabButton(tab))}
+            </div>
           </div>
 
-          <div className="admin-content" style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
-            {activeTab === 'dashboard' && <DashboardTab />}
-            {activeTab === 'users' && <UsersTab />}
-            {activeTab === 'listings' && <ListingsTab />}
-            {activeTab === 'moderation' && <ModerationTab />}
-            {activeTab === 'bookings' && <BookingsTab />}
-            {activeTab === 'push' && <PushTab />}
-            {activeTab === 'chats' && <ChatsTab />}
-            {activeTab === 'settings' && <SettingsTab />}
+          <div className="admin-container flex-1 py-6 lg:py-8">
+            <div className="admin-content admin-gap-section flex flex-col" style={{ maxHeight: 'none' }}>
+              {activeTab === 'dashboard' && <DashboardTab />}
+              {activeTab === 'users' && <UsersTab />}
+              {activeTab === 'listings' && <ListingsTab />}
+              {activeTab === 'moderation' && <ModerationTab />}
+              {activeTab === 'bookings' && <BookingsTab />}
+              {activeTab === 'push' && <PushTab />}
+              {activeTab === 'chats' && <ChatsTab />}
+              {activeTab === 'settings' && <SettingsTab />}
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )
@@ -176,9 +194,9 @@ function DashboardTab() {
   const revenueMax = Math.max(...revenueData, 1)
 
   return (
-    <div className="space-y-6">
-      {/* БЛОК 2: mobile 1 col, tablet 2, desktop 4; gap 12px */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="flex flex-col admin-gap-section">
+      {/* ТЗ-4: сетка метрик — 4/2/1 cols, gap 16px, карточки 110px */}
+      <section className="admin-metrics-grid">
         <StatCard title="Пользователей" value={stats.users.total} color="blue" />
         <StatCard title="Объявления" value={stats.listings.total} color="emerald" />
         <StatCard title="На модерации" value={stats.listings.pending} color="amber" />
@@ -196,57 +214,59 @@ function DashboardTab() {
             <StatCard title="Сообщения" value={econ.messagesCount} color="violet" />
           </>
         )}
-      </div>
+      </section>
 
       {charts && (revenueData.length > 0 || (charts.bookings?.length ?? 0) > 0 || (charts.newUsers?.length ?? 0) > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 lg:grid-cols-3 admin-gap-block">
           {revenueData.length > 0 && (
-            <div className="admin-card rounded-[18px] p-4 w-full min-w-0">
+            <div className="admin-card w-full min-w-0">
               <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Доход по дням (30 дн.)</h3>
-              <div className="w-full overflow-hidden" style={{ minHeight: 220 }}>
+              <div className="admin-chart-wrap">
                 <SimpleBarChart data={revenueData} max={revenueMax} color="bg-emerald-500" height={220} />
               </div>
             </div>
           )}
           {charts.bookings && charts.bookings.length > 0 && (
-            <div className="admin-card rounded-[18px] p-4 w-full min-w-0">
+            <div className="admin-card w-full min-w-0">
               <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Брони по дням (30 дн.)</h3>
-              <div className="w-full overflow-hidden" style={{ minHeight: 220 }}>
+              <div className="admin-chart-wrap">
                 <SimpleBarChart data={charts.bookings.map((b) => b.count)} max={Math.max(...charts.bookings.map((b) => b.count), 1)} color="bg-violet-500" height={220} />
               </div>
             </div>
           )}
           {charts.newUsers && charts.newUsers.length > 0 && (
-            <div className="admin-card rounded-[18px] p-4 w-full min-w-0">
+            <div className="admin-card w-full min-w-0">
               <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Новые пользователи (30 дн.)</h3>
-              <div className="w-full overflow-hidden" style={{ minHeight: 220 }}>
+              <div className="admin-chart-wrap">
                 <SimpleBarChart data={charts.newUsers.map((u) => u.count)} max={Math.max(...charts.newUsers.map((u) => u.count), 1)} color="bg-blue-500" height={220} />
               </div>
             </div>
           )}
-        </div>
+        </section>
       )}
 
       {econ && (
-        <div className="admin-card rounded-[18px] overflow-hidden">
+        <section className="admin-card overflow-hidden p-0">
           <h3 className="text-[16px] font-semibold text-[var(--admin-text-primary)] p-4 border-b border-[var(--admin-card-border)]">Юнит-экономика</h3>
-          <table className="admin-table w-full text-[14px]">
-            <thead>
-              <tr>
-                <th className="p-3 font-medium">Метрика</th>
-                <th className="p-3 font-medium">Значение</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td className="p-3">Total revenue</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
-              <tr><td className="p-3">Комиссия</td><td className="p-3 font-medium">{formatPrice(econ.commission ?? econ.revenue)}</td></tr>
-              <tr><td className="p-3">Средний чек</td><td className="p-3 font-medium">{econ.averageOrder ? formatPrice(econ.averageOrder) : '—'}</td></tr>
-              <tr><td className="p-3">Брони (подтверждённые)</td><td className="p-3">{stats.bookings.confirmed ?? 0}</td></tr>
-              <tr><td className="p-3">Конверсия</td><td className="p-3">{econ.totalViews ? (econ.conversion).toFixed(2) + '%' : '—'}</td></tr>
-              <tr><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(econ.gmv)}</td></tr>
-            </tbody>
-          </table>
-        </div>
+          <div className="admin-table-wrapper">
+            <table className="admin-table w-full text-[14px]">
+              <thead>
+                <tr>
+                  <th className="p-3 font-medium">Метрика</th>
+                  <th className="p-3 font-medium">Значение</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td className="p-3">Total revenue</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
+                <tr><td className="p-3">Комиссия</td><td className="p-3 font-medium">{formatPrice(econ.commission ?? econ.revenue)}</td></tr>
+                <tr><td className="p-3">Средний чек</td><td className="p-3 font-medium">{econ.averageOrder ? formatPrice(econ.averageOrder) : '—'}</td></tr>
+                <tr><td className="p-3">Брони (подтверждённые)</td><td className="p-3">{stats.bookings.confirmed ?? 0}</td></tr>
+                <tr><td className="p-3">Конверсия</td><td className="p-3">{econ.totalViews ? (econ.conversion).toFixed(2) + '%' : '—'}</td></tr>
+                <tr><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(econ.gmv)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   )
@@ -274,13 +294,13 @@ function StatCard({ title, value, color, format }: { title: string; value: numbe
   }
   const display = format === 'price' ? formatPrice(value) : format === 'percent' ? value.toFixed(1) + '%' : value.toLocaleString()
   return (
-    <div className="admin-card rounded-[18px] p-4">
+    <div className="admin-card admin-metric-card min-h-[110px] flex flex-col justify-center">
       <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center mb-2', colors[color] ?? 'bg-[var(--admin-input-bg)] text-[var(--admin-text-muted)]')}>
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
         </svg>
       </div>
-      <p className="text-[20px] sm:text-[24px] font-bold text-[var(--admin-text-primary)] truncate" title={String(display)}>{display}</p>
+      <p className="text-[18px] sm:text-[22px] font-bold text-[var(--admin-text-primary)] truncate" title={String(display)}>{display}</p>
       <p className="text-[12px] text-[var(--admin-text-secondary)] mt-0.5">{title}</p>
     </div>
   )
@@ -486,7 +506,7 @@ function ListingsTab() {
               )
             })}
           </div>
-          <div className="hidden md:block overflow-x-auto rounded-[18px] border border-[var(--admin-card-border)]">
+          <div className="hidden md:block admin-table-wrapper rounded-[18px] border border-[var(--admin-card-border)]">
             <table className="admin-table w-full text-[14px]">
               <thead>
                 <tr>

@@ -19,23 +19,126 @@
   min-height: 100vh;
 }
 
-/* БЛОК 4: единая система контейнеров */
+/* ТЗ-4: единый контейнер — padding desktop 24px, tablet 20px, mobile 14px */
 .admin-panel .admin-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 1023px) {
+  .admin-panel .admin-container {
+    padding: 20px;
+  }
 }
 @media (max-width: 767px) {
   .admin-panel .admin-container {
-    padding: 12px;
+    padding: 14px;
   }
 }
 
-/* Карточки */
+/* ТЗ-4: admin header — full width, border-bottom, inner 1280px */
+.admin-panel .admin-header {
+  width: 100%;
+  border-bottom: 1px solid var(--admin-card-border);
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+.admin-panel .admin-header__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* ТЗ-4: layout — sidebar (desktop) + main */
+.admin-panel .admin-layout {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  width: 100%;
+}
+.admin-panel .admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--admin-card-border);
+  padding: 20px 0;
+  display: none;
+}
+@media (min-width: 1024px) {
+  .admin-panel .admin-sidebar {
+    display: block;
+  }
+}
+.admin-panel .admin-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 1024px) {
+  .admin-panel .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* ТЗ-4: вертикальная сетка — gap блоков 20px, секций 32px */
+.admin-panel .admin-gap-block {
+  gap: 20px;
+}
+.admin-panel .admin-gap-section {
+  gap: 32px;
+}
+
+/* ТЗ-4: карточки — border-radius 16px, padding 16px */
 .admin-panel .admin-card {
   background: var(--admin-card-bg);
   border: 1px solid var(--admin-card-border);
-  border-radius: 14px;
+  border-radius: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ТЗ-4: dashboard grid — 4/2/1 cols, gap 16px; карточки метрик height 110px */
+.admin-panel .admin-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .admin-panel .admin-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .admin-panel .admin-metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.admin-panel .admin-metric-card {
+  min-height: 110px;
+  border-radius: 16px;
+}
+
+/* ТЗ-4: графики — 100% width, overflow hidden, mobile height 220px */
+.admin-panel .admin-chart-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+/* ТЗ-4: table-wrapper — overflow-x auto, max-width container */
+.admin-panel .admin-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-panel .admin-table-wrapper table {
+  min-width: 0;
 }
 
 /* Таблицы: прозрачный фон, hover, границы */
