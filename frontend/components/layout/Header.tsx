@@ -8,7 +8,6 @@ import { useAuthStore } from '@/domains/auth'
 import { ThemeContext } from '@/providers/ThemeProvider'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus, Moon, Sun } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
 import { MobileMenu } from './MobileMenu'
@@ -166,7 +165,6 @@ export function Header() {
             <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
           {authed && <div className="hidden md:flex"><NotificationsBell compactBadge /></div>}
-          <div className="hidden xl:flex"><ThemeToggle /></div>
           {authed ? (
             <div className="profile-dropdown-wrap relative shrink-0" ref={profileRef}>
               <UserAvatar

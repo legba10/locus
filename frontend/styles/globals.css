@@ -65,10 +65,11 @@ html {
   scroll-behavior: smooth;
 }
 
-/* ТЗ-1 п.5: фон — var(--bg-main) */
+/* ТЗ-1 п.5: фон — var(--bg-main). ТЗ-3: плавный скролл, инерция на мобильном */
 body {
   background: var(--bg-main);
   color: var(--text-primary);
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Стили для option элементов в select - закругленные углы */

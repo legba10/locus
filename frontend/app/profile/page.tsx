@@ -8,6 +8,7 @@ import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { supabase } from '@/shared/supabase-client'
 import { cn } from '@/shared/utils/cn'
+import { ThemeSettings } from '@/components/ui/ThemeSettings'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
@@ -226,6 +227,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+
+          <ThemeSettings />
 
           <section className="profile-header-tz9 rounded-[18px] p-5 sm:p-6">
             <h2 className="text-[18px] font-semibold text-[var(--color-text)] mb-4">Текущий тариф</h2>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { Logo } from './Logo'
+import { ThemeSwitcherFooter } from '@/components/ui/ThemeSwitcherFooter'
 
 /**
  * Footer — v3 Premium Product Footer
@@ -40,7 +41,7 @@ export function Footer({ className }: { className?: string }) {
       className={cn(className, 'footer-tz6 border-t border-[var(--border)]')}
     >
       <div className="market-container py-16 text-left">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-12">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Logo variant="theme" size="lg" showText={true} className="mb-5" />
@@ -126,6 +127,11 @@ export function Footer({ className }: { className?: string }) {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* ТЗ-3: тема сайта */}
+          <div className="lg:col-span-1">
+            <ThemeSwitcherFooter />
           </div>
         </div>
       </div>
