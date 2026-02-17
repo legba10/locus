@@ -271,9 +271,34 @@
   opacity: 0.7;
 }
 
-/* ═══ 7. Карточки объявлений на главной TZ-18 ═══ */
-.home-tz18 .listing-grid {
+/* ═══ 7. Карточки объявлений на главной TZ-18 — восстановление: 420px, 16/10, не растягивать ═══ */
+.home-tz18 .listing-grid,
+.home-tz18 .listing-grid-cards-tz {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 420px);
   gap: 24px;
+  justify-content: start;
+}
+
+@media (max-width: 767px) {
+  .home-tz18 .listing-grid-cards-tz {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.home-tz18 .listing-card-tz18,
+.home-tz18 .listing-grid-cards-tz > * {
+  width: 420px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .home-tz18 .listing-card-tz18,
+  .home-tz18 .listing-grid-cards-tz > * {
+    width: 100%;
+  }
 }
 
 .home-tz18 .listing-card-tz18 {
@@ -282,9 +307,10 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-/* ТЗ-7: фото карточек 4:3, не фиксированная высота */
-.home-tz18 .listing-card-tz18 .listing-card__image-wrap {
-  aspect-ratio: 4 / 3;
+/* ТЗ восстановление: карточки компактные, aspect-ratio 16/10 */
+.home-tz18 .listing-card-tz18 .listing-card__image-wrap,
+.home-tz18 .listing-grid-cards-tz .listing-card__image-wrap {
+  aspect-ratio: 16 / 10;
   height: auto;
   border-radius: 24px 24px 0 0;
 }

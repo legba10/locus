@@ -115,7 +115,7 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="layout-header__inner-tz2 mx-auto max-w-7xl h-full flex items-center justify-between">
+      <div className="layout-header__inner-tz2 h-full">
         {/* Слева: на ПК только логотип; на мобиле — бургер + логотип. Бургер только mobile. */}
         <div className="flex items-center gap-3 min-w-0">
           <IconButton

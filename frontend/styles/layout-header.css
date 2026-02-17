@@ -9,11 +9,34 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* ТЗ-2: отступы 16px слева/справа, высота контейнера 100% от header */
+/* ТЗ восстановление: контейнер header — max-width 1280px, padding 24px, flex space-between */
 .layout-header__inner-tz2 {
-  padding-left: 16px;
-  padding-right: 16px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
   height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 767px) {
+  .layout-header {
+    height: 60px;
+    min-height: 60px;
+  }
+  .layout-header__inner-tz2 {
+    padding: 0 16px;
+    height: 60px;
+    min-height: 60px;
+  }
+  /* ТЗ восстановление: мобильный header — лого фиксировано слева, без сдвигов */
+  .layout-header .logo-wrap {
+    position: relative;
+    left: 0;
+    transform: none;
+  }
 }
 
 /* ТЗ-14: логотип + надпись LOCUS — один источник, без смены по теме */
@@ -27,6 +50,11 @@
   font-size: 18px;
   letter-spacing: 0.5px;
   color: var(--text-main);
+}
+
+/* ТЗ восстановление: лого не сжимается */
+.logo-wrap {
+  flex-shrink: 0;
 }
 
 /* ТЗ-13: тонкая граница, иконки через var(--text-main) */
@@ -180,11 +208,19 @@
   color: var(--text-main);
 }
 
-/* ТЗ №2: header-actions — gap 8px, единый размер кнопок 44×44, аватар 36×36 */
-.header-actions {
+/* ТЗ восстановление: иконки справа — gap 18px desktop, 14px mobile, ровное выравнивание */
+.header-actions,
+.layout-header__right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 18px;
+}
+
+@media (max-width: 767px) {
+  .header-actions,
+  .layout-header__right {
+    gap: 14px;
+  }
 }
 /* ТЗ №2: выравнивание по вертикали — header одна линия 64px */
 .layout-header {
@@ -192,11 +228,6 @@
   align-items: center;
 }
 
-.layout-header__right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
 .layout-header__icon-wrap {
   display: flex;

@@ -2310,3 +2310,27 @@ textarea {
 .safe-area-mb {
   margin-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* ТЗ восстановление: блок метрик AI в объявлении — выравнивание и полоски */
+.section-ai-metrics {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section-ai-metrics__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section-ai-metrics__bar {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--bg-glass);
+  overflow: hidden;
+}
+.section-ai-metrics__bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}

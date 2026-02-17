@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -66,6 +66,14 @@ export function ListingPageV3({ id }: ListingPageV3Props) {
   const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false)
   const [reviewFilter, setReviewFilter] = useState<'all' | '5' | 'with_text' | 'recent'>('all')
   const [metricFilter, setMetricFilter] = useState('all')
+
+  /* Fullscreen галерея: блокировка скролла body */
+  useEffect(() => {
+    if (!isGalleryOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [isGalleryOpen])
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData, isLoading: isReviewsLoading } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)

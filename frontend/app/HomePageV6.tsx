@@ -564,7 +564,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="listing-grid-cards-tz grid grid-cols-1 sm:grid-cols-2 gap-3">
             {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
@@ -630,7 +630,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="listing-grid-cards-tz grid grid-cols-1 sm:grid-cols-2 gap-3">
             {allListingsLoading ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : allListingCards.length > 0 ? (

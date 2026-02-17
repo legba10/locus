@@ -38,9 +38,9 @@ export function AIMetrics({ listingId }: { listingId: string }) {
   if (display.length === 0) return null
 
   return (
-    <div className={cn('rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6')}>
-      <h2 className="text-[18px] font-bold text-[var(--text-main)] mb-4">Метрики AI</h2>
-      <div className="space-y-4">
+    <div className={cn('section-ai-metrics rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6')}>
+      <h2 className="text-[18px] font-bold text-[var(--text-main)]">Метрики AI</h2>
+      <div className="section-ai-metrics__rows">
         {display.map(({ key, avgValue }) => {
           const pct = Math.round(avgValue)
           const label = LABEL_OVERRIDE[key] ?? metricLabelByKey(key)
@@ -50,9 +50,9 @@ export function AIMetrics({ listingId }: { listingId: string }) {
                 <span className="font-medium text-[var(--text-main)]">{label}</span>
                 <span className="tabular-nums font-semibold text-[var(--text-main)]">{pct}%</span>
               </div>
-              <div className="h-[6px] rounded-full bg-[var(--bg-glass)] overflow-hidden">
+              <div className="section-ai-metrics__bar">
                 <div
-                  className="h-full rounded-full transition-all duration-300"
+                  className="section-ai-metrics__bar-fill"
                   style={{
                     width: `${pct}%`,
                     background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%)',

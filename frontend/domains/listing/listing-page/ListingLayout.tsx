@@ -321,23 +321,23 @@ export function ListingLayout(props: ListingLayoutProps) {
         <StickyActions price={price} onWrite={onWrite} onBook={onBook} onSave={onFavoriteToggle} isSaved={isFavorite} writeLoading={writeLoading} />
       </div>
 
-      {/* Fullscreen галерея */}
+      {/* Fullscreen галерея — overlay с классом open для затемнения, z-index и overflow для корректного отображения */}
       {isGalleryOpen && photos.length > 0 && (
-        <div className="fixed inset-0 overlay flex items-center justify-center" style={{ zIndex: 'var(--z-overlay)' }} role="dialog" aria-modal="true" aria-label="Галерея">
-          <button type="button" onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Закрыть">×</button>
+        <div className="fixed inset-0 overlay open flex items-center justify-center overflow-hidden" style={{ zIndex: 'var(--z-overlay)' }} role="dialog" aria-modal="true" aria-label="Галерея">
+          <button type="button" onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Закрыть">×</button>
           {photos.length > 1 && (
             <>
-              <button type="button" onClick={() => setActiveImage((i) => (i - 1 + photos.length) % photos.length)} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Предыдущее">
+              <button type="button" onClick={() => setActiveImage((i) => (i - 1 + photos.length) % photos.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Предыдущее">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               </button>
-              <button type="button" onClick={() => setActiveImage((i) => (i + 1) % photos.length)} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Следующее">
+              <button type="button" onClick={() => setActiveImage((i) => (i + 1) % photos.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center" aria-label="Следующее">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </button>
             </>
           )}
-          <Image src={photos[activeImage]?.url ?? ''} alt={`${title} — фото ${activeImage + 1}`} width={1200} height={800} className="max-h-[85vh] w-auto object-contain px-12" unoptimized={(photos[activeImage]?.url ?? '').startsWith('http')} />
+          <Image src={photos[activeImage]?.url ?? ''} alt={`${title} — фото ${activeImage + 1}`} width={1200} height={800} className="relative z-[1] max-h-[85vh] w-auto object-contain px-12" unoptimized={(photos[activeImage]?.url ?? '').startsWith('http')} />
           {photos.length > 1 && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
               {photos.map((_, i) => (
                 <button key={i} type="button" onClick={() => setActiveImage(i)} className={cn('w-2.5 h-2.5 rounded-full transition-all', activeImage === i ? 'bg-white scale-110' : 'bg-white/40')} aria-label={`Фото ${i + 1}`} />
               ))}
