@@ -25,6 +25,7 @@ export default function IconButton({
   as: Component = 'button',
   href,
 }: IconButtonProps) {
+  /* ТЗ восстановление: без обводок и рамок у иконок в шапке */
   const style = {
     width: 44,
     height: 44,
@@ -32,8 +33,8 @@ export default function IconButton({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border-main)',
+    background: 'transparent',
+    border: 'none',
   } as React.CSSProperties
 
   const common = {

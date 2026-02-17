@@ -5,8 +5,7 @@ import Image from 'next/image'
 import { cn } from '@/shared/utils/cn'
 
 /**
- * ТЗ №2: аватар пользователя в header — 36×36px, круг.
- * Инициалы при отсутствии фото; градиент фона.
+ * ТЗ №2: аватар в header. По умолчанию 36px; size=44 выравнивает с иконками (ПК и мобила).
  */
 export interface UserAvatarProps {
   user?: {
@@ -19,16 +18,18 @@ export interface UserAvatarProps {
   className?: string
   asButton?: boolean
   ariaExpanded?: boolean
+  /** Размер в px. 44 — как иконки в шапке (ТЗ восстановление). */
+  size?: number
 }
 
-export default function UserAvatar({ user, onClick, className, asButton = true, ariaExpanded }: UserAvatarProps) {
+export default function UserAvatar({ user, onClick, className, asButton = true, ariaExpanded, size = 36 }: UserAvatarProps) {
   const [avatarLoadError, setAvatarLoadError] = useState(false)
   const name = user?.full_name ?? user?.name ?? user?.username ?? ''
   const initials = (name?.trim().slice(0, 1) || 'U').toUpperCase()
   const avatarUrl = user?.avatar_url
   const hasValidAvatar = typeof avatarUrl === 'string' && avatarUrl.trim() !== '' && !avatarLoadError
 
-  const sizeStyle = { width: 36, height: 36 } as React.CSSProperties
+  const sizeStyle = { width: size, height: size } as React.CSSProperties
   const fallbackStyle = {
     ...sizeStyle,
     borderRadius: '50%',
@@ -45,8 +46,8 @@ export default function UserAvatar({ user, onClick, className, asButton = true, 
     <Image
       src={avatarUrl!}
       alt={name || 'Аватар'}
-      width={36}
-      height={36}
+      width={size}
+      height={size}
       className="rounded-full object-cover object-center w-full h-full"
       onError={() => setAvatarLoadError(true)}
     />

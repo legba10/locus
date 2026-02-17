@@ -10,7 +10,7 @@ import { addPendingReminder } from '@/shared/reviews/reviewReminderStorage'
 import { useAuthStore } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
-import { ListingLayoutTZ10 } from './listing-page'
+import { ListingLayout } from './listing-page'
 
 interface ListingPageV3Props {
   id: string
@@ -221,39 +221,83 @@ export function ListingPageV3({ id }: ListingPageV3Props) {
     lastSeen: (owner as any).lastSeen ?? null,
   }
 
-  const specItems: string[] = []
-  if (item.bedrooms != null && item.bedrooms > 0) {
-    specItems.push(item.bedrooms === 1 ? '1 комната' : `${item.bedrooms} комнаты`)
+  const similarListings = (similarData?.items ?? []).map((s: any) => ({
+    id: s.id ?? '',
+    photo: s.photos?.[0]?.url ?? s.images?.[0]?.url ?? s.photo,
+    title: s.title ?? undefined,
+    price: Number(s.basePrice ?? s.pricePerNight ?? s.price ?? 0),
+    city: s.city ?? '',
+    district: s.district ?? s.addressLine,
+    score: s.score,
+  }))
+
+  const reviewsForLayout = filteredReviews.map((r: any) => ({
+    id: r.id ?? '',
+    rating: r.rating ?? 0,
+    text: r.text ?? r.comment ?? null,
+    createdAt: r.createdAt ?? '',
+    author: r.author ? { id: r.author.id, profile: { name: r.author.name ?? r.author.profile?.name ?? null, avatarUrl: r.author.avatar ?? r.author.profile?.avatarUrl ?? null } } : undefined,
+    metrics: r.metrics ?? r.structuredMetrics ? Object.entries(r.structuredMetrics || {}).map(([metricKey, value]) => ({ metricKey, value: Number(value) })) : undefined,
+  }))
+
+  const onReviewSubmitted = () => {
+    queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
+    queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })
   }
-  if (item.area != null && item.area > 0) specItems.push(`${item.area} м²`)
-  if (item.floor != null && item.floor > 0) {
-    specItems.push(
-      item.totalFloors != null && item.totalFloors > 0
-        ? `${item.floor} из ${item.totalFloors} этаж`
-        : `${item.floor} этаж`
-    )
+  const userAlreadyReviewed = allReviews.some((r: any) => (r.authorId ?? r.author?.id) === user?.id)
+
+  const ownerForLayout = {
+    id: ownerMerged.id,
+    name: ownerMerged.name ?? 'Пользователь',
+    avatar: ownerMerged.avatar ?? null,
+    rating: ownerMerged.rating ?? null,
+    reviewsCount: ownerMerged.reviewsCount ?? null,
   }
-  const amenityLabels = Array.isArray(item.amenities) ? item.amenities.map((a: any) => a?.amenity?.label ?? a?.key ?? '').filter(Boolean) : []
-  if (amenityLabels.some((l) => /кухн|kitchen/i.test(l))) specItems.push('есть кухня')
-  if (amenityLabels.some((l) => /сануз|bath|туалет/i.test(l))) specItems.push('есть санузел')
 
   return (
-    <ListingLayoutTZ10
+    <ListingLayout
       listingId={id}
       title={item.title ?? ''}
       city={item.city ?? ''}
-      district={item.district ?? item.addressLine ?? null}
       price={priceValue}
       rooms={item.bedrooms ?? null}
       area={item.area ?? null}
       floor={item.floor ?? null}
       totalFloors={item.totalFloors ?? null}
-      description={item.description ?? ''}
-      specItems={specItems}
+      aiScore={aiScore}
       photos={photos}
-      owner={ownerMerged}
+      description={item.description ?? ''}
+      amenities={amenities}
+      addressLine={item.addressLine ?? (item as any).address}
+      lat={(item as any).lat}
+      lng={(item as any).lng}
+      owner={ownerForLayout}
+      ratingAvg={ratingAvg}
+      reviewPercent={reviewPercent}
+      ratingCount={ratingCount}
+      ratingDistribution={ratingDistribution}
+      reviews={reviewsForLayout}
+      similarListings={similarListings}
+      isFavorite={isFavorite}
+      onFavoriteToggle={() => setIsFavorite((f) => !f)}
       onWrite={handleWrite}
+      onBook={handleBook}
+      writeLoading={writeLoading}
       onBookingConfirm={handleBookingConfirm}
+      reviewFilter={reviewFilter}
+      setReviewFilter={setReviewFilter}
+      metricFilter={metricFilter}
+      setMetricFilter={setMetricFilter}
+      loadMoreReviews={loadMoreReviews}
+      hasMoreReviews={hasMoreReviews}
+      reviewsLoadingMore={reviewsLoadingMore}
+      isReviewsLoading={isReviewsLoading}
+      onReviewSubmitted={onReviewSubmitted}
+      userAlreadyReviewed={userAlreadyReviewed}
+      isGalleryOpen={isGalleryOpen}
+      setGalleryOpen={setGalleryOpen}
+      activeImage={activeImage}
+      setActiveImage={setActiveImage}
     />
   )
 }

@@ -154,7 +154,8 @@ export function ListingLayout(props: ListingLayoutProps) {
           />
         </div>
 
-        <div className="grid md:grid-cols-[65fr_35fr] gap-6 md:gap-6 md:items-start">
+        {/* ТЗ восстановление: левая колонка — контент, правая — бронирование 360px */}
+        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:gap-6 md:items-start">
           {/* Основной контент */}
           <div className="space-y-6 md:space-y-[24px]">
             {/* 3. Основной инфо-блок */}
@@ -307,8 +308,8 @@ export function ListingLayout(props: ListingLayoutProps) {
             )}
           </div>
 
-          {/* ТЗ-8: Правая колонка (ПК) — блок бронирования 360px, sticky top 100px */}
-          <div className="listing-layout-booking-wrap-tz8 hidden md:block w-full min-w-0 max-w-[360px]">
+          {/* Правая колонка (ПК) — блок бронирования 360px */}
+          <div className="listing-layout-booking-wrap-tz8 hidden md:block w-full min-w-0 md:max-w-[360px]">
             <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
           </div>
         </div>

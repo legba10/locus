@@ -66,12 +66,10 @@ export function Gallery({
           'rounded-[16px]'
         )}
       >
-        {/* TZ-10: desktop — фикс. соотношение 16/9, max-height, без скачков; mobile без изменений */}
+        {/* ТЗ восстановление: фикс. aspect ratio 16/10, object-fit cover, не тянется */}
         <div
           className={cn(
-            'relative w-full select-none rounded-2xl overflow-hidden',
-            'aspect-[4/3]',
-            'lg:aspect-[16/9] lg:max-h-[520px] xl:max-h-[600px]'
+            'relative w-full select-none rounded-2xl overflow-hidden aspect-[16/10]'
           )}
           onClick={onOpenFullscreen}
           onTouchStart={onTouchStart}

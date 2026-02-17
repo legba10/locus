@@ -220,7 +220,7 @@
   height: 20px !important;
 }
 
-/* ТЗ-9: переключатель темы — 44x44, var(--card-bg), иконка 20px */
+/* ТЗ восстановление: переключатель темы без обводки, как остальные иконки */
 .layout-header__theme-toggle,
 .theme-toggle-tz9 {
   width: 44px;
@@ -229,15 +229,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text);
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  color: var(--text-main);
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 .layout-header__theme-toggle:hover,
 .theme-toggle-tz9:hover {
-  transform: scale(1.05);
+  opacity: 0.9;
 }
 .layout-header__theme-toggle svg,
 .theme-toggle-tz9 svg {

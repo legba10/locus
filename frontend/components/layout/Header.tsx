@@ -116,12 +116,12 @@ export function Header() {
       }}
     >
       <div className="layout-header__inner-tz2 mx-auto max-w-7xl h-full flex items-center justify-between">
-        {/* ТЗ-13: Слева — бургер, логотип. Одна точка входа в профиль — аватар справа. */}
+        {/* Слева: на ПК только логотип; на мобиле — бургер + логотип. Бургер только mobile. */}
         <div className="flex items-center gap-3 min-w-0">
           <IconButton
             onClick={() => setIsMenuOpen((prev) => !prev)}
             ariaLabel={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            className="md:hidden"
+            className="md:!hidden"
           >
             <span className="flex flex-col gap-1.5" aria-hidden>
               <span className="block w-5 h-0.5 bg-current rounded-full" />
@@ -135,18 +135,20 @@ export function Header() {
             className="logo-wrap shrink-0"
             aria-label="LOCUS — на главную"
           >
-            {/* ТЗ-1 (жёсткое): без img/Image в лого — только текст; исключаем битую иконку при загрузке */}
             <span className="logo-text">LOCUS</span>
           </Link>
         </div>
 
-        {/* ТЗ №2: header-actions — gap 8px; кнопки 44×44, аватар 36×36. */}
-        <div className="layout-header__right header-actions flex items-center shrink-0">
-          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden md:flex">
-            <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
+        {/* Справа ПК: поиск, сердце, сообщения, уведомления, тема, аватар, разместить. Отступ от логотипа. */}
+        <div className="layout-header__right header-actions flex items-center shrink-0 md:ml-6">
+          <IconButton as="a" href="/search" ariaLabel="Поиск" className="hidden md:flex">
+            <Search className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
           <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden md:flex">
             <Heart className="w-5 h-5" strokeWidth={1.8} />
+          </IconButton>
+          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden md:flex">
+            <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
           {authed && <NotificationsBell compactBadge />}
           <ThemeToggle />
@@ -156,6 +158,7 @@ export function Header() {
                 user={{ avatar_url: displayAvatar, full_name: displayName, username: user?.username }}
                 onClick={() => setProfileOpen((o) => !o)}
                 ariaExpanded={profileOpen}
+                size={44}
               />
               {profileOpen && (
                 <div
