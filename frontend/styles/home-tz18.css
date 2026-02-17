@@ -452,6 +452,102 @@
   z-index: 10;
 }
 
+/* ТЗ: финальное выравнивание — hero→filter 32px, единая колонка, grid, кнопки одной ширины */
+.home-filter-section-tz-final {
+  padding-top: 32px;
+}
+.home-filter-outer {
+  width: 100%;
+}
+.home-filter-block-tz-final {
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--card-bg, var(--surface));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+@media (max-width: 767px) {
+  .home-filter-block-tz-final {
+    padding: 16px;
+    margin-left: 12px;
+    margin-right: 12px;
+    max-width: none;
+    width: calc(100% - 24px);
+    box-sizing: border-box;
+  }
+}
+.home-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .home-filter-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.home-filter-grid__field {
+  min-width: 0;
+}
+.home-filter-grid__hint {
+  grid-column: 1 / -1;
+}
+.home-filter-btn-primary {
+  grid-column: 1 / -1;
+  height: 52px;
+  border-radius: 14px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent-gradient, linear-gradient(to right, #7c3aed, #4f46e5));
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.home-filter-btn-primary:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+.home-filter-btn-filters {
+  grid-column: 1 / -1;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.home-filter-btn-filters:hover {
+  background: var(--bg-soft, rgba(0, 0, 0, 0.04));
+}
+.home-filter-mode-wrap {
+  max-width: 520px;
+  margin: 20px auto 0;
+  display: flex;
+  justify-content: center;
+}
+.home-listings-spacing-tz-final {
+  margin-top: 32px;
+}
+
 /* ТЗ-17: отступы блоков — Hero→Filter 24px, Filter→Cities 40px, Cities→Listings 40px */
 .home-tz17-filter-spacing {
   padding-top: 24px !important;
@@ -512,7 +608,11 @@
 }
 .mode-switch__hint {
   color: var(--text-secondary);
-  margin-top: 8px;
+  margin-top: 12px;
+  max-width: 420px;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 [data-theme="dark"] .mode-switch__hint,
 .dark .mode-switch__hint {

@@ -358,17 +358,16 @@ export function HomePageV6() {
       {/* 1. Hero — кнопка скроллит к поиску, под кнопкой сразу поиск */}
       <Hero onCtaClick={handleHeroCta} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} selectedCity={city ?? ''} />
 
-      {/* ТЗ-17: 2. Фильтр сразу под hero, отступ 24px */}
-      <section id="home-filter" className="home-tz6-block home-filter-section-tz9 home-tz17-filter-spacing relative z-20" aria-label="Поиск жилья">
-        <div className="market-container home-search-wrap-tz12 home-search-wrap-tz18">
-          <div className={cn('home-search-block-tz12 home-filter-animate-tz10 rounded-2xl md:rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)]', shakeCities && 'search-flow-shake')}>
-            {/* Строка: Город | Бюджет | Тип (desktop) или столбик (mobile) */}
-            <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4 mb-3">
-              <div className="flex-1 min-w-0">
+      {/* ТЗ: финальное выравнивание — единая колонка: hero → фильтр → переключатель → подпись → список */}
+      <section id="home-filter" className="home-filter-section-tz-final home-filter-section-tz9 relative z-20" aria-label="Поиск жилья">
+        <div className="home-filter-outer">
+          <div className={cn('home-filter-block-tz-final home-search-block-tz12 home-filter-animate-tz10', shakeCities && 'search-flow-shake')}>
+            <div className="home-filter-grid">
+              <div className="home-filter-grid__field">
                 <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Город</label>
                 <CitySelect value={city ?? ''} onChange={(v) => { setCity(v || null); setShowCityHint(false) }} placeholder="Выберите город" className="w-full" autoFocus />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="home-filter-grid__field">
                 <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Бюджет</label>
                 <select
                   value={budgetMin !== '' && budgetMax !== '' ? `${budgetMin}-${budgetMax}` : ''}
@@ -388,7 +387,7 @@ export function HomePageV6() {
                   ))}
                 </select>
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="home-filter-grid__field">
                 <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1.5">Тип жилья</label>
                 <select
                   value={Array.isArray(type) ? type[0] ?? '' : (type ?? '')}
@@ -400,18 +399,16 @@ export function HomePageV6() {
                   ))}
                 </select>
               </div>
-            </div>
-            {showCityHint && (
-              <p className="text-[14px] text-[var(--sub)] mb-3 rounded-xl px-4 py-2 bg-[var(--bg-secondary)] text-center" role="alert">
-                Сначала выберите город
-              </p>
-            )}
-            <div className="flex flex-col sm:flex-row gap-3">
+              {showCityHint && (
+                <p className="home-filter-grid__hint text-[14px] text-[var(--sub)] rounded-xl px-4 py-2 bg-[var(--bg-secondary)] text-center" role="alert">
+                  Сначала выберите город
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handlePrimarySearch}
                 disabled={searching}
-                className="search-btn-show-tz18 search-hero-submit-tz7-compact w-full sm:flex-1 order-1 flex items-center justify-center gap-2"
+                className="home-filter-btn-primary"
               >
                 {searching ? (
                   <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
@@ -422,7 +419,7 @@ export function HomePageV6() {
               <button
                 type="button"
                 onClick={() => setFilterSheetOpen(true)}
-                className="search-btn-filters-tz18 w-full sm:w-auto flex items-center justify-center gap-2 px-4 border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text)] font-medium text-[14px] order-2"
+                className="home-filter-btn-filters"
                 aria-label="Расширенные фильтры"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
@@ -431,8 +428,7 @@ export function HomePageV6() {
             </div>
           </div>
 
-          {/* ТЗ-2: единый segment Ручной | AI-подбор + подсказка ? (tooltip/popover) */}
-          <div className="mt-4">
+          <div className="home-filter-mode-wrap">
             <ModeSwitchBlock aiMode={aiMode} onChange={setAiMode} />
           </div>
 
@@ -505,8 +501,8 @@ export function HomePageV6() {
         </div>
       </section>
 
-      {/* ТЗ-21: 3. Актуальные предложения — сразу после фильтра */}
-      <section id="listings" className="home-tz6-block home-tz17-listings-spacing bg-transparent animate-fade-in scroll-mt-4">
+      {/* ТЗ: подпись → список 32px */}
+      <section id="listings" className="home-tz6-block home-listings-spacing-tz-final bg-transparent animate-fade-in scroll-mt-4">
         <div className="market-container">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6 md:mb-8">
             <div>
