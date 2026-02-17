@@ -12,11 +12,16 @@ export class AdminService {
   ) {}
 
   /**
-   * Get dashboard stats + economy (GMV, доход, конверсия, отмены, сообщения)
+   * Get dashboard stats + economy. ТЗ-5: flat shape + last 7 days + backward compat.
    */
   async getStats() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
     const [
       totalUsers,
+      activeUsers,
       totalListings,
       pendingListings,
       publishedListings,
@@ -27,8 +32,12 @@ export class AdminService {
       totalViews,
       messagesCount,
       revenueResult,
+      usersLast7,
+      listingsLast7,
+      bookingsLast7,
     ] = await Promise.all([
       this.prisma.user.count(),
+      this.prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
       this.prisma.listing.count(),
       this.prisma.listing.count({ where: { status: ListingStatus.PENDING_REVIEW } }),
       this.prisma.listing.count({ where: { status: ListingStatus.PUBLISHED } }),
@@ -51,6 +60,9 @@ export class AdminService {
           return 0;
         }
       })(),
+      this.prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.prisma.listing.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.prisma.booking.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
     ]);
 
     const gmv = gmvResult._sum?.totalPrice ?? 0;
@@ -61,7 +73,19 @@ export class AdminService {
     const averageOrder = confirmedBookings > 0 ? Math.round(gmv / confirmedBookings) : 0;
 
     return {
-      users: { total: totalUsers },
+      users_total: totalUsers,
+      users_active: activeUsers,
+      listings_total: totalListings,
+      listings_active: publishedListings,
+      bookings_total: totalBookings,
+      bookings_confirmed: confirmedBookings,
+      revenue_total: revenue,
+      gmv_total: gmv,
+      avg_check: averageOrder,
+      users_last_7_days: usersLast7,
+      listings_last_7_days: listingsLast7,
+      bookings_last_7_days: bookingsLast7,
+      users: { total: totalUsers, active: activeUsers },
       listings: { total: totalListings, pending: pendingListings, published: publishedListings },
       bookings: { total: totalBookings, confirmed: confirmedBookings, canceled: canceledBookings },
       economy: {
@@ -74,6 +98,57 @@ export class AdminService {
         messagesCount,
       },
     };
+  }
+
+  /**
+   * Последние действия: 10 последних событий (новый пользователь, объявление, бронь).
+   */
+  async getRecentActivity(limit = 10) {
+    const [recentUsers, recentListings, recentBookings] = await Promise.all([
+      this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, createdAt: true, email: true },
+      }),
+      this.prisma.listing.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, createdAt: true, title: true },
+      }),
+      this.prisma.booking.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, createdAt: true },
+      }),
+    ]);
+
+    const events: { type: 'user' | 'listing' | 'booking'; id: string; date: string; label: string }[] = [];
+    recentUsers.forEach((u) => {
+      events.push({
+        type: 'user',
+        id: u.id,
+        date: u.createdAt.toISOString(),
+        label: u.email || 'Новый пользователь',
+      });
+    });
+    recentListings.forEach((l) => {
+      events.push({
+        type: 'listing',
+        id: l.id,
+        date: l.createdAt.toISOString(),
+        label: l.title || 'Новое объявление',
+      });
+    });
+    recentBookings.forEach((b) => {
+      events.push({
+        type: 'booking',
+        id: b.id,
+        date: b.createdAt.toISOString(),
+        label: 'Новая бронь',
+      });
+    });
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return events.slice(0, limit);
   }
 
   /**

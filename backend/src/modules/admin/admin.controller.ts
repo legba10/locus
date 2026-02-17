@@ -33,6 +33,33 @@ export class AdminController {
     return this.adminService.getStatsCharts(days ? parseInt(days, 10) : 30);
   }
 
+  @Get('stats/revenue-chart')
+  @ApiOperation({ summary: 'Revenue by day (30 days)' })
+  async getRevenueChart(@Req() req: any, @Query('days') days?: string) {
+    const charts = await this.adminService.getStatsCharts(days ? parseInt(days, 10) : 30);
+    return charts.revenue;
+  }
+
+  @Get('stats/users-chart')
+  @ApiOperation({ summary: 'New users by day (30 days)' })
+  async getUsersChart(@Req() req: any, @Query('days') days?: string) {
+    const charts = await this.adminService.getStatsCharts(days ? parseInt(days, 10) : 30);
+    return charts.newUsers;
+  }
+
+  @Get('stats/bookings-chart')
+  @ApiOperation({ summary: 'Bookings by day (30 days)' })
+  async getBookingsChart(@Req() req: any, @Query('days') days?: string) {
+    const charts = await this.adminService.getStatsCharts(days ? parseInt(days, 10) : 30);
+    return charts.bookings;
+  }
+
+  @Get('stats/activity')
+  @ApiOperation({ summary: 'Last 10 activity events (admin only)' })
+  async getActivity(@Req() req: any, @Query('limit') limit?: string) {
+    return this.adminService.getRecentActivity(limit ? parseInt(limit, 10) : 10);
+  }
+
   @Get('listings/pending')
   @ApiOperation({ summary: 'Get listings pending moderation (admin only)' })
   async getPendingListings(@Req() req: any, @Query('limit') limit?: string) {

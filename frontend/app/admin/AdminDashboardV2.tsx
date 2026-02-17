@@ -11,10 +11,23 @@ import { apiFetch } from '@/shared/utils/apiFetch'
 type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'chats' | 'settings'
 const ADMIN_TAB_IDS: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
 
+/** ТЗ-5: flat + nested from GET /admin/stats */
 interface AdminStats {
-  users: { total: number }
-  listings: { total: number; pending: number; published: number }
-  bookings: { total: number; confirmed?: number; canceled?: number }
+  users_total?: number
+  users_active?: number
+  listings_total?: number
+  listings_active?: number
+  bookings_total?: number
+  bookings_confirmed?: number
+  revenue_total?: number
+  gmv_total?: number
+  avg_check?: number
+  users_last_7_days?: number
+  listings_last_7_days?: number
+  bookings_last_7_days?: number
+  users?: { total: number; active?: number }
+  listings?: { total: number; pending: number; published: number }
+  bookings?: { total: number; confirmed?: number; canceled?: number }
   economy?: {
     gmv: number
     revenue: number
@@ -24,6 +37,13 @@ interface AdminStats {
     conversion: number
     messagesCount: number
   }
+}
+
+interface ActivityEvent {
+  type: 'user' | 'listing' | 'booking'
+  id: string
+  date: string
+  label: string
 }
 
 interface ChartPoint {
@@ -153,26 +173,32 @@ export function AdminDashboardV2() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ДАШБОРД — Real API data
+// ДАШБОРД — ТЗ-5: реальная статистика, skeleton, обновить, активность
 // ═══════════════════════════════════════════════════════════════
 function DashboardTab() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [charts, setCharts] = useState<AdminCharts | null>(null)
+  const [activity, setActivity] = useState<ActivityEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsData, chartsData] = await Promise.all([
+      const [statsData, chartsData, activityData] = await Promise.all([
         apiFetch<AdminStats>('/admin/stats'),
         apiFetch<AdminCharts>('/admin/stats/charts?days=30').catch(() => null),
+        apiFetch<ActivityEvent[]>('/admin/stats/activity?limit=10').catch(() => []),
       ])
       setStats(statsData)
       setCharts(chartsData)
+      setActivity(Array.isArray(activityData) ? activityData : [])
+      setError(null)
     } catch (err) {
       setError(String(err))
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [])
 
@@ -185,89 +211,164 @@ function DashboardTab() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) return <div className="text-center py-8 text-[var(--admin-text-secondary)]">Загрузка...</div>
-  if (error) return <div className="text-center py-8 text-red-400">Ошибка: {error}</div>
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchData()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col admin-gap-section">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[18px] font-bold text-[var(--admin-text-primary)]">Дашборд</h2>
+        </div>
+        <section className="admin-metrics-grid">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="admin-card admin-metric-card min-h-[110px] animate-pulse">
+              <div className="h-8 w-8 rounded-lg bg-[var(--admin-input-bg)] mb-2" />
+              <div className="h-6 w-16 rounded bg-[var(--admin-input-bg)]" />
+              <div className="h-4 w-24 rounded bg-[var(--admin-input-bg)] mt-2" />
+            </div>
+          ))}
+        </section>
+        <div className="text-center py-6 text-[var(--admin-text-secondary)]">Загрузка данных...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="text-center py-8 text-red-400">Ошибка: {error}</div>
+        <button type="button" onClick={handleRefresh} className="mx-auto px-4 py-2 rounded-xl bg-violet-600 text-white text-[14px] font-medium">
+          Обновить
+        </button>
+      </div>
+    )
+  }
+
   if (!stats) return null
 
-  const econ = stats.economy
-  const revenueData = charts?.revenue?.length ? charts.revenue.map((r) => r.value ?? 0) : []
+  const s = stats
+  const econ = s.economy
+  const usersTotal = s.users_total ?? s.users?.total ?? 0
+  const usersActive = s.users_active ?? s.users?.active ?? usersTotal
+  const listingsTotal = s.listings_total ?? s.listings?.total ?? 0
+  const listingsActive = s.listings_active ?? s.listings?.published ?? 0
+  const bookingsTotal = s.bookings_total ?? s.bookings?.total ?? 0
+  const bookingsConfirmed = s.bookings_confirmed ?? s.bookings?.confirmed ?? 0
+  const revenueTotal = s.revenue_total ?? econ?.revenue ?? 0
+  const gmvTotal = s.gmv_total ?? econ?.gmv ?? 0
+  const avgCheck = s.avg_check ?? econ?.averageOrder ?? 0
+  const usersLast7 = s.users_last_7_days ?? 0
+  const listingsLast7 = s.listings_last_7_days ?? 0
+  const bookingsLast7 = s.bookings_last_7_days ?? 0
+
+  const revenueData = charts?.revenue?.length ? charts.revenue.map((r) => r.value ?? 0) : Array(30).fill(0)
+  const bookingsChartData = charts?.bookings?.length ? charts.bookings.map((b) => b.count) : Array(30).fill(0)
+  const usersChartData = charts?.newUsers?.length ? charts.newUsers.map((u) => u.count) : Array(30).fill(0)
   const revenueMax = Math.max(...revenueData, 1)
+  const bookingsMax = Math.max(...bookingsChartData, 1)
+  const usersMax = Math.max(...usersChartData, 1)
 
   return (
     <div className="flex flex-col admin-gap-section">
-      {/* ТЗ-4: сетка метрик — 4/2/1 cols, gap 16px, карточки 110px */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-[18px] font-bold text-[var(--admin-text-primary)]">Дашборд</h2>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="px-4 py-2 rounded-xl bg-[var(--admin-input-bg)] text-[var(--admin-text-primary)] text-[14px] font-medium border border-[var(--admin-card-border)] hover:bg-[var(--admin-row-hover)] disabled:opacity-60"
+        >
+          {refreshing ? 'Обновление…' : 'Обновить'}
+        </button>
+      </div>
+
+      {/* 1. Метрики — реальные значения, подпись +X за 7 дней */}
       <section className="admin-metrics-grid">
-        <StatCard title="Пользователей" value={stats.users.total} color="blue" />
-        <StatCard title="Объявления" value={stats.listings.total} color="emerald" />
-        <StatCard title="На модерации" value={stats.listings.pending} color="amber" />
-        <StatCard title="Опубликовано" value={stats.listings.published} color="violet" />
-        <StatCard title="Брони" value={stats.bookings.total} color="blue" />
-        <StatCard title="Отмены" value={stats.bookings.canceled ?? 0} color="red" />
-        {econ && (
-          <>
-            <StatCard title="Выручка" value={econ.revenue} color="emerald" format="price" />
-            <StatCard title="Комиссия" value={econ.commission ?? econ.revenue} color="emerald" format="price" />
-            <StatCard title="GMV" value={econ.gmv} color="violet" format="price" />
-            <StatCard title="Средний чек" value={econ.averageOrder ?? 0} color="violet" format="price" />
-            <StatCard title="Просмотры" value={econ.totalViews} color="blue" />
-            <StatCard title="Конверсия %" value={econ.conversion} color="emerald" format="percent" />
-            <StatCard title="Сообщения" value={econ.messagesCount} color="violet" />
-          </>
-        )}
+        <StatCard title="Пользователей" value={usersTotal} subtitle={usersLast7 > 0 ? `+${usersLast7} за 7 дней` : undefined} color="blue" />
+        <StatCard title="Активных пользователей" value={usersActive} color="blue" />
+        <StatCard title="Объявлений" value={listingsTotal} subtitle={listingsLast7 > 0 ? `+${listingsLast7} за 7 дней` : undefined} color="emerald" />
+        <StatCard title="Активных объявлений" value={listingsActive} color="emerald" />
+        <StatCard title="Бронирований" value={bookingsTotal} subtitle={bookingsLast7 > 0 ? `+${bookingsLast7} за 7 дней` : undefined} color="blue" />
+        <StatCard title="Подтверждённых броней" value={bookingsConfirmed} color="violet" />
+        <StatCard title="GMV" value={gmvTotal} color="violet" format="price" />
+        <StatCard title="Доход платформы" value={revenueTotal} color="emerald" format="price" />
+        <StatCard title="Комиссия" value={econ?.commission ?? revenueTotal} color="emerald" format="price" />
+        <StatCard title="Средний чек" value={avgCheck} color="violet" format="price" />
+        <StatCard title="Просмотры" value={econ?.totalViews ?? 0} color="blue" />
+        <StatCard title="Конверсия %" value={econ?.conversion ?? 0} color="emerald" format="percent" />
+        <StatCard title="Сообщения" value={econ?.messagesCount ?? 0} color="violet" />
       </section>
 
-      {charts && (revenueData.length > 0 || (charts.bookings?.length ?? 0) > 0 || (charts.newUsers?.length ?? 0) > 0) && (
-        <section className="grid grid-cols-1 lg:grid-cols-3 admin-gap-block">
-          {revenueData.length > 0 && (
-            <div className="admin-card w-full min-w-0">
-              <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Доход по дням (30 дн.)</h3>
-              <div className="admin-chart-wrap">
-                <SimpleBarChart data={revenueData} max={revenueMax} color="bg-emerald-500" height={220} />
-              </div>
-            </div>
-          )}
-          {charts.bookings && charts.bookings.length > 0 && (
-            <div className="admin-card w-full min-w-0">
-              <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Брони по дням (30 дн.)</h3>
-              <div className="admin-chart-wrap">
-                <SimpleBarChart data={charts.bookings.map((b) => b.count)} max={Math.max(...charts.bookings.map((b) => b.count), 1)} color="bg-violet-500" height={220} />
-              </div>
-            </div>
-          )}
-          {charts.newUsers && charts.newUsers.length > 0 && (
-            <div className="admin-card w-full min-w-0">
-              <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Новые пользователи (30 дн.)</h3>
-              <div className="admin-chart-wrap">
-                <SimpleBarChart data={charts.newUsers.map((u) => u.count)} max={Math.max(...charts.newUsers.map((u) => u.count), 1)} color="bg-blue-500" height={220} />
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {econ && (
-        <section className="admin-card overflow-hidden p-0">
-          <h3 className="text-[16px] font-semibold text-[var(--admin-text-primary)] p-4 border-b border-[var(--admin-card-border)]">Юнит-экономика</h3>
-          <div className="admin-table-wrapper">
-            <table className="admin-table w-full text-[14px]">
-              <thead>
-                <tr>
-                  <th className="p-3 font-medium">Метрика</th>
-                  <th className="p-3 font-medium">Значение</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td className="p-3">Total revenue</td><td className="p-3 font-medium">{formatPrice(econ.revenue)}</td></tr>
-                <tr><td className="p-3">Комиссия</td><td className="p-3 font-medium">{formatPrice(econ.commission ?? econ.revenue)}</td></tr>
-                <tr><td className="p-3">Средний чек</td><td className="p-3 font-medium">{econ.averageOrder ? formatPrice(econ.averageOrder) : '—'}</td></tr>
-                <tr><td className="p-3">Брони (подтверждённые)</td><td className="p-3">{stats.bookings.confirmed ?? 0}</td></tr>
-                <tr><td className="p-3">Конверсия</td><td className="p-3">{econ.totalViews ? (econ.conversion).toFixed(2) + '%' : '—'}</td></tr>
-                <tr><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(econ.gmv)}</td></tr>
-              </tbody>
-            </table>
+      {/* 2. Графики — всегда показываем, данные из API или нули */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 admin-gap-block">
+        <div className="admin-card w-full min-w-0">
+          <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Доход по дням (30 дн.)</h3>
+          <div className="admin-chart-wrap">
+            <SimpleBarChart data={revenueData.slice(-14)} max={revenueMax} color="bg-emerald-500" height={220} />
           </div>
-        </section>
-      )}
+        </div>
+        <div className="admin-card w-full min-w-0">
+          <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Брони по дням (30 дн.)</h3>
+          <div className="admin-chart-wrap">
+            <SimpleBarChart data={bookingsChartData.slice(-14)} max={bookingsMax} color="bg-violet-500" height={220} />
+          </div>
+        </div>
+        <div className="admin-card w-full min-w-0">
+          <h3 className="text-[14px] font-semibold text-[var(--admin-text-primary)] mb-3">Новые пользователи (30 дн.)</h3>
+          <div className="admin-chart-wrap">
+            <SimpleBarChart data={usersChartData.slice(-14)} max={usersMax} color="bg-blue-500" height={220} />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Таблица юнит-экономики */}
+      <section className="admin-card overflow-hidden p-0">
+        <h3 className="text-[16px] font-semibold text-[var(--admin-text-primary)] p-4 border-b border-[var(--admin-card-border)]">Юнит-экономика</h3>
+        <div className="admin-table-wrapper">
+          <table className="admin-table w-full text-[14px]">
+            <thead>
+              <tr>
+                <th className="p-3 font-medium">Метрика</th>
+                <th className="p-3 font-medium">Значение</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td className="p-3">Доход</td><td className="p-3 font-medium">{formatPrice(revenueTotal)}</td></tr>
+              <tr><td className="p-3">Комиссия</td><td className="p-3 font-medium">{formatPrice(econ?.commission ?? revenueTotal)}</td></tr>
+              <tr><td className="p-3">Средний чек</td><td className="p-3 font-medium">{formatPrice(avgCheck)}</td></tr>
+              <tr><td className="p-3">Брони (подтверждённые)</td><td className="p-3">{bookingsConfirmed}</td></tr>
+              <tr><td className="p-3">Конверсия %</td><td className="p-3">{(econ?.conversion ?? 0).toFixed(2)}%</td></tr>
+              <tr><td className="p-3">GMV</td><td className="p-3 font-medium">{formatPrice(gmvTotal)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Последние действия */}
+      <section className="admin-card overflow-hidden p-0">
+        <h3 className="text-[16px] font-semibold text-[var(--admin-text-primary)] p-4 border-b border-[var(--admin-card-border)]">Последние действия</h3>
+        <ul className="divide-y divide-[var(--admin-card-border)]">
+          {activity.length === 0 ? (
+            <li className="p-4 text-[var(--admin-text-muted)] text-[14px]">Нет событий</li>
+          ) : (
+            activity.map((ev) => (
+              <li key={`${ev.type}-${ev.id}`} className="flex items-center justify-between gap-3 p-4">
+                <span className="text-[var(--admin-text-secondary)] text-[14px] truncate">{ev.label}</span>
+                <span className="text-[var(--admin-text-muted)] text-[12px] shrink-0">
+                  {ev.type === 'user' && 'Пользователь'}
+                  {ev.type === 'listing' && 'Объявление'}
+                  {ev.type === 'booking' && 'Бронь'}
+                  {' · '}
+                  {new Date(ev.date).toLocaleString('ru')}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
     </div>
   )
 }
@@ -284,7 +385,7 @@ function SimpleBarChart({ data, max, color, height = 96 }: { data: number[]; max
   )
 }
 
-function StatCard({ title, value, color, format }: { title: string; value: number; color: string; format?: 'price' | 'percent' }) {
+function StatCard({ title, value, color, format, subtitle }: { title: string; value: number; color: string; format?: 'price' | 'percent'; subtitle?: string }) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-500/20 text-blue-300',
     emerald: 'bg-emerald-500/20 text-emerald-300',
@@ -302,6 +403,7 @@ function StatCard({ title, value, color, format }: { title: string; value: numbe
       </div>
       <p className="text-[18px] sm:text-[22px] font-bold text-[var(--admin-text-primary)] truncate" title={String(display)}>{display}</p>
       <p className="text-[12px] text-[var(--admin-text-secondary)] mt-0.5">{title}</p>
+      {subtitle && <p className="text-[11px] text-[var(--admin-text-muted)] mt-0.5">{subtitle}</p>}
     </div>
   )
 }
