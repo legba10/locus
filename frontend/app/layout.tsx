@@ -6,6 +6,7 @@ import { Footer } from '@/shared/ui/Footer'
 import ThemeProvider from '@/providers/ThemeProvider'
 import ErrorBoundaryWrapper from './ErrorBoundaryWrapper'
 import ModalRoot from './ModalRoot'
+import { SearchOverlay } from '@/components/search/SearchOverlay'
 import '../styles/globals.css'
 
 const ReviewReminderPopup = dynamic(() => import('@/components/reviews/ReviewReminderPopup').then((m) => ({ default: m.ReviewReminderPopup })), { ssr: false })
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <main className="flex-1 main-with-header">{children}</main>
                 <Footer />
                 <ModalRoot />
+                <SearchOverlay />
                 <ReviewReminderPopup />
                 <GeoInit />
               </div>

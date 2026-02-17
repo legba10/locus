@@ -12,6 +12,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
 import { MobileMenu } from './MobileMenu'
+import { useSearchOverlayStore } from '@/core/searchOverlay/searchOverlayStore'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 const iconSm = 'w-[18px] h-[18px] shrink-0'
@@ -59,6 +60,7 @@ export function Header() {
   const authed = isAuthenticated()
   const themeContext = useContext(ThemeContext)
   const isDark = themeContext?.resolvedTheme === 'dark'
+  const openSearchOverlay = useSearchOverlayStore((s) => s.open)
 
   useEffect(() => {
     if (!profileOpen) return
@@ -150,11 +152,11 @@ export function Header() {
 
         {/* Справа: по ТЗ — Desktop: search input, favorites, messages, notifications, theme, avatar. Tablet: search icon, notifications, avatar. Mobile: search icon, avatar. */}
         <div className="layout-header__right header-actions flex items-center shrink-0 gap-3 xl:gap-3 xl:ml-6">
-          {/* Поиск: на mobile/tablet — только иконка (fullscreen через переход на /search). На desktop — поле ввода. */}
-          <IconButton as="a" href="/search" ariaLabel="Поиск" className="flex xl:hidden">
+          {/* Поиск: клик по иконке или отправка формы открывает единый fullscreen search overlay. */}
+          <IconButton onClick={() => openSearchOverlay()} ariaLabel="Поиск" className="flex xl:hidden">
             <Search className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          <form action="/search" method="get" className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value; if (q?.trim()) { e.preventDefault(); router.push(`/search?q=${encodeURIComponent(q.trim())}`); } }}>
+          <form className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value?.trim() ?? ''; openSearchOverlay(q); }}>
             <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
           </form>
           <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden xl:flex">
