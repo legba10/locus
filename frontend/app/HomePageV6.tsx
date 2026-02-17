@@ -85,12 +85,17 @@ export function HomePageV6() {
     const el = document.getElementById('home-filter')
     searchSectionRef.current = el
     if (!el) return
+    let rafId = 0
     const obs = new IntersectionObserver(
-      ([e]) => setStickySearchVisible(!e.isIntersecting),
+      ([e]) => {
+        const visible = !e.isIntersecting
+        if (rafId) cancelAnimationFrame(rafId)
+        rafId = requestAnimationFrame(() => setStickySearchVisible(visible))
+      },
       { threshold: 0, rootMargin: '-80px 0px 0px 0px' }
     )
     obs.observe(el)
-    return () => obs.disconnect()
+    return () => { obs.disconnect(); if (rafId) cancelAnimationFrame(rafId) }
   }, [])
 
   /** ТЗ-5: при открытых фильтрах блокировать скролл body (desktop dropdown и mobile sheet) */
@@ -201,33 +206,36 @@ export function HomePageV6() {
     setShowAIWizard(true)
   }
 
+  /** Стабилизация: отложенный запуск после первого кадра — не блокируем отрисовку */
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const aiPopupClosed = localStorage.getItem('ai_popup_closed') === '1'
-    if (aiPopupClosed) {
-      setShowOnboarding(false)
+    const run = () => {
+      const aiPopupClosed = localStorage.getItem('ai_popup_closed') === '1'
+      if (aiPopupClosed) setShowOnboarding(false)
+      const seen = localStorage.getItem('onboarding_seen') === 'true'
+      const prefsRaw = localStorage.getItem('user.preferences')
+      if (!seen && !aiPopupClosed) {
+        setShowOnboarding(true)
+        return
+      }
+      if (prefsRaw) {
+        try {
+          const prefs = JSON.parse(prefsRaw) as UserPrefs
+          if (prefs.city) useFilterStore.getState().setCity(prefs.city)
+          if (prefs.budget) {
+            const [min, max] = (prefs.budget || '').split('-').map((x) => (x ? Number(x.replace(/\s/g, '')) : ''))
+            useFilterStore.getState().setBudget(min === undefined || min === '' ? '' : min, max === undefined || max === '' ? '' : max)
+          }
+          if (prefs.period) useFilterStore.setState({ duration: prefs.period === 'long' ? 'long' : prefs.period === 'short' ? 'short' : '' })
+        } catch (_) {}
+      }
+      const viewed = Number(localStorage.getItem('locus_viewed_count') || '0')
+      setViewsCount(Number.isFinite(viewed) ? viewed : 0)
+      const firstMatchSeen = localStorage.getItem('locus_first_match_seen') === 'true'
+      setHighlightFirstCard(!firstMatchSeen)
     }
-    const seen = localStorage.getItem('onboarding_seen') === 'true'
-    const prefsRaw = localStorage.getItem('user.preferences')
-    if (!seen && !aiPopupClosed) {
-      setShowOnboarding(true)
-      return
-    }
-    if (prefsRaw) {
-      try {
-        const prefs = JSON.parse(prefsRaw) as UserPrefs
-        if (prefs.city) useFilterStore.getState().setCity(prefs.city)
-        if (prefs.budget) {
-          const [min, max] = (prefs.budget || '').split('-').map((x) => (x ? Number(x.replace(/\s/g, '')) : ''))
-          useFilterStore.getState().setBudget(min === undefined || min === '' ? '' : min, max === undefined || max === '' ? '' : max)
-        }
-        if (prefs.period) useFilterStore.setState({ duration: prefs.period === 'long' ? 'long' : prefs.period === 'short' ? 'short' : '' })
-      } catch (_) {}
-    }
-    const viewed = Number(localStorage.getItem('locus_viewed_count') || '0')
-    setViewsCount(Number.isFinite(viewed) ? viewed : 0)
-    const firstMatchSeen = localStorage.getItem('locus_first_match_seen') === 'true'
-    setHighlightFirstCard(!firstMatchSeen)
+    const id = typeof window !== 'undefined' && window.requestIdleCallback ? window.requestIdleCallback(run, { timeout: 200 }) : setTimeout(run, 0)
+    return () => { if (typeof window !== 'undefined' && window.cancelIdleCallback) window.cancelIdleCallback(id as number); else clearTimeout(id as unknown as number) }
   }, [])
 
   /** ТЗ-20: закрытие фильтра по Escape */
@@ -277,15 +285,17 @@ export function HomePageV6() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const lastSeen = Number(localStorage.getItem('locus_last_activity') || '0')
-    const now = Date.now()
-    const twoDays = 2 * 24 * 60 * 60 * 1000
-    if (lastSeen > 0 && now - lastSeen > twoDays && 'Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification('Новые варианты под ваш бюджет')
-      } catch {}
+    const run = () => {
+      const lastSeen = Number(localStorage.getItem('locus_last_activity') || '0')
+      const now = Date.now()
+      const twoDays = 2 * 24 * 60 * 60 * 1000
+      if (lastSeen > 0 && now - lastSeen > twoDays && 'Notification' in window && Notification.permission === 'granted') {
+        try { new Notification('Новые варианты под ваш бюджет') } catch {}
+      }
+      localStorage.setItem('locus_last_activity', String(now))
     }
-    localStorage.setItem('locus_last_activity', String(now))
+    const id = window.requestIdleCallback ? window.requestIdleCallback(run, { timeout: 500 }) : setTimeout(run, 100)
+    return () => (window.cancelIdleCallback?.(id) ?? clearTimeout(id as unknown as number))
   }, [])
 
   const listingCount = data?.items?.length ?? 0
