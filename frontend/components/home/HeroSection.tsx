@@ -19,7 +19,7 @@ export function HeroSection({
 }) {
   return (
     <section
-      className="hero hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 hero-tz16 relative overflow-hidden bg-[var(--background)]"
+      className="hero hero-bg hero-section-tz4 hero-section-tz11 hero-tz17 hero-tz3 hero-tz16 relative overflow-hidden bg-[var(--background)]"
       aria-label="Главный экран"
     >
       <div className="hero-container relative z-10 mx-auto max-w-[1200px] px-5 md:px-6 flex flex-col items-center text-center">

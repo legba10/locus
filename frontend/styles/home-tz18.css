@@ -57,6 +57,49 @@
   margin: 0 auto;
 }
 
+/* ТЗ: Фоновые узоры hero — едва заметный паттерн карты/города */
+.hero-bg {
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/patterns/map-pattern.svg");
+  background-size: 900px;
+  background-repeat: repeat;
+  opacity: 0.07;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.2),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.2),
+    transparent
+  );
+}
+[data-theme="dark"] .hero-bg::before,
+.dark .hero-bg::before {
+  background-image: url("/patterns/map-pattern-dark.svg");
+  opacity: 0.06;
+}
+@media (max-width: 767px) {
+  .hero-bg::before {
+    background-size: 700px;
+    opacity: 0.05;
+  }
+  [data-theme="dark"] .hero-bg::before,
+  .dark .hero-bg::before {
+    opacity: 0.05;
+  }
+}
+
 /* ═══ 2. Hero типографика (дополнение к компоненту) ═══ */
 .hero-tz18-title {
   font-size: 32px;
