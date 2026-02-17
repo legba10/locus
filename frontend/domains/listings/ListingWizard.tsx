@@ -7,15 +7,22 @@ import { apiFetch, apiFetchJson } from "@/shared/utils/apiFetch";
 import { CityInput } from "@/shared/components/CityInput";
 import { useAuthStore } from "@/domains/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { PhotoUploader } from "@/components/listing/PhotoUploader";
+import type { ListingPhotoTag } from "@/components/listing/photo-upload-types";
+import { REQUIRED_TAGS } from "@/components/listing/photo-upload-types";
+import { ModeSelect, type ListingMode } from "@/components/listing/ModeSelect";
+import { AiLoader } from "@/components/listing/AiLoader";
+import { mockAnalyzePhotos } from "@/components/listing/mockAi";
 
 type WizardStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-type ExistingPhoto = { id: string; url: string };
+type ExistingPhoto = { id: string; url: string; tag?: ListingPhotoTag };
 
 type NewPhoto = {
   id: string;
   file: File;
   previewUrl: string;
+  tag: ListingPhotoTag;
 };
 
 type WizardData = {
@@ -74,7 +81,7 @@ function defaultData(): WizardData {
 }
 
 function clampFiles(files: File[]): File[] {
-  return files.filter(Boolean).slice(0, 10);
+  return files.filter(Boolean).slice(0, 12);
 }
 
 function uuid(): string {
@@ -90,10 +97,18 @@ function stepLabel(step: WizardStep, isEdit: boolean): string {
   return labels[step] ?? "";
 }
 
-function validateStep(step: WizardStep, d: WizardData, isEdit: boolean): string | null {
+function validateStep(step: WizardStep, d: WizardData, isEdit: boolean, mode: ListingMode | null): string | null {
   const photoCount = d.newPhotos.length + d.existingPhotos.length;
   if (step === 1) {
+    // ТЗ №5: в режиме manual можно без фото
+    if (mode === "manual" && !isEdit) return null;
     if (photoCount < 5) return "Добавьте минимум 5 фото (комната и санузел обязательны)";
+    const tags = [
+      ...d.newPhotos.map((p) => p.tag),
+      ...d.existingPhotos.map((p) => p.tag ?? "other"),
+    ];
+    if (!REQUIRED_TAGS.every((t) => tags.includes(t)))
+      return "Добавьте минимум 5 фото (комната и санузел обязательны)";
   }
   if (step === 2) {
     if (!d.city.trim()) return "Выберите город";
@@ -135,6 +150,9 @@ export function ListingWizard({
   const [data, setData] = useState<WizardData>(() => defaultData());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** ТЗ №5: режим размещения. null = экран выбора режима */
+  const [mode, setMode] = useState<ListingMode | null>(null);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const topRef = useRef<HTMLDivElement | null>(null);
 
   // Mobile UX: scroll to top on step change
@@ -227,7 +245,7 @@ export function ListingWizard({
     setData({
       newPhotos: [],
       existingPhotos: Array.isArray(initialListing.photos)
-        ? initialListing.photos.map((p: any) => ({ id: p.id, url: p.url }))
+        ? initialListing.photos.map((p: any) => ({ id: p.id, url: p.url, tag: "other" as ListingPhotoTag }))
         : [],
       coverPhotoIndex: 0,
       title: initialListing.title ?? "",
@@ -261,10 +279,28 @@ export function ListingWizard({
     };
   }, [data.newPhotos]);
 
+  // ТЗ №5: для manual поток 0 → 2,3,4,5,6 → 1 (фото) → 7
   const totalSteps = isEdit ? 7 : 8;
-  const currentStepIndex = isEdit ? step : step + 1;
+  const flowStepIndex = useMemo(() => {
+    if (isEdit) return step - 1; // 1..7 → 0..6
+    if (mode === "manual") {
+      const order = [0, 2, 3, 4, 5, 6, 1, 7] as const;
+      const i = order.indexOf(step as (typeof order)[number]);
+      return i < 0 ? 0 : i;
+    }
+    return step; // fast: 0..7
+  }, [step, mode, isEdit]);
+  const currentStepIndex = isEdit ? step : flowStepIndex + 1;
   const progressPct = useMemo(() => Math.round((currentStepIndex / totalSteps) * 100), [currentStepIndex, totalSteps]);
-  const stepError = validateStep(step, data, isEdit);
+  const stepError = validateStep(step, data, isEdit, mode);
+
+  const photoItems = useMemo(
+    () => [
+      ...data.newPhotos.map((p) => ({ id: p.id, preview: p.previewUrl, tag: p.tag, isNew: true })),
+      ...data.existingPhotos.map((p) => ({ id: p.id, preview: p.url, tag: (p.tag ?? "other") as ListingPhotoTag, isNew: false })),
+    ],
+    [data.newPhotos, data.existingPhotos]
+  );
 
   const limit = user?.listingLimit ?? 1;
   const used = user?.listingUsed ?? 0;
@@ -275,7 +311,19 @@ export function ListingWizard({
     await apiFetch(`/listings/${encodeURIComponent(initialListing.id)}/photos/${encodeURIComponent(photoId)}`, {
       method: "DELETE",
     });
-    setData((prev) => ({ ...prev, existingPhotos: prev.existingPhotos.filter((p) => p.id !== photoId) }));
+    setData((prev) => {
+      const existingIdx = prev.existingPhotos.findIndex((p) => p.id === photoId);
+      if (existingIdx === -1) return prev;
+      const idx = prev.newPhotos.length + existingIdx;
+      const existingPhotos = prev.existingPhotos.filter((p) => p.id !== photoId);
+      const total = prev.newPhotos.length + existingPhotos.length;
+      let newCover = prev.coverPhotoIndex;
+      if (idx >= 0) {
+        if (idx === prev.coverPhotoIndex) newCover = 0;
+        else if (idx < prev.coverPhotoIndex) newCover = prev.coverPhotoIndex - 1;
+      }
+      return { ...prev, existingPhotos, coverPhotoIndex: total ? Math.min(Math.max(0, newCover), total - 1) : 0 };
+    });
   }
 
   function addFiles(files: File[]) {
@@ -284,10 +332,11 @@ export function ListingWizard({
       id: uuid(),
       file: f,
       previewUrl: URL.createObjectURL(f),
+      tag: "other",
     }));
     setData((prev) => ({
       ...prev,
-      newPhotos: [...prev.newPhotos, ...mapped].slice(0, 10),
+      newPhotos: [...prev.newPhotos, ...mapped].slice(0, 12),
     }));
   }
 
@@ -307,10 +356,10 @@ export function ListingWizard({
     setError(null);
 
     // Final validation (photos, quick, description, price)
-    const v1 = validateStep(1, data, isEdit);
-    const v2 = validateStep(2, data, isEdit);
-    const v5 = validateStep(5, data, isEdit);
-    const v6 = validateStep(6, data, isEdit);
+    const v1 = validateStep(1, data, isEdit, mode);
+    const v2 = validateStep(2, data, isEdit, mode);
+    const v5 = validateStep(5, data, isEdit, mode);
+    const v6 = validateStep(6, data, isEdit, mode);
     if (v1 || v2 || v5 || v6) {
       setError(v1 || v2 || v5 || v6);
       return;
@@ -360,9 +409,14 @@ export function ListingWizard({
         if (!listingId) throw new Error("Сервер не вернул ID нового объявления");
       }
 
-      // Upload new photos
-      for (let i = 0; i < data.newPhotos.length; i++) {
-        const file = data.newPhotos[i]?.file;
+      // Upload new photos (ТЗ №4: обложка первой)
+      const photosToUpload = [...data.newPhotos];
+      if (data.coverPhotoIndex < photosToUpload.length) {
+        const [cover] = photosToUpload.splice(data.coverPhotoIndex, 1);
+        if (cover) photosToUpload.unshift(cover);
+      }
+      for (let i = 0; i < photosToUpload.length; i++) {
+        const file = photosToUpload[i]?.file;
         if (!file) continue;
         const form = new FormData();
         form.append("file", file);
@@ -402,18 +456,75 @@ export function ListingWizard({
     }
   }
 
-  function next() {
-    const e = validateStep(step, data, isEdit);
+  async function next() {
+    const e = validateStep(step, data, isEdit, mode);
     if (e) {
       setError(e);
       return;
     }
     setError(null);
+    // ТЗ №5 fast: фото → AI → форма с автозаполнением
+    if (step === 1 && mode === "fast") {
+      setAiAnalyzing(true);
+      try {
+        const result = await mockAnalyzePhotos();
+        setData((prev) => ({
+          ...prev,
+          title: result.title,
+          type: result.type,
+          rooms: String(result.rooms),
+          description: result.description ?? prev.description,
+        }));
+      } finally {
+        setAiAnalyzing(false);
+        setStep(2);
+      }
+      return;
+    }
+    // ТЗ №5 manual: после шага 6 (цена) → фото, после фото → превью
+    if (mode === "manual" && !isEdit) {
+      if (step === 6) {
+        setStep(1);
+        return;
+      }
+      if (step === 1) {
+        setStep(7);
+        return;
+      }
+    }
     setStep((s) => (Math.min(7, s + 1) as WizardStep));
   }
 
   function back() {
     setError(null);
+    if (!isEdit && mode !== null) {
+      if (mode === "fast") {
+        if (step === 1) {
+          setStep(0);
+          setMode(null);
+          return;
+        }
+        if (step === 2) {
+          setStep(1);
+          return;
+        }
+      }
+      if (mode === "manual") {
+        if (step === 2) {
+          setStep(0);
+          setMode(null);
+          return;
+        }
+        if (step === 1) {
+          setStep(6);
+          return;
+        }
+        if (step === 7) {
+          setStep(1);
+          return;
+        }
+      }
+    }
     setStep((s) => (Math.max(isEdit ? 1 : 0, s - 1) as WizardStep));
   }
 
@@ -421,8 +532,21 @@ export function ListingWizard({
     <div ref={topRef} className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[24px] font-bold text-[#1C1F26]">{isEdit ? "Редактировать объявление" : "Добавить объявление"}</h1>
-          <p className="mt-1 text-[13px] text-[#6B7280]">
+          {!isEdit && mode !== null && step !== 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setMode(null);
+                setStep(0);
+                setData(defaultData());
+              }}
+              className="text-[13px] text-[var(--accent)] hover:underline mb-1 block"
+            >
+              ← изменить способ размещения
+            </button>
+          )}
+          <h1 className="text-[24px] font-bold text-[var(--text-primary)]">{isEdit ? "Редактировать объявление" : "Добавить объявление"}</h1>
+          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
             Шаг {currentStepIndex}/{totalSteps} • {stepLabel(step, isEdit)}
           </p>
         </div>
@@ -430,7 +554,7 @@ export function ListingWizard({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[12px] border border-gray-200 bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 hover:bg-gray-50"
+            className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-input)]"
           >
             Закрыть
           </button>
@@ -438,33 +562,79 @@ export function ListingWizard({
       </div>
 
       {/* Progress */}
-      <div className="h-2 w-full rounded-full bg-gray-100">
-        <div className="h-2 rounded-full bg-violet-600 transition-all" style={{ width: `${progressPct}%` }} />
+      <div className="h-2 w-full rounded-full bg-[var(--bg-input)]">
+        <div className="h-2 rounded-full bg-[var(--accent)] transition-all" style={{ width: `${progressPct}%` }} />
       </div>
 
       <div
         className={cn(
-          "bg-white rounded-[18px] p-5 sm:p-6",
+          "bg-[var(--bg-card)] rounded-[18px] p-5 sm:p-6",
           "shadow-[0_6px_24px_rgba(0,0,0,0.08)]",
-          "border border-gray-100/80"
+          "border border-[var(--border-main)]"
         )}
       >
-        {/* Шаг 0: Старт (только при создании) */}
+        {/* ТЗ №5: экран выбора режима */}
         {step === 0 && !isEdit && (
-          <StartStep onQuickPhotos={() => setStep(1)} onFromScratch={() => setStep(1)} />
+          <ModeSelect
+            onSelectFast={() => {
+              setMode("fast");
+              setStep(1);
+            }}
+            onSelectManual={() => {
+              setMode("manual");
+              setStep(2);
+            }}
+          />
         )}
 
         {step === 1 && (
-          <PhotoStepGrid
-            newPhotos={data.newPhotos}
-            existingPhotos={data.existingPhotos}
-            coverPhotoIndex={data.coverPhotoIndex}
-            onAddFiles={addFiles}
-            onRemoveNew={(id) => setData((p) => ({ ...p, newPhotos: p.newPhotos.filter((x) => x.id !== id) }))}
-            onRemoveExisting={removeExistingPhoto}
-            onReorder={reorderNew}
-            onSetCover={(idx) => setData((p) => ({ ...p, coverPhotoIndex: idx }))}
-          />
+          <div className="relative">
+            {aiAnalyzing && (
+              <div className="absolute inset-0 rounded-[18px] bg-[var(--bg-card)]/95 flex flex-col items-center justify-center gap-3 z-10">
+                <AiLoader />
+              </div>
+            )}
+            <PhotoUploader
+              items={photoItems}
+              coverIndex={data.coverPhotoIndex}
+              onAddFiles={addFiles}
+              onRemove={(id, isNew) => {
+                if (isNew) {
+                  setData((p) => {
+                    const idx = p.newPhotos.findIndex((x) => x.id === id);
+                    const newPhotos = p.newPhotos.filter((x) => x.id !== id);
+                    const total = newPhotos.length + p.existingPhotos.length;
+                    let newCover = p.coverPhotoIndex;
+                    if (idx >= 0) {
+                      if (idx === p.coverPhotoIndex) newCover = 0;
+                      else if (idx < p.coverPhotoIndex) newCover = p.coverPhotoIndex - 1;
+                    }
+                    return { ...p, newPhotos, coverPhotoIndex: total ? Math.min(Math.max(0, newCover), total - 1) : 0 };
+                  });
+                } else void removeExistingPhoto(id);
+              }}
+              onReorder={(fromIndex, toIndex) => {
+                const n = data.newPhotos.length;
+                if (fromIndex >= n || toIndex >= n) return;
+                setData((prev) => {
+                  const arr = prev.newPhotos.slice();
+                  const item = arr[fromIndex];
+                  if (!item) return prev;
+                  arr.splice(fromIndex, 1);
+                  arr.splice(toIndex, 0, item);
+                  const newCover =
+                    fromIndex === prev.coverPhotoIndex ? toIndex : toIndex === prev.coverPhotoIndex ? fromIndex : prev.coverPhotoIndex;
+                  return { ...prev, newPhotos: arr, coverPhotoIndex: newCover };
+                });
+              }}
+              onSetCover={(index) => setData((p) => ({ ...p, coverPhotoIndex: index }))}
+              onTagChange={(id, tag, isNew) => {
+                if (isNew) setData((p) => ({ ...p, newPhotos: p.newPhotos.map((x) => (x.id === id ? { ...x, tag } : x)) }));
+                else setData((p) => ({ ...p, existingPhotos: p.existingPhotos.map((x) => (x.id === id ? { ...x, tag } : x)) }));
+              }}
+              validationError={stepError}
+            />
+          </div>
         )}
 
         {step === 2 && (
@@ -481,7 +651,7 @@ export function ListingWizard({
                     onClick={() => setData((p) => ({ ...p, type: t }))}
                     className={cn(
                       "rounded-[14px] border px-4 py-2.5 text-[13px] font-semibold transition-colors",
-                      data.type === t ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
+                      data.type === t ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]" : "border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
                     )}
                   >
                     {humanType(t)}
@@ -555,7 +725,7 @@ export function ListingWizard({
             </Field>
             <div className="rounded-[14px] border border-violet-100 bg-violet-50/70 p-4">
               <div className="text-[13px] font-semibold text-violet-700">AI‑описание</div>
-              <div className="mt-1 text-[12px] text-[#6B7280]">Позже здесь можно будет сгенерировать описание одним кликом.</div>
+              <div className="mt-1 text-[12px] text-[var(--text-secondary)]">Позже здесь можно будет сгенерировать описание одним кликом.</div>
             </div>
           </div>
         )}
@@ -582,13 +752,13 @@ export function ListingWizard({
                 />
               </Field>
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Торг</label>
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Торг</label>
                 <button
                   type="button"
                   onClick={() => setData((p) => ({ ...p, negotiable: !p.negotiable }))}
                   className={cn(
                     "w-full rounded-[14px] px-4 py-3 border text-left text-[14px] font-semibold transition-colors",
-                    data.negotiable ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
+                    data.negotiable ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]" : "border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
                   )}
                   aria-pressed={data.negotiable}
                 >
@@ -598,14 +768,14 @@ export function ListingWizard({
             </div>
             <div className="rounded-[14px] border border-violet-100 bg-violet-50/70 p-4">
               <div className="text-[13px] font-semibold text-violet-700">AI‑совет</div>
-              <div className="mt-1 text-[12px] text-[#6B7280]">После одобрения покажем рекомендацию по цене.</div>
+              <div className="mt-1 text-[12px] text-[var(--text-secondary)]">После одобрения покажем рекомендацию по цене.</div>
             </div>
           </div>
         )}
 
         {step === 7 && (
           <div className="space-y-4">
-            <div className="text-[14px] font-semibold text-[#1C1F26]">Готово к публикации</div>
+            <div className="text-[14px] font-semibold text-[var(--text-primary)]">Готово к публикации</div>
             {(data.newPhotos.length + data.existingPhotos.length) < 5 && (
               <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Добавьте минимум 5 фото для лучшего отклика.</div>
             )}
@@ -627,11 +797,11 @@ export function ListingWizard({
               <PreviewItem label="Торг" value={data.negotiable ? "Да" : "Нет"} />
             </div>
             {data.amenityKeys.length > 0 && (
-              <div className="rounded-[14px] border border-gray-100 bg-white p-4">
-                <div className="text-[12px] text-[#6B7280]">Удобства</div>
+              <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+                <div className="text-[12px] text-[var(--text-secondary)]">Удобства</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {data.amenityKeys.slice(0, 10).map((k) => (
-                    <span key={k} className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-[12px] text-[#4B5563]">
+                    <span key={k} className="px-2.5 py-1 rounded-full bg-[var(--bg-input)] border border-[var(--border-main)] text-[12px] text-[var(--text-secondary)]">
                       {AMENITIES_FLAT.find((a) => a.key === k)?.label ?? k.replace(/_/g, " ")}
                     </span>
                   ))}
@@ -647,21 +817,21 @@ export function ListingWizard({
 
       {/* Errors */}
       {(error || stepError) && (
-        <div className="rounded-[14px] border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+        <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-3 text-[13px] text-[#ff6b6b]">
           {error || stepError}
         </div>
       )}
 
       {/* Sticky actions */}
       <div className="sticky bottom-4 z-10">
-        <div className="rounded-[18px] border border-gray-100 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.10)] flex items-center gap-3">
+        <div className="rounded-[18px] border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.10)] flex items-center gap-3">
           <button
             type="button"
             onClick={back}
             disabled={step === 0 || (isEdit && step === 1) || isSubmitting}
             className={cn(
               "px-4 py-2 rounded-[14px] text-[14px] font-semibold border",
-              (step === 0 || (isEdit && step === 1) || isSubmitting) ? "border-gray-200 text-gray-400" : "border-gray-200 text-[#1C1F26] hover:bg-gray-50"
+              (step === 0 || (isEdit && step === 1) || isSubmitting) ? "border-[var(--border-main)] text-[var(--text-muted)]" : "border-[var(--border-main)] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
             )}
           >
             Назад
@@ -671,10 +841,10 @@ export function ListingWizard({
             <button
               type="button"
               onClick={next}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (step === 0 && mode === null)}
               className={cn(
-                "px-5 py-2 rounded-[14px] text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-[0_4px_14px_rgba(124,58,237,0.35)]",
-                isSubmitting && "opacity-70 cursor-not-allowed"
+                "px-5 py-2 rounded-[14px] text-[14px] font-semibold text-[var(--text-on-accent)] bg-[var(--accent)] hover:opacity-95 shadow-[0_4px_14px_rgba(124,58,237,0.35)]",
+                (isSubmitting || (step === 0 && mode === null)) && "opacity-70 cursor-not-allowed"
               )}
             >
               Далее
@@ -685,7 +855,7 @@ export function ListingWizard({
               onClick={() => void submit()}
               disabled={isSubmitting}
               className={cn(
-                "px-5 py-2 rounded-[14px] text-[14px] font-semibold text-white bg-violet-600 hover:bg-violet-500 shadow-[0_4px_14px_rgba(124,58,237,0.35)]",
+                "px-5 py-2 rounded-[14px] text-[14px] font-semibold text-[var(--text-on-accent)] bg-[var(--accent)] hover:opacity-95 shadow-[0_4px_14px_rgba(124,58,237,0.35)]",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
             >
@@ -699,12 +869,12 @@ export function ListingWizard({
 }
 
 const inputCls =
-  "w-full rounded-[14px] px-4 py-3 border border-gray-200/60 bg-white/95 text-[#1C1F26] text-[14px] focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400";
+  "w-full rounded-[14px] px-4 py-3 border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[13px] font-medium text-[#6B7280] mb-2">{label}</label>
+      <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">{label}</label>
       {children}
     </div>
   );
@@ -712,9 +882,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function PreviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[14px] border border-gray-100 bg-white p-4">
-      <div className="text-[12px] text-[#6B7280]">{label}</div>
-      <div className="mt-1 text-[14px] font-semibold text-[#1C1F26]">{value}</div>
+    <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+      <div className="text-[12px] text-[var(--text-secondary)]">{label}</div>
+      <div className="mt-1 text-[14px] font-semibold text-[var(--text-primary)]">{value}</div>
     </div>
   );
 }
@@ -724,41 +894,6 @@ function humanType(t: WizardData["type"]) {
   if (t === "house") return "Дом";
   if (t === "studio") return "Студия";
   return "Квартира";
-}
-
-// Create Listing v3: стартовый экран
-function StartStep({ onQuickPhotos, onFromScratch }: { onQuickPhotos: () => void; onFromScratch: () => void }) {
-  return (
-    <div className="py-4">
-      <h2 className="text-[18px] font-semibold text-[#1C1F26] mb-6">Добавить объявление</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          type="button"
-          onClick={onQuickPhotos}
-          className={cn(
-            "rounded-[18px] border-2 border-dashed border-gray-200 bg-gray-50/80 p-8 text-center transition-colors",
-            "hover:border-violet-300 hover:bg-violet-50/50 hover:border-solid"
-          )}
-        >
-          <span className="text-[32px] mb-3 block">📷</span>
-          <span className="text-[15px] font-semibold text-[#1C1F26]">Быстро добавить фото</span>
-          <p className="mt-2 text-[13px] text-[#6B7280]">Загрузите фото — остальное подскажем</p>
-        </button>
-        <button
-          type="button"
-          onClick={onFromScratch}
-          className={cn(
-            "rounded-[18px] border-2 border-dashed border-gray-200 bg-gray-50/80 p-8 text-center transition-colors",
-            "hover:border-violet-300 hover:bg-violet-50/50 hover:border-solid"
-          )}
-        >
-          <span className="text-[32px] mb-3 block">✍️</span>
-          <span className="text-[15px] font-semibold text-[#1C1F26]">Создать с нуля</span>
-          <p className="mt-2 text-[13px] text-[#6B7280]">Заполним по шагам</p>
-        </button>
-      </div>
-    </div>
-  );
 }
 
 // Create Listing v3: фото — сетка мини-карточек [ + ] [ + ] …
@@ -814,7 +949,7 @@ function PhotoStepGrid({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-[#6B7280]">Фото (минимум 5: комната и санузел)</span>
+        <span className="text-[13px] font-medium text-[var(--text-secondary)]">Фото (минимум 5: комната и санузел)</span>
         <span className="text-[12px] text-[#94A3B8]">{total}/12</span>
       </div>
       <div
@@ -908,7 +1043,7 @@ function AmenitiesStepChips({ amenityKeys, onChange }: { amenityKeys: string[]; 
       <div className="text-[13px] font-medium text-[#6B7280]">Удобства — выберите чипами</div>
       {categories.map(({ category, items }) => (
         <div key={category}>
-          <div className="text-[12px] text-[#94A3B8] mb-2">{category}</div>
+          <div className="text-[12px] text-[var(--text-muted)] mb-2">{category}</div>
           <div className="flex flex-wrap gap-2">
             {items.map((a) => {
               const checked = amenityKeys.includes(a.key);
@@ -919,7 +1054,7 @@ function AmenitiesStepChips({ amenityKeys, onChange }: { amenityKeys: string[]; 
                   onClick={() => toggle(a.key)}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
-                    checked ? "border-violet-200 bg-violet-50 text-violet-700" : "border-gray-200 bg-white text-[#1C1F26] hover:bg-gray-50"
+                    checked ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]" : "border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
                   )}
                   aria-pressed={checked}
                 >

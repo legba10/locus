@@ -298,7 +298,7 @@ export function ListingLayout(props: ListingLayoutProps) {
             {similarListings.length > 0 && (
               <section>
                 <h2 className="text-[24px] font-bold text-[var(--text-main)] mb-4">Похожие объявления</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {similarListings.slice(0, 4).map((s) => (
                     <ListingCard key={s.id} id={s.id} photo={s.photo} title={s.title ?? 'Без названия'} price={s.price} city={s.city} district={s.district} />
                   ))}

@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isInitialized, user]);
 
   // ТЗ-6: при 401 редирект на login только с защищённых маршрутов. Главная и публичные страницы — без редиректа (нет цикла).
-  const PROTECTED_PATHS = ["/profile", "/owner", "/favorites", "/messages", "/bookings", "/admin"]
+  const PROTECTED_PATHS = ["/profile", "/owner", "/favorites", "/messages", "/bookings", "/admin", "/ai-params"]
   useEffect(() => {
     setOn401(() => {
       const pathname = typeof window !== "undefined" ? window.location.pathname : ""

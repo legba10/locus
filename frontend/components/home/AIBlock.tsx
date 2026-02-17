@@ -32,7 +32,7 @@ export function AIBlock({ onStartClick }: AIBlockProps) {
             disabled={!onStartClick}
             className={cn(
               'inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-[15px] font-semibold',
-              'bg-[var(--accent)] text-white',
+              'bg-[var(--accent)] text-[var(--text-on-accent)]',
               'hover:opacity-95 active:scale-[0.98] transition-all',
               !onStartClick && 'opacity-60 cursor-not-allowed'
             )}

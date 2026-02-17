@@ -33,22 +33,19 @@ export default function PageClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-main)]">
       <div className="w-full max-w-md">
-            {/* Glass Card */}
+            {/* Card — ТЗ №1: только переменные темы */}
             <div className={cn(
-              'bg-white/[0.75] backdrop-blur-[22px]',
-              'rounded-[20px]',
-              'border border-white/60',
-              'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-              'p-8',
-              'relative'
+              'rounded-[20px] p-8 relative',
+              'bg-[var(--bg-card)] border border-[var(--border-main)]',
+              'shadow-[var(--shadow-card)]'
             )}>
           <div className="space-y-6">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-[24px] font-bold text-[#1C1F26] mb-2">Вход</h1>
-              <p className="text-[14px] text-[#6B7280]">
+              <h1 className="text-[24px] font-bold text-[var(--text-primary)] mb-2">Вход</h1>
+              <p className="text-[14px] text-[var(--text-secondary)]">
                 Войдите в аккаунт LOCUS
               </p>
               {fromRegistered && (
@@ -81,7 +78,7 @@ export default function PageClient() {
               onSubmit={handleSubmit}
             >
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">
                   Email
                 </label>
                 <input
@@ -92,17 +89,17 @@ export default function PageClient() {
                   placeholder="email@example.com"
                   autoComplete="email"
                   className={cn(
-                    'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
-                    'text-[#1C1F26] text-[14px]',
-                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
+                    'w-full rounded-[14px] px-4 py-3 text-[14px]',
+                    'bg-[var(--bg-input)] border border-[var(--border-main)] text-[var(--text-primary)]',
+                    'placeholder:text-[var(--text-muted)]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]',
                     'transition-all'
                   )}
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-[#6B7280] mb-2">
+                <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">
                   Пароль
                 </label>
                 <input
@@ -114,10 +111,10 @@ export default function PageClient() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className={cn(
-                    'w-full rounded-[14px] px-4 py-3',
-                    'border border-gray-200/60 bg-white/95',
-                    'text-[#1C1F26] text-[14px]',
-                    'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
+                    'w-full rounded-[14px] px-4 py-3 text-[14px]',
+                    'bg-[var(--bg-input)] border border-[var(--border-main)] text-[var(--text-primary)]',
+                    'placeholder:text-[var(--text-muted)]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]',
                     'transition-all'
                   )}
                 />
@@ -128,7 +125,7 @@ export default function PageClient() {
                 disabled={isLoading}
                 className={cn(
                   'w-full py-3 rounded-[14px] flex items-center justify-center gap-2',
-                  'bg-violet-600 text-white font-semibold text-[15px]',
+                  'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
                   'hover:bg-violet-500 active:bg-violet-700',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   'transition-all duration-200',
@@ -146,9 +143,9 @@ export default function PageClient() {
             </form>
 
             {/* Register link */}
-            <p className="text-center text-[13px] text-[#6B7280]">
+            <p className="text-center text-[13px] text-[var(--text-secondary)]">
               Нет аккаунта?{' '}
-              <Link href="/auth/register" className="text-violet-600 hover:text-violet-700 font-medium">
+              <Link href="/auth/register" className="text-[var(--accent)] hover:opacity-90 font-medium">
                 Зарегистрироваться
               </Link>
             </p>
@@ -156,15 +153,15 @@ export default function PageClient() {
             {/* Тестовые аккаунты — подсказка для разработки */}
             {process.env.NODE_ENV === 'development' && (
               <details className="mt-4">
-                <summary className="text-[12px] text-[#6B7280] cursor-pointer hover:text-[#1C1F26] transition-colors">
+                <summary className="text-[12px] text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] transition-colors">
                   Тестовые аккаунты (для разработки)
                 </summary>
-                <div className="mt-3 p-3 rounded-[12px] bg-gray-50 border border-gray-200 text-[11px] text-[#6B7280] space-y-1.5">
-                  <p><strong className="text-[#1C1F26]">Пользователь:</strong> guest1@locus.local / password123</p>
-                  <p><strong className="text-[#1C1F26]">Арендодатель:</strong> host1@locus.local / password123</p>
-                  <p><strong className="text-[#1C1F26]">Администратор:</strong> admin@locus.local / password123</p>
-                  <p className="text-[10px] text-[#9CA3AF] mt-2">
-                    После выполнения <code className="bg-gray-200 px-1 rounded">npm run db:seed</code> в backend
+                <div className="mt-3 p-3 rounded-[12px] bg-[var(--bg-secondary)] border border-[var(--border-main)] text-[11px] text-[var(--text-secondary)] space-y-1.5">
+                  <p><strong className="text-[var(--text-primary)]">Пользователь:</strong> guest1@locus.local / password123</p>
+                  <p><strong className="text-[var(--text-primary)]">Арендодатель:</strong> host1@locus.local / password123</p>
+                  <p><strong className="text-[var(--text-primary)]">Администратор:</strong> admin@locus.local / password123</p>
+                  <p className="text-[10px] text-[var(--text-muted)] mt-2">
+                    После выполнения <code className="bg-[var(--bg-elevated)] px-1 rounded">npm run db:seed</code> в backend
                   </p>
                 </div>
               </details>
@@ -175,10 +172,10 @@ export default function PageClient() {
               <>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+                    <div className="w-full border-t border-[var(--border-main)]"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white/[0.75] text-[#6B7280]">или</span>
+                    <span className="px-2 bg-[var(--bg-card)] text-[var(--text-secondary)]">или</span>
                   </div>
                 </div>
                 <button
@@ -186,16 +183,16 @@ export default function PageClient() {
                   onClick={() => handleTelegramLogin()}
                   className={cn(
                     'w-full py-3 rounded-[14px]',
-                    'bg-[#2AABEE] text-white font-semibold text-[15px]',
-                    'hover:bg-[#229ED9] active:bg-[#1f8fc2] transition-colors',
+                    'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
+                    'hover:opacity-95 active:opacity-90 transition-opacity',
                     'flex items-center justify-center gap-2'
                   )}
                 >
                   <TelegramStatus />
                   Войти через Telegram
                 </button>
-                <p className="text-center text-[12px] text-[#6B7280]">
-                  Хотите <span className="font-medium text-[#1C1F26]">сдать жильё бесплатно</span>? После входа вы сможете разместить 1 объявление на FREE.
+                <p className="text-center text-[12px] text-[var(--text-secondary)]">
+                  Хотите <span className="font-medium text-[var(--text-primary)]">сдать жильё бесплатно</span>? После входа вы сможете разместить 1 объявление на FREE.
                 </p>
               </>
             )}
@@ -204,7 +201,7 @@ export default function PageClient() {
 
             {/* Back to home */}
             <div className="text-center mt-6">
-              <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
+              <Link href="/" className="text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                 ← На главную
               </Link>
             </div>

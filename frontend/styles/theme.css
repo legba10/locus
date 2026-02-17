@@ -108,31 +108,31 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ-18: фон #0B0F1A, карточки #111827, границы rgba(255,255,255,0.08), глубина */
+/* Dark — ТЗ №1: без засветов, текст #e6eaf2 (не #ffffff), фон #070b17, карточка #0f1629 */
 :root[data-theme="dark"],
 .dark {
-  --background: #0B0F1A;
-  --bg: #0B0F1A;
-  --card: #111827;
-  --text: #ffffff;
-  --sub: #9ca3af;
+  --background: #070b17;
+  --bg: #070b17;
+  --card: #0f1629;
+  --text: #e6eaf2;
+  --sub: #9aa3b2;
   --border: rgba(255, 255, 255, 0.08);
   --accent1: #8b5cf6;
   --accent2: #6366f1;
 }
 
 :root[data-theme="dark"] {
-  --bg-main: #0B0F1A;
-  --bg-secondary: #111827;
-  --bg-surface: #111827;
-  --bg-card: #111827;
+  --bg-main: #070b17;
+  --bg-secondary: #0f1629;
+  --bg-surface: #0c1324;
+  --bg-card: #0f1629;
   --bg-elevated: #161b2e;
-  --bg-modal: #0f172a;
+  --bg-modal: #0f1629;
 
-  --text-primary: #ffffff;
-  --text-main: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #6f7685;
+  --text-primary: #e6eaf2;
+  --text-main: #e6eaf2;
+  --text-secondary: #9aa3b2;
+  --text-muted: #6b7280;
 
   --border-main: rgba(255, 255, 255, 0.08);
 
@@ -155,20 +155,29 @@
   --surface-secondary: #111827;
   --header-bg: #161b2e;
   --border-primary: rgba(255, 255, 255, 0.08);
-  --input-bg: #111827;
-  --bg-input: #111827;
-  --icon-primary: #ffffff;
+  --input-bg: #0c1324;
+  --bg-input: #0c1324;
+  --icon-primary: #e6eaf2;
   --danger: #ef4444;
 }
 
-/* ТЗ-6: Footer — light #F3F4F6 + border, dark #020617 */
+/* ТЗ №1: текст на акцентных кнопках — переменная, не text-white */
+:root,
+:root[data-theme="light"] {
+  --text-on-accent: #ffffff;
+}
+:root[data-theme="dark"] {
+  --text-on-accent: #e6eaf2;
+}
+
+/* ТЗ-6 + ТЗ №1: Footer — переменные темы */
 .footer-tz6 {
-  background: #F3F4F6;
-  border-top: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-main);
 }
 
 [data-theme="dark"] .footer-tz6,
 .dark .footer-tz6 {
-  background: #020617;
-  border-top-color: rgba(255, 255, 255, 0.08);
+  background: var(--bg-main);
+  border-top-color: var(--border-main);
 }

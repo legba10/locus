@@ -94,24 +94,24 @@
    DARK — ТЗ-4 БЛОК 1
    ═══════════════════════════════════════════════════════════════ */
 :root[data-theme="dark"] {
-  /* Фоны */
-  --bg-main: #0b0f1a;
-  --bg-secondary: #111827;
-  --bg-card: #11182a;
+  /* Фоны — ТЗ №1: единый слой, без засветов */
+  --bg-main: #070b17;
+  --bg-secondary: #0f1629;
+  --bg-card: #0f1629;
   --bg-glass: rgba(255, 255, 255, 0.06);
   --surface: #161b2e;
-  --card: #11182a;
+  --card: #0f1629;
   --card-hover: #1e293b;
 
   /* Границы */
-  --border: rgba(255, 255, 255, 0.12);
-  --divider: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --divider: rgba(255, 255, 255, 0.08);
 
-  /* Текст */
-  --text-main: #ffffff;
-  --text-primary: #ffffff;
+  /* Текст — не #ffffff, читаемый контраст */
+  --text-main: #e6eaf2;
+  --text-primary: #e6eaf2;
   --text-secondary: #9aa3b2;
-  --text-muted: #71717a;
+  --text-muted: #6b7280;
 
   /* Акцент */
   --accent: #7b61ff;

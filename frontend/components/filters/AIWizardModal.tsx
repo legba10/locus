@@ -109,7 +109,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
       aria-label="Подбор жилья с AI"
     >
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
@@ -118,8 +118,8 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
         className={cn(
           'relative w-full max-h-[90vh] flex flex-col',
           'rounded-t-[24px]',
-          'bg-[var(--card-bg)] border border-b-0 border-[var(--border)]',
-          'text-[var(--text-main)] shadow-2xl',
+          'bg-[var(--bg-card)] border border-b-0 border-[var(--border-main)]',
+          'text-[var(--text-primary)] shadow-2xl',
           'md:max-w-[520px] md:rounded-[24px] md:border-b md:mx-auto md:max-h-[85vh]'
         )}
         style={{ zIndex: 'var(--z-modal)' }}
@@ -128,7 +128,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
         {/* Заголовок + крестик — не скроллится */}
         <div className="flex-shrink-0 flex items-start justify-between gap-4 p-5 pb-0">
           <div className="min-w-0">
-            <h2 className="text-[20px] font-bold text-[var(--text-main)] leading-tight">
+            <h2 className="text-[20px] font-bold text-[var(--text-primary)] leading-tight">
               Подберём жильё за 10 секунд
             </h2>
             <p className="text-[14px] text-[var(--text-secondary)] mt-1">
@@ -152,17 +152,17 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
           <div className="space-y-6 pb-2">
             {/* Шаг 1: Город */}
             <div>
-              <p className="text-[12px] font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-2">Шаг 1</p>
-              <label className="block text-[14px] font-medium text-[var(--text-main)] mb-2">Где ищете?</label>
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--card-bg)] overflow-hidden">
+              <p className="text-[12px] font-medium text-[var(--text-muted)] uppercase tracking-wide mb-2">Шаг 1</p>
+              <label className="block text-[14px] font-medium text-[var(--text-primary)] mb-2">Где ищете?</label>
+              <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-input)] overflow-hidden">
                 <CitySelect value={city} onChange={setCity} placeholder="Город" className="w-full" />
               </div>
             </div>
 
             {/* Шаг 2: Бюджет — пресеты */}
             <div>
-              <p className="text-[12px] font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-2">Шаг 2</p>
-              <label className="block text-[14px] font-medium text-[var(--text-main)] mb-2">Бюджет (₽/мес)</label>
+              <p className="text-[12px] font-medium text-[var(--text-muted)] uppercase tracking-wide mb-2">Шаг 2</p>
+              <label className="block text-[14px] font-medium text-[var(--text-primary)] mb-2">Бюджет (₽/мес)</label>
               <div className="flex flex-wrap gap-2">
                 {BUDGET_PRESETS.map((p) => (
                   <button
@@ -173,7 +173,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
                       'px-4 py-2.5 rounded-xl text-[14px] font-medium border transition-colors',
                       budgetPresetId === p.id
                         ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]'
-                        : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-main)] hover:border-[var(--accent)]/50'
+                        : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-[var(--accent)]/50'
                     )}
                   >
                     {p.label}
@@ -184,8 +184,8 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
 
             {/* Шаг 3: Тип жилья */}
             <div>
-              <p className="text-[12px] font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-2">Шаг 3</p>
-              <label className="block text-[14px] font-medium text-[var(--text-main)] mb-2">Тип жилья</label>
+              <p className="text-[12px] font-medium text-[var(--text-muted)] uppercase tracking-wide mb-2">Шаг 3</p>
+              <label className="block text-[14px] font-medium text-[var(--text-primary)] mb-2">Тип жилья</label>
               <div className="flex flex-wrap gap-2">
                 {PROPERTY_OPTIONS.map((o) => (
                   <button
@@ -196,7 +196,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
                       'px-4 py-2.5 rounded-xl text-[14px] font-medium border transition-colors',
                       propertyTypes.includes(o.value)
                         ? 'border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]'
-                        : 'border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-main)] hover:border-[var(--accent)]/50'
+                        : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-[var(--accent)]/50'
                     )}
                   >
                     {o.label}
@@ -207,8 +207,8 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
 
             {/* Шаг 4: Даты */}
             <div>
-              <p className="text-[12px] font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-2">Шаг 4</p>
-              <label className="block text-[14px] font-medium text-[var(--text-main)] mb-2">Даты</label>
+              <p className="text-[12px] font-medium text-[var(--text-muted)] uppercase tracking-wide mb-2">Шаг 4</p>
+              <label className="block text-[14px] font-medium text-[var(--text-primary)] mb-2">Даты</label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[12px] text-[var(--text-secondary)] mb-1">Заезд</label>
@@ -216,7 +216,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
                     type="date"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full h-12 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] px-3 text-[var(--text-main)] text-[14px]"
+                    className="w-full h-12 rounded-xl border border-[var(--border-main)] bg-[var(--bg-input)] px-3 text-[var(--text-primary)] text-[14px]"
                   />
                 </div>
                 <div>
@@ -225,24 +225,24 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
                     type="date"
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full h-12 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] px-3 text-[var(--text-main)] text-[14px]"
+                    className="w-full h-12 rounded-xl border border-[var(--border-main)] bg-[var(--bg-input)] px-3 text-[var(--text-primary)] text-[14px]"
                   />
                 </div>
               </div>
             </div>
 
             {validationError && (
-              <p className="text-[14px] text-red-500" role="alert">{validationError}</p>
+              <p className="text-[14px] text-[#ff6b6b]" role="alert">{validationError}</p>
             )}
           </div>
         </div>
 
         {/* Футер — не скроллится */}
-        <div className="flex-shrink-0 p-5 pt-4 border-t border-[var(--border)] bg-[var(--card-bg)] space-y-3">
+        <div className="flex-shrink-0 p-5 pt-4 border-t border-[var(--border-main)] bg-[var(--bg-card)] space-y-3">
           <button
             type="button"
             onClick={handleSubmit}
-            className="w-full h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px] hover:opacity-95 transition-opacity"
+            className="w-full h-12 rounded-xl bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[14px] hover:opacity-95 transition-opacity"
           >
             Подобрать
           </button>
@@ -252,7 +252,7 @@ export function AIWizardModal({ open, onClose, initialCity = '', onComplete }: A
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-11 rounded-xl border border-[var(--border)] bg-transparent text-[var(--text-main)] font-medium text-[14px] hover:bg-[var(--bg-secondary)] transition-colors"
+            className="w-full h-11 rounded-xl border border-[var(--border-main)] bg-transparent text-[var(--text-primary)] font-medium text-[14px] hover:bg-[var(--bg-secondary)] transition-colors"
           >
             Закрыть
           </button>

@@ -40,23 +40,23 @@ export function AIPopup({
     <div className="fixed inset-0 flex items-center justify-center p-4 z-[var(--z-overlay)]" aria-modal="true" role="dialog">
       <div className="overlay" onClick={handleClose} aria-hidden />
       <div
-        className="relative rounded-2xl bg-[#0b1228] p-6 w-full max-w-[420px] border border-white/10 shadow-xl z-[var(--z-modal)]"
+        className="relative rounded-2xl bg-[var(--bg-card)] p-6 w-full max-w-[420px] border border-[var(--border-main)] shadow-xl z-[var(--z-modal)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition"
+          className="absolute right-3 top-3 w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-input)] transition"
           aria-label="Закрыть"
         >
           <span className="text-lg leading-none">×</span>
         </button>
-        <h3 className="text-[22px] font-bold text-white pr-10">Найдём жильё под ваш бюджет</h3>
-        <p className="mt-2 text-[14px] text-white/70">AI анализирует рынок и подбирает варианты</p>
+        <h3 className="text-[22px] font-bold text-[var(--text-primary)] pr-10">Найдём жильё под ваш бюджет</h3>
+        <p className="mt-2 text-[14px] text-[var(--text-secondary)]">AI анализирует рынок и подбирает варианты</p>
         {onStart && (
           <button
             type="button"
-            className="mt-5 w-full h-11 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition"
+            className="mt-5 w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--text-on-accent)] font-medium hover:opacity-90 transition"
             onClick={onStart}
           >
             {primaryButtonText}

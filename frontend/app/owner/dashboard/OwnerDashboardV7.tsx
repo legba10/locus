@@ -14,7 +14,7 @@ import type { UserPlan } from '@/shared/contracts/api'
 import { PlanBadge } from '@/components/planBadge/PlanBadge'
 import { LockedFeatureCard } from '@/components/paywall/LockedFeatureCard'
 import { ListingWizard } from '@/domains/listings/ListingWizard'
-import { ListingCard } from '@/components/listing'
+import { MyListingCard } from '@/components/listing/MyListingCard'
 
 type DashboardTab = 'listings' | 'add' | 'bookings' | 'messages' | 'analytics' | 'profile'
 
@@ -54,9 +54,9 @@ export function OwnerDashboardV7() {
 
   if (!isAuthenticated()) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
         <div className="text-center">
-          <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Требуется авторизация</h2>
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Требуется авторизация</h2>
           <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 text-[14px]">
             Войти в аккаунт
           </Link>
@@ -66,7 +66,7 @@ export function OwnerDashboardV7() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ═══════════════════════════════════════════════════════════════
@@ -74,13 +74,13 @@ export function OwnerDashboardV7() {
               ═══════════════════════════════════════════════════════════════ */}
           <aside className="lg:col-span-1">
             <div className={cn(
-              'bg-white/[0.75] backdrop-blur-[22px]',
+              'bg-[var(--bg-card)] backdrop-blur-[22px]',
               'rounded-[20px]',
-              'border border-white/60',
+              'border border-[var(--border-main)]',
               'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
               'p-6 sticky top-6'
             )}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-6">Кабинет</h2>
+              <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-6">Кабинет</h2>
               
               <nav className="space-y-1">
                 {[
@@ -132,9 +132,10 @@ export function OwnerDashboardV7() {
                       'text-[14px] font-medium transition-all',
                       'flex items-center gap-2',
                       activeTab === tab.id
-                        ? 'bg-violet-600 text-white'
-                        : 'text-[#6B7280] hover:bg-gray-100',
-                      isLocked && 'opacity-80'
+                        ? 'bg-[var(--accent)] text-[var(--text-on-accent)]'
+                        : isLocked
+                          ? 'text-[var(--text-muted)] hover:bg-[var(--bg-input)]'
+                          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-input)]',
                     )}
                   >
                     {tab.icon}
@@ -208,7 +209,7 @@ export function OwnerDashboardV7() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// МОИ ОБЪЯВЛЕНИЯ
+// МОИ ОБЪЯВЛЕНИЯ — ТЗ №6: карточки, статусы, пустое состояние, sticky кнопка
 // ═══════════════════════════════════════════════════════════════
 function MyListingsTab({
   onAdd,
@@ -223,7 +224,6 @@ function MyListingsTab({
   listingLimit: number;
   onUpgrade: (reason: "limit" | "analytics" | "ai" | "general") => void;
 }) {
-  const router = useRouter()
   const queryClient = useQueryClient()
   const { data, isLoading } = useFetch<{ items: any[] }>(
     ['owner-listings'],
@@ -234,17 +234,45 @@ function MyListingsTab({
   const used = listings.length
   const canCreate = used < listingLimit
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Удалить объявление? Это действие необратимо.')) return
+    try {
+      await apiFetch(`/api/listings/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleHide = async (id: string) => {
+    try {
+      await apiFetch(`/api/listings/${encodeURIComponent(id)}/unpublish`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const toCardData = (item: any) => ({
+    id: item.id,
+    title: item.title ?? 'Без названия',
+    price: Number(item.basePrice ?? item.pricePerNight ?? 0),
+    cover: item.photos?.[0]?.url ?? item.images?.[0]?.url ?? null,
+    status: item.status ?? 'DRAFT',
+    createdAt: item.createdAt,
+  })
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-[24px] font-bold text-[#1C1F26]">Мои объявления</h1>
+        <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Мои объявления</h1>
         {!isLoading && listings.length > 0 && (
           <button
             type="button"
             onClick={canCreate ? onAdd : () => onUpgrade("limit")}
             className={cn(
               'px-5 py-2.5 rounded-[14px]',
-              canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              canCreate ? 'bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95' : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:opacity-90',
               'font-semibold text-[14px] transition-colors'
             )}
           >
@@ -253,19 +281,19 @@ function MyListingsTab({
         )}
       </div>
 
-      <div className="flex items-center justify-between rounded-[16px] border border-gray-100/80 bg-white px-5 py-4 shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+      <div className="flex items-center justify-between rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] px-5 py-4">
         <div className="flex items-center gap-3">
           <PlanBadge plan={plan} />
-          <div className="text-[13px] text-[#6B7280]">
-            Использовано <span className="font-semibold text-[#1C1F26]">{used}</span> из{" "}
-            <span className="font-semibold text-[#1C1F26]">{listingLimit}</span> объявлений
+          <div className="text-[13px] text-[var(--text-secondary)]">
+            Использовано <span className="font-semibold text-[var(--text-primary)]">{used}</span> из{" "}
+            <span className="font-semibold text-[var(--text-primary)]">{listingLimit}</span> объявлений
           </div>
         </div>
         {plan === "FREE" && (
           <button
             type="button"
             onClick={() => onUpgrade("general")}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95"
           >
             Улучшить тариф
           </button>
@@ -274,17 +302,16 @@ function MyListingsTab({
 
       {!canCreate && (
         <div className={cn(
-          'bg-white rounded-[16px] p-5',
-          'border border-gray-100/80',
-          'shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
+          'bg-[var(--bg-card)] rounded-[16px] p-5',
+          'border border-[var(--border-main)]'
         )}>
-          <p className="text-[14px] text-[#6B7280] mb-3">
+          <p className="text-[14px] text-[var(--text-secondary)] mb-3">
             У вас бесплатный тариф. Вы уже разместили {used} объявление.
           </p>
           <button
             type="button"
             onClick={() => onUpgrade("limit")}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-violet-600 text-white hover:bg-violet-500"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-[12px] text-center text-[13px] font-semibold bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95"
           >
             Перейти на тариф
           </button>
@@ -292,34 +319,34 @@ function MyListingsTab({
       )}
 
       {isLoading && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-[18px] animate-pulse" />
+            <div key={i} className="h-[120px] bg-[var(--bg-input)] rounded-[16px] animate-pulse" />
           ))}
         </div>
       )}
 
       {!isLoading && listings.length === 0 && (
         <div className={cn(
-          'bg-white rounded-[18px] p-12 text-center',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
+          'flex flex-col items-center justify-center py-16 px-4 text-center',
+          'bg-[var(--bg-card)] rounded-[18px] border border-[var(--border-main)]'
         )}>
-          <p className="text-[16px] text-[#6B7280] mb-4">У вас пока нет объявлений</p>
+          <p className="text-[16px] text-[var(--text-secondary)] mb-6">У вас пока нет объявлений</p>
           <button
             type="button"
-            onClick={canCreate ? onAdd : undefined}
+            onClick={canCreate ? onAdd : () => onUpgrade("limit")}
             disabled={!canCreate}
             className={cn(
-              'inline-block px-5 py-2.5 rounded-[14px]',
-              canCreate ? 'bg-violet-600 text-white hover:bg-violet-500' : 'bg-gray-200 text-gray-400 cursor-not-allowed',
-              'font-semibold text-[14px] transition-colors'
+              'inline-flex items-center justify-center px-6 py-3 rounded-[14px] font-semibold text-[15px] transition-colors',
+              canCreate
+                ? 'bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95'
+                : 'bg-[var(--bg-input)] text-[var(--text-muted)] cursor-not-allowed'
             )}
           >
-            Создать первое объявление
+            Разместить объявление
           </button>
           {!canCreate && (
-            <p className="mt-3 text-[13px] text-[#9CA3AF]">
+            <p className="mt-3 text-[13px] text-[var(--text-muted)]">
               Добавление объявлений доступно на платном тарифе.
             </p>
           )}
@@ -327,24 +354,36 @@ function MyListingsTab({
       )}
 
       {!isLoading && listings.length > 0 && (
-        <div className="listing-grid pb-[120px]">
-          {listings.map((listing: any) => {
-            const photoUrl = listing.photos?.[0]?.url || listing.images?.[0]?.url
-            return (
-              <ListingCard
-                key={listing.id}
-                id={listing.id}
-                photo={photoUrl ?? undefined}
-                photos={listing.photos?.map((p: { url: string }) => ({ url: p.url })) ?? (listing.images?.length ? listing.images.map((p: { url: string }) => ({ url: p.url })) : undefined)}
-                title={listing.title || 'Без названия'}
-                price={listing.basePrice ?? listing.pricePerNight ?? 0}
-                city={listing.city ?? ''}
-                district={listing.district ?? undefined}
-              />
-            )
-          })}
+        <div className="space-y-3">
+          {listings.map((item: any) => (
+            <MyListingCard
+              key={item.id}
+              listing={toCardData(item)}
+              onEdit={onEdit}
+              onDelete={handleDelete}
+              onHide={handleHide}
+            />
+          ))}
         </div>
       )}
+
+      {/* ТЗ №6: sticky bottom button */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 p-4 bg-[var(--bg-main)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb">
+        <div className="max-w-7xl mx-auto px-4 flex justify-center sm:justify-end">
+          <button
+            type="button"
+            onClick={canCreate ? onAdd : () => onUpgrade("limit")}
+            className={cn(
+              'w-full sm:w-auto px-6 py-3 rounded-[14px] font-semibold text-[15px] transition-colors',
+              canCreate
+                ? 'bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95 shadow-[0_4px_14px_rgba(124,58,237,0.25)]'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)]'
+            )}
+          >
+            Разместить объявление
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -379,13 +418,13 @@ function AddListingTab({
 function BookingsTab() {
   return (
     <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">Бронирования</h1>
+      <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Бронирования</h1>
       <div className={cn(
-        'bg-white rounded-[18px] p-8 text-center',
+        'bg-[var(--bg-card)] rounded-[18px] p-8 text-center',
         'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-        'border border-gray-100/80'
+        'border border-[var(--border-main)]'
       )}>
-        <p className="text-[15px] text-[#6B7280]">
+        <p className="text-[15px] text-[var(--text-secondary)]">
           Пока нет бронирований. Заявки появятся после первых арендаторов.
         </p>
       </div>
@@ -414,11 +453,11 @@ function MessagesTab() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">Сообщения</h1>
+      <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Сообщения</h1>
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-gray-100 rounded-[18px] animate-pulse" />
+            <div key={i} className="h-20 bg-[var(--bg-input)] rounded-[18px] animate-pulse" />
           ))}
         </div>
       ) : Array.isArray(chats) && chats.length > 0 ? (
@@ -435,30 +474,30 @@ function MessagesTab() {
                 key={c.id}
                 href={`/chat/${c.id}`}
                 className={cn(
-                  'flex items-center gap-4 p-4 rounded-[18px] bg-white border border-gray-100/80',
+                  'flex items-center gap-4 p-4 rounded-[18px] bg-[var(--bg-card)] border border-[var(--border-main)]',
                   'shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:border-violet-200'
                 )}
               >
-                <div className="relative w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                <div className="relative w-14 h-14 rounded-full bg-[var(--bg-input)] overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {photoUrl ? (
                     <Image src={photoUrl} alt="" fill className="object-cover" sizes="56px" />
                   ) : (
-                    <span className="text-[16px] font-semibold text-[#4B5563]">
+                    <span className="text-[16px] font-semibold text-[var(--text-secondary)]">
                       {name.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[#1C1F26] truncate">{name}</div>
+                  <div className="font-semibold text-[var(--text-primary)] truncate">{name}</div>
                   {c.listingTitle && (
-                    <div className="text-[13px] text-[#6B7280] truncate">{c.listingTitle}</div>
+                    <div className="text-[13px] text-[var(--text-secondary)] truncate">{c.listingTitle}</div>
                   )}
                   {last && (
-                    <div className="text-[13px] text-[#9CA3AF] truncate mt-0.5">{last.text}</div>
+                    <div className="text-[13px] text-[var(--text-muted)] truncate mt-0.5">{last.text}</div>
                   )}
                 </div>
                 {(c.unreadCount ?? 0) > 0 && (
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600 text-white text-[12px] font-bold flex items-center justify-center">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent)] text-[var(--text-on-accent)] text-[12px] font-bold flex items-center justify-center">
                     {c.unreadCount}
                   </span>
                 )}
@@ -468,11 +507,11 @@ function MessagesTab() {
         </div>
       ) : (
         <div className={cn(
-          'bg-white rounded-[18px] p-8 text-center',
+          'bg-[var(--bg-card)] rounded-[18px] p-8 text-center',
           'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
+          'border border-[var(--border-main)]'
         )}>
-          <p className="text-[15px] text-[#6B7280]">
+          <p className="text-[15px] text-[var(--text-secondary)]">
             Чаты появятся, когда гости напишут вам по объявлению (кнопка «Написать» на странице объявления).
           </p>
         </div>
@@ -487,13 +526,13 @@ function MessagesTab() {
 function AnalyticsTab() {
   return (
     <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">Аналитика</h1>
+      <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Аналитика</h1>
       <div className={cn(
-        'bg-white rounded-[18px] p-8 text-center',
+        'bg-[var(--bg-card)] rounded-[18px] p-8 text-center',
         'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-        'border border-gray-100/80'
+        'border border-[var(--border-main)]'
       )}>
-        <p className="text-[15px] text-[#6B7280]">
+        <p className="text-[15px] text-[var(--text-secondary)]">
           Данные появятся после первых просмотров и бронирований.
         </p>
       </div>
@@ -504,25 +543,25 @@ function AnalyticsTab() {
 function PaidFeatureNotice() {
   return (
     <div className={cn(
-      'bg-white rounded-[18px] p-8 text-center',
+      'bg-[var(--bg-card)] rounded-[18px] p-8 text-center',
       'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-      'border border-gray-100/80'
+      'border border-[var(--border-main)]'
     )}>
       <div className="text-4xl mb-3">🔒</div>
-      <h2 className="text-[18px] font-bold text-[#1C1F26] mb-2">Функция доступна на платном тарифе</h2>
-      <p className="text-[14px] text-[#6B7280]">
+      <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-2">Функция доступна на платном тарифе</h2>
+      <p className="text-[14px] text-[var(--text-secondary)]">
         Обновите тариф, чтобы добавлять объявления и смотреть аналитику.
       </p>
       <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
         <Link
           href="/pricing"
-          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium border border-gray-200 text-[#1C1F26] hover:bg-gray-50"
+          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium border border-[var(--border-main)] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
         >
           Посмотреть тарифы
         </Link>
         <Link
           href="/pricing#cta"
-          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-violet-600 text-white hover:bg-violet-500"
+          className="px-4 py-2 rounded-[12px] text-center text-[13px] font-medium bg-[var(--accent)] text-[var(--text-on-accent)] hover:opacity-95"
         >
           Купить тариф
         </Link>
@@ -585,25 +624,25 @@ function ProfileTab() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[24px] font-bold text-[#1C1F26]">Профиль</h1>
-      <div className="rounded-[18px] border border-gray-100/80 bg-white p-6 shadow-[0_6px_24px_rgba(0,0,0,0.08)]">
+      <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Профиль</h1>
+      <div className="rounded-[18px] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 shadow-[0_6px_24px_rgba(0,0,0,0.08)]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
               <PlanBadge plan={plan} />
-              <div className="text-[14px] font-bold text-[#1C1F26]">Ваш тариф: {plan}</div>
+              <div className="text-[14px] font-bold text-[var(--text-primary)]">Ваш тариф: {plan}</div>
             </div>
-            <div className="mt-1 text-[13px] text-[#6B7280]">
+            <div className="mt-1 text-[13px] text-[var(--text-secondary)]">
               {used} из {listingLimit} объявлений использовано
             </div>
-            <div className="mt-2 text-[13px] text-[#6B7280]">
+            <div className="mt-2 text-[13px] text-[var(--text-secondary)]">
               Перейти на PRO: до 5 объявлений • аналитика • продвижение
             </div>
           </div>
           {plan === "FREE" && (
             <Link
               href="/pricing?reason=profile_upsell"
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-[14px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-semibold hover:opacity-95"
             >
               Улучшить тариф
             </Link>
@@ -611,40 +650,40 @@ function ProfileTab() {
         </div>
       </div>
       <div className={cn(
-        'bg-white rounded-[18px] p-6',
+        'bg-[var(--bg-card)] rounded-[18px] p-6',
         'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-        'border border-gray-100/80'
+        'border border-[var(--border-main)]'
       )}>
         <div className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
+            <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Имя</label>
             <input
               type="text"
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-white/95',
-                'text-[#1C1F26] text-[14px]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                'text-[var(--text-primary)] text-[14px]',
+                'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]'
               )}
             />
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Тариф</label>
+            <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Тариф</label>
             <input
               type="text"
               value={tariffLabel}
               disabled
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
-                'border border-gray-200/60 bg-gray-50',
-                'text-[#1C1F26] text-[14px]'
+                'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                'text-[var(--text-primary)] text-[14px]'
               )}
             />
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Телефон</label>
+            <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Телефон</label>
             <input
               type="tel"
               value={formData.phone}
@@ -653,13 +692,13 @@ function ProfileTab() {
               readOnly={isTelegramPhone}
               className={cn(
                 'w-full rounded-[14px] px-4 py-3',
-                isTelegramPhone ? 'border border-gray-200/60 bg-gray-50' : 'border border-gray-200/60 bg-white/95',
-                'text-[#1C1F26] text-[14px]',
-                'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
+                isTelegramPhone ? 'border border-[var(--border-main)] bg-[var(--bg-input)]' : 'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                'text-[var(--text-primary)] text-[14px]',
+                'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]'
               )}
             />
             {isTelegramPhone && (
-              <p className="text-[12px] text-[#6B7280] mt-2">Подтверждён через Telegram</p>
+              <p className="text-[12px] text-[var(--text-secondary)] mt-2">Подтверждён через Telegram</p>
             )}
           </div>
           {error && <p className="text-[13px] text-red-600">{error}</p>}
@@ -670,8 +709,8 @@ function ProfileTab() {
             disabled={isSaving}
             className={cn(
               'w-full py-3 rounded-[14px]',
-              'bg-violet-600 text-white font-semibold text-[15px]',
-              'hover:bg-violet-500 transition-colors',
+              'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
+              'hover:opacity-95 transition-opacity',
               isSaving && 'opacity-70 cursor-not-allowed'
             )}
           >

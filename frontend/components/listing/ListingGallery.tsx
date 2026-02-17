@@ -9,18 +9,23 @@ export interface ListingGalleryProps {
   title: string
   verified?: boolean
   onOpenFullscreen?: () => void
+  /** ТЗ №10: детальная страница — height 280px, radius bottom 20, без миниатюр */
+  variant?: 'default' | 'detail'
 }
 
 const SWIPE_THRESHOLD = 50
 
-export function ListingGallery({ photos, title, verified, onOpenFullscreen }: ListingGalleryProps) {
+const GALLERY_HEIGHT_DETAIL = 280
+
+export function ListingGallery({ photos, title, verified, onOpenFullscreen, variant = 'default' }: ListingGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [hoverThumbIndex, setHoverThumbIndex] = useState<number | null>(null)
   const hasPhotos = photos?.length > 0
   const count = photos?.length ?? 0
   const cover = photos?.[activeIndex]?.url || photos?.[0]?.url
-  const previewUrl = hoverThumbIndex != null && photos?.[hoverThumbIndex] ? photos[hoverThumbIndex].url : null
+  const previewUrl = variant === 'default' && hoverThumbIndex != null && photos?.[hoverThumbIndex] ? photos[hoverThumbIndex].url : null
+  const isDetail = variant === 'detail'
 
   const goPrev = useCallback(
     (e?: React.MouseEvent) => {
@@ -73,16 +78,23 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
   return (
     <div
       className={cn(
-        'bg-white rounded-2xl overflow-hidden',
-        'shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
+        'overflow-hidden',
+        isDetail
+          ? 'rounded-b-[20px] bg-[var(--bg-input)]'
+          : 'bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-gray-100'
       )}
     >
       <div
-        className="relative w-full h-[42vh] sm:h-[45vh] min-h-[240px] bg-gray-100 select-none"
-        onClick={onOpenFullscreen}
+        className={cn(
+          'relative w-full select-none',
+          isDetail ? 'bg-[var(--bg-input)]' : 'bg-gray-100',
+          isDetail ? '' : 'h-[42vh] sm:h-[45vh] min-h-[240px]'
+        )}
+        style={isDetail ? { height: GALLERY_HEIGHT_DETAIL } : undefined}
+        onClick={!isDetail ? onOpenFullscreen : undefined}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        role={hasPhotos ? 'button' : undefined}
+        role={hasPhotos && !isDetail ? 'button' : undefined}
       >
         {hasPhotos && cover ? (
           <>
@@ -115,7 +127,7 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
               <>
                 <button
                   type="button"
-                  onClick={goPrev}
+                  onClick={(e) => { e.stopPropagation(); goPrev(e) }}
                   className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors"
                   aria-label="Предыдущее фото"
                 >
@@ -125,7 +137,7 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
                 </button>
                 <button
                   type="button"
-                  onClick={goNext}
+                  onClick={(e) => { e.stopPropagation(); goNext(e) }}
                   className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/55 text-white flex items-center justify-center transition-colors"
                   aria-label="Следующее фото"
                 >
@@ -158,14 +170,14 @@ export function ListingGallery({ photos, title, verified, onOpenFullscreen }: Li
             )}
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[14px] text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-[14px] text-[var(--text-muted)]">
             Фото пока не добавлены
           </div>
         )}
       </div>
 
-      {/* Thumbnails — desktop with hover preview (main image switches to hovered thumb on hover) */}
-      {hasPhotos && count > 1 && (
+      {/* Thumbnails — только в default (не в detail) */}
+      {hasPhotos && count > 1 && !isDetail && (
         <div
           className="hidden sm:flex gap-2 p-3 overflow-x-auto border-t border-gray-100"
           onMouseLeave={() => setHoverThumbIndex(null)}

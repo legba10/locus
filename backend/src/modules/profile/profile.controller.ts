@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Patch, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Patch, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { ProfileService } from "./profile.service";
@@ -11,6 +11,13 @@ export class ProfileController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
+  @Get()
+  async get(@Req() req: any) {
+    return this.profileService.getProfile(req.user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard)
   @Patch()
   @HttpCode(HttpStatus.OK)
   async update(@Req() req: any, @Body() dto: UpdateProfileDto) {
@@ -18,8 +25,9 @@ export class ProfileController {
     const phone = dto.phone ?? undefined;
     const role = dto.role ?? undefined;
     const avatarUrl = dto.avatar_url ?? undefined;
+    const aiParams = dto.ai_params ?? undefined;
 
-    if (fullName === undefined && phone === undefined && role === undefined && avatarUrl === undefined) {
+    if (fullName === undefined && phone === undefined && role === undefined && avatarUrl === undefined && aiParams === undefined) {
       throw new BadRequestException("No profile fields provided");
     }
 

@@ -237,7 +237,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
                 )}
               >
                 <div>{m?.text ?? ''}</div>
-                <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-white/80' : 'text-[var(--text-secondary)]')}>
+                <div className={cn('text-[11px] mt-1', m.senderId === myId ? 'text-[var(--text-on-accent)]' : 'text-[var(--text-secondary)]')}>
                   {m?.createdAt ? new Date(m.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
                 </div>
               </div>

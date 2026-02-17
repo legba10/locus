@@ -439,16 +439,16 @@ export function SearchPageV4() {
 
             {/* Loading */}
             {isLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <ListingCardSkeleton key={i} />
                 ))}
               </div>
             )}
 
-            {/* Сетка объявлений */}
+            {/* Сетка объявлений — ТЗ №9: gap 12px, mobile 1 col, tablet 2, desktop 3 */}
             {!isLoading && sortedListings.length > 0 && (
-              <div className="listing-grid listing-grid-tz4 listing-grid-tz10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {sortedListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}

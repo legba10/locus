@@ -69,7 +69,7 @@ export function GeoInit() {
               requestGeoAgain()
               dismissDeniedModal()
             }}
-            className="flex-1 px-4 py-3 rounded-xl bg-[var(--accent)] text-white font-medium text-[14px] hover:opacity-95 transition-opacity"
+            className="flex-1 px-4 py-3 rounded-xl bg-[var(--accent)] text-[var(--text-on-accent)] font-medium text-[14px] hover:opacity-95 transition-opacity"
           >
             Разрешить
           </button>

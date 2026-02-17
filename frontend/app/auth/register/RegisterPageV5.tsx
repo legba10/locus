@@ -73,16 +73,13 @@ export function RegisterPageV5() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-main)]">
       <div className="w-full max-w-md">
-            {/* Glass Card */}
+            {/* Card — ТЗ №1: только переменные темы */}
             <div className={cn(
-              'bg-white/[0.75] backdrop-blur-[22px]',
-              'rounded-[20px]',
-              'border border-white/60',
-              'shadow-[0_20px_60px_rgba(0,0,0,0.12)]',
-              'p-8',
-              'relative'
+              'rounded-[20px] p-8 relative',
+              'bg-[var(--bg-card)] border border-[var(--border-main)]',
+              'shadow-[var(--shadow-card)]'
             )}>
           {/* Logo */}
           <div className="text-center mb-8">
@@ -93,8 +90,8 @@ export function RegisterPageV5() {
           {step === 'form' && (
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Регистрация</h1>
-                <p className="text-[13px] text-[#6B7280]">
+                <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-1">Регистрация</h1>
+                <p className="text-[13px] text-[var(--text-secondary)]">
                   Через Email. Или войдите через Telegram на странице входа.
                 </p>
               </div>
@@ -107,7 +104,7 @@ export function RegisterPageV5() {
 
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Имя</label>
+                  <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Имя</label>
                   <input
                     type="text"
                     value={name}
@@ -116,8 +113,8 @@ export function RegisterPageV5() {
                     required
                     className={cn(
                       'w-full rounded-[14px] px-4 py-3',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
+                      'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                      'text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-muted)]',
                       'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                       'transition-all'
                     )}
@@ -125,7 +122,7 @@ export function RegisterPageV5() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Email</label>
+                  <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Email</label>
                   <input
                     type="email"
                     value={email}
@@ -134,8 +131,8 @@ export function RegisterPageV5() {
                     required
                     className={cn(
                       'w-full rounded-[14px] px-4 py-3',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
+                      'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                      'text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-muted)]',
                       'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                       'transition-all'
                     )}
@@ -143,7 +140,7 @@ export function RegisterPageV5() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Пароль</label>
+                  <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Пароль</label>
                   <input
                     type="password"
                     value={password}
@@ -153,8 +150,8 @@ export function RegisterPageV5() {
                     required
                     className={cn(
                       'w-full rounded-[14px] px-4 py-3',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
+                      'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                      'text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-muted)]',
                       'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                       'transition-all'
                     )}
@@ -162,7 +159,7 @@ export function RegisterPageV5() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Подтвердите пароль</label>
+                  <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Подтвердите пароль</label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -172,8 +169,8 @@ export function RegisterPageV5() {
                     required
                     className={cn(
                       'w-full rounded-[14px] px-4 py-3',
-                      'border border-gray-200/60 bg-white/95',
-                      'text-[#1C1F26] text-[14px]',
+                      'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                      'text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-muted)]',
                       'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                       'transition-all'
                     )}
@@ -184,7 +181,7 @@ export function RegisterPageV5() {
                   type="submit"
                   className={cn(
                     'w-full py-3 rounded-[14px]',
-                    'bg-violet-600 text-white font-semibold text-[15px]',
+                    'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
                     'hover:bg-violet-500 transition-colors',
                     'shadow-[0_4px_14px_rgba(124,58,237,0.35)]'
                   )}
@@ -193,14 +190,14 @@ export function RegisterPageV5() {
                 </button>
               </form>
 
-              <p className="text-center text-[13px] text-[#6B7280]">
+              <p className="text-center text-[13px] text-[var(--text-secondary)]">
                 Уже есть аккаунт?{' '}
                 <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 font-medium">
                   Войти
                 </Link>
               </p>
-              <p className="text-center text-[12px] text-[#6B7280] mt-1">
-                <Link href="/auth/login" className="text-[#2AABEE] hover:underline font-medium">
+              <p className="text-center text-[12px] text-[var(--text-secondary)] mt-1">
+                <Link href="/auth/login" className="text-[var(--accent)] hover:underline font-medium">
                   Войти через Telegram
                 </Link>
               </p>
@@ -212,7 +209,7 @@ export function RegisterPageV5() {
             <div className="space-y-6">
               <button
                 onClick={() => setStep('form')}
-                className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors flex items-center gap-1"
+                className="text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -224,8 +221,8 @@ export function RegisterPageV5() {
                 // AI параметры для пользователя
                 <>
                   <div className="text-center">
-                    <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Параметры для AI</h1>
-                    <p className="text-[13px] text-[#6B7280]">
+                    <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-1">Параметры для AI</h1>
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       Помогите AI подобрать вам идеальное жильё
                     </p>
                   </div>
@@ -238,22 +235,22 @@ export function RegisterPageV5() {
 
                   <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }} className="space-y-4">
                     <div>
-                      <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Город</label>
+                      <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Город</label>
                       <CityInput
                         value={aiCity}
                         onChange={setAiCity}
                         placeholder="Выберите город"
                         className={cn(
                           'w-full rounded-[14px] px-4 py-3',
-                          'border border-gray-200/60 bg-white/95',
-                          'text-[#1C1F26] text-[14px]',
+                          'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                          'text-[var(--text-primary)] text-[14px]',
                           'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                         )}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Бюджет (₽/мес)</label>
+                      <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Бюджет (₽/мес)</label>
                       <input
                         type="number"
                         value={aiBudget}
@@ -261,23 +258,23 @@ export function RegisterPageV5() {
                         placeholder="30000"
                         className={cn(
                           'w-full rounded-[14px] px-4 py-3',
-                          'border border-gray-200/60 bg-white/95',
-                          'text-[#1C1F26] text-[14px]',
+                          'border border-[var(--border-main)] bg-[var(--bg-input)]',
+                          'text-[var(--text-primary)] text-[14px]',
                           'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400'
                         )}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[13px] font-medium text-[#6B7280] mb-2">Тип жилья</label>
+                      <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-2">Тип жилья</label>
                       <select
                         value={aiType}
                         onChange={(e) => setAiType(e.target.value)}
                         className={cn(
                           'w-full rounded-[14px] px-4 py-3',
-                          'border border-white/60',
-                          'bg-white/75 backdrop-blur-[18px]',
-                          'text-[#1C1F26] text-[14px]',
+                          'border border-[var(--border-main)]',
+                          'bg-[var(--bg-input)]',
+                          'text-[var(--text-primary)] text-[14px]',
                           'focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400',
                           'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
                           'hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]',
@@ -297,7 +294,7 @@ export function RegisterPageV5() {
                       disabled={loading}
                       className={cn(
                         'w-full py-3 rounded-[14px]',
-                        'bg-violet-600 text-white font-semibold text-[15px]',
+                        'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
                         'hover:bg-violet-500 transition-colors',
                         'disabled:opacity-50 disabled:cursor-not-allowed',
                         'shadow-[0_4px_14px_rgba(124,58,237,0.35)]'
@@ -311,24 +308,24 @@ export function RegisterPageV5() {
                 // Подтверждение для арендодателя
                 <>
                   <div className="text-center">
-                    <h1 className="text-[22px] font-bold text-[#1C1F26] mb-1">Подтверждение</h1>
-                    <p className="text-[13px] text-[#6B7280]">
+                    <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-1">Подтверждение</h1>
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       Проверьте данные перед регистрацией
                     </p>
                   </div>
 
-                  <div className="space-y-3 p-4 bg-gray-50 rounded-[14px]">
+                  <div className="space-y-3 p-4 bg-[var(--bg-secondary)] rounded-[14px]">
                     <div>
-                      <span className="text-[12px] text-[#6B7280]">Имя:</span>
-                      <p className="text-[14px] font-medium text-[#1C1F26]">{name}</p>
+                      <span className="text-[12px] text-[var(--text-secondary)]">Имя:</span>
+                      <p className="text-[14px] font-medium text-[var(--text-primary)]">{name}</p>
                     </div>
                     <div>
-                      <span className="text-[12px] text-[#6B7280]">Email:</span>
-                      <p className="text-[14px] font-medium text-[#1C1F26]">{email}</p>
+                      <span className="text-[12px] text-[var(--text-secondary)]">Email:</span>
+                      <p className="text-[14px] font-medium text-[var(--text-primary)]">{email}</p>
                     </div>
                     <div>
-                      <span className="text-[12px] text-[#6B7280]">Тип аккаунта:</span>
-                      <p className="text-[14px] font-medium text-[#1C1F26]">
+                      <span className="text-[12px] text-[var(--text-secondary)]">Тип аккаунта:</span>
+                      <p className="text-[14px] font-medium text-[var(--text-primary)]">
                         {selectedRole === 'landlord' ? 'Арендодатель' : 'Пользователь'}
                       </p>
                     </div>
@@ -346,7 +343,7 @@ export function RegisterPageV5() {
                     onClick={handleRegister}
                     className={cn(
                       'w-full py-3 rounded-[14px]',
-                      'bg-violet-600 text-white font-semibold text-[15px]',
+                      'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
                       'hover:bg-violet-500 transition-colors',
                       'disabled:opacity-50 disabled:cursor-not-allowed',
                       'shadow-[0_4px_14px_rgba(124,58,237,0.35)]'
@@ -362,7 +359,7 @@ export function RegisterPageV5() {
 
         {/* Back to home */}
         <div className="text-center mt-6">
-          <Link href="/" className="text-[13px] text-[#6B7280] hover:text-[#1C1F26] transition-colors">
+          <Link href="/" className="text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             ← На главную
           </Link>
         </div>

@@ -145,7 +145,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
           aria-label="Забронировать"
           className={cn(
             'booking-btn w-full min-w-0 h-[52px] rounded-[14px] font-semibold text-[16px] border-0',
-            'bg-[var(--accent)] text-white',
+            'bg-[var(--accent)] text-[var(--text-on-accent)]',
             'hover:opacity-90 disabled:cursor-not-allowed',
             'transition-opacity duration-200 focus-visible:outline-none'
           )}

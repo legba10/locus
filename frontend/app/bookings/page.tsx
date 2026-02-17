@@ -1,18 +1,53 @@
 'use client'
 
 import Link from 'next/link'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/domains/auth'
-import { cn } from '@/shared/utils/cn'
+import { useFetch } from '@/shared/hooks/useFetch'
+import { apiFetch } from '@/shared/utils/apiFetch'
+import { BookingCard, formatBookingDates, type BookingCardData } from '@/components/booking/BookingCard'
+import { BookingsEmptyState } from '@/components/booking/EmptyState'
+
+function toCardData(item: any): BookingCardData {
+  const checkIn = item.checkIn != null ? String(item.checkIn) : ''
+  const checkOut = item.checkOut != null ? String(item.checkOut) : ''
+  return {
+    id: item.id,
+    listingId: item.listingId,
+    listingTitle: item.listing?.title ?? 'Без названия',
+    listingPhoto: item.listing?.photos?.[0]?.url ?? null,
+    date: formatBookingDates(checkIn, checkOut),
+    status: item.status ?? 'PENDING',
+  }
+}
 
 export default function BookingsPage() {
   const { isAuthenticated } = useAuthStore()
+  const queryClient = useQueryClient()
+  const { data, isLoading } = useFetch<{ items: any[] }>(
+    ['bookings-my'],
+    '/api/bookings',
+    { enabled: isAuthenticated() }
+  )
+
+  const items = data?.items ?? []
+
+  const handleCancel = async (id: string) => {
+    if (!confirm('Отменить бронирование?')) return
+    try {
+      await apiFetch(`/api/bookings/${encodeURIComponent(id)}/cancel`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['bookings-my'] })
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   if (!isAuthenticated()) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
         <div className="text-center">
-          <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Требуется авторизация</h2>
-          <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 text-[14px]">
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Требуется авторизация</h2>
+          <Link href="/auth/login" className="text-[14px] text-[var(--accent)] hover:underline">
             Войти в аккаунт
           </Link>
         </div>
@@ -21,18 +56,37 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen bg-[var(--bg-main)]">
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-[24px] font-bold text-[#1C1F26] mb-6">Бронирования</h1>
-        <div className={cn(
-          'bg-white rounded-[18px] p-8 text-center',
-          'shadow-[0_6px_24px_rgba(0,0,0,0.08)]',
-          'border border-gray-100/80'
-        )}>
-          <p className="text-[15px] text-[#6B7280]">
-            У вас пока нет бронирований.
-          </p>
-        </div>
+        <h1 className="text-[24px] font-bold text-[var(--text-primary)] mb-6">Бронирования</h1>
+
+        {isLoading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-[140px] bg-[var(--bg-input)] rounded-[16px] animate-pulse"
+                aria-hidden
+              />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && items.length === 0 && (
+          <BookingsEmptyState />
+        )}
+
+        {!isLoading && items.length > 0 && (
+          <div className="space-y-3">
+            {items.map((item: any) => (
+              <BookingCard
+                key={item.id}
+                booking={toCardData(item)}
+                onCancel={handleCancel}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -27,6 +27,13 @@ export class BookingsController {
 
   @ApiBearerAuth()
   @UseGuards(SupabaseAuthGuard)
+  @Get()
+  async getMy(@Req() req: any) {
+    return { items: await this.bookings.getMyBookings(req.user.id) };
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard)
   @Get(":id")
   async getOne(@Req() req: any, @Param("id") id: string) {
     return { item: await this.bookings.getByIdForUser(id, req.user.id) };

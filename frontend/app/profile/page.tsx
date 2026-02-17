@@ -46,7 +46,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-[20px] font-bold text-[#1C1F26] mb-4">Требуется авторизация</h2>
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Требуется авторизация</h2>
           <Link href="/auth/login" className="text-violet-600 hover:text-violet-700 text-[14px]">
             Войти в аккаунт
           </Link>
@@ -59,12 +59,12 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen">
         <div className="container py-8">
-          <div className="h-8 w-48 rounded-lg bg-gray-200 animate-pulse mb-6" />
-          <div className="rounded-[24px] bg-white/90 border border-gray-100 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+          <div className="h-8 w-48 rounded-lg bg-[var(--bg-input)] animate-pulse mb-6" />
+          <div className="rounded-[24px] bg-[var(--bg-card)] border border-[var(--border-main)] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
-              <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
-              <div className="h-4 w-64 rounded bg-gray-100 animate-pulse" />
+              <div className="w-24 h-24 rounded-full bg-[var(--bg-input)] animate-pulse" />
+              <div className="h-6 w-32 rounded bg-[var(--bg-input)] animate-pulse" />
+              <div className="h-4 w-64 rounded bg-[var(--bg-input)] animate-pulse" />
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 rounded-xl bg-emerald-600 text-white px-4 py-3 text-[14px] shadow-lg">
+        <div className="fixed top-4 right-4 z-50 rounded-xl bg-[var(--bg-card)] border border-[var(--border-main)] text-[var(--text-primary)] px-4 py-3 text-[14px] shadow-lg">
           Изменения сохранены
         </div>
       )}
@@ -248,7 +248,7 @@ export default function ProfilePage() {
             disabled={isSaving}
             className={cn(
               'w-full py-3 rounded-[14px]',
-              'bg-violet-600 text-white font-semibold text-[15px]',
+              'bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px]',
               'hover:bg-violet-500 transition-colors',
               isSaving && 'opacity-70 cursor-not-allowed'
             )}

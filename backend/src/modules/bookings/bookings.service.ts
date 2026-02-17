@@ -25,6 +25,23 @@ export class BookingsService {
     private readonly chatsService: ChatsService,
   ) {}
 
+  async getMyBookings(guestId: string) {
+    const list = await this.prisma.booking.findMany({
+      where: { guestId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            photos: { orderBy: { sortOrder: "asc" }, take: 1 },
+          },
+        },
+      },
+    });
+    return list;
+  }
+
   async getByIdForUser(id: string, userId: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },

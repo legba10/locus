@@ -1,0 +1,29 @@
+/**
+ * ТЗ-12: скелетоны с простым shimmer для списка, карточки, страницы объявления.
+ */
+
+@keyframes tz12-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer-tz12 {
+  background: linear-gradient(
+    90deg,
+    var(--bg-input) 0%,
+    var(--bg-card) 50%,
+    var(--bg-input) 100%
+  );
+  background-size: 200% 100%;
+  animation: tz12-shimmer 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer-tz12 {
+    animation: none;
+  }
+}

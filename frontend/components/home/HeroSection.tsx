@@ -35,11 +35,11 @@ export function HeroSection({
           type="button"
           onClick={onCtaClick}
           disabled={ctaLoading}
-          className="hero-tz18-cta hero-cta-tz11 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none mt-5"
+          className="hero-tz18-cta hero-cta-tz11 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none mt-5"
         >
           {ctaLoading ? (
             <>
-              <span className="inline-block w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden />
+              <span className="inline-block w-5 h-5 border-2 border-[var(--text-on-accent)]/40 border-t-[var(--text-on-accent)] rounded-full animate-spin shrink-0" aria-hidden />
               Ищем варианты…
             </>
           ) : (

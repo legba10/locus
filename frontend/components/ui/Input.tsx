@@ -14,15 +14,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-1">
         {label && (
-          <label className="block text-small font-medium text-[var(--text-secondary)]">
+          <label className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">
             {label}
           </label>
         )}
         <input
           ref={ref}
           className={cn(
-            'w-full rounded-[14px] px-4 py-3 text-body',
-            'bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)]',
+            'w-full h-12 rounded-[12px] px-4 text-[15px]',
+            'bg-[var(--bg-input)] border border-[var(--border-main)] text-[var(--text-primary)]',
+            'placeholder:text-[var(--text-muted)]',
             'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]',
             'disabled:opacity-50 disabled:cursor-not-allowed transition-colors',
             error && 'border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/20',

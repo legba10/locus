@@ -10,6 +10,9 @@
 @import './layout.css';
 @import './layout-header.css';
 @import './typography.css';
+@import './tz12-typography.css';
+@import './tz12-skeleton.css';
+@import './tz12-layout.css';
 @import './buttons-tz5.css';
 @import './listing-card-tz6.css';
 @import './listing-card-tz4.css';
@@ -1412,9 +1415,11 @@ body.modal-open {
 .dark .text-gray-600,
 [data-theme="dark"] .text-gray-500,
 .dark .text-gray-500,
+[data-theme="dark"] .text-gray-400,
+.dark .text-gray-400,
 [data-theme="dark"] .text-\[\#6B7280\],
 .dark .text-\[\#6B7280\] {
-  color: var(--text-soft) !important;
+  color: var(--text-secondary) !important;
 }
 
 /* ════════════════════════════════════════════════════════════════

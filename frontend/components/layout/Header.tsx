@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef, useContext } from 'react'
 import { cn } from '@/shared/utils/cn'
@@ -9,6 +8,8 @@ import { useAuthStore } from '@/domains/auth'
 import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import IconButton from '@/components/ui/IconButton'
+import UserAvatar from '@/components/ui/UserAvatar'
 import { MobileMenu } from './MobileMenu'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
@@ -53,7 +54,6 @@ export function Header() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
-  const [avatarLoadError, setAvatarLoadError] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
@@ -89,11 +89,6 @@ export function Header() {
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
   const displayName = user?.full_name ?? user?.username ?? null
   const displayAvatar = user?.avatar_url ?? null
-  const hasValidAvatar = typeof displayAvatar === 'string' && displayAvatar.trim() !== ''
-
-  useEffect(() => {
-    setAvatarLoadError(false)
-  }, [displayAvatar])
 
   const handleLogout = async () => {
     await logout()
@@ -123,19 +118,17 @@ export function Header() {
       <div className="layout-header__inner-tz2 mx-auto max-w-7xl h-full flex items-center justify-between">
         {/* ТЗ-13: Слева — бургер, логотип. Одна точка входа в профиль — аватар справа. */}
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            type="button"
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[var(--bg-secondary)] transition md:hidden shrink-0 text-[var(--text-main)]"
+          <IconButton
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            aria-expanded={isMenuOpen}
+            ariaLabel={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            className="md:hidden"
           >
             <span className="flex flex-col gap-1.5" aria-hidden>
               <span className="block w-5 h-0.5 bg-current rounded-full" />
               <span className="block w-5 h-0.5 bg-current rounded-full" />
               <span className="block w-5 h-0.5 bg-current rounded-full" />
             </span>
-          </button>
+          </IconButton>
           <Link
             href="/"
             onClick={handleLogoClick}
@@ -147,50 +140,23 @@ export function Header() {
           </Link>
         </div>
 
-        {/* ТЗ-2 + ТЗ-17: справа [messages] [favorites] [bell] [theme] [avatar] [разместить]; gap 12px; мобила — уведомления, тема, профиль. */}
-        <div className="layout-header__right flex items-center gap-3 shrink-0">
-          <Link href="/messages" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-[var(--text-main)] hover:bg-[var(--bg-secondary)] transition hidden md:flex shrink-0" aria-label="Сообщения">
-            <MessageCircle size={22} strokeWidth={1.8} />
-          </Link>
-          <Link href="/favorites" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl text-[var(--text-main)] hover:bg-[var(--bg-secondary)] transition hidden md:flex shrink-0" aria-label="Избранное">
-            <Heart size={22} strokeWidth={1.8} />
-          </Link>
-          {authed && (
-            <div className="layout-header__icon-wrap shrink-0">
-              <NotificationsBell compactBadge />
-            </div>
-          )}
+        {/* ТЗ №2: header-actions — gap 8px; кнопки 44×44, аватар 36×36. */}
+        <div className="layout-header__right header-actions flex items-center shrink-0">
+          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden md:flex">
+            <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
+          </IconButton>
+          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="hidden md:flex">
+            <Heart className="w-5 h-5" strokeWidth={1.8} />
+          </IconButton>
+          {authed && <NotificationsBell compactBadge />}
           <ThemeToggle />
           {authed ? (
             <div className="relative shrink-0" ref={profileRef}>
-              <button
-                type="button"
+              <UserAvatar
+                user={{ avatar_url: displayAvatar, full_name: displayName, username: user?.username }}
                 onClick={() => setProfileOpen((o) => !o)}
-                className="layout-header__avatar flex shrink-0 p-0 border-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-                aria-label="Профиль"
-                aria-expanded={profileOpen}
-              >
-                {/* ТЗ-3: аватар без битой картинки — Image только при валидном src; при ошибке загрузки показываем fallback (div). */}
-                <span
-                  className="header-avatar-wrapper relative inline-block w-9 h-9 max-w-9 max-h-9 rounded-full overflow-hidden flex items-center justify-center bg-transparent flex-shrink-0"
-                  style={{ minWidth: 36, minHeight: 36 }}
-                >
-                  {hasValidAvatar && !avatarLoadError ? (
-                    <Image
-                      src={displayAvatar!}
-                      alt={displayName || 'Аватар'}
-                      fill
-                      sizes="36px"
-                      className="object-cover object-center"
-                      onError={() => setAvatarLoadError(true)}
-                    />
-                  ) : (
-                    <span className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)] text-[var(--text-main)] text-sm font-medium">
-                      {(displayName?.trim().charAt(0) || 'Г').toUpperCase()}
-                    </span>
-                  )}
-                </span>
-              </button>
+                ariaExpanded={profileOpen}
+              />
               {profileOpen && (
                 <div
                   className="profile-dropdown-tz13 profile-dropdown-tz17 absolute right-0 top-full mt-2 w-[260px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] py-2 shadow-xl z-[var(--z-dropdown)]"

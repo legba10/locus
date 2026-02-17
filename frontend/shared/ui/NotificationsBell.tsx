@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell } from 'lucide-react'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
+import IconButton from '@/components/ui/IconButton'
 import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
 
@@ -184,15 +185,14 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
 
   return (
     <div className="relative">
-      <button
-        type="button"
+      <IconButton
         onClick={() => setOpen((o) => !o)}
+        ariaLabel="Уведомления"
         className={cn(
-          'notifications-bell-btn relative w-10 h-10 flex items-center justify-center rounded-[12px] hover:bg-[var(--accent-soft)] transition-colors shrink-0',
+          'notifications-bell-btn relative',
           badgePop && 'shake',
-          isMobile && 'mr-1'
+          isMobile && 'mr-0'
         )}
-        aria-label="Уведомления"
       >
         <Bell className="w-5 h-5" strokeWidth={1.8} aria-hidden />
         {unreadCount > 0 && (
@@ -200,7 +200,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
             className={cn(
               'notifications-badge absolute top-0.5 right-0.5 rounded-full font-bold flex items-center justify-center transition-transform duration-200',
               compactBadge && 'notifications-badge-compact min-w-[8px] w-[8px] h-[8px] text-[0]',
-              !compactBadge && 'min-w-[18px] h-[18px] px-1 text-[11px] text-white',
+              !compactBadge && 'min-w-[18px] h-[18px] px-1 text-[11px] text-[var(--text-on-accent)]',
               badgePop && 'scale-110'
             )}
             title={unreadCount > 0 ? `${unreadCount} непрочитанных` : undefined}
@@ -208,7 +208,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
             {compactBadge ? '' : (unreadCount > 99 ? '99+' : unreadCount)}
           </span>
         )}
-      </button>
+      </IconButton>
       <NotificationsPanel
         open={open}
         onClose={() => setOpen(false)}

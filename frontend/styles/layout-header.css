@@ -180,11 +180,22 @@
   color: var(--text-main);
 }
 
-/* ТЗ-2: между иконками 12px на всех breakpoints */
+/* ТЗ №2: header-actions — gap 8px, единый размер кнопок 44×44, аватар 36×36 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* ТЗ №2: выравнивание по вертикали — header одна линия 64px */
+.layout-header {
+  display: flex;
+  align-items: center;
+}
+
 .layout-header__right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .layout-header__icon-wrap {
@@ -193,11 +204,9 @@
   justify-content: center;
 }
 
-/* ТЗ-6: кнопка уведомлений в хедере 40x40, иконка 20px */
+/* ТЗ №2: кнопки в header 44×44 (IconButton), иконка 20px */
 .layout-header__icon-wrap .notifications-bell-btn,
 .layout-header__icon-wrap [class*="notifications-bell"] {
-  width: 40px;
-  height: 40px;
   padding: 0;
   color: var(--text-main);
   display: flex;
@@ -252,7 +261,8 @@
   height: 22px !important;
 }
 
-/* ТЗ-3: badge уведомлений в header — без резких цветов */
+/* ТЗ-3: badge уведомлений в header — без резких цветов (ТЗ №2: в .header-actions после удаления icon-wrap) */
+.header-actions .notifications-badge,
 .layout-header__icon-wrap .notifications-badge {
   background: var(--accent);
   opacity: 0.92;
@@ -284,18 +294,19 @@
   color: #a5b4fc;
 }
 
-/* ТЗ-4: кнопка «Разместить» */
+/* ТЗ №2: кнопки «Войти» / «Разместить» — min-height 44px для выравнивания с icon buttons */
 .layout-header__cta-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
   padding: 8px 16px;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-on-accent, #fff);
   text-decoration: none;
-  background: linear-gradient(to right, #7c3aed, #4f46e5);
+  background: var(--accent);
   transition: opacity 0.15s ease;
 }
 .layout-header__cta-btn:hover {

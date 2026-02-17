@@ -13,6 +13,7 @@ export type ProfileResponse = {
   avatar: string | null;
   email: string;
   phone: string;
+  aiParams?: Record<string, unknown> | null;
 };
 
 @Injectable()
@@ -24,6 +25,27 @@ export class ProfileService {
     private readonly neonUser: NeonUserService,
     private readonly supabaseAuth: SupabaseAuthService,
   ) {}
+
+  /** Get profile (Neon) including aiParams for onboarding check. */
+  async getProfile(userId: string): Promise<ProfileResponse> {
+    await this.neonUser.ensureUserExists(userId, null);
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      include: { user: { select: { email: true } } },
+    });
+    const name = (profile?.name ?? "").trim() || "";
+    const email = profile?.email ?? profile?.user?.email ?? "";
+    const phoneVal = (profile?.phone ?? "").trim() || "";
+    const aiParams = profile?.aiParams as Record<string, unknown> | null | undefined;
+    return {
+      id: userId,
+      name,
+      avatar: profile?.avatarUrl ?? null,
+      email: email ?? "",
+      phone: phoneVal,
+      aiParams: aiParams ?? null,
+    };
+  }
 
   /**
    * Update profile: always save to Neon first, then try Supabase sync (errors logged, not thrown).
@@ -126,6 +148,12 @@ export class ProfileService {
       updateData.avatarUrl = avatarUrl;
     }
 
+    const aiParams = dto.ai_params;
+    if (aiParams !== undefined) {
+      createData.aiParams = aiParams;
+      updateData.aiParams = aiParams;
+    }
+
     await this.prisma.profile.upsert({
       where: { userId },
       create: createData as any,
@@ -151,6 +179,7 @@ export class ProfileService {
     const name = (profile?.name ?? "").trim() || "";
     const email = profile?.email ?? profile?.user?.email ?? userEmail ?? "";
     const phoneVal = (profile?.phone ?? "").trim() || "";
+    const aiParamsOut = profile?.aiParams as Record<string, unknown> | null | undefined;
 
     return {
       id: userId,
@@ -158,6 +187,7 @@ export class ProfileService {
       avatar: profile?.avatarUrl ?? null,
       email: email ?? "",
       phone: phoneVal,
+      aiParams: aiParamsOut ?? null,
     };
   }
 }

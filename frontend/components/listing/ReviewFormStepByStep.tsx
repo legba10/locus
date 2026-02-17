@@ -125,7 +125,7 @@ export function ReviewFormStepByStep({
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="mt-4 px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
+            className="mt-4 px-4 py-2 rounded-[12px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-semibold"
           >
             Дальше
           </button>
@@ -173,7 +173,7 @@ export function ReviewFormStepByStep({
                 if (isLastMetric) setStep(3)
                 else setMetricIndex((i) => i + 1)
               }}
-              className="w-full sm:w-auto sm:flex-1 px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold"
+              className="w-full sm:w-auto sm:flex-1 px-4 py-2 rounded-[12px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-semibold"
             >
               {isLastMetric ? 'Дальше' : 'Далее'}
             </button>
@@ -216,7 +216,7 @@ export function ReviewFormStepByStep({
               type="button"
               onClick={submit}
               disabled={submitting}
-              className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[14px] font-semibold disabled:opacity-50"
+              className="px-4 py-2 rounded-[12px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-semibold disabled:opacity-50"
             >
               {submitting ? 'Отправка…' : 'Отправить'}
             </button>

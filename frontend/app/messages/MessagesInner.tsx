@@ -150,7 +150,7 @@ export default function MessagesInner() {
                       </div>
                     )}
                     {(c.unreadCount ?? 0) > 0 && (
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[11px] font-bold flex items-center justify-center">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--text-on-accent)] text-[11px] font-bold flex items-center justify-center">
                         {c.unreadCount}
                       </span>
                     )}

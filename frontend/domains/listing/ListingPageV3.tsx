@@ -10,7 +10,7 @@ import { addPendingReminder } from '@/shared/reviews/reviewReminderStorage'
 import { useAuthStore } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
-import { ListingLayout } from './listing-page'
+import { ListingLayoutTZ10 } from './listing-page'
 
 interface ListingPageV3Props {
   id: string
@@ -83,11 +83,14 @@ export function ListingPageV3({ id }: ListingPageV3Props) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--bg-main)]">
-        <div className="max-w-[1280px] mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <div className="h-[240px] md:h-[420px] rounded-b-[24px] md:rounded-[24px] skeleton-glass" />
-            <div className="h-32 skeleton-glass rounded-[20px]" />
-            <div className="h-48 skeleton-glass rounded-[20px]" />
+        <div className="max-w-[720px] mx-auto px-4 py-4 md:py-6">
+          <div className="space-y-4">
+            <div className="h-[280px] rounded-b-[20px] skeleton-shimmer-tz12" />
+            <div className="h-8 w-2/3 skeleton-shimmer-tz12 rounded-[12px]" />
+            <div className="h-5 w-full skeleton-shimmer-tz12 rounded-[12px]" />
+            <div className="h-5 w-3/4 skeleton-shimmer-tz12 rounded-[12px]" />
+            <div className="h-24 skeleton-shimmer-tz12 rounded-[16px]" />
+            <div className="h-20 skeleton-shimmer-tz12 rounded-[16px]" />
           </div>
         </div>
       </div>
@@ -208,74 +211,49 @@ export function ListingPageV3({ id }: ListingPageV3Props) {
     }
   }
 
-  const similarListings = (similarData?.items ?? [])
-    .filter((s: any) => s.id !== item.id)
-    .slice(0, 4)
-    .map((s: any) => ({
-      id: s.id,
-      photo: s.photos?.[0]?.url ?? s.images?.[0]?.url,
-      title: s.title,
-      price: s.pricePerNight ?? s.basePrice ?? 0,
-      city: s.city ?? '',
-      district: s.district,
-      score: s.score,
-    }))
+  const ownerMerged = {
+    id: owner.id,
+    name: ownerPublicData?.profile?.name ?? owner.name,
+    avatar: ownerPublicData?.profile?.avatar ?? owner.avatar,
+    rating: ownerPublicData?.profile?.rating_avg ?? owner.rating ?? null,
+    reviewsCount: ownerPublicData?.profile?.reviews_count ?? (owner as any).reviews_count ?? null,
+    listingsCount: (owner as any).listingsCount ?? 0,
+    lastSeen: (owner as any).lastSeen ?? null,
+  }
+
+  const specItems: string[] = []
+  if (item.bedrooms != null && item.bedrooms > 0) {
+    specItems.push(item.bedrooms === 1 ? '1 комната' : `${item.bedrooms} комнаты`)
+  }
+  if (item.area != null && item.area > 0) specItems.push(`${item.area} м²`)
+  if (item.floor != null && item.floor > 0) {
+    specItems.push(
+      item.totalFloors != null && item.totalFloors > 0
+        ? `${item.floor} из ${item.totalFloors} этаж`
+        : `${item.floor} этаж`
+    )
+  }
+  const amenityLabels = Array.isArray(item.amenities) ? item.amenities.map((a: any) => a?.amenity?.label ?? a?.key ?? '').filter(Boolean) : []
+  if (amenityLabels.some((l) => /кухн|kitchen/i.test(l))) specItems.push('есть кухня')
+  if (amenityLabels.some((l) => /сануз|bath|туалет/i.test(l))) specItems.push('есть санузел')
 
   return (
-    <ListingLayout
+    <ListingLayoutTZ10
       listingId={id}
       title={item.title ?? ''}
       city={item.city ?? ''}
+      district={item.district ?? item.addressLine ?? null}
       price={priceValue}
       rooms={item.bedrooms ?? null}
       area={item.area ?? null}
       floor={item.floor ?? null}
       totalFloors={item.totalFloors ?? null}
-      aiScore={aiScore}
-      photos={photos}
       description={item.description ?? ''}
-      amenities={amenities}
-      addressLine={item.addressLine}
-      lat={item.lat}
-      lng={item.lng}
-      owner={{
-        id: owner.id,
-        name: ownerPublicData?.profile?.name ?? owner.name,
-        avatar: ownerPublicData?.profile?.avatar ?? owner.avatar,
-        rating: ownerPublicData?.profile?.rating_avg ?? owner.rating ?? null,
-        reviewsCount: ownerPublicData?.profile?.reviews_count ?? (owner as any).reviews_count ?? null,
-      }}
-      ratingAvg={ratingAvg}
-      reviewPercent={reviewPercent}
-      ratingCount={ratingCount}
-      ratingDistribution={ratingDistribution}
-      reviews={filteredReviews}
-      similarListings={similarListings}
-      isFavorite={isFavorite}
-      onFavoriteToggle={() => setIsFavorite((f) => !f)}
+      specItems={specItems}
+      photos={photos}
+      owner={ownerMerged}
       onWrite={handleWrite}
-      onBook={handleBook}
-      writeLoading={writeLoading}
       onBookingConfirm={handleBookingConfirm}
-      reviewFilter={reviewFilter}
-      setReviewFilter={setReviewFilter}
-      metricFilter={metricFilter}
-      setMetricFilter={setMetricFilter}
-      loadMoreReviews={loadMoreReviews}
-      hasMoreReviews={hasMoreReviews}
-      reviewsLoadingMore={reviewsLoadingMore}
-      isReviewsLoading={isReviewsLoading}
-      onReviewSubmitted={() => {
-        setAdditionalReviews([])
-        queryClient.invalidateQueries({ queryKey: ['listing-reviews', id] })
-        queryClient.invalidateQueries({ queryKey: ['listing-rating-summary', id] })
-        queryClient.invalidateQueries({ queryKey: ['listing-metrics', id] })
-      }}
-      userAlreadyReviewed={baseReviews.some((r: any) => r.authorId === user?.id)}
-      isGalleryOpen={isGalleryOpen}
-      setGalleryOpen={setGalleryOpen}
-      activeImage={activeImage}
-      setActiveImage={setActiveImage}
     />
   )
 }

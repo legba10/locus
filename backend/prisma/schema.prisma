@@ -88,6 +88,8 @@ model Profile {
   email               String?
   phone               String?
   locale              String    @default("ru")
+  /// AI onboarding params (budget, rooms, district, duration, propertyType)
+  aiParams            Json?
   nameChangedAt       DateTime?
   nameChangeCountDay  Int       @default(0)
   nameChangeCountMonth Int      @default(0)

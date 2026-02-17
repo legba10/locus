@@ -1,0 +1,22 @@
+/**
+ * ТЗ-12: единая сетка страниц.
+ * Горизонтальный padding 16px, gap между блоками 16px, gap внутри карточек 12px.
+ */
+
+.page-container-tz12 {
+  padding-left: var(--page-px, 16px);
+  padding-right: var(--page-px, 16px);
+}
+
+.section-gap-tz12 {
+  gap: var(--section-gap, 16px);
+}
+
+.card-gap-tz12 {
+  gap: var(--card-gap, 12px);
+}
+
+/* Safe-area для sticky кнопок на iPhone */
+.main-with-header {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

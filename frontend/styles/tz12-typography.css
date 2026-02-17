@@ -1,0 +1,40 @@
+/**
+ * ТЗ-12: единая иерархия заголовков и текста.
+ * h1: 24px, h2: 20px, p: 15px, small: 13px
+ * Цвета: var(--text-primary), var(--text-secondary)
+ */
+
+/* ТЗ-12 переопределение */
+h1, .text-h1 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+h2, .text-h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* Основной текст — 15px */
+.text-p, .text-body-tz12 {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Второстепенный текст */
+.text-secondary-tz12 {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+/* Мелкий текст — 13px */
+.text-small-tz12, small {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}

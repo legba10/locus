@@ -59,7 +59,7 @@ export default function PageClient() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <ListingCardSkeleton key={i} />
           ))}
@@ -81,16 +81,15 @@ export default function PageClient() {
 
       {/* Empty state */}
       {!isLoading && !error && (!data?.items || data.items.length === 0) && (
-        <div className="rounded-2xl border border-border bg-surface-2 p-8 text-center">
-          <svg className="mx-auto h-16 w-16 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] p-8 text-center">
+          <svg className="mx-auto h-16 w-16 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <h2 className="mt-4 text-xl font-semibold text-text">Сохраняйте варианты</h2>
-          <p className="mt-2 text-text-mut">Добавляйте объявления в избранное, чтобы вернуться к ним позже</p>
-          <Link 
-            href="/search" 
-            className="mt-4 inline-block rounded-xl px-6 py-2 font-medium text-white transition-[background] hover:opacity-95"
-            style={{ background: 'var(--button-primary)' }}
+          <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">Сохраняйте варианты</h2>
+          <p className="mt-2 text-[15px] text-[var(--text-secondary)]">Добавляйте объявления в избранное, чтобы вернуться к ним позже</p>
+          <Link
+            href="/search"
+            className="mt-6 btn btn--primary btn--md inline-flex"
           >
             Найти жильё
           </Link>
@@ -99,7 +98,7 @@ export default function PageClient() {
 
       {/* Listings grid */}
       {!isLoading && !error && data?.items && data.items.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {data.items.map((listing: any) => (
             <ListingCard
               key={listing.id}

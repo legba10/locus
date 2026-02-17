@@ -96,11 +96,11 @@ export function FilterPanel({
   return (
     <aside className={cn('filter-panel-card')}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[16px] font-bold text-white">Фильтры</h2>
+        <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Фильтры</h2>
         <button
           type="button"
           onClick={reset}
-          className="text-[12px] font-medium text-[rgba(255,255,255,0.7)] hover:text-white transition-colors"
+          className="text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           Сбросить
         </button>

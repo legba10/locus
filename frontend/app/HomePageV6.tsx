@@ -347,7 +347,7 @@ export function HomePageV6() {
             <button type="button" onClick={handleScrollToFilter} className="h-9 px-3 rounded-lg border border-[var(--border)] text-[13px] font-medium text-[var(--text-main)]" aria-label="Фильтры">
               Фильтры
             </button>
-            <button type="button" onClick={handlePrimarySearch} disabled={searching} className="h-9 px-4 rounded-lg bg-[var(--accent)] text-white text-[13px] font-semibold ml-auto">
+            <button type="button" onClick={handlePrimarySearch} disabled={searching} className="h-9 px-4 rounded-lg bg-[var(--accent)] text-[var(--text-on-accent)] text-[13px] font-semibold ml-auto">
               {searching ? '…' : 'Показать'}
             </button>
           </div>
@@ -440,7 +440,7 @@ export function HomePageV6() {
                   onClick={() => setAiMode(false)}
                   className={cn(
                     'home-tz19-pill-btn flex-1 h-10 min-h-[40px] rounded-[20px] text-[14px] font-medium transition-all duration-150 border',
-                    !aiMode ? 'bg-[var(--accent)] text-white border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
+                    !aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
                   )}
                 >
                   Ручной
@@ -450,7 +450,7 @@ export function HomePageV6() {
                   onClick={() => setAiMode(true)}
                   className={cn(
                     'home-tz19-pill-btn flex-1 h-10 min-h-[40px] rounded-[20px] text-[14px] font-medium transition-all duration-150 border',
-                    aiMode ? 'bg-[var(--accent)] text-white border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
+                    aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-transparent shadow-sm' : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
                   )}
                 >
                   AI-подбор
@@ -483,7 +483,7 @@ export function HomePageV6() {
           {filterSheetOpen && (
             <>
               <div
-                className="home-filter-overlay-tz12 fixed inset-0 bg-black/40 transition-opacity hidden md:block"
+                className="home-filter-overlay-tz12 fixed inset-0 bg-[var(--overlay-bg)] transition-opacity hidden md:block"
                 style={{ zIndex: 899 }}
                 aria-hidden
                 onClick={() => setFilterSheetOpen(false)}
@@ -506,7 +506,7 @@ export function HomePageV6() {
                 </div>
                 <div className="flex-shrink-0 flex gap-3 p-4 border-t border-[var(--border)] bg-[var(--card-bg)]">
                   <button type="button" onClick={() => { resetFilters(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl border border-[var(--border)] text-[var(--text-main)] font-medium text-[14px]">Сбросить</button>
-                  <button type="button" onClick={handleFilterApplyLocal} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">Применить</button>
+                  <button type="button" onClick={handleFilterApplyLocal} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[14px]">Применить</button>
                 </div>
               </div>
             </>
@@ -538,7 +538,7 @@ export function HomePageV6() {
                   <button type="button" onClick={() => { resetFilters(); setFilterSheetOpen(false); }} className="flex-1 h-12 rounded-xl border border-[var(--border)] text-[var(--text-main)] font-medium text-[14px]">
                     Сбросить
                   </button>
-                  <button type="button" onClick={handleFilterApplyLocal} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-white font-semibold text-[14px]">
+                  <button type="button" onClick={handleFilterApplyLocal} className="flex-1 h-12 rounded-xl bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[14px]">
                     Применить
                   </button>
                 </div>
@@ -564,7 +564,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid listing-grid-tz4 listing-grid-tz10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
@@ -591,7 +591,6 @@ export function HomePageV6() {
                   propertyType={listing.propertyType}
                   amenities={listing.amenities?.length ? listing.amenities : undefined}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
-                  className="listing-card-tz18"
                 />
               ))
             ) : (
@@ -605,7 +604,7 @@ export function HomePageV6() {
                   </div>
                   <p className="text-[16px] font-semibold text-[var(--text)]">Пока нет объявлений</p>
                   <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Попробуйте изменить фильтры.</p>
-                  <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
+                  <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-[var(--text-on-accent)] font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
                     Смотреть все объявления
                   </Link>
                 </div>
@@ -631,7 +630,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid listing-grid-tz4 listing-grid-tz10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {allListingsLoading ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : allListingCards.length > 0 ? (
@@ -665,7 +664,7 @@ export function HomePageV6() {
                 <div className="home-card-tz4 rounded-2xl p-6 md:p-8 text-center">
                   <p className="text-[16px] font-semibold text-[var(--text)]">Пока нет объявлений</p>
                   <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Измените фильтры или зайдите позже.</p>
-                  <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
+                  <Link href="/listings" className="mt-4 inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-[var(--text-on-accent)] font-semibold text-[15px] hover:opacity-95 transition-all duration-200">
                     Смотреть все объявления
                   </Link>
                 </div>
@@ -707,7 +706,7 @@ export function HomePageV6() {
             <button
               type="button"
               onClick={() => setShowAIWizard(true)}
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 bg-[var(--accent)] text-white font-semibold text-[15px] hover:opacity-95 transition-opacity"
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px] hover:opacity-95 transition-opacity"
               aria-label="Начать подбор"
             >
               Начать подбор
@@ -946,7 +945,7 @@ export function HomePageV6() {
       {/* ТЗ-19: tooltip «В чём разница?» — Ручной vs AI-подбор */}
       {showDiffPopup && (
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[var(--z-modal)]" aria-modal="true" role="dialog">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDiffPopup(false)} aria-hidden />
+          <div className="absolute inset-0 bg-[var(--overlay-bg)]" onClick={() => setShowDiffPopup(false)} aria-hidden />
           <div className="relative w-full max-w-[400px] rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-6 shadow-xl">
             <div className="flex items-start justify-between gap-4 mb-4">
               <h3 className="text-[18px] font-semibold text-[var(--text-main)]">В чём разница?</h3>

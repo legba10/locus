@@ -1,4 +1,5 @@
 export { ListingLayout } from './ListingLayout'
+export { ListingLayoutTZ10 } from './ListingLayoutTZ10'
 export { Gallery } from './Gallery'
 export { StickyActions } from './StickyActions'
 export { OwnerCard } from './OwnerCard'

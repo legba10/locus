@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsIn, IsOptional, IsString } from "class-validator";
+import { IsIn, IsObject, IsOptional, IsString } from "class-validator";
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: "Иван Иванов" })
@@ -26,4 +26,10 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsIn(["renter", "landlord"])
   role?: "renter" | "landlord";
+
+  /** ТЗ №8: AI onboarding params (budget, rooms, district, duration, propertyType) */
+  @ApiPropertyOptional({ description: "AI params for personalization" })
+  @IsOptional()
+  @IsObject()
+  ai_params?: Record<string, unknown>;
 }
