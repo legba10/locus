@@ -48,7 +48,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   budgetMin: '',
   budgetMax: '',
   duration: '',
-  aiMode: true,
+  aiMode: false,
 }
 
 export type BudgetDisplay = { min: number; max: number; label: string }

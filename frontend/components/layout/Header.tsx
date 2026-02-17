@@ -164,7 +164,7 @@ export function Header() {
           <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="hidden xl:flex">
             <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
           </IconButton>
-          {authed && <div className="hidden md:flex"><NotificationsBell compactBadge /></div>}
+          {authed && <div className="flex"><NotificationsBell compactBadge /></div>}
           {authed ? (
             <div className="profile-dropdown-wrap relative shrink-0" ref={profileRef}>
               <UserAvatar
@@ -184,12 +184,6 @@ export function Header() {
                   <Link href="/owner/dashboard" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <LayoutList className={iconSm} /> Мои объявления
                   </Link>
-                  <Link href="/messages" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                    <MessageCircle className={iconSm} /> Сообщения
-                  </Link>
-                  <Link href="/favorites" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                    <Heart className={iconSm} /> Избранное
-                  </Link>
                   <button type="button" onClick={() => { themeContext?.toggle(); setProfileOpen(false); }} className="profile-dropdown-tz7__item w-full flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] text-left" role="menuitem">
                     {isDark ? <Sun className={iconSm} /> : <Moon className={iconSm} />}
                     <span>Тема</span>
@@ -198,11 +192,11 @@ export function Header() {
                     <CreditCard className={iconSm} /> Тарифы
                   </Link>
                   {canCreateListing && (
-                    <Link href={createHref} className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] md:hidden" onClick={() => setProfileOpen(false)} role="menuitem">
+                    <Link href={createHref} className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                       <Plus className={iconSm} /> Разместить объявление
                     </Link>
                   )}
-                  <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)] md:hidden" onClick={() => setProfileOpen(false)} role="menuitem">
+                  <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <Settings className={iconSm} /> Настройки
                   </Link>
                   {isAdmin && (
