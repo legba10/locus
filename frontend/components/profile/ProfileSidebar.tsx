@@ -5,13 +5,15 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 
+/** ТЗ-20: Дашборд, Доход, затем настройки */
 const TABS = [
-  { href: '/profile', label: 'Основное' },
+  { href: '/profile', label: 'Дашборд' },
+  { href: '/profile/income', label: 'Доход' },
   { href: '/profile/security', label: 'Безопасность' },
   { href: '/profile/notifications', label: 'Уведомления' },
   { href: '/profile/payments', label: 'Платежи' },
   { href: '/profile/docs', label: 'Документы' },
-  { href: '/profile/settings', label: 'Настройки интерфейса' },
+  { href: '/profile/settings', label: 'Настройки' },
 ] as const
 
 export function ProfileSidebar() {
@@ -32,7 +34,7 @@ export function ProfileSidebar() {
           )}
           aria-expanded={mobileOpen}
         >
-          {TABS.find((t) => pathname === t.href)?.label ?? 'Основное'}
+          {TABS.find((t) => pathname === t.href)?.label ?? 'Дашборд'}
           <svg className={cn('w-5 h-5 transition-transform', mobileOpen && 'rotate-180')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>

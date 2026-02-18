@@ -15,20 +15,18 @@ export interface ListingCardTZ7Props extends ListingCardProps {
   availableFrom?: string | null
 }
 
+/** ТЗ 19: метки на фото — проверено, AI подобрано, топ, новый объект, суперхозяин */
 const BADGE_OVERLAY: Record<ListingCardBadge, string> = {
   verified: 'Проверено',
-  ai: 'AI рекомендует',
-  top: 'Топ вариант',
-  new: 'Новое',
+  ai: 'AI подобрано',
+  top: 'Топ',
+  new: 'Новый объект',
   discount: 'Скидка',
   rare: 'Редко',
   superhost: 'Суперхозяин',
   owner: 'Собственник',
   agent: 'Агент',
 }
-
-const PHOTO_HEIGHT_PC = 220
-const PHOTO_HEIGHT_MOBILE = 200
 
 function ListingCardTZ7Component(props: ListingCardTZ7Props) {
   const {
@@ -57,6 +55,7 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
     onFavoriteToggle,
     className,
     aiRecommendTooltip,
+    rating,
   } = props
 
   const [imgError, setImgError] = useState(false)
@@ -102,10 +101,13 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
           : rooms != null && rooms > 0
             ? `${rooms}-к квартира`
             : 'Квартира'
-  const locationLine = [city, district].filter(Boolean).join(' • ') || city || ''
-  const metroText = metro ? (typeof metro === 'string' && metro.match(/\d+/) ? metro : '5 мин метро') : null
+  const districtShort = district || 'центр'
+  const metroText = metro ? (typeof metro === 'string' && metro.match(/\d+/) ? `до метро ${metro}` : 'до метро 5 мин') : 'до метро 5 мин'
+  const datesLine = availableToday ? 'даты свободны сегодня' : availableFrom ? `С ${availableFrom}` : null
 
   const topBadges = badges?.slice(0, 3) ?? []
+  const ratingValue = rating != null && Number(rating) >= 0 ? Number(rating) : null
+  const locationLine = [city, district].filter(Boolean).join(', ') || city || ''
 
   return (
     <Link
@@ -119,30 +121,24 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
         className
       )}
     >
-      {/* 1. Фото — ПК 220px, моб 200px, 4/3 cover; оверлеи */}
-      <div
-        className={cn(
-          'relative w-full overflow-hidden rounded-[12px] bg-[var(--bg-input)]',
-          'h-[200px] lg:h-[220px]'
-        )}
-      >
+      {/* ТЗ 19: Фото — 4:3, без растяжения, lazy; оверлеи: бейджи, избранное, цена, рейтинг */}
+      <div className="relative w-full overflow-hidden rounded-[12px] bg-[var(--bg-input)] aspect-[4/3]">
         {showPhoto ? (
           <img
             src={displayPhoto}
             alt=""
-            className="h-full w-full object-cover transition-all duration-200 group-hover:scale-[1.02]"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[var(--text-muted)] text-4xl">
+          <div className="absolute inset-0 flex items-center justify-center text-[var(--text-muted)] text-4xl">
             📷
           </div>
         )}
-        {/* Затемнение при hover */}
         <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10 pointer-events-none" />
 
-        {/* Оверлей слева сверху — бейджи */}
+        {/* Верх фото: бейджи слева */}
         <div className="absolute left-2 top-2 flex flex-wrap gap-1.5">
           {topBadges.map((b) => (
             <span
@@ -154,7 +150,7 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
           ))}
         </div>
 
-        {/* Оверлей справа сверху — избранное */}
+        {/* Верх фото: избранное справа */}
         <div className="absolute right-2 top-2">
           <button
             type="button"
@@ -169,82 +165,41 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
           </button>
         </div>
 
-        {/* Оверлей снизу — градиент + тип + локация */}
-        <div className="absolute inset-x-0 bottom-0 rounded-b-[12px] h-20 bg-gradient-to-t from-black/75 to-transparent pt-6 px-3 pb-2">
-          <p className="text-[13px] font-semibold text-white truncate">{typeLabel}</p>
-          <p className="text-[12px] text-white/90 truncate">{locationLine}</p>
+        {/* Низ фото: слева цена / ночь, справа рейтинг ★ */}
+        <div className="absolute inset-x-0 bottom-0 rounded-b-[12px] h-14 bg-gradient-to-t from-black/75 to-transparent px-3 pb-2 pt-6 flex items-end justify-between">
+          <p className="text-[14px] font-bold text-white drop-shadow-sm">{priceMain} {priceSuffix}</p>
+          {ratingValue != null && (
+            <p className="text-[13px] font-medium text-white/95 flex items-center gap-1">
+              <span aria-hidden>★</span> {Number(ratingValue).toFixed(1)}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* 2. Основной блок — цена, характеристики, AI, даты */}
-      <div className="flex flex-col gap-2 pt-1">
-        <div>
-          <p className="text-[18px] font-bold text-[var(--text-primary)] leading-tight">
-            {priceMain} {priceSuffix}
-          </p>
-          {priceSecondary && (
-            <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">{priceSecondary}</p>
-          )}
-        </div>
-
-        {/* Характеристики в строку */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--text-muted)]">
-          {guests != null && guests > 0 && (
-            <span className="flex items-center gap-1">
-              <span aria-hidden>🛏</span> {guests} гостей
-            </span>
-          )}
-          {rooms != null && rooms > 0 && (
-            <span className="flex items-center gap-1">
-              <span aria-hidden>🛋</span> {rooms} {rooms === 1 ? 'комната' : 'комн.'}
-            </span>
-          )}
-          {area != null && area > 0 && (
-            <span className="flex items-center gap-1">
-              <span aria-hidden>📐</span> {area} м²
-            </span>
-          )}
-          {metroText && (
-            <span className="flex items-center gap-1">
-              <span aria-hidden>🚇</span> {metroText}
-            </span>
-          )}
-        </div>
-
-        {/* AI-метка */}
-        {(badges?.includes('ai') || aiRecommendTooltip) && (
-          <p className="text-[12px] font-medium text-[var(--accent)]">
-            {aiRecommendTooltip || 'Подобрано для вас'}
-          </p>
-        )}
-
-        {/* Даты */}
-        {(availableToday || availableFrom) && (
-          <p className="text-[12px] text-[var(--text-secondary)]">
-            {availableToday ? 'Свободно сегодня' : availableFrom ? `С ${availableFrom}` : ''}
-          </p>
-        )}
+      {/* ТЗ 19: Блок 2 под фото — 4 строки инфо */}
+      <div className="flex flex-col gap-0.5 pt-2">
+        <p className="text-[14px] font-medium text-[var(--text-primary)] truncate">
+          {typeLabel} · {area != null && area > 0 ? `${area} м²` : '—'} · {districtShort}
+        </p>
+        <p className="text-[13px] text-[var(--text-secondary)] truncate">{locationLine}</p>
+        <p className="text-[12px] text-[var(--text-muted)]">{metroText}</p>
+        {datesLine && <p className="text-[12px] text-[var(--text-muted)]">{datesLine}</p>}
       </div>
 
-      {/* 3. Блок доверия */}
-      {(viewsCount != null || favoritesCount != null) && (
-        <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-          {viewsCount != null && <span>{viewsCount} просмотров за неделю</span>}
-          {favoritesCount != null && <span>{favoritesCount} сохранения</span>}
-        </div>
+      {/* ТЗ 19: Блок 3 — AI пояснение (маленький серый текст) */}
+      {(badges?.includes('ai') || aiRecommendTooltip) && (
+        <p className="text-[12px] text-[var(--text-muted)] pt-0.5">
+          {aiRecommendTooltip || 'Подходит под ваш бюджет'}
+        </p>
       )}
 
-      {/* 4. Кнопка */}
-      <div className="pt-1">
-        <span
-          className={cn(
-            'inline-flex w-full items-center justify-center rounded-[12px] py-2.5 text-[14px] font-semibold transition-colors',
-            'bg-[var(--accent)] text-[var(--button-primary-text)]'
-          )}
-        >
-          Смотреть
-        </span>
-      </div>
+      {/* ТЗ 19: Мини-аналитика — просмотров сегодня, сохранений */}
+      {(viewsCount != null || favoritesCount != null) && (
+        <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)] pt-1">
+          {viewsCount != null && <span>просмотров сегодня {viewsCount}</span>}
+          {favoritesCount != null && <span>сохранений {favoritesCount}</span>}
+        </div>
+      )}
     </Link>
   )
 }
@@ -259,9 +214,7 @@ export function ListingCardTZ7Skeleton() {
         'bg-[var(--bg-card)] border border-[var(--border-main)]'
       )}
     >
-      <div
-        className="rounded-[12px] bg-[var(--bg-input)] animate-pulse h-[200px] lg:h-[220px]"
-      />
+      <div className="rounded-[12px] bg-[var(--bg-input)] animate-pulse aspect-[4/3] w-full" />
       <div className="pt-2 space-y-2">
         <div className="h-5 w-2/3 rounded bg-[var(--bg-input)] animate-pulse" />
         <div className="h-4 w-full rounded bg-[var(--bg-input)] animate-pulse" />

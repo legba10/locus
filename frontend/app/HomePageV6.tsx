@@ -52,7 +52,7 @@ interface UserPrefs {
  */
 export function HomePageV6() {
   const router = useRouter()
-  const { user } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore()
   const { city, budgetMin, budgetMax, type, duration, aiMode, rooms, setCity, setBudget, setType, setDuration, setAiMode, setRooms, getBudgetQuery, reset: resetFilters } = useFilterStore()
   const [aiPreparing, setAiPreparing] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -123,7 +123,7 @@ export function HomePageV6() {
   const allListingCards = useHomeListingCards(allListingsData)
   const isLandlord = user?.role === 'landlord'
   const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
-  const hostCtaHref = isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host'
+  const hostCtaHref = !isAuthenticated() ? '/auth/login?redirect=/owner/dashboard' : (isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host')
 
   /** ТЗ-5: на главной — scroll к результатам на той же странице; не открывать новую страницу */
   const handlePrimarySearch = () => {
@@ -527,7 +527,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid-cards-tz grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
@@ -536,6 +536,7 @@ export function HomePageV6() {
                   key={listing.id}
                   id={listing.id}
                   photo={listing.photo || undefined}
+                  photos={listing.photos ?? undefined}
                   title={listing.title}
                   price={listing.price}
                   city={listing.city}
@@ -553,6 +554,11 @@ export function HomePageV6() {
                   reviewCount={listing.reviewCount ?? undefined}
                   propertyType={listing.propertyType}
                   amenities={listing.amenities?.length ? listing.amenities : undefined}
+                  viewsCount={listing.viewsCount ?? undefined}
+                  favoritesCount={listing.favoritesCount ?? undefined}
+                  availableToday={listing.availableToday}
+                  availableFrom={listing.availableFrom ?? undefined}
+                  aiRecommendTooltip={listing.aiRecommendTooltip}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
                 />
               ))
@@ -593,7 +599,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid-cards-tz grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {allListingsLoading ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : allListingCards.length > 0 ? (
@@ -602,6 +608,7 @@ export function HomePageV6() {
                   key={listing.id}
                   id={listing.id}
                   photo={listing.photo || undefined}
+                  photos={listing.photos ?? undefined}
                   title={listing.title}
                   price={listing.price}
                   city={listing.city}
@@ -613,13 +620,18 @@ export function HomePageV6() {
                   guests={listing.guests ?? undefined}
                   floor={listing.floor ?? undefined}
                   totalFloors={listing.totalFloors ?? undefined}
-                  aiReasons={undefined}
-                  badges={listing.badges?.filter((b) => b !== 'ai') ?? []}
+                  aiReasons={listing.aiReasons ?? undefined}
+                  badges={listing.badges ?? []}
                   rating={listing.rating}
                   reviewCount={listing.reviewCount ?? undefined}
                   propertyType={listing.propertyType}
                   amenities={listing.amenities?.length ? listing.amenities : undefined}
-                  className="listing-card-tz18"
+                  viewsCount={listing.viewsCount ?? undefined}
+                  favoritesCount={listing.favoritesCount ?? undefined}
+                  availableToday={listing.availableToday}
+                  availableFrom={listing.availableFrom ?? undefined}
+                  aiRecommendTooltip={listing.aiRecommendTooltip}
+                  className="listing-card-tz19"
                 />
               ))
             ) : (
@@ -784,6 +796,7 @@ export function HomePageV6() {
                   LOCUS анализирует рынок и подсказывает оптимальную цену
                 </p>
                 
+                {/* ТЗ 13: кнопка «создать объявление» только в кабинете; на главной — только переход в кабинет */}
                 <Link 
                   href={hostCtaHref}
                   className={cn(

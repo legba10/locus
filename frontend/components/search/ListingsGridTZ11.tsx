@@ -44,7 +44,7 @@ export function ListingsGridTZ11({
 }: ListingsGridTZ11Props) {
   if (isLoading) {
     return (
-      <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4', className)}>
+      <div className={cn('grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4', className)}>
         {Array.from({ length: 6 }).map((_, i) => (
           <ListingCardSkeleton key={i} />
         ))}
@@ -84,7 +84,7 @@ export function ListingsGridTZ11({
   }
 
   return (
-    <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4', className)}>
+    <div className={cn('grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4', className)}>
       {items.map((item) => (
         <ListingCard
           key={item.id}

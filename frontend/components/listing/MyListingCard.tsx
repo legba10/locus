@@ -11,6 +11,14 @@ export interface MyListingCardData {
   cover: string | null;
   status: string;
   createdAt?: string;
+  /** ТЗ-20.2: просмотры, бронирования, доход */
+  viewsCount?: number | null;
+  bookingsCount?: number | null;
+  income?: number | null;
+  /** ТЗ-20.3: AI анализ — спрос, цена рынка, рекомендации */
+  aiDemand?: string | null;
+  aiMarketPrice?: string | number | null;
+  aiRecommendations?: string[] | null;
 }
 
 export interface MyListingCardProps {
@@ -18,6 +26,7 @@ export interface MyListingCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onHide: (id: string) => void;
+  onStats?: (id: string) => void;
   className?: string;
 }
 
@@ -31,7 +40,7 @@ function formatDate(value: string | undefined): string {
   }
 }
 
-export function MyListingCard({ listing, onEdit, onDelete, onHide, className }: MyListingCardProps) {
+export function MyListingCard({ listing, onEdit, onDelete, onHide, onStats, className }: MyListingCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -82,7 +91,7 @@ export function MyListingCard({ listing, onEdit, onDelete, onHide, className }: 
             {listing.title || "Без названия"}
           </h3>
           <p className="text-[14px] text-[var(--text-primary)] mt-0.5">
-            {listing.price ? `${listing.price.toLocaleString("ru-RU")} ₽/мес` : "—"}
+            {listing.price ? `${listing.price.toLocaleString("ru-RU")} ₽/ночь` : "—"}
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
             <StatusBadge status={statusBadge} />
@@ -92,9 +101,29 @@ export function MyListingCard({ listing, onEdit, onDelete, onHide, className }: 
               </span>
             )}
           </div>
+          {(listing.viewsCount != null || listing.bookingsCount != null || listing.income != null) && (
+            <div className="flex flex-wrap gap-3 mt-2 text-[12px] text-[var(--text-muted)]">
+              {listing.viewsCount != null && <span>Просмотры: {listing.viewsCount}</span>}
+              {listing.bookingsCount != null && <span>Брони: {listing.bookingsCount}</span>}
+              {listing.income != null && <span>Доход: {Number(listing.income).toLocaleString("ru-RU")} ₽</span>}
+            </div>
+          )}
+          {/* ТЗ-20.3: AI анализ — спрос, цена рынка, рекомендации */}
+          {(listing.aiDemand || listing.aiMarketPrice != null || (listing.aiRecommendations?.length ?? 0) > 0) && (
+            <div className="mt-2 pt-2 border-t border-[var(--border-main)] text-[12px]">
+              <p className="font-medium text-[var(--text-secondary)] mb-1">AI анализ</p>
+              <div className="space-y-0.5 text-[var(--text-muted)]">
+                {listing.aiDemand && <p>Спрос: {listing.aiDemand}</p>}
+                {listing.aiMarketPrice != null && <p>Цена рынка: {typeof listing.aiMarketPrice === 'number' ? `${listing.aiMarketPrice.toLocaleString('ru-RU')} ₽` : listing.aiMarketPrice}</p>}
+                {listing.aiRecommendations?.length ? (
+                  <p>Рекомендации: {listing.aiRecommendations.slice(0, 2).join('; ')}</p>
+                ) : null}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Действия: десктоп — кнопки, mobile — три точки */}
+        {/* Действия: редактировать, статистика; десктоп — кнопки, mobile — меню */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <div className="hidden sm:flex items-center gap-1">
             <button
@@ -104,6 +133,15 @@ export function MyListingCard({ listing, onEdit, onDelete, onHide, className }: 
             >
               Редактировать
             </button>
+            {onStats && (
+              <button
+                type="button"
+                onClick={() => onStats(listing.id)}
+                className="px-3 py-1.5 rounded-[10px] text-[13px] font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                Статистика
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onHide(listing.id)}
@@ -148,6 +186,16 @@ export function MyListingCard({ listing, onEdit, onDelete, onHide, className }: 
                 >
                   Редактировать
                 </button>
+                {onStats && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => { onStats(listing.id); setMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-[13px] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                  >
+                    Статистика
+                  </button>
+                )}
                 <button
                   type="button"
                   role="menuitem"

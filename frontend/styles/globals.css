@@ -25,6 +25,7 @@
 @import './motion-tz16.css';
 @import './messages-tz11.css';
 @import './admin-panel.css';
+@import './tz22-polish.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -922,6 +923,14 @@ body.modal-open {
   margin: 16px 0;
   height: 1px;
   background: var(--border-main);
+}
+/* Разделитель в списке бургера (ТЗ 11: блок админа) */
+.drawer.mobile-menu .menu .menu-list .menu-separator {
+  list-style: none;
+  margin: 12px 0 8px;
+  height: 1px;
+  background: var(--border-main);
+  min-height: 1px;
 }
 
 /* Header: лого 30px, gap 6px, текст жирнее, выравнивание */

@@ -57,7 +57,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [isGalleryOpen, setGalleryOpen] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
   const [descExpanded, setDescExpanded] = useState(false)
-  const [aiTooltipOpen, setAiTooltipOpen] = useState(false)
+  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -212,17 +212,27 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
           ← Назад к поиску
         </Link>
 
-        {/* 1. Галерея — ПК: большое слева + 4 мини справа 420px; моб: слайдер + счётчик */}
-        <section className="mb-6">
-          <GalleryTZ8
-            photos={photos}
-            onOpenFullscreen={photosLength > 0 ? () => setGalleryOpen(true) : undefined}
-          />
-        </section>
+        {/* ТЗ 19: Верх — галерея 60% + правый блок брони 40%, фиксирован при скролле */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 mb-6">
+          <section className="lg:col-span-3 min-w-0">
+            <GalleryTZ8
+              photos={photos}
+              onOpenFullscreen={photosLength > 0 ? () => setGalleryOpen(true) : undefined}
+            />
+          </section>
+          <div className="lg:col-span-2">
+            <div id="listing-booking" className="sticky top-6">
+              <ListingBooking
+                listingId={item.id}
+                pricePerNight={priceValue || 0}
+                onConfirm={handleBookingConfirm}
+              />
+            </div>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Левая колонка — основной контент */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Информация под фото: описание, удобства, расположение, отзывы */}
+        <div className="space-y-6">
             {/* 2. Основной блок */}
             <section>
               <h1 className="text-[22px] md:text-[24px] font-bold text-[var(--text-primary)] leading-tight">
@@ -239,35 +249,62 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {pricePerMonth > 0 && (
                   <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>
                 )}
+                {priceValue > 0 && (
+                  <p className="text-[12px] text-[var(--text-muted)] mt-1">включая сервис 7%</p>
+                )}
+              </div>
+
+              {/* ТЗ 19: метки доверия — Проверено, AI подобрано, Новый объект, Суперхозяин */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {(item as any)?.verified && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium bg-[var(--accent)]/15 text-[var(--accent)]">
+                    <span aria-hidden>✓</span> Проверено
+                  </span>
+                )}
+                {aiScore >= 70 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium bg-[var(--accent)]/15 text-[var(--accent)]">
+                    <span aria-hidden>✓</span> AI подобрано
+                  </span>
+                )}
+                {(item as any)?.isNew && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium bg-[var(--accent)]/15 text-[var(--accent)]">
+                    Новый объект
+                  </span>
+                )}
+                {((owner as any)?.superhost || (item as any)?.superhost) && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium bg-[var(--accent)]/15 text-[var(--accent)]">
+                    Суперхозяин
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-4 mt-4 text-[14px] text-[var(--text-secondary)]">
                 <span>🛏 {(item as any).capacityGuests ?? 2} гостя</span>
                 <span>🛋 {item.bedrooms ?? 1} комната</span>
                 {item.area != null && <span>📐 {item.area} м²</span>}
+                {item.floor != null && (
+                  <span>🏢 {item.totalFloors != null ? `этаж ${item.floor} из ${item.totalFloors}` : `${item.floor} этаж`}</span>
+                )}
                 <span>🚇 5 мин</span>
               </div>
             </section>
 
-            {/* 5. AI-блок */}
+            {/* ТЗ 18: AI-блок — карточка с иконкой, список анализа */}
             <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
-              <p className="text-[15px] font-semibold text-[var(--text-primary)]">Подобрано для вас</p>
-              <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-                {aiScore >= 70 ? 'Под ваш бюджет' : 'В этом районе'}
-              </p>
-              <div className="relative mt-2">
-                <button
-                  type="button"
-                  onClick={() => setAiTooltipOpen((o) => !o)}
-                  className="text-[13px] font-medium text-[var(--accent)] hover:underline"
-                >
-                  Почему?
-                </button>
-                {aiTooltipOpen && (
-                  <div className="absolute left-0 top-full mt-2 z-10 max-w-sm rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-3 shadow-lg text-[13px] text-[var(--text-secondary)]">
-                    AI подобрал это жильё: {aiReasons.slice(0, 2).join(', ')}.
-                  </div>
-                )}
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/15 flex items-center justify-center shrink-0" aria-hidden>
+                  <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></path></svg>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">AI анализ</h3>
+                  <ul className="mt-2 space-y-1.5 text-[14px] text-[var(--text-secondary)]">
+                    {(aiReasons.length > 0 ? aiReasons : ['Под ваш бюджет', 'Район востребован']).slice(0, 4).map((r, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="text-[var(--accent)]">•</span> {typeof r === 'string' ? r : (r as string)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </section>
 
@@ -286,17 +323,26 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </section>
             )}
 
-            {/* 7. Удобства */}
+            {/* ТЗ 18: Удобства — сетка, «Показать все» при большом списке */}
             {amenities.length > 0 && (
               <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
                 <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-4">Удобства</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {amenities.map((label, i) => (
+                  {(amenitiesExpanded ? amenities : amenities.slice(0, 8)).map((label, i) => (
                     <div key={i} className="flex items-center gap-2 text-[14px] text-[var(--text-secondary)]">
-                      <span className="text-lg">•</span> {label}
+                      <span className="text-[var(--accent)]">•</span> {label}
                     </div>
                   ))}
                 </div>
+                {amenities.length > 8 && (
+                  <button
+                    type="button"
+                    onClick={() => setAmenitiesExpanded((e) => !e)}
+                    className="mt-3 text-[14px] font-medium text-[var(--accent)] hover:underline"
+                  >
+                    {amenitiesExpanded ? 'Свернуть' : 'Показать все'}
+                  </button>
+                )}
               </section>
             )}
 
@@ -354,10 +400,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </div>
             </section>
 
-            {/* 10. Похожие */}
+            {/* ТЗ 18: Похожие рядом */}
             {similarListings.length > 0 && (
               <section>
-                <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Похожие варианты</h2>
+                <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Похожие рядом</h2>
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 scrollbar-none">
                   {similarListings.map((s: any) => (
                     <div key={s.id} className="flex-shrink-0 w-[280px]">
@@ -377,31 +423,27 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 </div>
               </section>
             )}
-
-          </div>
-
-          {/* Правая колонка — бронирование (sticky) */}
-          <div className="lg:col-span-1">
-            <div id="listing-booking" className="sticky top-6">
-              <ListingBooking
-                listingId={item.id}
-                pricePerNight={priceValue || 0}
-                onConfirm={handleBookingConfirm}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Моб: фиксированная кнопка снизу */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] md:hidden">
-        <button
-          type="button"
-          onClick={scrollToBooking}
-          className="w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]"
-        >
-          Забронировать
-        </button>
+      {/* ТЗ 18: Sticky-панель mobile — цена + забронировать */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] md:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[18px] font-bold text-[var(--text-primary)]">
+              {priceValue > 0 ? `${priceValue.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+              <span className="text-[14px] font-normal text-[var(--text-muted)]"> / ночь</span>
+            </p>
+            {priceValue > 0 && <p className="text-[11px] text-[var(--text-muted)]">включая сервис 7%</p>}
+          </div>
+          <button
+            type="button"
+            onClick={scrollToBooking}
+            className="shrink-0 h-12 px-6 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px]"
+          >
+            Забронировать
+          </button>
+        </div>
       </div>
 
       {/* Fullscreen галерея */}
@@ -464,7 +506,7 @@ function GalleryTZ8({
           className="col-span-3 relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           {mainUrl ? (
-            <img src={mainUrl} alt="" className="w-full h-full object-cover" />
+            <img src={mainUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-4xl">📷</div>
           )}
@@ -477,7 +519,7 @@ function GalleryTZ8({
               onClick={() => setActiveIndex(idx)}
               className="flex-1 min-h-0 relative overflow-hidden rounded-r-[4px] focus:outline-none"
             >
-              <img src={photos[idx]?.url} alt="" className="w-full h-full object-cover" />
+              <img src={photos[idx]?.url} alt="" className="w-full h-full object-cover" loading="lazy" />
             </button>
           ))}
         </div>
@@ -490,7 +532,7 @@ function GalleryTZ8({
           onTouchEnd={onTouchEnd}
         >
           {mainUrl ? (
-            <img src={mainUrl} alt="" className="w-full h-full object-cover" />
+            <img src={mainUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-4xl">📷</div>
           )}

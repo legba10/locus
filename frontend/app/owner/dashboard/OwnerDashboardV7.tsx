@@ -164,6 +164,7 @@ export function OwnerDashboardV7() {
                   setEditingListing(listing)
                   setActiveTab('add')
                 }}
+                onStats={() => setActiveTab('analytics')}
                 plan={plan}
                 listingLimit={listingLimit}
                 onUpgrade={(reason) => { setUpgradeReason(reason); setUpgradeOpen(true); }}
@@ -216,12 +217,14 @@ export function OwnerDashboardV7() {
 function MyListingsTab({
   onAdd,
   onEdit,
+  onStats,
   plan,
   listingLimit,
   onUpgrade,
 }: {
   onAdd: () => void;
   onEdit: (listing: any) => void;
+  onStats?: (id: string) => void;
   plan: UserPlan;
   listingLimit: number;
   onUpgrade: (reason: "limit" | "analytics" | "ai" | "general") => void;
@@ -262,6 +265,12 @@ function MyListingsTab({
     cover: item.photos?.[0]?.url ?? item.images?.[0]?.url ?? null,
     status: item.status ?? 'DRAFT',
     createdAt: item.createdAt,
+    viewsCount: item.viewsCount ?? item.views ?? null,
+    bookingsCount: item.bookingsCount ?? item.bookings ?? null,
+    income: item.income ?? null,
+    aiDemand: item.aiDemand ?? item.demand ?? null,
+    aiMarketPrice: item.aiMarketPrice ?? item.marketPrice ?? null,
+    aiRecommendations: item.aiRecommendations ?? item.recommendations ?? null,
   })
 
   return (
@@ -364,6 +373,7 @@ function MyListingsTab({
               onEdit={onEdit}
               onDelete={handleDelete}
               onHide={handleHide}
+              onStats={onStats}
             />
           ))}
         </div>

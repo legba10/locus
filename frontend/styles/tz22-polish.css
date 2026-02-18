@@ -1,0 +1,227 @@
+/**
+ * ТЗ-22: Финальная полировка UI.
+ * Единая сетка отступов, кнопки, инпуты, лёгкие анимации.
+ * Не меняет структуру, только визуальное выравнивание.
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   SPACING GRID (4, 8, 12, 16, 24, 32, 48)
+   Использовать для отступов блоков, карточек, секций
+   ═══════════════════════════════════════════════════════════════ */
+.tz22-gap-4 { gap: 4px; }
+.tz22-gap-8 { gap: 8px; }
+.tz22-gap-12 { gap: 12px; }
+.tz22-gap-16 { gap: 16px; }
+.tz22-gap-24 { gap: 24px; }
+.tz22-gap-32 { gap: 32px; }
+.tz22-gap-48 { gap: 48px; }
+.tz22-p-12 { padding: 12px; }
+.tz22-p-16 { padding: 16px; }
+.tz22-p-24 { padding: 24px; }
+.tz22-rounded-12 { border-radius: 12px; }
+.tz22-rounded-16 { border-radius: 16px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   INPUTS — высота 48px, radius 12px, единый focus
+   ═══════════════════════════════════════════════════════════════ */
+.tz22-input,
+input[type="text"].tz22-input,
+input[type="email"].tz22-input,
+input[type="search"].tz22-input,
+input[type="tel"].tz22-input,
+input[type="date"].tz22-input,
+textarea.tz22-input {
+  min-height: 48px;
+  height: 48px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-main, var(--border));
+  background: var(--bg-input, var(--bg-card));
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+textarea.tz22-input {
+  min-height: 96px;
+  height: auto;
+}
+.tz22-input::placeholder {
+  color: var(--text-muted);
+}
+.tz22-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.15);
+}
+.tz22-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS — Primary 12px radius, 12x20 padding; единый hover/active
+   ═══════════════════════════════════════════════════════════════ */
+.btn-tz22-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--button-primary-text, #fff);
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.btn-tz22-primary:hover { opacity: 0.95; }
+.btn-tz22-primary:active { transform: translateY(1px); }
+.btn-tz22-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-tz22-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid var(--border-main, var(--border));
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-tz22-secondary:hover {
+  background: var(--bg-input, rgba(0,0,0,0.04));
+  border-color: var(--text-muted);
+}
+.btn-tz22-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Ghost — иконки, без фона */
+.btn-tz22-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-tz22-ghost:hover { background: var(--bg-input, rgba(0,0,0,0.04)); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS — единые отступы, скругление 16px
+   ═══════════════════════════════════════════════════════════════ */
+.tz22-card {
+  border-radius: 16px;
+  border: 1px solid var(--border-main, var(--border));
+  background: var(--bg-card);
+  padding: 16px;
+  transition: box-shadow 0.2s ease;
+}
+@media (min-width: 768px) {
+  .tz22-card { padding: 24px; }
+}
+.tz22-card:hover {
+  box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.06));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPOGRAPHY — вторичный текст через переменные (не opacity на светлой теме)
+   ═══════════════════════════════════════════════════════════════ */
+.tz22-text-secondary {
+  color: var(--text-secondary);
+}
+.tz22-text-muted {
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT TRANSITIONS — hover, меню, карточки
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+  .tz22-transition {
+    transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .tz22-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+}
+
+/* ТЗ-22: шапка — 64px высота везде, поиск 48px и 12px radius */
+.layout-header {
+  height: 64px !important;
+  min-height: 64px !important;
+}
+.layout-header .layout-header__inner-tz2 {
+  height: 64px !important;
+  min-height: 64px !important;
+}
+.layout-header__search-input {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+.layout-header__search-input:focus {
+  box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.15);
+}
+
+/* ТЗ-22: кнопки — radius 12px, padding 12x20 для primary */
+.btn {
+  border-radius: 12px;
+}
+.btn--md {
+  padding: 12px 20px;
+}
+.btn--primary {
+  border-radius: 12px;
+}
+.btn--secondary {
+  border-radius: 12px;
+}
+
+/* ТЗ-22: карточки объявлений — скругление 16px, единые отступы */
+.listing-card .rounded-\[16px\],
+.listing-card .rounded-\[12px\] {
+  border-radius: 16px;
+}
+.listing-card a[class*="rounded"] {
+  border-radius: 16px;
+}
+
+/* ТЗ-22: нижнее меню — отступы по сетке, safe area */
+[aria-label="Основная навигация"] {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 8px;
+  gap: 4px;
+}
+
+/* Лёгкие анимации — hover для карточек и кнопок */
+@media (prefers-reduced-motion: no-preference) {
+  .listing-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .listing-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  }
+  .profile-dropdown-tz17 {
+    animation: tz22-dropdown 0.15s ease;
+  }
+}
+@keyframes tz22-dropdown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

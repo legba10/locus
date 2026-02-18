@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Plus } from 'lucide-react'
+import { Search, MessageCircle, HelpCircle, LogOut, Shield, User, LayoutList, Settings, Calendar, TrendingUp, Info, CreditCard, Mail } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
@@ -48,7 +48,8 @@ function NavItem({
 /** ТЗ-14: один логотип /logo.svg + надпись LOCUS, без смены по теме, стабильно везде */
 export function Header() {
   const router = useRouter()
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, isAuthenticated, logout, hasRole } = useAuthStore()
+  const isLandlord = hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -110,8 +111,8 @@ export function Header() {
   return (
     <header
       className={cn(
-        'layout-header layout-header-tz13 layout-header-tz2 layout-header-overflow-fix sticky left-0 right-0 z-[var(--z-header)] w-full',
-        'h-16 xl:h-[72px] min-h-16 xl:min-h-[72px]',
+        'layout-header layout-header-tz13 layout-header-tz2 layout-header-overflow-fix sticky top-0 left-0 right-0 z-[var(--z-header)] w-full',
+        'h-16 min-h-16',
         'transition-[box-shadow,background] duration-200',
         scrolled && 'layout-header--scrolled'
       )}
@@ -146,24 +147,24 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Справа: ТЗ — порядок [поиск] [сердце] [сообщения] [колокол] [аватар]; mobile и desktop. Уведомления всегда в шапке при authed. */}
+        {/* ТЗ-21: Справа — только поиск, сообщения, уведомления, аватар. Без избранного и дублей. */}
         <div className="layout-header__right header-actions flex items-center shrink-0 gap-2 sm:gap-3 xl:gap-3 xl:ml-6">
           <IconButton onClick={() => openSearchOverlay()} ariaLabel="Поиск" className="flex xl:hidden">
-            <Search className="w-5 h-5" strokeWidth={1.8} />
+            <Search className="w-6 h-6" strokeWidth={1.8} />
           </IconButton>
           <form className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value?.trim() ?? ''; openSearchOverlay(q); }}>
             <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
           </form>
-          <IconButton as="a" href="/favorites" ariaLabel="Избранное" className="flex">
-            <Heart className="w-5 h-5" strokeWidth={1.8} />
-          </IconButton>
-          <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="flex">
-            <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
-          </IconButton>
+          {/* Сообщения и уведомления — только в шапке (дублей в меню авы нет) */}
           {authed && (
-            <div className="flex shrink-0" aria-label="Уведомления">
-              <NotificationsBell compactBadge />
-            </div>
+            <>
+              <IconButton as="a" href="/messages" ariaLabel="Сообщения" className="flex">
+                <MessageCircle className="w-6 h-6" strokeWidth={1.8} />
+              </IconButton>
+              <div className="flex shrink-0" aria-label="Уведомления">
+                <NotificationsBell compactBadge />
+              </div>
+            </>
           )}
           {authed ? (
             <div className="profile-dropdown-wrap relative shrink-0" ref={profileRef}>
@@ -171,34 +172,40 @@ export function Header() {
                 user={{ avatar_url: displayAvatar, full_name: displayName, username: user?.username }}
                 onClick={() => setProfileOpen((o) => !o)}
                 ariaExpanded={profileOpen}
-                size={44}
+                size={40}
               />
               {profileOpen && (
                 <div
                   className="profile-dropdown-tz13 profile-dropdown-tz17 w-[260px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-card)] py-2 shadow-xl"
                   role="menu"
                 >
+                  {/* ТЗ-21: меню аватара — 1.Профиль 2.Мои объявления 3.Бронирования 4.Доход 5.Настройки 6.Выйти. Без сообщений и избранного. */}
                   <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <User className={iconSm} /> Профиль
                   </Link>
-                  <Link href="/owner/dashboard" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                    <LayoutList className={iconSm} /> Мои объявления
-                  </Link>
-                  <Link href="/pricing" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                    <CreditCard className={iconSm} /> Тарифы
-                  </Link>
-                  {canCreateListing && (
-                    <Link href={createHref} className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                      <Plus className={iconSm} /> Разместить объявление
-                    </Link>
+                  {isLandlord && (
+                    <>
+                      <Link href="/owner/dashboard" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                        <LayoutList className={iconSm} /> Мои объявления
+                      </Link>
+                      <Link href="/owner/dashboard?tab=bookings" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                        <Calendar className={iconSm} /> Бронирования
+                      </Link>
+                      <Link href="/profile/income" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                        <TrendingUp className={iconSm} /> Доход
+                      </Link>
+                    </>
                   )}
-                  <Link href="/profile" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                  <Link href="/profile/settings" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
                     <Settings className={iconSm} /> Настройки
                   </Link>
                   {isAdmin && (
-                    <Link href="/admin" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
-                      <Shield className={iconSm} /> Админ
-                    </Link>
+                    <>
+                      <div className="border-t border-[var(--border)] my-1" />
+                      <Link href="/admin" className="profile-dropdown-tz7__item flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--text-main)]" onClick={() => setProfileOpen(false)} role="menuitem">
+                        <Shield className={iconSm} /> Админ панель
+                      </Link>
+                    </>
                   )}
                   <div className="border-t border-[var(--border)] my-1" />
                   <button type="button" onClick={() => { setProfileOpen(false); handleLogout(); }} className="profile-dropdown-tz7__item profile-dropdown-logout-tz10 w-full flex items-center gap-3 px-4 py-2.5 text-[14px]" role="menuitem">
@@ -215,11 +222,7 @@ export function Header() {
               Войти
             </Link>
           )}
-          {canCreateListing && (
-            <Link href={createHref} className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0 hidden xl:flex" aria-label="Разместить объявление">
-              Разместить
-            </Link>
-          )}
+          {/* ТЗ 11: кнопка «Разместить» только в кабинете и в профиле, не в хедере */}
         </div>
       </div>
 
@@ -238,27 +241,13 @@ export function Header() {
           </button>
         </div>
         <div className="mobile-menu-separator" aria-hidden />
-        {!isAuthenticated() && (
-          <div className="mobile-menu-cta-wrap">
-            <button
-              type="button"
-              onClick={() => handleNavigate('/auth/login')}
-              className="btn btn--primary btn--md w-full"
-            >
-              Войти / Зарегистрироваться
-            </button>
-          </div>
-        )}
-        <nav className="mobile-menu-nav menu" aria-label="Навигация">
+        {/* ТЗ 17: бургер = только сервис. Порядок: Помощь, О сервисе, Тарифы, Контакты. Без сообщений, избранного, профиля, уведомлений. */}
+        <nav className="mobile-menu-nav menu" aria-label="Сервисное меню">
           <ul className="menu-list">
-            <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-            <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-            <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-            <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-            {isAdmin && (
-              <NavItem icon={<Shield size={22} strokeWidth={1.8} />} label="Админ" onClick={() => handleNavigate('/admin')} />
-            )}
             <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
+            <NavItem icon={<Info size={22} strokeWidth={1.8} />} label="О сервисе" onClick={() => handleNavigate('/how-it-works')} />
+            <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
+            <NavItem icon={<Mail size={22} strokeWidth={1.8} />} label="Контакты" onClick={() => handleNavigate('/contacts')} />
           </ul>
         </nav>
       </MobileMenu>

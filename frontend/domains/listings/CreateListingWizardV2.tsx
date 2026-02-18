@@ -17,6 +17,8 @@ import { StepPreview } from '@/domains/listings/steps/StepPreview'
 const TOTAL_STEPS = 8
 const MIN_PHOTOS = 5
 const MAX_PHOTOS = 30
+/** ТЗ 14: одна формулировка требования к фото, без дублей */
+const PHOTO_MIN_MSG = 'Добавьте минимум 5 фото'
 
 const TYPE_LABELS: Record<PropertyType, string> = {
   apartment: 'Квартира',
@@ -112,7 +114,7 @@ export function CreateListingWizardV2({
 
   const photoError = useMemo(() => {
     if (step !== 2) return null
-    if (photoItems.length < MIN_PHOTOS) return 'Добавьте минимум 5 фото'
+    if (photoItems.length < MIN_PHOTOS) return PHOTO_MIN_MSG
     return null
   }, [step, photoItems.length])
 
@@ -191,7 +193,7 @@ export function CreateListingWizardV2({
   const goNext = useCallback(() => {
     setError(null)
     if (step === 2 && photoItems.length < MIN_PHOTOS) {
-      setError('Добавьте минимум 5 фото')
+      setError(PHOTO_MIN_MSG)
       return
     }
     if (step === 1 && !city.trim()) {
@@ -221,7 +223,7 @@ export function CreateListingWizardV2({
     if (isSubmitting) return
     setError(null)
     if (photoItems.length < MIN_PHOTOS) {
-      setError('Добавьте минимум 5 фото')
+      setError(PHOTO_MIN_MSG)
       return
     }
     if (!city.trim()) {

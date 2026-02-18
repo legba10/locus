@@ -41,15 +41,19 @@ export function DashboardV2() {
   const listingUsed = (user as any)?.listingUsed ?? 0
   const isFreePlan = plan === 'FREE'
   const canCreate = listingUsed < listingLimit
+  const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
 
   useEffect(() => {
     const tab = searchParams.get('tab') as string | null
+    if (tab === 'messages') {
+      router.replace('/messages')
+      return
+    }
     const map: Record<string, CabinetTab> = {
       listings: 'listings',
       add: 'listings',
       promotion: 'promotion',
       bookings: 'bookings',
-      messages: 'messages',
       finances: 'finances',
       profile: 'profile',
       settings: 'settings',
@@ -59,7 +63,26 @@ export function DashboardV2() {
     else if (tab === 'finances') setActiveTab('finances')
     else if (tab === 'settings') setActiveTab('settings')
     else if (tab && map[tab]) setActiveTab(map[tab])
-  }, [searchParams])
+  }, [searchParams, router])
+
+  const handleTabChange = (tab: CabinetTab) => {
+    if (tab === 'messages') {
+      router.push('/messages')
+      return
+    }
+    if (tab === 'admin') {
+      router.push('/admin')
+      return
+    }
+    setActiveTab(tab)
+    if (tab === 'listings') router.push('/owner/dashboard?tab=listings')
+    else if (tab === 'promotion') router.push('/owner/dashboard?tab=promotion')
+    else if (tab === 'bookings') router.push('/owner/dashboard?tab=bookings')
+    else if (tab === 'finances') router.push('/owner/dashboard?tab=finances')
+    else if (tab === 'profile') router.push('/owner/dashboard?tab=profile')
+    else if (tab === 'settings') router.push('/owner/dashboard?tab=settings')
+    else router.push('/owner/dashboard')
+  }
 
   if (!isAuthenticated()) {
     return (
@@ -85,18 +108,8 @@ export function DashboardV2() {
           <aside className="lg:col-span-1">
             <SidebarV2
               activeTab={activeTab}
-              onTabChange={(tab) => {
-                setActiveTab(tab)
-                if (tab === 'listings') router.push('/owner/dashboard?tab=listings')
-                else if (tab === 'promotion') router.push('/owner/dashboard?tab=promotion')
-                else if (tab === 'bookings') router.push('/owner/dashboard?tab=bookings')
-                else if (tab === 'messages') router.push('/owner/dashboard?tab=messages')
-                else if (tab === 'analytics') router.push('/owner/dashboard?tab=analytics')
-                else if (tab === 'profile') router.push('/owner/dashboard?tab=profile')
-                else if (tab === 'finances') router.push('/owner/dashboard?tab=finances')
-                else if (tab === 'settings') router.push('/owner/dashboard?tab=settings')
-                else router.push('/owner/dashboard')
-              }}
+              onTabChange={handleTabChange}
+              showAdmin={isAdmin}
             />
           </aside>
 
@@ -108,7 +121,6 @@ export function DashboardV2() {
                 onUpgrade={() => { setUpgradeReason('general'); setUpgradeOpen(true); }}
                 onGoToListings={() => { setActiveTab('listings'); router.push('/owner/dashboard?tab=listings'); }}
                 onGoToBookings={() => { setActiveTab('bookings'); router.push('/owner/dashboard?tab=bookings'); }}
-                onGoToMessages={() => { setActiveTab('messages'); router.push('/owner/dashboard?tab=messages'); }}
                 onGoToPromotion={() => { setActiveTab('promotion'); router.push('/owner/dashboard?tab=promotion'); }}
               />
             )}
@@ -156,7 +168,7 @@ export function DashboardV2() {
               />
             ) : null}
             {activeTab === 'bookings' && <BookingsTabV2 />}
-            {activeTab === 'messages' && <MessagesTabV2 />}
+            {/* ТЗ 14: сообщения — один центр, только /messages; из кабинета редирект по клику и по ?tab=messages */}
             {activeTab === 'finances' && <FinancesTabV2 isFreePlan={isFreePlan} />}
             {activeTab === 'profile' && <ProfileTabV2 />}
             {activeTab === 'settings' && <SettingsTabV2 />}
@@ -243,14 +255,13 @@ function UserIconMobile() {
   )
 }
 
-/** ТЗ 6: Обзор — 4 метрики, быстрые действия, мини 3 объявления, последние бронирования */
+/** ТЗ 14: Обзор — метрики (Активные, Бронирования сегодня, Доход месяц, Просмотры), быстрые действия без дубля сообщений */
 function DashboardHomeTab({
   canCreate,
   onAddListing,
   onUpgrade,
   onGoToListings,
   onGoToBookings,
-  onGoToMessages,
   onGoToPromotion,
 }: {
   canCreate: boolean
@@ -258,7 +269,6 @@ function DashboardHomeTab({
   onUpgrade: () => void
   onGoToListings: () => void
   onGoToBookings: () => void
-  onGoToMessages: () => void
   onGoToPromotion: () => void
 }) {
   const { data } = useFetch<{ items: any[] }>(['owner-listings-home'], '/api/listings/my')
@@ -283,11 +293,11 @@ function DashboardHomeTab({
             <p className="text-[24px] font-bold text-[var(--text-primary)] mt-1">{activeCount}</p>
           </div>
           <div className={metricCls}>
-            <p className="text-[12px] text-[var(--text-muted)]">Бронирования</p>
+            <p className="text-[12px] text-[var(--text-muted)]">Бронирования сегодня</p>
             <p className="text-[24px] font-bold text-[var(--text-primary)] mt-1">{bookingsCount}</p>
           </div>
           <div className={metricCls}>
-            <p className="text-[12px] text-[var(--text-muted)]">Доход</p>
+            <p className="text-[12px] text-[var(--text-muted)]">Доход месяц</p>
             <p className="text-[24px] font-bold text-[var(--text-primary)] mt-1">{income > 0 ? `${income.toLocaleString('ru-RU')} ₽` : '0 ₽'}</p>
           </div>
           <div className={metricCls}>
@@ -315,11 +325,7 @@ function DashboardHomeTab({
           </button>
           <button type="button" onClick={onGoToBookings} className="flex flex-col items-center justify-center gap-2 rounded-[12px] p-4 bg-[var(--bg-input)] border border-[var(--border-main)] text-[var(--text-primary)] font-medium text-[14px] hover:bg-[var(--bg-main)] transition-colors">
             <span className="text-xl">📅</span>
-            Открыть календарь
-          </button>
-          <button type="button" onClick={onGoToMessages} className="flex flex-col items-center justify-center gap-2 rounded-[12px] p-4 bg-[var(--bg-input)] border border-[var(--border-main)] text-[var(--text-primary)] font-medium text-[14px] hover:bg-[var(--bg-main)] transition-colors">
-            <span className="text-xl">💬</span>
-            Ответить на сообщения
+            Календарь
           </button>
         </div>
       </section>
@@ -465,9 +471,10 @@ function ListingsTabV2({
       {!isLoading && listings.length === 0 && (
         <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-12 text-center">
           <p className="text-[16px] text-[var(--text-secondary)] mb-4">У вас пока нет объявлений</p>
-          <p className="text-[14px] text-[var(--text-muted)]">
-            Используйте кнопку «Разместить» в шапке сайта, чтобы добавить первое объявление.
-          </p>
+          <p className="text-[14px] text-[var(--text-muted)] mb-4">Создайте первое объявление кнопкой выше.</p>
+          <button type="button" onClick={onAdd} className="inline-flex items-center gap-2 px-4 py-3 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95">
+            <span>+</span> Создать объявление
+          </button>
         </div>
       )}
 

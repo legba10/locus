@@ -781,7 +781,7 @@ export function ListingWizard({
           <div className="space-y-4">
             <div className="text-[14px] font-semibold text-[var(--text-primary)]">Готово к публикации</div>
             {(data.newPhotos.length + data.existingPhotos.length) < 5 && (
-              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Добавьте минимум 5 фото для лучшего отклика.</div>
+              <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Заполните шаг «Фото»: минимум 5 фото (комната и санузел обязательны).</div>
             )}
             {!data.title.trim() && (
               <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-800">Заполните название.</div>
