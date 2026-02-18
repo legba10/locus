@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatPrice, RU } from '@/core/i18n/ru'
+import { formatPrice } from '@/core/i18n/ru'
 import { cn } from '@/shared/utils/cn'
 
 const MAX_GUESTS = 16
@@ -114,14 +114,14 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         {nights > 0 && (
           <div className="mt-3 space-y-1.5">
             <div className="flex justify-between text-[14px] text-[var(--text-primary)]">
-              <span>× {nights} {nights === 1 ? 'ночь' : 'ночей'} = {base.toLocaleString('ru-RU')} ₽</span>
+              <span>{nights} {nights === 1 ? 'ночь' : 'ночей'} × {pricePerNight.toLocaleString('ru-RU')} = {base.toLocaleString('ru-RU')} ₽</span>
             </div>
             <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
-              <span>Комиссия сервиса 7%:</span>
+              <span>комиссия 7%</span>
               <span>{serviceFee.toLocaleString('ru-RU')} ₽</span>
             </div>
             <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border-main)] text-[16px] font-bold text-[var(--text-primary)]">
-              <span>{RU.price.total}</span>
+              <span>итого:</span>
               <span>{total.toLocaleString('ru-RU')} ₽</span>
             </div>
           </div>
@@ -140,15 +140,16 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         }
         disabled={!canConfirm}
         aria-disabled={!canConfirm}
-        aria-label="Забронировать"
+        aria-label={canConfirm ? 'Забронировать' : 'Выбрать даты'}
         className={cn(
           'w-full h-12 rounded-[12px] font-semibold text-[15px] border-0 mt-2',
           'bg-[var(--accent)] text-[var(--button-primary-text)]',
           'hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed',
-          'transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]'
+          'transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]'
         )}
       >
-        Забронировать
+        {canConfirm ? 'Забронировать' : 'Выбрать даты'}
       </button>
     </div>
   )
