@@ -27,25 +27,26 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
   const canConfirm = checkIn && checkOut && guests >= 1
   const effectiveMax = Math.min(maxGuests, MAX_GUESTS)
 
+  const inputCls = 'w-full h-12 min-h-[48px] rounded-[12px] px-4 box-border border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20'
+
   return (
     <div
       className={cn(
-        'booking-card booking-card-tz8 w-full max-w-[360px] box-border',
-        'rounded-[20px] border border-[var(--border)] p-5',
-        'bg-[var(--card-bg)]',
-        'shadow-[var(--shadow-card)]',
-        'flex flex-col gap-12 overflow-hidden'
+        'booking-card w-full max-w-[360px] box-border',
+        'rounded-[16px] border border-[var(--border-main)] p-5',
+        'bg-[var(--bg-card)] shadow-[0_4px_20px_rgba(0,0,0,0.06)]',
+        'flex flex-col gap-4 overflow-hidden'
       )}
     >
-      <h2 className="text-[20px] font-bold text-[var(--text-main)]">Бронирование</h2>
+      <h2 className="text-[18px] font-bold text-[var(--text-primary)]">Бронирование</h2>
       <p className="text-[14px] text-[var(--text-secondary)]">
-        Выберите даты заезда и выезда, количество гостей.
+        Даты заезда и выезда, количество гостей.
       </p>
 
-      {/* ТЗ-5: поля дат — единый контейнер (grid в CSS), width 100%, height 52px, border-radius 14px, padding 0 16px; light/dark одинаковые */}
-      <div className="booking-dates booking-dates-tz8" role="group" aria-label="Даты заезда и выезда">
-        <div className="booking-date-field booking-date--checkin w-full">
-          <label id="booking-checkin-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkin-input">
+      {/* ТЗ 8: поля дат — одинаковая высота/ширина, border-radius 12px */}
+      <div className="grid grid-cols-2 gap-3" role="group" aria-label="Даты заезда и выезда">
+        <div className="min-w-0">
+          <label id="booking-checkin-label" className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkin-input">
             Заезд
           </label>
           <input
@@ -55,11 +56,11 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
             onChange={(e) => setCheckIn(e.target.value)}
             aria-label="Дата заезда"
             aria-describedby="booking-checkin-label"
-            className="booking-date-input w-full h-[52px] min-h-[52px] rounded-[14px] px-4 box-border border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-main)] text-[14px]"
+            className={inputCls}
           />
         </div>
-        <div className="booking-date-field booking-date--checkout w-full">
-          <label id="booking-checkout-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkout-input">
+        <div className="min-w-0">
+          <label id="booking-checkout-label" className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1" htmlFor="booking-checkout-input">
             Выезд
           </label>
           <input
@@ -70,15 +71,14 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
             min={checkIn || undefined}
             aria-label="Дата выезда"
             aria-describedby="booking-checkout-label"
-            className="booking-date-input w-full h-[52px] min-h-[52px] rounded-[14px] px-4 box-border border border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-main)] text-[14px]"
+            className={inputCls}
           />
         </div>
       </div>
 
-      {/* ТЗ-5: гости — height 52px, flex align center justify-between, кнопки 44×44, border-radius 12px */}
       <div className="guests-control min-w-0">
-        <label id="booking-guests-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Гости</label>
-        <div className="flex items-center justify-between h-[52px] rounded-[12px] border border-[var(--border)] px-4 bg-[var(--card-bg)]">
+        <label id="booking-guests-label" className="block text-[13px] font-medium text-[var(--text-secondary)] mb-1">Гости</label>
+        <div className="flex items-center justify-between h-12 rounded-[12px] border border-[var(--border-main)] px-4 bg-[var(--bg-input)]">
           <button
             type="button"
             aria-label="Уменьшить"
@@ -86,12 +86,12 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.max(1, g - 1))
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] flex items-center justify-center border border-[var(--border)] text-lg font-medium text-[var(--text-main)] hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--card-bg)]"
+            className="w-10 h-10 rounded-[12px] flex items-center justify-center border border-[var(--border-main)] text-lg font-medium text-[var(--text-primary)] hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--bg-card)]"
             disabled={guests <= 1}
           >
             −
           </button>
-          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums text-[var(--text-main)]">{guests}</span>
+          <span className="flex-1 text-center text-[15px] font-semibold tabular-nums text-[var(--text-primary)]">{guests}</span>
           <button
             type="button"
             aria-label="Увеличить"
@@ -99,7 +99,7 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5)
               setGuests((g) => Math.min(effectiveMax, g + 1))
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] flex items-center justify-center border border-[var(--border)] text-lg font-medium text-[var(--text-main)] hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--card-bg)]"
+            className="w-10 h-10 rounded-[12px] flex items-center justify-center border border-[var(--border-main)] text-lg font-medium text-[var(--text-primary)] hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--bg-card)]"
             disabled={guests >= effectiveMax}
           >
             +
@@ -107,21 +107,20 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         </div>
       </div>
 
-      {/* ТЗ-5: цена за ночь, база (× ночей), комиссия сервиса 7%, итог. Только UI, API не меняем. */}
-      <div className="booking-price-block-tz8">
-        <p className="text-[20px] font-bold text-[var(--text-main)]">
+      <div className="border-t border-[var(--border-main)] pt-4">
+        <p className="text-[18px] font-bold text-[var(--text-primary)]">
           {formatPrice(pricePerNight, 'night')}
         </p>
         {nights > 0 && (
-          <div className="booking-price-breakdown-tz8 mt-3 space-y-1.5">
-            <div className="flex justify-between text-[14px] text-[var(--text-main)]">
+          <div className="mt-3 space-y-1.5">
+            <div className="flex justify-between text-[14px] text-[var(--text-primary)]">
               <span>× {nights} {nights === 1 ? 'ночь' : 'ночей'} = {base.toLocaleString('ru-RU')} ₽</span>
             </div>
             <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
               <span>Комиссия сервиса 7%:</span>
               <span>{serviceFee.toLocaleString('ru-RU')} ₽</span>
             </div>
-            <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border)] text-[16px] font-bold text-[var(--text-main)]">
+            <div className="flex justify-between items-baseline pt-2 border-t border-[var(--border-main)] text-[16px] font-bold text-[var(--text-primary)]">
               <span>{RU.price.total}</span>
               <span>{total.toLocaleString('ru-RU')} ₽</span>
             </div>
@@ -129,30 +128,28 @@ export function ListingBooking({ listingId, pricePerNight, maxGuests = MAX_GUEST
         )}
       </div>
 
-      <div className="booking-actions mt-1">
-        <button
-          type="button"
-          onClick={() =>
-            canConfirm &&
-            onConfirm?.({
-              checkIn: new Date(checkIn),
-              checkOut: new Date(checkOut),
-              guests,
-            })
-          }
-          disabled={!canConfirm}
-          aria-disabled={!canConfirm}
-          aria-label="Забронировать"
-          className={cn(
-            'booking-btn w-full min-w-0 h-[52px] rounded-[14px] font-semibold text-[16px] border-0',
-            'bg-[var(--accent)] text-[var(--text-on-accent)]',
-            'hover:opacity-90 disabled:cursor-not-allowed',
-            'transition-opacity duration-200 focus-visible:outline-none'
-          )}
-        >
-          Забронировать
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() =>
+          canConfirm &&
+          onConfirm?.({
+            checkIn: new Date(checkIn),
+            checkOut: new Date(checkOut),
+            guests,
+          })
+        }
+        disabled={!canConfirm}
+        aria-disabled={!canConfirm}
+        aria-label="Забронировать"
+        className={cn(
+          'w-full h-12 rounded-[12px] font-semibold text-[15px] border-0 mt-2',
+          'bg-[var(--accent)] text-[var(--button-primary-text)]',
+          'hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed',
+          'transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]'
+        )}
+      >
+        Забронировать
+      </button>
     </div>
   )
 }
