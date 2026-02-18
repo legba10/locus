@@ -10,6 +10,7 @@ import { Search, Heart, MessageCircle, CreditCard, HelpCircle, LogOut, ArrowLeft
 import { NotificationsBell } from './NotificationsBell'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { ThemeContext } from '@/providers/ThemeProvider'
+import { useProfileV2 } from '@/config/uiFlags'
 
 const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
 
@@ -133,7 +134,7 @@ export function HeaderLight() {
 
           {/* Auth — ТЗ: одна кнопка Войти/Зарегистрироваться; Выйти = Danger */}
           <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
+            {!useProfileV2 && <ThemeToggle />}
             {authed && <NotificationsBell />}
             {canCreateListing && (
               <Link
@@ -170,7 +171,7 @@ export function HeaderLight() {
 
           <div className="md:hidden flex items-center gap-3">
             {authed && <NotificationsBell />}
-            <ThemeToggle />
+            {!useProfileV2 && <ThemeToggle />}
           </div>
         </div>
       </div>

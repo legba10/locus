@@ -4,6 +4,9 @@
  */
 
 // ——— Listing (совместимо с backend CreateListingDto, ответы GET /listings, /search)
+/** Тариф размещения объявления (ТЗ 5). Backend: listing.plan */
+export type ListingPlan = "free" | "pro" | "top";
+
 export interface Listing {
   id: string;
   title: string;
@@ -25,6 +28,8 @@ export interface Listing {
   photos?: ListingPhoto[];
   amenities?: string[];
   houseRules?: Record<string, unknown>;
+  /** Тариф продвижения: free (базовый), pro, top. ТЗ 5. */
+  plan?: ListingPlan;
 }
 
 export interface ListingPhoto {

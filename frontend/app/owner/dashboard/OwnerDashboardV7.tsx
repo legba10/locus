@@ -13,6 +13,8 @@ import { UpgradeModal } from '@/components/upgradeModal/UpgradeModal'
 import type { UserPlan } from '@/shared/contracts/api'
 import { PlanBadge } from '@/components/planBadge/PlanBadge'
 import { LockedFeatureCard } from '@/components/paywall/LockedFeatureCard'
+import { useCreateListingV2 } from '@/config/uiFlags'
+import { CreateListingWizardV2 } from '@/domains/listings/CreateListingWizardV2'
 import { ListingWizard } from '@/domains/listings/ListingWizard'
 import { MyListingCard } from '@/components/listing/MyListingCard'
 
@@ -402,6 +404,16 @@ function AddListingTab({
   initialListing?: any | null;
   onLimitReached?: () => void;
 }) {
+  if (useCreateListingV2) {
+    return (
+      <CreateListingWizardV2
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        initialListing={initialListing}
+        onLimitReached={onLimitReached}
+      />
+    )
+  }
   return (
     <ListingWizard
       onSuccess={onSuccess}

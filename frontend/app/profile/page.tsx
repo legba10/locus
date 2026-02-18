@@ -3,16 +3,16 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { supabase } from '@/shared/supabase-client'
 import { cn } from '@/shared/utils/cn'
 import { ThemeSettings } from '@/components/ui/ThemeSettings'
+import { useProfileV2 } from '@/config/uiFlags'
+import { ProfileMainBlock } from '@/components/profile'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
-  const router = useRouter()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const initialSyncedRef = useRef<string | null>(null)
@@ -28,6 +28,26 @@ export default function ProfilePage() {
       : user?.tariff === 'landlord_pro'
         ? 'Landlord Pro'
         : 'Free'
+
+  if (useProfileV2) {
+    if (!isAuthenticated()) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-[20px] font-bold text-[var(--text-primary)] mb-4">Требуется авторизация</h2>
+            <Link href="/auth/login" className="text-[var(--accent)] text-[14px]">Войти в аккаунт</Link>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="space-y-6">
+        <h1 className="text-[22px] font-semibold text-[var(--text-primary)]">Основное</h1>
+        <ProfileMainBlock />
+      </div>
+    )
+  }
+
   useEffect(() => {
     if (!user?.id) return
     if (initialSyncedRef.current !== user.id) {

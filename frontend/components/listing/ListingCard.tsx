@@ -12,7 +12,7 @@ export interface ListingCardOwner {
   rating?: number | null
 }
 
-export type ListingCardBadge = 'verified' | 'ai' | 'top' | 'new' | 'discount' | 'rare'
+export type ListingCardBadge = 'verified' | 'ai' | 'top' | 'new' | 'discount' | 'rare' | 'superhost' | 'owner' | 'agent'
 
 export interface ListingCardProps {
   id: string

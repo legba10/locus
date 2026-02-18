@@ -52,38 +52,40 @@ const PlanCardItem = ({ plan }: { plan: PlanCard }) => {
         'relative rounded-[26px] border p-6 md:p-7 transition-all',
         plan.highlight ? 'md:scale-[1.02]' : 'hover:-translate-y-0.5',
         plan.theme === 'primary'
-          ? 'tariff-primary-card text-white border-transparent shadow-[0_20px_60px_rgba(99,102,241,0.35)]'
-          : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border)] shadow-[0_12px_36px_rgba(17,24,39,0.08)]'
+          ? 'border-[var(--accent)] bg-[var(--accent)]/10 shadow-[0_20px_60px_rgba(124,58,237,0.15)]'
+          : 'bg-[var(--bg-card)] border-[var(--border-main)] shadow-[0_12px_36px_rgba(0,0,0,0.06)]'
       )}
     >
       {plan.highlight && (
-        <div className="pointer-events-none absolute inset-0 -z-10 rounded-[28px] bg-violet-400/20 blur-2xl" />
+        <div className="pointer-events-none absolute inset-0 -z-10 rounded-[28px] bg-[var(--accent)]/10 blur-2xl" />
       )}
       {plan.badge && (
         <div
           className={cn(
-            'absolute right-5 top-5 rounded-full px-3 py-1 text-[12px] font-semibold',
-            plan.theme === 'primary' ? 'bg-white/15 text-white' : 'bg-violet-100 text-violet-700'
+            'absolute right-5 top-5 rounded-full px-3 py-1 text-[12px] font-semibold border',
+            plan.theme === 'primary'
+              ? 'bg-[var(--accent)]/20 text-[var(--text-primary)] border-[var(--accent)]/40'
+              : 'bg-[var(--bg-input)] text-[var(--text-secondary)] border-[var(--border-main)]'
           )}
         >
           {plan.badge}
         </div>
       )}
-      <h3 className={cn('text-[18px] font-semibold mb-2', plan.theme === 'primary' ? 'text-white' : 'text-[var(--text-main)]')}>
+      <h3 className="text-[18px] font-semibold mb-2 text-[var(--text-primary)]">
         {plan.title}
       </h3>
       {plan.description && (
-        <p className={cn('text-[13px] mb-3', plan.theme === 'primary' ? 'text-white/80' : 'text-[var(--text-secondary)]')}>
+        <p className="text-[13px] mb-3 text-[var(--text-secondary)]">
           {plan.description}
         </p>
       )}
-      <p className={cn('text-[28px] font-bold mb-4', plan.theme === 'primary' ? 'text-white' : 'text-[var(--text-main)]')}>
+      <p className="text-[28px] font-bold mb-4 text-[var(--text-primary)]">
         {plan.price}
       </p>
-      <ul className={cn('text-[14px] space-y-3 mb-6', plan.theme === 'primary' ? 'text-white/90' : 'text-[var(--text-secondary)]')}>
+      <ul className="text-[14px] space-y-3 mb-6 text-[var(--text-secondary)]">
         {plan.features.map((feature) => (
           <li key={feature.text} className="flex items-start gap-2">
-            <Icon name={feature.icon} className={plan.theme === 'primary' ? 'text-white' : 'text-violet-600'} />
+            <Icon name={feature.icon} className="text-[var(--accent)] shrink-0" />
             <span>{feature.text}</span>
           </li>
         ))}
@@ -91,10 +93,8 @@ const PlanCardItem = ({ plan }: { plan: PlanCard }) => {
       <Link
         href={plan.href}
         className={cn(
-          'inline-flex items-center justify-center w-full px-4 py-2.5 rounded-[14px] text-[14px] font-semibold transition',
-          plan.theme === 'primary'
-            ? 'bg-white text-violet-700 hover:bg-white/90'
-            : 'bg-violet-600 text-white hover:bg-violet-500'
+          'inline-flex items-center justify-center w-full px-4 py-2.5 rounded-[14px] text-[14px] font-semibold transition border',
+          'bg-[var(--accent)] text-[var(--button-primary-text)] border-[var(--accent)] hover:opacity-95'
         )}
       >
         {plan.ctaLabel}
@@ -188,19 +188,19 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
     <div className="min-h-screen">
       <div className="container py-12 md:py-16">
         <div className="text-center mb-10 md:mb-12">
-          <h1 className="text-[30px] md:text-[40px] font-bold text-[var(--text-main)] mb-3">Тарифы LOCUS</h1>
+          <h1 className="text-[30px] md:text-[40px] font-bold text-[var(--text-primary)] mb-3">Тарифы LOCUS</h1>
           <p className="text-[15px] md:text-[16px] text-[var(--text-secondary)]">
             Выберите тариф под ваши задачи и получите максимум пользы от LOCUS.
           </p>
           {reason === 'host' && (
-            <div className="mt-5 inline-flex items-center gap-2 rounded-[14px] bg-violet-50 px-4 py-2 text-[13px] text-violet-700">
+            <div className="mt-5 inline-flex items-center gap-2 rounded-[14px] bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-4 py-2 text-[13px] text-[var(--text-primary)]">
               Можно разместить 1 объявление бесплатно. Для большего лимита — PRO/AGENCY.
             </div>
           )}
         </div>
 
         <div className="flex flex-col items-center gap-4 mb-10">
-          <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+          <div className="inline-flex items-center rounded-full border border-[var(--border-main)] bg-[var(--bg-card)] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
             {[
               { value: 'seeker', label: 'Ищу жильё' },
               { value: 'landlord', label: 'Сдаю жильё' },
@@ -213,8 +213,8 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
                 className={cn(
                   'px-4 md:px-5 py-2 rounded-full text-[13px] md:text-[14px] font-semibold transition',
                   userType === item.value
-                    ? 'bg-violet-600 text-white shadow-[0_8px_18px_rgba(99,102,241,0.35)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-main)]'
+                    ? 'bg-[var(--accent)] text-[var(--button-primary-text)] shadow-[0_2px_8px_rgba(124,58,237,0.25)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 )}
               >
                 {item.label}
@@ -227,17 +227,17 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
         </div>
 
         {userType === 'landlord' && (
-          <div className="mb-8 md:mb-10 rounded-[22px] border border-violet-100 bg-white p-6 md:p-7 shadow-[0_12px_40px_rgba(99,102,241,0.10)]">
+          <div className="mb-8 md:mb-10 rounded-[22px] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 md:p-7 shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <div className="text-[16px] font-extrabold text-[var(--text-main)]">1 объявление бесплатно</div>
+                <div className="text-[16px] font-extrabold text-[var(--text-primary)]">1 объявление бесплатно</div>
                 <div className="mt-1 text-[13px] text-[var(--text-secondary)]">
                   Разместите первое объявление на FREE и начните получать заявки. Лимит — 1 объявление.
                 </div>
               </div>
               <Link
                 href={freeCreateHref}
-                className="inline-flex items-center justify-center rounded-[14px] bg-violet-600 px-5 py-3 text-[14px] font-semibold text-white hover:bg-violet-500"
+                className="inline-flex items-center justify-center rounded-[14px] bg-[var(--accent)] border border-[var(--accent)] px-5 py-3 text-[14px] font-semibold text-[var(--button-primary-text)] hover:opacity-95"
               >
                 Разместить бесплатно
               </Link>
@@ -262,16 +262,16 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
           id="cta"
           className={cn(
             'mt-12 rounded-[22px] p-6 md:p-8 text-center',
-            'bg-white border border-gray-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)]'
+            'bg-[var(--bg-card)] border border-[var(--border-main)] shadow-[0_12px_40px_rgba(0,0,0,0.06)]'
           )}
         >
-          <h3 className="text-[18px] md:text-[20px] font-bold text-[var(--text-main)] mb-2">Готовы подключить тариф?</h3>
+          <h3 className="text-[18px] md:text-[20px] font-bold text-[var(--text-primary)] mb-2">Готовы подключить тариф?</h3>
           <p className="text-[14px] text-[var(--text-secondary)] mb-5">
             Оставьте заявку, и мы подберём оптимальный план под ваши цели.
           </p>
           <a
             href="mailto:support@locus.app"
-            className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500 transition"
+            className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-95 transition border border-[var(--accent)]"
           >
             Оставить заявку
           </a>

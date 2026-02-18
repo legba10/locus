@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
 import { Logo } from './Logo'
-import { ThemeSwitcherFooter } from '@/components/ui/ThemeSwitcherFooter'
+import { ThemeSwitcherFooterGate } from '@/components/ui/ThemeSwitcherFooterGate'
 
 /**
  * Footer — v3 Premium Product Footer
@@ -131,7 +131,7 @@ export function Footer({ className }: { className?: string }) {
 
           {/* ТЗ-3: тема сайта */}
           <div className="lg:col-span-1">
-            <ThemeSwitcherFooter />
+            <ThemeSwitcherFooterGate />
           </div>
         </div>
       </div>

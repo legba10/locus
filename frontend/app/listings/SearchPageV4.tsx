@@ -439,7 +439,7 @@ export function SearchPageV4() {
 
             {/* Loading */}
             {isLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <ListingCardSkeleton key={i} />
                 ))}
@@ -448,7 +448,7 @@ export function SearchPageV4() {
 
             {/* Сетка объявлений — ТЗ №9: gap 12px, mobile 1 col, tablet 2, desktop 3 */}
             {!isLoading && sortedListings.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {sortedListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}

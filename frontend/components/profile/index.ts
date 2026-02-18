@@ -1,0 +1,8 @@
+export { ProfileCard } from './ProfileCard'
+export { ProfileLayoutV2 } from './ProfileLayoutV2'
+export { ProfileSidebar } from './ProfileSidebar'
+export { ProfileMainBlock } from './ProfileMainBlock'
+export { SecurityBlock } from './SecurityBlock'
+export { PaymentsBlock } from './PaymentsBlock'
+export { DocsBlock } from './DocsBlock'
+export { NotificationToggles } from './NotificationToggles'
