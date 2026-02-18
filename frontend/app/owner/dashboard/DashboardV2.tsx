@@ -20,7 +20,7 @@ import type { ListingPlan } from '@/shared/contracts/api'
 import { PromoteListingModal } from '@/components/monetization'
 import { TariffCard, type TariffCardOption } from '@/components/monetization/TariffCard'
 import { ThemeSettings } from '@/components/ui/ThemeSettings'
-import { SidebarV2, MOBILE_TABS, type CabinetTab } from './SidebarV2'
+import type { CabinetTab } from './SidebarV2'
 import { ListingCardCabinetV2 } from '@/components/cabinet'
 
 export function DashboardV2() {
@@ -45,8 +45,24 @@ export function DashboardV2() {
 
   useEffect(() => {
     const tab = searchParams.get('tab') as string | null
+    if (!tab) {
+      router.replace('/profile')
+      return
+    }
+    if (tab === 'add') {
+      router.replace('/create-listing')
+      return
+    }
     if (tab === 'messages') {
       router.replace('/messages')
+      return
+    }
+    if (tab === 'profile' || tab === 'home') {
+      router.replace('/profile')
+      return
+    }
+    if (tab === 'settings') {
+      router.replace('/profile/settings')
       return
     }
     const map: Record<string, CabinetTab> = {
@@ -98,22 +114,14 @@ export function DashboardV2() {
   const goToAdd = () => {
     setEditingListing(null)
     setActiveTab('listings')
-    router.push('/owner/dashboard?tab=add')
+    router.push('/create-listing')
   }
 
+  /** ТЗ-8: Единый кабинет — сайдбар в layout (ProfileLayoutV2), здесь только контент раздела. */
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-20 lg:pb-0">
       <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <aside className="lg:col-span-1">
-            <SidebarV2
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              showAdmin={isAdmin}
-            />
-          </aside>
-
-          <main className="lg:col-span-3 space-y-6">
+        <main className="space-y-6">
             {activeTab === 'home' && (
               <DashboardHomeTab
                 canCreate={canCreate}
@@ -139,7 +147,7 @@ export function DashboardV2() {
             ) : activeTab === 'listings' ? (
               <ListingsTabV2
                 onAdd={goToAdd}
-                onEdit={(listing) => { setEditingListing(listing); router.push('/owner/dashboard?tab=add'); }}
+                onEdit={(listing) => { setEditingListing(listing); router.push(`/create-listing/draft/${listing.id}`); }}
                 onPromote={(id, listingPlan) => setPromoteModalListing({ id, plan: listingPlan ?? 'free' })}
                 onStats={() => { setActiveTab('home'); router.push('/owner/dashboard'); }}
                 plan={plan}
@@ -151,7 +159,7 @@ export function DashboardV2() {
             ) : activeTab === 'promotion' ? (
               <PromotionTab
                 onPromote={(id, listingPlan) => setPromoteModalListing({ id, plan: listingPlan ?? 'free' })}
-                onEdit={(listing) => { setEditingListing(listing); router.push('/owner/dashboard?tab=add'); }}
+                onEdit={(listing) => { setEditingListing(listing); router.push(`/create-listing/draft/${listing.id}`); }}
                 onDelete={async (id) => {
                   if (!confirm('Удалить объявление?')) return
                   try {
@@ -172,8 +180,7 @@ export function DashboardV2() {
             {activeTab === 'finances' && <FinancesTabV2 isFreePlan={isFreePlan} />}
             {activeTab === 'profile' && <ProfileTabV2 />}
             {activeTab === 'settings' && <SettingsTabV2 />}
-          </main>
-        </div>
+        </main>
       </div>
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={plan} reason={upgradeReason} />
       <PromoteListingModal
@@ -199,59 +206,8 @@ export function DashboardV2() {
         }}
       />
 
-      {/* ТЗ 6: Mobile — табы Главная, Объявления, Сообщения, Профиль */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around py-2 px-2 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        {MOBILE_TABS.map((tabId) => {
-          const label = tabId === 'home' ? 'Главная' : tabId === 'listings' ? 'Объявления' : tabId === 'messages' ? 'Сообщения' : 'Профиль'
-          return (
-            <button
-              key={tabId}
-              type="button"
-              onClick={() => { setActiveTab(tabId); router.push(tabId === 'home' ? '/owner/dashboard' : `/owner/dashboard?tab=${tabId}`); }}
-              className={cn(
-                'flex flex-col items-center gap-1 py-2 px-3 rounded-[12px] text-[11px] font-medium transition-colors min-w-[64px]',
-                activeTab === tabId ? 'text-[var(--accent)] bg-[var(--accent)]/10' : 'text-[var(--text-muted)]'
-              )}
-            >
-              {tabId === 'home' && <HomeIconMobile />}
-              {tabId === 'listings' && <ListingsIconMobile />}
-              {tabId === 'messages' && <MessagesIconMobile />}
-              {tabId === 'profile' && <UserIconMobile />}
-              <span>{label}</span>
-            </button>
-          )
-        })}
-      </nav>
+      {/* ТЗ-4: Нижнее меню только глобальное (BottomNavGlobal). Не дублируем табы здесь. */}
     </div>
-  )
-}
-
-function HomeIconMobile() {
-  return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  )
-}
-function ListingsIconMobile() {
-  return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-    </svg>
-  )
-}
-function MessagesIconMobile() {
-  return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  )
-}
-function UserIconMobile() {
-  return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
   )
 }
 
@@ -394,8 +350,17 @@ function ListingsTabV2({
   queryClient: ReturnType<typeof useQueryClient>
 }) {
   const { data, isLoading } = useFetch<{ items: any[] }>(['owner-listings'], '/api/listings/my')
-  const listings = data?.items ?? []
-  const used = listings.length
+  const allListings = data?.items ?? []
+  const used = allListings.length
+  /** ТЗ-8: вкладки — Активные, На модерации, Архив, Черновики */
+  const [listingsSubTab, setListingsSubTab] = useState<'active' | 'moderation' | 'archive' | 'draft'>('active')
+  const listings = (() => {
+    if (listingsSubTab === 'active') return allListings.filter((l: any) => l.status === 'PUBLISHED' || l.status === 'ACTIVE')
+    if (listingsSubTab === 'moderation') return allListings.filter((l: any) => l.status === 'PENDING' || l.status === 'ON_REVIEW' || l.status === 'MODERATION')
+    if (listingsSubTab === 'archive') return allListings.filter((l: any) => l.status === 'ARCHIVED' || l.status === 'UNPUBLISHED' || l.status === 'INACTIVE')
+    if (listingsSubTab === 'draft') return allListings.filter((l: any) => l.status === 'DRAFT')
+    return allListings
+  })()
 
   const handleDelete = async (id: string) => {
     if (!confirm('Удалить объявление? Это действие необратимо.')) return
@@ -438,7 +403,7 @@ function ListingsTabV2({
           className="inline-flex items-center gap-2 px-4 py-3 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95 shadow-[0_2px_8px_rgba(124,58,237,0.25)]"
         >
           <span>+</span>
-          Разместить объявление
+          Добавить объявление
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-[13px] text-[var(--text-secondary)]">
@@ -449,6 +414,27 @@ function ListingsTabV2({
             Улучшить тариф
           </button>
         )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {[
+          { id: 'active' as const, label: 'Активные' },
+          { id: 'moderation' as const, label: 'На модерации' },
+          { id: 'archive' as const, label: 'Архив' },
+          { id: 'draft' as const, label: 'Черновики' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setListingsSubTab(t.id)}
+            className={cn(
+              'px-4 py-2 rounded-[12px] text-[14px] font-medium transition-colors',
+              listingsSubTab === t.id ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)]'
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {!canCreate && used > 0 && (
@@ -470,11 +456,10 @@ function ListingsTabV2({
 
       {!isLoading && listings.length === 0 && (
         <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-12 text-center">
-          <p className="text-[16px] text-[var(--text-secondary)] mb-4">У вас пока нет объявлений</p>
-          <p className="text-[14px] text-[var(--text-muted)] mb-4">Создайте первое объявление кнопкой выше.</p>
-          <button type="button" onClick={onAdd} className="inline-flex items-center gap-2 px-4 py-3 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95">
-            <span>+</span> Создать объявление
-          </button>
+          <p className="text-[16px] text-[var(--text-secondary)] mb-6">У вас пока нет объявлений</p>
+          <Link href="/create-listing" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95 transition-opacity">
+            Разместить
+          </Link>
         </div>
       )}
 
@@ -623,17 +608,17 @@ function AddListingTab({
   )
 }
 
+/** ТЗ-8: Бронирования — 2 вкладки: Я снимаю, У меня снимают */
 function BookingsTabV2() {
-  const [subTab, setSubTab] = useState<'future' | 'completed' | 'cancelled'>('future')
+  const [subTab, setSubTab] = useState<'guest' | 'host'>('guest')
 
   return (
     <div className="space-y-6">
       <h1 className="text-[22px] font-bold text-[var(--text-primary)]">Бронирования</h1>
       <div className="flex gap-2">
         {[
-          { id: 'future' as const, label: 'Текущие' },
-          { id: 'completed' as const, label: 'Прошедшие' },
-          { id: 'cancelled' as const, label: 'Отменённые' },
+          { id: 'guest' as const, label: 'Я снимаю' },
+          { id: 'host' as const, label: 'У меня снимают' },
         ].map((t) => (
           <button
             key={t.id}
@@ -649,7 +634,9 @@ function BookingsTabV2() {
         ))}
       </div>
       <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 text-center">
-        <p className="text-[var(--text-secondary)]">Пока нет бронирований. Заявки появятся после первых арендаторов.</p>
+        <p className="text-[var(--text-secondary)]">
+          {subTab === 'guest' ? 'Пока нет бронирований. Ваши заявки появятся здесь.' : 'Пока нет заявок. Бронирования появятся, когда гости начнут бронировать ваши объявления.'}
+        </p>
       </div>
     </div>
   )
@@ -692,7 +679,7 @@ function MessagesTabV2() {
             return (
               <Link
                 key={c.id}
-                href={`/chat/${c.id}`}
+                href={`/messages?chat=${c.id}`}
                 className={cn(
                   'flex items-center gap-4 p-4 rounded-[16px] bg-[var(--bg-card)] border border-[var(--border-main)]',
                   'hover:border-[var(--accent)]/30 transition-colors'
@@ -728,28 +715,24 @@ function MessagesTabV2() {
   )
 }
 
-/** ТЗ 6: Настройки — Тема, Уведомления, Город, Язык */
+/** ТЗ-8: Настройки — только тема, уведомления. Полные настройки (имя, почта, пароль, аватар) на /profile/settings */
 function SettingsTabV2() {
   const cardCls = 'rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/80 backdrop-blur p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)]'
   return (
     <div className="space-y-6">
       <h1 className="text-[22px] font-bold text-[var(--text-primary)]">Настройки</h1>
+      <p className="text-[14px] text-[var(--text-secondary)]">
+        <Link href="/profile/settings" className="text-[var(--accent)] font-medium hover:underline">
+          Открыть все настройки (аккаунт, пароль, уведомления, тема) →
+        </Link>
+      </p>
       <section className={cardCls}>
         <ThemeSettings />
       </section>
       <section className={cardCls}>
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">Уведомления</h2>
-        <p className="text-[14px] text-[var(--text-secondary)]">Email и push-уведомления о новых сообщениях и бронированиях.</p>
-        <p className="text-[13px] text-[var(--text-muted)] mt-2">Настройки уведомлений появятся в следующей версии.</p>
-      </section>
-      <section className={cardCls}>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">Город</h2>
-        <p className="text-[14px] text-[var(--text-secondary)]">Основной город для поиска и рекомендаций.</p>
-        <p className="text-[13px] text-[var(--text-muted)] mt-2">Выбор города по умолчанию — в разработке.</p>
-      </section>
-      <section className={cardCls}>
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">Язык</h2>
-        <p className="text-[14px] text-[var(--text-secondary)]">Русский (интерфейс).</p>
+        <p className="text-[14px] text-[var(--text-secondary)]">Email и push о новых сообщениях и бронированиях.</p>
+        <p className="text-[13px] text-[var(--text-muted)] mt-2">Настройки уведомлений — в разделе <Link href="/profile/notifications" className="text-[var(--accent)] hover:underline">Уведомления</Link>.</p>
       </section>
     </div>
   )

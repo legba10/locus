@@ -9,7 +9,7 @@ import { supabase } from '@/shared/supabase-client'
 import { cn } from '@/shared/utils/cn'
 import { ThemeSettings } from '@/components/ui/ThemeSettings'
 import { useProfileV2 } from '@/config/uiFlags'
-import { ProfileMainBlock, ProfileDashboardTZ20 } from '@/components/profile'
+import { ProfileDashboardTZ20 } from '@/components/profile'
 
 export default function ProfilePage() {
   const { user, isAuthenticated, refresh } = useAuthStore()
@@ -43,9 +43,6 @@ export default function ProfilePage() {
     return (
       <div className="space-y-6">
         <ProfileDashboardTZ20 />
-        <hr className="border-[var(--border-main)]" />
-        <h2 className="text-[18px] font-semibold text-[var(--text-primary)]">Основное</h2>
-        <ProfileMainBlock />
       </div>
     )
   }
