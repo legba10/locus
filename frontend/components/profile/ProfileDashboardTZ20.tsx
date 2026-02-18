@@ -3,21 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuthStore } from '@/domains/auth'
-import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
-import { LayoutList, Calendar, MessageCircle, TrendingUp, Heart, Star } from 'lucide-react'
+import { LayoutList, Calendar, MessageSquare, TrendingUp, Star } from 'lucide-react'
 
 /** ТЗ-20: Главный экран профиля = дашборд: аватар, имя, рейтинг, статус; 4 карточки */
 export function ProfileDashboardTZ20() {
   const { user } = useAuthStore()
   const isLandlord = (user as any)?.role === 'landlord' || (user as any)?.listingUsed > 0
-  const { data: listingsData } = useFetch<{ items?: any[] }>(
-    ['owner-listings'],
-    '/api/listings/my',
-    { enabled: !!user && isLandlord }
-  )
-  const listings = listingsData?.items ?? []
-  const activeCount = listings.filter((l: any) => l.status === 'PUBLISHED' || l.status === 'ACTIVE').length
 
   const displayName = user?.full_name ?? user?.username ?? 'Пользователь'
   const displayAvatar = user?.avatar_url ?? null
@@ -25,11 +17,11 @@ export function ProfileDashboardTZ20() {
   const listingUsed = (user as any)?.listingUsed ?? 0
   const listingLimit = user?.listingLimit ?? 1
 
+  /** ТЗ-7: Сообщения только из шапки (desktop) и нижнего меню (mobile), не дублируем в кабинете */
   const cards = [
-    { href: '/owner/dashboard', label: 'Мои объявления', icon: LayoutList, count: listingUsed },
+    ...(isLandlord ? [{ href: '/owner/dashboard?tab=listings', label: 'Мои объявления', icon: LayoutList, count: listingUsed }] : []),
     { href: '/owner/dashboard?tab=bookings', label: 'Бронирования', icon: Calendar },
-    { href: '/messages', label: 'Сообщения', icon: MessageCircle },
-    { href: '/profile/income', label: 'Доход / аналитика', icon: TrendingUp },
+    ...(isLandlord ? [{ href: '/profile/finance', label: 'Финансы', icon: TrendingUp }] : []),
   ]
 
   return (
@@ -62,32 +54,7 @@ export function ProfileDashboardTZ20() {
         </div>
       </section>
 
-      {/* ТЗ-20.1: Мои показатели (для арендодателя) — 4 карточки в ряд ПК, 2 моб */}
-      {isLandlord && (
-        <section>
-          <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-3">Мои показатели</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
-              <p className="text-[22px] font-bold text-[var(--text-primary)] tabular-nums">{activeCount}</p>
-              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">активных объявлений</p>
-            </div>
-            <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
-              <p className="text-[22px] font-bold text-[var(--text-primary)] tabular-nums">—</p>
-              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">доход</p>
-            </div>
-            <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
-              <p className="text-[22px] font-bold text-[var(--text-primary)] tabular-nums">—</p>
-              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">бронирований</p>
-            </div>
-            <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
-              <p className="text-[22px] font-bold text-[var(--text-primary)] tabular-nums">{rating != null ? Number(rating).toFixed(1) : '—'}</p>
-              <p className="text-[12px] text-[var(--text-muted)] mt-0.5">рейтинг</p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 4 карточки: Мои объявления, Бронирования, Сообщения, Доход */}
+      {/* ТЗ-8: Без блока «Мои показатели»/доходов в обзоре — только аватар, имя, статус и разделы. */}
       <section>
         <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-3">Разделы</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -129,36 +96,14 @@ export function ProfileDashboardTZ20() {
             )}
           </div>
           <p className="text-[13px] text-[var(--text-muted)] mb-2">AI-анализ отзывов и сильные/слабые стороны появятся после накопления отзывов.</p>
-          <Link href="/owner/dashboard?tab=profile" className="text-[13px] font-medium text-[var(--accent)] hover:underline inline-flex items-center gap-1.5">
+          <Link href="/profile" className="text-[13px] font-medium text-[var(--accent)] hover:underline inline-flex items-center gap-1.5">
             <MessageSquare className="w-4 h-4" strokeWidth={1.8} />
             Подробнее в кабинете
           </Link>
         </div>
       </section>
 
-      {/* ТЗ-20.4: Отзывы — средний рейтинг, AI-анализ */}
-      <section>
-        <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-3">Отзывы</h2>
-        <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
-          {rating != null ? (
-            <p className="flex items-center gap-1.5 text-[18px] font-bold text-[var(--text-primary)]">
-              <Star className="w-5 h-5 fill-[var(--accent)] text-[var(--accent)]" aria-hidden />
-              {Number(rating).toFixed(1)} — средний рейтинг
-            </p>
-          ) : (
-            <p className="text-[var(--text-muted)] text-[14px]">Пока нет рейтинга</p>
-          )}
-          <p className="text-[13px] text-[var(--text-muted)] mt-2">Сильные и слабые стороны появятся после отзывов.</p>
-        </div>
-      </section>
-
-      {/* Избранное — не удаляем, даём ссылку */}
-      <p className="text-[13px] text-[var(--text-muted)]">
-        <Link href="/favorites" className="text-[var(--accent)] hover:underline inline-flex items-center gap-1.5">
-          <Heart className="w-4 h-4" strokeWidth={1.8} />
-          Избранное
-        </Link>
-      </p>
+      {/* ТЗ-14: Избранное — одна точка входа (страница /favorites доступна по прямой ссылке из карточек объявлений) */}
     </div>
   )
 }
