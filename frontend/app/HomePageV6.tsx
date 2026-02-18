@@ -527,7 +527,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {isLoading || aiPreparing || searching ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : listingCards.length > 0 ? (
@@ -559,6 +559,8 @@ export function HomePageV6() {
                   availableToday={listing.availableToday}
                   availableFrom={listing.availableFrom ?? undefined}
                   aiRecommendTooltip={listing.aiRecommendTooltip}
+                  minNights={listing.minNights}
+                  aiMatchScore={listing.aiMatchScore}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
                 />
               ))
@@ -599,7 +601,7 @@ export function HomePageV6() {
               Смотреть все объявления
             </Link>
           </div>
-          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="listing-grid-cards-tz grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {allListingsLoading ? (
               Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
             ) : allListingCards.length > 0 ? (
@@ -631,6 +633,8 @@ export function HomePageV6() {
                   availableToday={listing.availableToday}
                   availableFrom={listing.availableFrom ?? undefined}
                   aiRecommendTooltip={listing.aiRecommendTooltip}
+                  minNights={listing.minNights}
+                  aiMatchScore={listing.aiMatchScore}
                   className="listing-card-tz19"
                 />
               ))

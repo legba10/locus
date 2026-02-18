@@ -20,3 +20,6 @@ export const useListingCardTZ7 = true;
 
 /** ТЗ 8: страница объявления — галерея 420px, основной блок, бронирование справа, AI, описание, удобства, хозяин, район, похожие. */
 export const useListingPageTZ8 = true;
+
+/** ТЗ-13: next-gen карточки объявлений — AI-метрики, бейджи, локация, кнопки [♡] [Посмотреть], сетка 3 колонки gap 24px. */
+export const useListingCardTZ13 = true;

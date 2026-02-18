@@ -82,6 +82,8 @@ export function useHomeListingCards(data: ListingsResponse | undefined) {
       rating: cache?.rating ?? null,
       reviewPercent: cache?.positive_ratio != null ? Math.round(cache.positive_ratio * 100) : null,
       reviewCount: listing.reviewCount ?? listing.reviewsCount ?? null,
+      minNights: listing.minNights ?? listing.min_nights ?? null,
+      aiMatchScore: listing.score ?? listing.aiScore ?? null,
       propertyType: (listing.type || 'apartment').toString().toLowerCase(),
       amenities: mapAmenities(listing.amenities),
       cleanliness: cache?.cleanliness ?? null,

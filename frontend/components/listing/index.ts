@@ -1,19 +1,25 @@
-import { useNewListingUI, useListingCardTZ7 } from '@/config/uiFlags'
+import { useNewListingUI, useListingCardTZ7, useListingCardTZ13 } from '@/config/uiFlags'
 import { ListingCard as ListingCardCurrent, ListingCardSkeleton as ListingCardSkeletonCurrent } from './ListingCard'
 import { ListingCardV2, ListingCardV2Skeleton } from './ListingCardV2'
 import { ListingCardTZ7, ListingCardTZ7Skeleton } from './ListingCardTZ7'
+import { ListingCardTZ13, ListingCardTZ13Skeleton } from './ListingCardTZ13'
 
 export type { ListingCardProps, ListingCardOwner, ListingCardBadge } from './ListingCard'
 export type { ListingCardTZ7Props } from './ListingCardTZ7'
+export type { ListingCardTZ13Props } from './ListingCardTZ13'
 export { ListingCardV2, ListingCardV2Skeleton } from './ListingCardV2'
 export { ListingCardTZ7, ListingCardTZ7Skeleton } from './ListingCardTZ7'
+export { ListingCardTZ13, ListingCardTZ13Skeleton } from './ListingCardTZ13'
 
-export const ListingCard = useNewListingUI
-  ? (useListingCardTZ7 ? ListingCardTZ7 : ListingCardV2)
+const ResolvedCard = useNewListingUI
+  ? (useListingCardTZ13 ? ListingCardTZ13 : useListingCardTZ7 ? ListingCardTZ7 : ListingCardV2)
   : ListingCardCurrent
-export const ListingCardSkeleton = useNewListingUI
-  ? (useListingCardTZ7 ? ListingCardTZ7Skeleton : ListingCardV2Skeleton)
+const ResolvedSkeleton = useNewListingUI
+  ? (useListingCardTZ13 ? ListingCardTZ13Skeleton : useListingCardTZ7 ? ListingCardTZ7Skeleton : ListingCardV2Skeleton)
   : ListingCardSkeletonCurrent
+
+export const ListingCard = ResolvedCard
+export const ListingCardSkeleton = ResolvedSkeleton
 export { ListingGallery } from './ListingGallery'
 export { ListingHeader } from './ListingHeader'
 export { ListingOwner } from './ListingOwner'
