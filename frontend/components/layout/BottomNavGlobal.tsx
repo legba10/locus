@@ -4,12 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
-import { Home, Search, MessageCircle, User, PlusSquare, Heart } from 'lucide-react'
+import { Home, Search, MessageCircle, User, PlusSquare } from 'lucide-react'
 
-/** ТЗ-21: Нижнее меню (mobile). Арендатор: Главная, Поиск, Сообщения, Избранное, Профиль. Арендодатель: Главная, Поиск, Добавить, Сообщения, Профиль. Без тарифов, доходов, дашборда. */
+/** TZ-22: Нижнее меню — всегда 5 пунктов: Главная, Поиск, Добавить, Сообщения, Профиль. Единая основа, без дублей. */
 export function BottomNavGlobal() {
   const pathname = usePathname()
-  const { isAuthenticated, user, hasRole } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
 
   const isAdmin = pathname?.startsWith('/admin')
   if (isAdmin) return null
@@ -19,14 +19,12 @@ export function BottomNavGlobal() {
   const isHome = base === '' || base === '/'
   const isSearch = (base === '/listings' || base.startsWith('/listings')) && !isListingDetail
   const isMessages = base === '/messages' || base.startsWith('/messages')
-  const isFavorites = base === '/favorites'
-  const isProfile = base === '/profile' || base.startsWith('/profile') || base.startsWith('/auth')
   const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/dashboard/listings/create')
+  const isDashboard = base === '/dashboard' || base.startsWith('/dashboard') || base === '/profile' || base.startsWith('/profile') || base.startsWith('/auth')
 
   const authed = isAuthenticated()
-  const isLandlord = Boolean(hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0))
   const messagesHref = authed ? '/messages' : '/auth/login?redirect=/messages'
-  const profileHref = authed ? '/profile' : '/auth/login'
+  const profileHref = authed ? '/dashboard' : '/auth/login?redirect=/dashboard'
   const addHref = authed ? '/dashboard/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/dashboard/listings/create')
 
   const linkCls = (active: boolean) =>
@@ -49,41 +47,17 @@ export function BottomNavGlobal() {
         <Search className="w-5 h-5" strokeWidth={1.8} />
         <span>Поиск</span>
       </Link>
-      {authed && isLandlord ? (
-        <Link href={addHref} className={linkCls(isAdd)} aria-current={isAdd ? 'page' : undefined}>
-          <PlusSquare className="w-5 h-5" strokeWidth={1.8} />
-          <span>Добавить</span>
-        </Link>
-      ) : authed ? (
-        <Link href={messagesHref} className={linkCls(isMessages)} aria-current={isMessages ? 'page' : undefined}>
-          <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
-          <span>Сообщения</span>
-        </Link>
-      ) : (
-        <Link href={messagesHref} className={linkCls(false)}>
-          <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
-          <span>Сообщения</span>
-        </Link>
-      )}
-      {authed && isLandlord ? (
-        <Link href={messagesHref} className={linkCls(isMessages)} aria-current={isMessages ? 'page' : undefined}>
-          <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
-          <span>Сообщения</span>
-        </Link>
-      ) : authed ? (
-        <Link href="/favorites" className={linkCls(isFavorites)} aria-current={isFavorites ? 'page' : undefined}>
-          <Heart className="w-5 h-5" strokeWidth={1.8} />
-          <span>Избранное</span>
-        </Link>
-      ) : (
-        <Link href="/auth/login?redirect=/favorites" className={linkCls(false)}>
-          <Heart className="w-5 h-5" strokeWidth={1.8} />
-          <span>Избранное</span>
-        </Link>
-      )}
-      <Link href={profileHref} className={linkCls(isProfile)} aria-current={isProfile ? 'page' : undefined}>
+      <Link href={addHref} className={linkCls(isAdd)} aria-current={isAdd ? 'page' : undefined}>
+        <PlusSquare className="w-5 h-5" strokeWidth={1.8} />
+        <span>Добавить</span>
+      </Link>
+      <Link href={messagesHref} className={linkCls(isMessages)} aria-current={isMessages ? 'page' : undefined}>
+        <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
+        <span>Сообщения</span>
+      </Link>
+      <Link href={profileHref} className={linkCls(isDashboard)} aria-current={isDashboard ? 'page' : undefined}>
         <User className="w-5 h-5" strokeWidth={1.8} />
-        <span>{authed ? 'Профиль' : 'Войти'}</span>
+        <span>{authed ? 'Профиль' : 'Профиль'}</span>
       </Link>
     </nav>
   )

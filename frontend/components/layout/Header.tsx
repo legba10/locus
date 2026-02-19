@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, HelpCircle, Mail, User, LayoutDashboard, FileText, MessageCircle, Heart, Wallet, Megaphone, Settings, LogOut } from 'lucide-react'
+import { Search, HelpCircle, Mail, User, LayoutDashboard, FileText, MessageCircle, Wallet, Megaphone, Settings, LogOut, Tag } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
@@ -220,7 +220,8 @@ export function Header() {
           <div className="mobile-menu-separator" aria-hidden />
           <nav className="mobile-menu-nav menu" aria-label="Меню гостя">
             <ul className="menu-list">
-              <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
+              <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск" onClick={() => handleNavigate('/listings')} />
+              <NavItem icon={<Tag size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
               <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
               <NavItem icon={<Mail size={22} strokeWidth={1.8} />} label="Контакты" onClick={() => handleNavigate('/contacts')} />
               <NavItem icon={<User size={22} strokeWidth={1.8} />} label="Войти" onClick={() => handleNavigate('/auth/login')} />
@@ -240,13 +241,12 @@ export function Header() {
           <div className="mobile-menu-separator" aria-hidden />
           <nav className="mobile-menu-nav menu" aria-label="Кабинет">
             <ul className="menu-list">
-              <NavItem icon={<LayoutDashboard size={22} strokeWidth={1.8} />} label="Обзор" onClick={() => handleNavigate('/profile')} />
-              {isLandlord && <NavItem icon={<FileText size={22} strokeWidth={1.8} />} label="Мои объявления" onClick={() => handleNavigate('/owner/dashboard?tab=listings')} />}
+              <NavItem icon={<LayoutDashboard size={22} strokeWidth={1.8} />} label="Кабинет" onClick={() => handleNavigate('/dashboard')} />
+              {isLandlord && <NavItem icon={<FileText size={22} strokeWidth={1.8} />} label="Мои объявления" onClick={() => handleNavigate('/dashboard/listings')} />}
               <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-              <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-              {isLandlord && <NavItem icon={<Wallet size={22} strokeWidth={1.8} />} label="Финансы" onClick={() => handleNavigate('/owner/dashboard?tab=finances')} />}
-              {isLandlord && <NavItem icon={<Megaphone size={22} strokeWidth={1.8} />} label="Продвижение" onClick={() => handleNavigate('/owner/dashboard?tab=promotion')} />}
-              <NavItem icon={<Settings size={22} strokeWidth={1.8} />} label="Настройки" onClick={() => handleNavigate('/profile/settings')} />
+              {isLandlord && <NavItem icon={<Wallet size={22} strokeWidth={1.8} />} label="Финансы" onClick={() => handleNavigate('/dashboard/billing')} />}
+              {isLandlord && <NavItem icon={<Megaphone size={22} strokeWidth={1.8} />} label="Продвижение" onClick={() => handleNavigate('/dashboard/promo')} />}
+              <NavItem icon={<Settings size={22} strokeWidth={1.8} />} label="Настройки" onClick={() => handleNavigate('/dashboard/profile')} />
               <NavItem icon={<LogOut size={22} strokeWidth={1.8} />} label="Выйти" onClick={() => { setIsMenuOpen(false); logout(); router.push('/'); }} />
             </ul>
           </nav>

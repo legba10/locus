@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useFilterStore } from '@/core/filters'
 import { CitySelect } from './CitySelect'
@@ -19,6 +19,7 @@ export interface FiltersModalProps {
 
 export function FiltersModal({ open, onClose, onApply, className }: FiltersModalProps) {
   const { city, budgetMin, budgetMax, type, rooms, duration, aiMode, setCity, setBudget, setType, setRooms, setDuration, setAiMode, reset } = useFilterStore()
+  const touchStartY = useRef(0)
 
   useEffect(() => {
     if (!open) return
@@ -34,14 +35,31 @@ export function FiltersModal({ open, onClose, onApply, className }: FiltersModal
     onClose()
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+  }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const endY = e.changedTouches[0].clientY
+    if (endY - touchStartY.current > 60) onClose()
+  }
+
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
       maxHeight="78vh"
+      animateClose
       className={cn('rounded-t-2xl border-0 max-w-none mx-0 bg-[var(--card)] border-t border-[var(--border)]', className)}
     >
       <div className="flex flex-col max-h-[78vh]" data-testid="filters-modal">
+        <div
+          className="shrink-0 pt-2 pb-1 flex justify-center touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          aria-hidden
+        >
+          <div className="w-10 h-1 rounded-full bg-[var(--border)]" aria-hidden />
+        </div>
         <div className="flex items-center justify-between p-4 border-b border-[var(--border)] shrink-0">
           <h2 className="text-[16px] font-bold text-[var(--text)]">Фильтры</h2>
           <button type="button" onClick={onClose} className="rounded-full p-2 text-[var(--sub)] hover:bg-[var(--border)]" aria-label="Закрыть">
