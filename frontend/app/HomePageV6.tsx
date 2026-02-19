@@ -123,7 +123,7 @@ export function HomePageV6() {
   const allListingCards = useHomeListingCards(allListingsData)
   const isLandlord = user?.role === 'landlord'
   const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
-  const hostCtaHref = !isAuthenticated() ? '/auth/login?redirect=/owner/dashboard' : (isLandlord && isPaidTariff ? '/owner/dashboard?tab=add' : '/pricing?reason=host')
+  const hostCtaHref = !isAuthenticated() ? '/auth/login?redirect=/dashboard/listings/create' : (isLandlord && isPaidTariff ? '/dashboard/listings/create' : '/pricing?reason=host')
 
   /** ТЗ-5: на главной — scroll к результатам на той же странице; не открывать новую страницу */
   const handlePrimarySearch = () => {

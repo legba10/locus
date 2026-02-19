@@ -28,7 +28,7 @@ export default function ProfileIncomePage() {
       {!isLandlord ? (
         <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-center">
           <p className="text-[var(--text-secondary)] mb-4">Доход доступен для арендодателей.</p>
-          <Link href="/owner/dashboard?tab=add" className="text-[var(--accent)] font-medium hover:underline">
+          <Link href="/dashboard/listings/create" className="text-[var(--accent)] font-medium hover:underline">
             Разместить объявление
           </Link>
         </div>

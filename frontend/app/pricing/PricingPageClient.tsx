@@ -108,7 +108,7 @@ export function PricingPageClient({ reason }: { reason?: string | null }) {
   const { user, isAuthenticated } = useAuthStore()
   const limit = user?.listingLimit ?? 1
   const used = user?.listingUsed ?? 0
-  const freeCreateHref = isAuthenticated() && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
+  const freeCreateHref = isAuthenticated() && used >= limit ? '/pricing?reason=limit' : '/dashboard/listings/create'
 
   const plans = useMemo<PlanCard[]>(() => {
     if (userType === 'landlord') {

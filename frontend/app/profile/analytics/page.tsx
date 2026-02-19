@@ -27,7 +27,7 @@ export default function ProfileAnalyticsPage() {
         <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-center">
           <BarChart3 className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" strokeWidth={1.5} />
           <p className="text-[var(--text-secondary)] mb-4">Аналитика доступна для арендодателей после размещения объявлений.</p>
-          <Link href="/create-listing" className="text-[var(--accent)] font-medium hover:underline">Разместить объявление</Link>
+          <Link href="/dashboard/listings/create" className="text-[var(--accent)] font-medium hover:underline">Разместить объявление</Link>
         </div>
       </div>
     )

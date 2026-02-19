@@ -81,7 +81,8 @@ export default function MessagesInner() {
   return (
     <div
       className={cn(
-        'messages-page-tz11 flex flex-col md:grid bg-[var(--card-bg)] fixed left-0 right-0 bottom-0 z-[5]',
+        'messages-page-tz11 flex flex-col md:grid bg-[var(--card-bg)] fixed left-0 right-0 z-[5]',
+        'bottom-0 md:bottom-0',
         isMobileChatOpen ? 'md:grid-cols-[320px_1fr]' : 'md:grid-cols-[320px_1fr]'
       )}
       style={{
@@ -117,8 +118,21 @@ export default function MessagesInner() {
                 const other = isHost ? c.guest : c.host
                 const name = (other?.profile?.name ?? '').toString().trim() || 'Пользователь'
                 const avatarUrl = other?.profile?.avatarUrl ?? null
-                const photoUrl = avatarUrl || c.listingPhotoUrl || null
+                /** ТЗ-7: карточка диалога — фото объявления приоритетнее, затем аватар */
+                const photoUrl = c.listingPhotoUrl || avatarUrl || null
                 const isActive = c.id === activeChatId
+                const listingTitle = (c.listingTitle ?? '').toString().trim()
+                const dateLabel = last
+                  ? (() => {
+                      const d = new Date(last.createdAt)
+                      const today = new Date()
+                      if (d.toDateString() === today.toDateString()) return 'сегодня'
+                      const yesterday = new Date(today)
+                      yesterday.setDate(yesterday.getDate() - 1)
+                      if (d.toDateString() === yesterday.toDateString()) return 'вчера'
+                      return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' })
+                    })()
+                  : null
                 return (
                   <button
                     key={c.id}
@@ -129,45 +143,49 @@ export default function MessagesInner() {
                       isActive ? 'bg-[var(--accent)]/10' : 'hover:bg-[var(--bg-secondary)]'
                     )}
                   >
-                    <div className="relative w-12 h-12 rounded-full bg-[var(--bg-secondary)] overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    <div className="relative w-14 h-14 rounded-xl bg-[var(--bg-secondary)] overflow-hidden flex-shrink-0 flex items-center justify-center">
                       {photoUrl && typeof photoUrl === 'string' ? (
-                        <Image src={photoUrl} alt="" fill className="object-cover" sizes="48px" />
+                        <Image src={photoUrl} alt="" fill className="object-cover" sizes="56px" />
                       ) : (
-                        <span className="text-[14px] font-semibold text-[var(--text-secondary)]">
+                        <span className="text-[16px] font-semibold text-[var(--text-secondary)]">
                           {(name || 'П').charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-[var(--text-main)] truncate">{name}</div>
+                      {listingTitle && (
+                        <div className="text-[12px] text-[var(--text-secondary)] truncate mt-0.5">{listingTitle}</div>
+                      )}
                       {last && (
-                        <div className="text-[13px] text-[var(--text-secondary)] truncate mt-0.5">{last.text}</div>
+                        <div className="text-[13px] text-[var(--text-muted)] truncate mt-0.5">{last.text}</div>
                       )}
                     </div>
-                    {last && (
-                      <div className="text-[11px] text-[var(--text-secondary)] flex-shrink-0">
-                        {new Date(last.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short' })}
-                      </div>
-                    )}
-                    {(c.unreadCount ?? 0) > 0 && (
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--text-on-accent)] text-[11px] font-bold flex items-center justify-center">
-                        {c.unreadCount}
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      {dateLabel && (
+                        <span className="text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{dateLabel}</span>
+                      )}
+                      {(c.unreadCount ?? 0) > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--text-on-accent)] text-[11px] font-bold flex items-center justify-center">
+                          {c.unreadCount}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 )
               }).filter(Boolean)}
             </div>
           ) : (
             <div className="p-6 text-center">
-              <p className="text-[14px] text-[var(--text-secondary)]">Пока нет сообщений</p>
+              <p className="text-[14px] text-[var(--text-main)] font-medium">У вас пока нет сообщений</p>
+              <p className="text-[13px] text-[var(--text-secondary)] mt-2">Начните диалог через объявление</p>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Правая колонка (ПК) или полноэкранный чат (мобилка при открытом диалоге) */}
-      <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
+      {/* Правая колонка (ПК) или полноэкранный чат (мобилка при открытом диалоге). TZ-21: pb под нижнее меню на mobile. */}
+      <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col pb-[64px] md:pb-0', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
         {activeChatId ? (
           <div className="flex flex-col h-full min-h-0">
             <ChatPanel

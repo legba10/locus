@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, HelpCircle, CreditCard, Mail, User } from 'lucide-react'
+import { Search, HelpCircle, Mail, User, LayoutDashboard, FileText, MessageCircle, Heart, Wallet, Megaphone, Settings, LogOut } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
@@ -57,6 +57,7 @@ export function Header() {
 
   const authed = isAuthenticated()
   const isAdmin = hasRole?.('admin') ?? false
+  const isLandlord = Boolean(hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0))
   const openSearchOverlay = useSearchOverlayStore((s) => s.open)
   const displayName = user?.full_name ?? (user as any)?.name ?? undefined
   const displayAvatar = user?.avatar_url ?? null
@@ -105,11 +106,11 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      {/* ТЗ-16: Авторизованный — [логотип] [поиск] [колокол] [аватар]. Гость — бургер, лого, поиск, Войти. Лого по центру на mobile. */}
-      <div className={cn('layout-header__inner-tz2 h-full', authed ? 'grid grid-cols-[1fr_auto_1fr] items-center gap-2' : 'flex items-center')}>
-        {/* Бургер только для гостя */}
-        {!authed && (
-          <div className="flex items-center shrink-0 xl:hidden">
+      {/* TZ-21: [бургер] LOCUS [поиск] [уведомления] [аватар]. Лого прижат к бургеру слева, центр пустой, аватар справа. */}
+      <div className="layout-header__inner-tz2 h-full flex items-center gap-2">
+        {/* Слева: бургер + логотип (mobile всегда, desktop без бургера) */}
+        <div className="flex items-center shrink-0 gap-1 min-w-0">
+          <div className="flex shrink-0 lg:hidden">
             <IconButton
               onClick={() => setIsMenuOpen((prev) => !prev)}
               ariaLabel={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
@@ -121,22 +122,19 @@ export function Header() {
               </span>
             </IconButton>
           </div>
-        )}
-        {authed && <div className="min-w-0" aria-hidden />}
-
-        {/* Логотип: центр на mobile (grid при authed), слева на desktop */}
-        <div className={cn('flex justify-center min-w-0 md:justify-start', !authed && 'flex-1')}>
           <Link
             href="/"
             onClick={() => { handleLogoClick(); setAvatarOpen(false); }}
-            className="logo-wrap inline-flex items-center justify-center h-10"
+            className="logo-wrap inline-flex items-center justify-center h-10 shrink-0"
             aria-label="LOCUS — на главную"
           >
             <span className="logo-text text-[18px] font-bold tracking-tight">LOCUS</span>
           </Link>
         </div>
+        {/* Центр пустой */}
+        <div className="flex-1 min-w-0 hidden md:block" aria-hidden />
 
-        {/* Справа: поиск, колокол, аватар (авторизован) или Войти (гость) */}
+        {/* ТЗ-18: Справа — поиск, колокол, CTA «Сдать жильё», аватар (авторизован) или Войти (гость). Header чистый: без сообщений, бургера на ПК, дублей. */}
         <div className="layout-header__right header-actions flex items-center justify-end shrink-0 gap-2 sm:gap-3 xl:gap-3 xl:ml-6">
           <IconButton onClick={() => openSearchOverlay()} ariaLabel="Поиск" className="flex xl:hidden">
             <Search className="w-6 h-6" strokeWidth={1.8} />
@@ -144,11 +142,31 @@ export function Header() {
           <form className="hidden xl:flex items-center flex-1 min-w-0 max-w-[200px]" onSubmit={(e) => { e.preventDefault(); const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement)?.value?.trim() ?? ''; openSearchOverlay(q); }}>
             <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
           </form>
+          {/* ТЗ-21: Колокол всегда. Гость — иконка; авторизован — NotificationsBell. */}
+          {authed ? (
+            <div className="flex shrink-0" aria-label="Уведомления">
+              <NotificationsBell compactBadge />
+            </div>
+          ) : (
+            <span className="flex w-9 h-9 items-center justify-center rounded-lg text-[var(--text-muted)]" aria-hidden>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-6-6 6 6 0 00-6 6v3.159c0 .538-.214 1.055-.595 1.436L7 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            </span>
+          )}
+          {/* ТЗ-21: Сообщения в header только на desktop. На mobile — только в нижнем меню. */}
+          {authed && (
+            <Link href="/messages" className="hidden xl:flex w-9 h-9 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]" aria-label="Сообщения">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            </Link>
+          )}
+          {/* ТЗ-21: CTA «Сдать жильё» — только desktop (sm+). */}
+          <Link
+            href={authed ? '/dashboard/listings/create' : `/auth/login?redirect=${encodeURIComponent('/dashboard/listings/create')}`}
+            className="hidden sm:flex h-9 px-4 items-center justify-center rounded-xl text-sm font-medium shrink-0 bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-95"
+          >
+            Сдать жильё
+          </Link>
           {authed && (
             <>
-              <div className="flex shrink-0" aria-label="Уведомления">
-                <NotificationsBell compactBadge />
-              </div>
               <div className="relative flex shrink-0" ref={avatarRef}>
                 <button
                   type="button"
@@ -161,12 +179,19 @@ export function Header() {
                 </button>
                 {avatarOpen && (
                   <div
-                    className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg z-[var(--z-dropdown)]"
+                    className="absolute right-0 top-full mt-1 py-1 min-w-[200px] rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg z-[var(--z-dropdown)]"
                     role="menu"
                   >
                     <Link href="/profile" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)] rounded-t-[12px]" role="menuitem">Профиль</Link>
+                    {isLandlord && (
+                      <>
+                        <Link href="/owner/dashboard?tab=listings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Мои объявления</Link>
+                        <Link href="/owner/dashboard?tab=bookings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Бронирования</Link>
+                      </>
+                    )}
+                    <Link href="/profile/settings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Настройки</Link>
                     {isAdmin && (
-                      <Link href="/admin" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Админ панель</Link>
+                      <Link href="/admin" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)] border-t border-[var(--border-main)]" role="menuitem">Админ панель</Link>
                     )}
                     <button type="button" onClick={() => { setAvatarOpen(false); logout(); router.push('/'); }} className="block w-full text-left px-4 py-3 text-[14px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)] rounded-b-[12px]" role="menuitem">Выйти</button>
                   </div>
@@ -175,14 +200,14 @@ export function Header() {
             </>
           )}
           {!authed && (
-            <Link href="/auth/login" className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0">
+            <Link href="/auth/login" className="hidden xl:flex layout-header__cta-btn h-9 px-4 items-center justify-center rounded-xl text-sm font-medium shrink-0">
               Войти
             </Link>
           )}
         </div>
       </div>
 
-      {/* ТЗ-2: Бургер только для гостя. Содержимое: поиск жилья, тарифы, помощь, контакты, войти. */}
+      {/* TZ-21: Боковое меню. Гость: поиск, помощь, контакты, войти. Авторизован: обзор, объявления, сообщения, избранное, финансы, продвижение, настройки, выйти. */}
       {!authed && (
         <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
           <div className="mobile-menu-header-row flex items-center justify-end">
@@ -196,10 +221,33 @@ export function Header() {
           <nav className="mobile-menu-nav menu" aria-label="Меню гостя">
             <ul className="menu-list">
               <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск жилья" onClick={() => handleNavigate('/listings')} />
-              <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
               <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
               <NavItem icon={<Mail size={22} strokeWidth={1.8} />} label="Контакты" onClick={() => handleNavigate('/contacts')} />
               <NavItem icon={<User size={22} strokeWidth={1.8} />} label="Войти" onClick={() => handleNavigate('/auth/login')} />
+            </ul>
+          </nav>
+        </MobileMenu>
+      )}
+      {authed && (
+        <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
+          <div className="mobile-menu-header-row flex items-center justify-end">
+            <button type="button" onClick={() => setIsMenuOpen(false)} className="mobile-menu-close text-[var(--text-main)]" aria-label="Закрыть меню">
+              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          <div className="mobile-menu-separator" aria-hidden />
+          <nav className="mobile-menu-nav menu" aria-label="Кабинет">
+            <ul className="menu-list">
+              <NavItem icon={<LayoutDashboard size={22} strokeWidth={1.8} />} label="Обзор" onClick={() => handleNavigate('/profile')} />
+              {isLandlord && <NavItem icon={<FileText size={22} strokeWidth={1.8} />} label="Мои объявления" onClick={() => handleNavigate('/owner/dashboard?tab=listings')} />}
+              <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+              <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
+              {isLandlord && <NavItem icon={<Wallet size={22} strokeWidth={1.8} />} label="Финансы" onClick={() => handleNavigate('/owner/dashboard?tab=finances')} />}
+              {isLandlord && <NavItem icon={<Megaphone size={22} strokeWidth={1.8} />} label="Продвижение" onClick={() => handleNavigate('/owner/dashboard?tab=promotion')} />}
+              <NavItem icon={<Settings size={22} strokeWidth={1.8} />} label="Настройки" onClick={() => handleNavigate('/profile/settings')} />
+              <NavItem icon={<LogOut size={22} strokeWidth={1.8} />} label="Выйти" onClick={() => { setIsMenuOpen(false); logout(); router.push('/'); }} />
             </ul>
           </nav>
         </MobileMenu>

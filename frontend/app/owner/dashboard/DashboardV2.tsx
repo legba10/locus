@@ -50,7 +50,7 @@ export function DashboardV2() {
       return
     }
     if (tab === 'add') {
-      router.replace('/create-listing')
+      router.replace('/dashboard/listings/create')
       return
     }
     if (tab === 'messages') {
@@ -114,7 +114,7 @@ export function DashboardV2() {
   const goToAdd = () => {
     setEditingListing(null)
     setActiveTab('listings')
-    router.push('/create-listing')
+    router.push('/dashboard/listings/create')
   }
 
   /** ТЗ-8: Единый кабинет — сайдбар в layout (ProfileLayoutV2), здесь только контент раздела. */
@@ -457,7 +457,7 @@ function ListingsTabV2({
       {!isLoading && listings.length === 0 && (
         <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-12 text-center">
           <p className="text-[16px] text-[var(--text-secondary)] mb-6">У вас пока нет объявлений</p>
-          <Link href="/create-listing" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95 transition-opacity">
+          <Link href="/dashboard/listings/create" className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95 transition-opacity">
             Разместить
           </Link>
         </div>

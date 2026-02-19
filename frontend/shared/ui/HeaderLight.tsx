@@ -48,7 +48,7 @@ export function HeaderLight() {
   const limit = user?.listingLimit ?? 1
   const used = user?.listingUsed ?? 0
   const canCreateListing = authed
-  const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/owner/dashboard?tab=add'
+  const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/dashboard/listings/create'
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
   const displayName = user?.full_name ?? user?.username ?? null
   const displayAvatar = user?.avatar_url ?? null
@@ -240,7 +240,7 @@ export function HeaderLight() {
                 />
               )}
               <NavItem icon={<Heart size={22} strokeWidth={1.8} />} label="Избранное" onClick={() => handleNavigate('/favorites')} />
-              <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
+              {/* ТЗ-7: Сообщения на mobile только из нижнего меню, не дублируем в бургере */}
               <NavItem icon={<CreditCard size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
               {isAdmin && (
                 <NavItem icon={<Shield size={22} strokeWidth={1.8} />} label="Админ" onClick={() => handleNavigate('/admin')} />

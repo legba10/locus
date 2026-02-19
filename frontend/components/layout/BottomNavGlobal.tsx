@@ -21,13 +21,13 @@ export function BottomNavGlobal() {
   const isMessages = base === '/messages' || base.startsWith('/messages')
   const isFavorites = base === '/favorites'
   const isProfile = base === '/profile' || base.startsWith('/profile') || base.startsWith('/auth')
-  const isAdd = pathname?.startsWith('/create-listing')
+  const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/dashboard/listings/create')
 
   const authed = isAuthenticated()
   const isLandlord = Boolean(hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0))
   const messagesHref = authed ? '/messages' : '/auth/login?redirect=/messages'
   const profileHref = authed ? '/profile' : '/auth/login'
-  const addHref = authed ? '/create-listing' : '/auth/login?redirect=' + encodeURIComponent('/create-listing')
+  const addHref = authed ? '/dashboard/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/dashboard/listings/create')
 
   const linkCls = (active: boolean) =>
     cn('flex flex-col items-center gap-0.5 py-2 px-2 rounded-[12px] text-[10px] font-medium transition-colors min-w-[52px]', active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]')

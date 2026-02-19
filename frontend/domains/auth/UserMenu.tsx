@@ -59,7 +59,7 @@ export function UserMenu() {
   const tariff = user.tariff ?? "free";
   const limit = (user as any).listingLimit ?? 1;
   const used = (user as any).listingUsed ?? 0;
-  const createHref = used >= limit ? "/pricing?reason=limit" : "/owner/dashboard?tab=add";
+  const createHref = used >= limit ? "/pricing?reason=limit" : "/dashboard/listings/create";
 
   const roleBadge = "Пользователь";
   const tariffBadge =
