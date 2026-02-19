@@ -3,13 +3,15 @@
  * Не переопределять --bg-main, --bg-card, --text-primary и т.д. — они в theme.css
  */
 
-/* ТЗ-12: отступы и сетка — единая система */
+/* ТЗ-12: отступы и сетка — единая система. TZ-23: header 56px, bottom nav для отступов. */
 :root {
   --page-px: 16px;
   --section-gap: 16px;
   --card-gap: 12px;
   --radius-card: 18px;
   --radius-card-lg: 20px;
+  --header-height: 56px;
+  --bottom-nav-height: 56px;
 }
 
 /* ТЗ-3: алиасы для поверхностей и overlay */

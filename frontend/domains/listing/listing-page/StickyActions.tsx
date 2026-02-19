@@ -31,36 +31,36 @@ export function StickyActions({
           'md:hidden'
         )}
       >
-        {price != null && price > 0 && (
-          <span className="text-[13px] font-semibold text-[var(--text-main)] shrink-0">
-            от {price.toLocaleString('ru-RU')} ₽
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={onWrite}
-          disabled={writeLoading}
-          className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] disabled:opacity-70"
-        >
-          {writeLoading ? '…' : 'Написать'}
-        </button>
-        <button
-          type="button"
-          onClick={onBook}
-          className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-semibold text-[14px]"
-        >
-          Забронировать
-        </button>
         <button
           type="button"
           onClick={onSave}
-          className="shrink-0 w-12 h-12 rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] flex items-center justify-center"
+          className="shrink-0 w-12 h-12 rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] flex items-center justify-center active:scale-95 transition-transform"
           aria-label={isSaved ? 'Убрать из избранного' : 'В избранное'}
         >
           <svg className={cn('w-5 h-5', isSaved ? 'fill-red-500 text-red-500' : 'text-[var(--text-secondary)]')} fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
         </button>
+        <button
+          type="button"
+          onClick={onWrite}
+          disabled={writeLoading}
+          className="flex-1 min-h-[48px] rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] disabled:opacity-70 active:scale-[0.98] transition-transform"
+        >
+          {writeLoading ? '…' : 'Написать'}
+        </button>
+        <button
+          type="button"
+          onClick={onBook}
+          className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-semibold text-[14px] active:scale-[0.98] transition-transform"
+        >
+          Забронировать
+        </button>
+        {price != null && price > 0 && (
+          <span className="text-[13px] font-semibold text-[var(--text-main)] shrink-0 hidden sm:inline">
+            от {price.toLocaleString('ru-RU')} ₽
+          </span>
+        )}
       </div>
 
       {/* Desktop: плавающий блок справа 320px sticky top 100px */}

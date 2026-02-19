@@ -339,7 +339,7 @@ export function SearchPageV4() {
             <MobileFilters
               open={filtersModalOpen}
               onClose={() => setFiltersModalOpen(false)}
-              onApply={() => setFiltersModalOpen(false)}
+              onApply={() => { setFiltersModalOpen(false); handleSearch(); }}
               resultCount={sortedListings.length}
             />
           ) : (
@@ -499,7 +499,6 @@ export function SearchPageV4() {
           </div>
         </div>
       </div>
-      <FiltersModal open={filtersModalOpen} onClose={() => setFiltersModalOpen(false)} onApply={handleSearch} />
     </div>
   )
 }

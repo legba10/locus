@@ -98,7 +98,7 @@ export function Header() {
     <header
       className={cn(
         'layout-header layout-header-tz13 layout-header-tz2 layout-header-overflow-fix sticky top-0 left-0 right-0 z-[var(--z-header)] w-full',
-        'h-16 min-h-16',
+        'h-[56px] min-h-[56px]',
         'transition-[box-shadow,background] duration-200',
         scrolled && 'layout-header--scrolled'
       )}

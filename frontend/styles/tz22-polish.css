@@ -157,14 +157,14 @@ textarea.tz22-input {
   }
 }
 
-/* ТЗ-22: шапка — 64px высота везде, поиск 48px и 12px radius */
+/* TZ-23: шапка — 56px высота, поиск 48px и 12px radius */
 .layout-header {
-  height: 64px !important;
-  min-height: 64px !important;
+  height: 56px !important;
+  min-height: 56px !important;
 }
 .layout-header .layout-header__inner-tz2 {
-  height: 64px !important;
-  min-height: 64px !important;
+  height: 56px !important;
+  min-height: 56px !important;
 }
 .layout-header__search-input {
   min-height: 48px !important;

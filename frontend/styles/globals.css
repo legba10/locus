@@ -1583,10 +1583,10 @@ body {
 .text-title-xl { font-size: 28px; font-weight: 700; color: var(--text-primary); }
 .text-title-lg { font-size: 22px; font-weight: 600; color: var(--text-primary); }
 
-/* ТЗ-4 БЛОК 9: Header — одинаковая высота 64px mobile + desktop */
+/* TZ-23: Header — 56px */
 .header {
-  min-height: 64px;
-  height: 64px;
+  min-height: 56px;
+  height: 56px;
 }
 
 .header .logo {

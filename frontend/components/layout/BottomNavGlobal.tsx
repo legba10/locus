@@ -28,13 +28,18 @@ export function BottomNavGlobal() {
   const addHref = authed ? '/dashboard/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/dashboard/listings/create')
 
   const linkCls = (active: boolean) =>
-    cn('flex flex-col items-center gap-0.5 py-2 px-2 rounded-[12px] text-[10px] font-medium transition-colors min-w-[52px]', active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]')
+    cn(
+      'flex flex-col items-center gap-0.5 py-2 px-2 rounded-[12px] text-[10px] font-medium transition-colors min-w-[52px]',
+      active ? 'text-[var(--accent)] bg-[var(--accent)]/10' : 'text-[var(--text-muted)]'
+    )
 
   return (
     <nav
       className={cn(
-        'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around py-2 px-1 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[max(0.5rem,env(safe-area-inset-bottom))]',
-        isListingDetail && 'opacity-85'
+        'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around py-2 px-1',
+        'bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]',
+        'pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]',
+        isListingDetail && 'opacity-90'
       )}
       aria-label="Основная навигация"
       data-listing-detail={isListingDetail ? 'true' : undefined}

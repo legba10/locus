@@ -67,7 +67,7 @@ export default function MessagesInner() {
   /** ТЗ-5: skeleton пока грузится user (избегаем console error при undefined user) */
   if (user === undefined) {
     return (
-      <div className="flex flex-col bg-[var(--card-bg)] h-full min-h-0" style={{ top: 'var(--header-height, 64px)', height: 'calc(100vh - var(--header-height, 64px))' }}>
+      <div className="flex flex-col bg-[var(--card-bg)] h-full min-h-0" style={{ top: 'var(--header-height, 56px)', height: 'calc(100vh - var(--header-height, 56px))' }}>
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="h-8 w-8 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin" aria-hidden />
         </div>
@@ -86,8 +86,8 @@ export default function MessagesInner() {
         isMobileChatOpen ? 'md:grid-cols-[320px_1fr]' : 'md:grid-cols-[320px_1fr]'
       )}
       style={{
-        top: 'var(--header-height, 64px)',
-        height: 'calc(100vh - var(--header-height, 64px))',
+        top: 'var(--header-height, 56px)',
+        height: 'calc(100vh - var(--header-height, 56px))',
         overflow: 'hidden',
       }}
     >
@@ -185,7 +185,7 @@ export default function MessagesInner() {
       </aside>
 
       {/* Правая колонка (ПК) или полноэкранный чат (мобилка при открытом диалоге). TZ-21: pb под нижнее меню на mobile. */}
-      <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col pb-[64px] md:pb-0', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
+      <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col chat-column-mobile-pb md:pb-0', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
         {activeChatId ? (
           <div className="flex flex-col h-full min-h-0">
             <ChatPanel

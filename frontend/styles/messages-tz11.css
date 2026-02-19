@@ -4,7 +4,7 @@
  */
 
 .messages-page-tz11 {
-  --header-height: 64px;
+  --header-height: var(--header-height, 56px);
 }
 
 /* ТЗ-8: чат — фиксированная высота, скролл только внутри; страница не скроллится */
@@ -31,7 +31,7 @@
 }
 
 .messages-chat-page-tz11 {
-  --header-height: 64px;
+  --header-height: var(--header-height, 56px);
 }
 
 /* ТЗ-8: поле ввода фикс снизу, не прыгает */
@@ -46,7 +46,20 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* ТЗ-8: мобилка — чат занимает доступную высоту, input всегда виден (flex-shrink-0) */
+/* ТЗ-7/ТЗ-8: мобилка — 100dvh, чат занимает высоту, input фикс (flex-shrink-0) */
+@media (max-width: 767px) {
+  .messages-page-tz11 {
+    height: calc(100dvh - var(--header-height, 56px));
+    min-height: 0;
+  }
+}
+
+/* TZ-23: поле ввода чата над bottom bar — отступ = высота навбара + safe-area */
+@media (max-width: 767px) {
+  .chat-column-mobile-pb {
+    padding-bottom: max(56px, calc(56px + env(safe-area-inset-bottom, 0px)));
+  }
+}
 
 /* ТЗ-12: быстрые подсказки — чипы, горизонтальный скролл на мобилке, тёмная тема, анимация */
 .chat-suggestions-tz12 {

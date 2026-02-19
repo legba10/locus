@@ -32,7 +32,7 @@ export default function DashboardPage() {
     )
   }
 
-  const blockCls = 'flex items-center justify-between gap-3 w-full p-4 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-input)] transition-colors text-left'
+  const blockCls = 'flex items-center justify-between gap-3 w-full p-4 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-input)] active:scale-[0.99] transition-colors duration-200 text-left'
   const iconCls = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
 
   return (
