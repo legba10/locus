@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { Search, HelpCircle, CreditCard, Mail, User } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
+import UserAvatar from '@/components/ui/UserAvatar'
 import { MobileMenu } from './MobileMenu'
 import { useSearchOverlayStore } from '@/core/searchOverlay/searchOverlayStore'
 
@@ -47,13 +48,27 @@ function NavItem({
 /** ТЗ-14: один логотип /logo.svg + надпись LOCUS, без смены по теме, стабильно везде */
 export function Header() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, hasRole, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [avatarOpen, setAvatarOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
 
   const authed = isAuthenticated()
+  const isAdmin = hasRole?.('admin') ?? false
   const openSearchOverlay = useSearchOverlayStore((s) => s.open)
+  const displayName = user?.full_name ?? (user as any)?.name ?? undefined
+  const displayAvatar = user?.avatar_url ?? null
+
+  useEffect(() => {
+    if (!avatarOpen) return
+    const close = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarOpen(false)
+    }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [avatarOpen])
 
   const handleLogoClick = () => setIsMenuOpen(false)
 
@@ -90,8 +105,9 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      <div className="layout-header__inner-tz2 h-full">
-        {/* ТЗ-1: Бургер только для гостя. Авторизованный — всё через нижнее меню и профиль. */}
+      {/* ТЗ-16: Авторизованный — [логотип] [поиск] [колокол] [аватар]. Гость — бургер, лого, поиск, Войти. Лого по центру на mobile. */}
+      <div className={cn('layout-header__inner-tz2 h-full', authed ? 'grid grid-cols-[1fr_auto_1fr] items-center gap-2' : 'flex items-center')}>
+        {/* Бургер только для гостя */}
         {!authed && (
           <div className="flex items-center shrink-0 xl:hidden">
             <IconButton
@@ -106,21 +122,22 @@ export function Header() {
             </IconButton>
           </div>
         )}
+        {authed && <div className="min-w-0" aria-hidden />}
 
-        {/* Центр/лого: на mobile лого по центру (flex-1 justify-center), на md+ лого слева */}
-        <div className="flex-1 flex justify-center min-w-0 md:flex-initial md:justify-start">
+        {/* Логотип: центр на mobile (grid при authed), слева на desktop */}
+        <div className={cn('flex justify-center min-w-0 md:justify-start', !authed && 'flex-1')}>
           <Link
             href="/"
-            onClick={handleLogoClick}
-            className="logo-wrap"
+            onClick={() => { handleLogoClick(); setAvatarOpen(false); }}
+            className="logo-wrap inline-flex items-center justify-center h-10"
             aria-label="LOCUS — на главную"
           >
-            <span className="logo-text">LOCUS</span>
+            <span className="logo-text text-[18px] font-bold tracking-tight">LOCUS</span>
           </Link>
         </div>
 
-        {/* ТЗ-14: Авторизованный — только логотип, поиск, колокольчик. Сообщения/профиль/добавить — только в нижнем меню и sidebar. */}
-        <div className="layout-header__right header-actions flex items-center shrink-0 gap-2 sm:gap-3 xl:gap-3 xl:ml-6">
+        {/* Справа: поиск, колокол, аватар (авторизован) или Войти (гость) */}
+        <div className="layout-header__right header-actions flex items-center justify-end shrink-0 gap-2 sm:gap-3 xl:gap-3 xl:ml-6">
           <IconButton onClick={() => openSearchOverlay()} ariaLabel="Поиск" className="flex xl:hidden">
             <Search className="w-6 h-6" strokeWidth={1.8} />
           </IconButton>
@@ -128,9 +145,34 @@ export function Header() {
             <input type="search" name="q" placeholder="Поиск..." className="layout-header__search-input w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--bg-main)] text-[var(--text-main)] text-sm placeholder:text-[var(--text-muted)]" aria-label="Поиск" />
           </form>
           {authed && (
-            <div className="flex shrink-0" aria-label="Уведомления">
-              <NotificationsBell compactBadge />
-            </div>
+            <>
+              <div className="flex shrink-0" aria-label="Уведомления">
+                <NotificationsBell compactBadge />
+              </div>
+              <div className="relative flex shrink-0" ref={avatarRef}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setAvatarOpen((v) => !v); }}
+                  className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  aria-label="Меню"
+                  aria-expanded={avatarOpen}
+                >
+                  <UserAvatar user={{ avatar_url: displayAvatar, full_name: displayName, username: user?.username }} size={40} asButton={false} />
+                </button>
+                {avatarOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-1 py-1 min-w-[180px] rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg z-[var(--z-dropdown)]"
+                    role="menu"
+                  >
+                    <Link href="/profile" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)] rounded-t-[12px]" role="menuitem">Профиль</Link>
+                    {isAdmin && (
+                      <Link href="/admin" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Админ панель</Link>
+                    )}
+                    <button type="button" onClick={() => { setAvatarOpen(false); logout(); router.push('/'); }} className="block w-full text-left px-4 py-3 text-[14px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)] rounded-b-[12px]" role="menuitem">Выйти</button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
           {!authed && (
             <Link href="/auth/login" className="layout-header__cta-btn h-9 px-4 flex items-center justify-center rounded-xl text-sm font-medium shrink-0">

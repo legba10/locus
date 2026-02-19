@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { useRouter } from 'next/navigation'
 
-/** ТЗ-15: Вкладки кабинета — Основные (Мои объявления, Бронирования, Сообщения, Избранное), Для арендодателя (Доходы, Аналитика, Продвижение), Системные (Настройки, Поддержка). Профиль — первый пункт. */
+/** ТЗ-16: Профиль — Обзор, Основные (Мои объявления, Бронирования, Сообщения, Избранное), Для арендодателя (Продвижение, Финансы), Системные (Настройки, Поддержка). Без Аналитики, без Админ, без дублей. */
 function useCabinetTabs() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -17,7 +17,7 @@ function useCabinetTabs() {
   return useMemo(() => {
     const profileActive = pathname === '/profile' && !pathname.startsWith('/profile/')
     const tabs: Array<{ href: string; label: string; isActive: boolean; section?: string }> = [
-      { href: '/profile', label: 'Профиль', isActive: profileActive },
+      { href: '/profile', label: 'Обзор', isActive: profileActive },
     ]
     // Основные
     tabs.push(
@@ -26,12 +26,11 @@ function useCabinetTabs() {
       { href: '/messages', label: 'Сообщения', isActive: pathname?.startsWith('/messages'), section: 'main' },
       { href: '/favorites', label: 'Избранное', isActive: pathname === '/favorites', section: 'main' }
     )
-    // Для арендодателя
+    // Для арендодателя (только если есть объявления)
     if (isLandlord) {
       tabs.push(
-        { href: '/profile/finance', label: 'Доходы', isActive: pathname === '/profile/finance' || pathname === '/profile/income', section: 'landlord' },
-        { href: '/profile/analytics', label: 'Аналитика', isActive: pathname === '/profile/analytics', section: 'landlord' },
-        { href: '/owner/dashboard?tab=promotion', label: 'Продвижение', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'promotion', section: 'landlord' }
+        { href: '/owner/dashboard?tab=promotion', label: 'Продвижение', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'promotion', section: 'landlord' },
+        { href: '/profile/finance', label: 'Финансы', isActive: pathname === '/profile/finance' || pathname === '/profile/income', section: 'landlord' }
       )
     }
     // Системные
@@ -56,7 +55,7 @@ export function ProfileSidebar() {
   const { tabs, isLandlord } = useCabinetTabs()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const currentLabel = tabs.find((t) => t.isActive)?.label ?? (pathname === '/profile' ? 'Профиль' : tabs[0]?.label ?? 'Профиль')
+  const currentLabel = tabs.find((t) => t.isActive)?.label ?? (pathname === '/profile' ? 'Обзор' : tabs[0]?.label ?? 'Обзор')
 
   const handleLogout = () => {
     setMobileOpen(false)
