@@ -1,12 +1,22 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { ProfileCard } from '@/components/profile'
 import { ThemeSettings } from '@/components/ui/ThemeSettings'
 import { cn } from '@/shared/utils/cn'
 
+/** ТЗ-8: Настройки — только имя, почта, пароль, аватар, уведомления, тема. */
+const SETTINGS_NAV = [
+  { href: '/profile', label: 'Аккаунт' },
+  { href: '/profile/security', label: 'Пароль' },
+  { href: '/profile/notifications', label: 'Уведомления' },
+  { href: '/profile/settings', label: 'Интерфейс' },
+]
+
 export default function ProfileSettingsPage() {
+  const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
 
   if (!isAuthenticated()) {
@@ -22,23 +32,29 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[22px] font-semibold text-[var(--text-primary)]">Настройки интерфейса</h1>
-
-      <ProfileCard>
-        <ThemeSettings />
-      </ProfileCard>
-
-      <ProfileCard title="Язык">
-        <p className="text-[14px] text-[var(--text-secondary)] mb-3">Язык интерфейса</p>
-        <div className="flex gap-2">
-          <button type="button" className={cn('px-4 py-2 rounded-[12px] text-[14px] font-medium bg-[var(--accent)] text-[var(--button-primary-text)]')}>
-            Русский
-          </button>
-          <button type="button" className="px-4 py-2 rounded-[12px] text-[14px] font-medium border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)]">
-            English
-          </button>
-        </div>
-      </ProfileCard>
+      <h1 className="text-[22px] font-semibold text-[var(--text-primary)]">Настройки</h1>
+      <nav className="flex flex-wrap gap-2 pb-2 border-b border-[var(--border-main)]">
+        {SETTINGS_NAV.map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'px-4 py-2 rounded-[12px] text-[14px] font-medium transition-colors',
+              (pathname?.replace(/\/$/, '') || '') === href.replace(/\/$/, '')
+                ? 'bg-[var(--accent)] text-[var(--button-primary-text)]'
+                : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)]'
+            )}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <section>
+        <h2 className="text-[18px] font-semibold text-[var(--text-primary)] mb-4">Интерфейс</h2>
+        <ProfileCard>
+          <ThemeSettings />
+        </ProfileCard>
+      </section>
     </div>
   )
 }

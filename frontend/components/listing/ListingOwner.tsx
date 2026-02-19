@@ -16,6 +16,8 @@ export interface ListingOwnerProps {
   }
   onWrite?: () => void
   showRespondsFast?: boolean
+  /** ТЗ-3: без кнопки «Профиль»; переход по клику на карточку */
+  hideProfileButton?: boolean
 }
 
 const FALLBACK_OWNER = {
@@ -28,11 +30,12 @@ const FALLBACK_OWNER = {
   lastSeen: null as string | null,
 };
 
-export function ListingOwner({ owner, onWrite, showRespondsFast = true }: ListingOwnerProps) {
+export function ListingOwner({ owner, onWrite, showRespondsFast = true, hideProfileButton }: ListingOwnerProps) {
   const o = owner ?? FALLBACK_OWNER;
   const hasRating = o.rating != null && Number.isFinite(o.rating);
   const reviewsCount = o.reviewsCount ?? null;
   const listingsCount = o.listingsCount ?? 0;
+  const profileHref = o.id ? `/user/${o.id}` : '#';
 
   const reviewsLabel =
     reviewsCount == null
@@ -54,13 +57,8 @@ export function ListingOwner({ owner, onWrite, showRespondsFast = true }: Listin
     return 'Отвечает быстро'
   })()
 
-  return (
-    <div
-      className={cn(
-        'rounded-[18px] p-4 md:p-6',
-        'bg-[var(--bg-card)] border border-[var(--border-main)]'
-      )}
-    >
+  const content = (
+    <>
       <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Владелец</h2>
       <div className="flex items-start gap-4">
         <div className="relative w-14 h-14 rounded-full overflow-hidden bg-[var(--bg-input)] flex-shrink-0">
@@ -93,20 +91,39 @@ export function ListingOwner({ owner, onWrite, showRespondsFast = true }: Listin
           <div className="flex flex-wrap gap-2 mt-4">
             <button
               type="button"
-              onClick={onWrite}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWrite?.(); }}
               className="px-4 py-2.5 rounded-[12px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-semibold hover:opacity-95 transition-opacity"
             >
               Написать
             </button>
-            <Link
-              href={o.id ? `/user/${o.id}` : "#"}
-              className="px-4 py-2.5 rounded-[12px] border border-[var(--border-main)] text-[var(--text-primary)] text-[14px] font-semibold hover:bg-[var(--bg-input)] transition-colors"
-            >
-              Профиль
-            </Link>
+            {!hideProfileButton && (
+              <Link
+                href={profileHref}
+                className="px-4 py-2.5 rounded-[12px] border border-[var(--border-main)] text-[var(--text-primary)] text-[14px] font-semibold hover:bg-[var(--bg-input)] transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Профиль
+              </Link>
+            )}
           </div>
         </div>
       </div>
-    </div>
-  )
+    </>
+  );
+
+  const className = cn(
+    'rounded-[18px] p-4 md:p-6',
+    'bg-[var(--bg-card)] border border-[var(--border-main)]',
+    hideProfileButton && 'cursor-pointer hover:bg-[var(--bg-input)]/50 transition-colors'
+  );
+
+  if (hideProfileButton && o.id) {
+    return (
+      <Link href={profileHref} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }

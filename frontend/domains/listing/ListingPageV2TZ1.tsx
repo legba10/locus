@@ -169,7 +169,7 @@ export function ListingPageV2TZ1({ id }: ListingPageV2TZ1Props) {
     setWriteLoading(true)
     try {
       const conv = await apiFetchJson<{ id: string }>(`/chats/by-listing/${item.id}`, { method: 'POST' })
-      router.push(`/chat/${conv.id}`)
+      router.push(`/messages?chat=${conv.id}`)
     } catch {
       router.push(`/messages?listing=${item.id}`)
     } finally {
@@ -202,7 +202,7 @@ export function ListingPageV2TZ1({ id }: ListingPageV2TZ1Props) {
           checkOut: typeof booking.checkOut === 'string' ? booking.checkOut : new Date(booking.checkOut).toISOString(),
         })
       }
-      if (res?.conversationId) router.push(`/chat/${res.conversationId}`)
+      if (res?.conversationId) router.push(`/messages?chat=${res.conversationId}`)
     } catch {}
   }
 

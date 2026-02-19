@@ -82,7 +82,7 @@ export class ChatsService {
     const conv = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
-        listing: { select: { id: true, title: true, photos: { take: 1, orderBy: { sortOrder: "asc" } } } },
+        listing: { select: { id: true, title: true, addressLine: true, city: true, photos: { take: 1, orderBy: { sortOrder: "asc" } } } },
         host: { include: { profile: true } },
         guest: { include: { profile: true } },
       },
@@ -153,7 +153,7 @@ export class ChatsService {
         "Новое сообщение",
         `${(message.sender as any).profile?.name ?? "Кто-то"}: ${trimmed.slice(0, 80)}${trimmed.length > 80 ? "…" : ""}`,
         null,
-        { link: `/chat/${conversationId}`, entityId: conversationId },
+        { link: `/messages?chat=${conversationId}`, entityId: conversationId },
       )
       .catch(() => {});
 
@@ -185,8 +185,10 @@ export class ChatsService {
     const photo = listing?.photos?.[0];
     return {
       ...c,
+      listingId: listing?.id,
       listingTitle: listing?.title,
       listingPhotoUrl: photo?.url,
+      listingAddress: listing?.addressLine || listing?.city || null,
     };
   }
 }

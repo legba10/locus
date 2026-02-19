@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
@@ -14,14 +16,11 @@ export type Message = {
   sender?: { profile?: { name?: string | null } }
 }
 
-/** ТЗ-8: быстрые фразы-чипы над полем ввода (вставляют текст при нажатии) */
+/** ТЗ-7: шаблоны при открытии диалога — по нажатию вставляются в поле */
 const QUICK_SUGGESTIONS_BASE = [
-  'Здравствуйте! Можно забронировать?',
-  'Свободно ли на эти даты?',
-  'Можно посмотреть сегодня?',
-  'Интересует квартира',
-  'Какие даты свободны?',
-  'Подскажите, какая окончательная цена?',
+  'Можно забронировать на сегодня?',
+  'Квартира свободна?',
+  'На длительный срок можно?',
 ]
 
 export interface ChatPanelProps {
@@ -66,7 +65,10 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
 
   const { data: conv } = useFetch<{
     id: string
+    listingId?: string
     listingTitle?: string
+    listingPhotoUrl?: string
+    listingAddress?: string
     host?: { id: string }
     guest?: { id: string }
   }>(['chat-meta', chatId], `/chats/${chatId}`, { enabled: !!chatId && isAuthenticated() })
@@ -202,6 +204,29 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
         )}
         <span className="flex-1 font-semibold text-[var(--text-main)] truncate">{title}</span>
       </header>
+
+      {/* ТЗ-7: блок объявления — фото, адрес, перейти к объявлению */}
+      {(conv?.listingId || conv?.listingPhotoUrl || conv?.listingTitle) && (
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-secondary)]/50">
+          {conv.listingPhotoUrl && (
+            <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--bg-secondary)]">
+              <Image src={conv.listingPhotoUrl} alt="" fill className="object-cover" sizes="56px" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            {conv.listingTitle && <p className="font-medium text-[var(--text-main)] truncate text-[14px]">{conv.listingTitle}</p>}
+            {conv.listingAddress && <p className="text-[12px] text-[var(--text-secondary)] truncate mt-0.5">{conv.listingAddress}</p>}
+          </div>
+          {conv.listingId && (
+            <Link
+              href={`/listings/${conv.listingId}`}
+              className="flex-shrink-0 text-[13px] font-medium text-[var(--accent)] hover:underline"
+            >
+              К объявлению
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* ТЗ-15: контейнер сообщений — overflow-y auto, height 100%, без overflow hidden */}
       <div

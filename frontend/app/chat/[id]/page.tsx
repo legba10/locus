@@ -1,39 +1,33 @@
 'use client'
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 import { useAuthStore } from '@/domains/auth'
-import { ChatPanel } from '@/components/chat/ChatPanel'
 
+/** ТЗ-7: Единая система сообщений — все чаты только на /messages. Редирект старых ссылок /chat/[id]. */
 export default function ChatPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()
   const id = params?.id ?? ''
   const { isAuthenticated } = useAuthStore()
-  const suggestedCheckIn = searchParams.get('checkIn') ?? undefined
-  const suggestedCheckOut = searchParams.get('checkOut') ?? undefined
 
-  if (!isAuthenticated()) {
-    router.push(`/auth/login?redirect=${encodeURIComponent(`/chat/${id}`)}`)
-    return null
-  }
+  useEffect(() => {
+    if (!id) {
+      router.replace('/messages')
+      return
+    }
+    if (!isAuthenticated()) {
+      router.replace(`/auth/login?redirect=${encodeURIComponent(`/messages?chat=${id}`)}`)
+      return
+    }
+    const checkIn = searchParams.get('checkIn') ?? ''
+    const checkOut = searchParams.get('checkOut') ?? ''
+    const q = new URLSearchParams({ chat: id })
+    if (checkIn) q.set('checkIn', checkIn)
+    if (checkOut) q.set('checkOut', checkOut)
+    router.replace(`/messages?${q.toString()}`)
+  }, [id, router, isAuthenticated, searchParams])
 
-  if (!id) {
-    router.push('/messages')
-    return null
-  }
-
-  return (
-    <div
-      className="messages-chat-page-tz11 fixed left-0 right-0 bottom-0 z-[10] bg-[var(--card-bg)]"
-      style={{ top: 'var(--header-height, 64px)' }}
-    >
-      <ChatPanel
-        chatId={id}
-        onBack={() => router.push('/messages')}
-        suggestedCheckIn={suggestedCheckIn}
-        suggestedCheckOut={suggestedCheckOut}
-      />
-    </div>
-  )
+  return null
 }

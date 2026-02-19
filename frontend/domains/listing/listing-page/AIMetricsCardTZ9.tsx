@@ -73,6 +73,8 @@ export function AIMetricsCardTZ9({ listingId }: { listingId: string }) {
     )
   }
 
+  const recommend = overall >= 80
+
   return (
     <section
       className={cn(
@@ -80,10 +82,18 @@ export function AIMetricsCardTZ9({ listingId }: { listingId: string }) {
         mounted && 'animate-fade-in'
       )}
     >
-      <h2 className="text-[18px] font-bold text-[var(--text-primary)]">AI-оценка квартиры</h2>
-      <p className="mt-1 text-[28px] font-bold text-[var(--text-primary)] tabular-nums">
-        Общий индекс: <span className="text-[var(--accent)]">{overall}</span>/100
-      </p>
+      <h2 className="text-[18px] font-bold text-[var(--text-primary)]">AI-оценка жилья</h2>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-[28px] font-bold text-[var(--text-primary)] tabular-nums">
+          <span className="text-[var(--accent)]">{overall}</span>/100
+        </p>
+        {recommend && (
+          <span className="px-3 py-1 rounded-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[13px] font-semibold">
+            Рекомендовано
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-[14px] text-[var(--text-secondary)]">Подходит для: пары, 3–5 дней</p>
       <div className="mt-4 space-y-3">
         {display.map(({ key, pct, count }) => (
           <div key={key} className="relative">
@@ -107,16 +117,18 @@ export function AIMetricsCardTZ9({ listingId }: { listingId: string }) {
             </div>
             {tooltipKey === key && (
               <div className="absolute left-0 top-full mt-2 z-10 max-w-xs rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] p-3 shadow-lg text-[13px] text-[var(--text-secondary)]">
-                Оценка на основе:
-                <ul className="mt-1 list-disc list-inside">
-                  <li>{count || 24} отзывов</li>
-                  <li>18 бронирований</li>
-                  <li>данных района</li>
-                </ul>
+                Оценка на основе отзывов и данных объявления.
               </div>
             )}
           </div>
         ))}
+      </div>
+      {/* ТЗ-11: Инсайты AI — чаще всего хвалят / иногда жалуются */}
+      <div className="mt-5 pt-4 border-t border-[var(--border-main)] space-y-3">
+        <p className="text-[13px] font-semibold text-[var(--text-primary)]">Чаще всего гости хвалят:</p>
+        <p className="text-[13px] text-[var(--text-secondary)]">чистоту · быстрый заезд · расположение</p>
+        <p className="text-[13px] font-semibold text-[var(--text-primary)] mt-2">Иногда жалуются:</p>
+        <p className="text-[13px] text-[var(--text-secondary)]">шум улицы</p>
       </div>
     </section>
   )

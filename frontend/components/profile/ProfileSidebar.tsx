@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { useRouter } from 'next/navigation'
 
-/** ТЗ-16: Профиль — Обзор, Основные (Мои объявления, Бронирования, Сообщения, Избранное), Для арендодателя (Продвижение, Финансы), Системные (Настройки, Поддержка). Без Аналитики, без Админ, без дублей. */
+/** ТЗ-19: Профиль — только разделы: Основное (Мои объявления, Бронирования, Сообщения, Избранное), Для арендодателя (Финансы, Продвижение), Система (Настройки, Выйти). Без админ-дашборда, без дублей. */
 function useCabinetTabs() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -15,37 +15,35 @@ function useCabinetTabs() {
   const isLandlord = hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0)
 
   return useMemo(() => {
-    const profileActive = pathname === '/profile' && !pathname.startsWith('/profile/')
-    const tabs: Array<{ href: string; label: string; isActive: boolean; section?: string }> = [
-      { href: '/profile', label: 'Обзор', isActive: profileActive },
-    ]
-    // Основные
+    const tabs: Array<{ href: string; label: string; isActive: boolean; section?: string }> = []
+    // ТЗ-21: Основное — Мои объявления только если landlord, затем Бронирования, Сообщения, Избранное
+    if (isLandlord) {
+      tabs.push({ href: '/owner/dashboard?tab=listings', label: 'Мои объявления', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'listings', section: 'main' })
+    }
     tabs.push(
-      { href: '/owner/dashboard?tab=listings', label: 'Мои объявления', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'listings', section: 'main' },
       { href: '/owner/dashboard?tab=bookings', label: 'Бронирования', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'bookings', section: 'main' },
       { href: '/messages', label: 'Сообщения', isActive: pathname?.startsWith('/messages'), section: 'main' },
       { href: '/favorites', label: 'Избранное', isActive: pathname === '/favorites', section: 'main' }
     )
-    // Для арендодателя (только если есть объявления)
+    // ТЗ-21: Для арендодателя — Продвижение, Финансы. Без доходов, аналитики, дашборда, админа.
     if (isLandlord) {
       tabs.push(
         { href: '/owner/dashboard?tab=promotion', label: 'Продвижение', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'promotion', section: 'landlord' },
-        { href: '/profile/finance', label: 'Финансы', isActive: pathname === '/profile/finance' || pathname === '/profile/income', section: 'landlord' }
+        { href: '/owner/dashboard?tab=finances', label: 'Финансы', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'finances', section: 'landlord' }
       )
     }
-    // Системные
+    // Система (только Настройки; Выйти — отдельная кнопка)
     tabs.push(
-      { href: '/profile/settings', label: 'Настройки', isActive: pathname?.startsWith('/profile/settings'), section: 'system' },
-      { href: '/help', label: 'Поддержка', isActive: pathname === '/help', section: 'system' }
+      { href: '/profile/settings', label: 'Настройки', isActive: pathname?.startsWith('/profile/settings'), section: 'system' }
     )
     return { tabs, isLandlord }
   }, [pathname, searchParams, isLandlord])
 }
 
 const SECTION_LABELS: Record<string, string> = {
-  main: 'Основные',
+  main: 'Основное',
   landlord: 'Для арендодателя',
-  system: 'Системные',
+  system: 'Система',
 }
 
 export function ProfileSidebar() {
@@ -55,7 +53,7 @@ export function ProfileSidebar() {
   const { tabs, isLandlord } = useCabinetTabs()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const currentLabel = tabs.find((t) => t.isActive)?.label ?? (pathname === '/profile' ? 'Обзор' : tabs[0]?.label ?? 'Обзор')
+  const currentLabel = tabs.find((t) => t.isActive)?.label ?? (pathname === '/profile' ? 'Профиль' : tabs[0]?.label ?? 'Профиль')
 
   const handleLogout = () => {
     setMobileOpen(false)

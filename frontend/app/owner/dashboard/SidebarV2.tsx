@@ -23,16 +23,15 @@ function RocketIcon() {
   )
 }
 
-/** ТЗ 6: порядок как в Airbnb/Cian — Обзор, Объявления, Бронирования, Сообщения, Продвижение, Финансы, Профиль, Настройки. Аналитика встроена в Обзор. */
+/** ТЗ-7: Сообщения только из шапки (desktop) и нижнего меню (mobile). Не дублируем в сайдбаре. */
 const TABS: { id: CabinetTab; label: string; icon: React.ReactNode; mobileOrder?: number }[] = [
   { id: 'home', label: 'Обзор', icon: <HomeIcon />, mobileOrder: 0 },
   { id: 'listings', label: 'Мои объявления', icon: <ListingsIcon />, mobileOrder: 1 },
   { id: 'bookings', label: 'Бронирования', icon: <CalendarIcon /> },
-  { id: 'messages', label: 'Сообщения', icon: <MessagesIcon />, mobileOrder: 2 },
   { id: 'promotion', label: 'Продвижение', icon: <RocketIcon /> },
   { id: 'finances', label: 'Финансы', icon: <WalletIcon /> },
-  { id: 'profile', label: 'Профиль', icon: <UserIcon />, mobileOrder: 3 },
-  { id: 'settings', label: 'Настройки', icon: <SettingsIcon /> },
+  { id: 'profile', label: 'Профиль', icon: <UserIcon />, mobileOrder: 2 },
+  { id: 'settings', label: 'Настройки', icon: <SettingsIcon />, mobileOrder: 3 },
 ]
 
 function HomeIcon() {
@@ -53,13 +52,6 @@ function CalendarIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  )
-}
-function MessagesIcon() {
-  return (
-    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
     </svg>
   )
 }

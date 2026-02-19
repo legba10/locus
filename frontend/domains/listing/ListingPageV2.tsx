@@ -194,7 +194,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
     setWriteLoading(true)
     try {
       const conv = await apiFetchJson<{ id: string }>(`/chats/by-listing/${item.id}`, { method: 'POST' })
-      router.push(`/chat/${conv.id}`)
+      router.push(`/messages?chat=${conv.id}`)
     } catch {
       router.push(`/messages?listing=${item.id}`)
     } finally {
@@ -230,7 +230,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
         })
       }
       if (res?.conversationId) {
-        router.push(`/chat/${res.conversationId}`)
+        router.push(`/messages?chat=${res.conversationId}`)
       }
     } catch {
       // Error shown by API or could set local state
@@ -303,12 +303,33 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
         <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Основной контент: на мобильном — единственный столбец; CTA только в sticky-баре */}
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
+            {/* ТЗ-1: Порядок блоков — ФОТО, ЦЕНА+CTA, AI, ОПИСАНИЕ, УДОБСТВА, ХОЗЯИН, ОТЗЫВЫ, КАРТА, БРОНИРОВАНИЕ */}
             <ListingGallery
               photos={photos}
               title={item.title ?? ''}
               verified={aiScore.score >= 70}
               onOpenFullscreen={photos.length > 0 ? () => setGalleryOpen(true) : undefined}
             />
+            {/* ЦЕНА + CTA (в потоке; на десктопе дублируется в правой колонке) */}
+            <div className="lg:hidden">
+              <ListingCta
+                price={priceValue}
+                onWrite={handleWrite}
+                onBook={handleBook}
+                onSave={() => setIsFavorite((f) => !f)}
+                isSaved={isFavorite}
+                views={viewsValue}
+                sticky={false}
+              />
+            </div>
+            {/* AI блок */}
+            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">AI анализ</h2>
+              <ul className="space-y-2 text-[14px] text-[#6B7280]">
+                {aiScore.score >= 70 && <li className="flex items-center gap-2">✓ Под ваш бюджет</li>}
+                {aiScore.reasons?.length ? aiScore.reasons.slice(0, 3).map((r, i) => <li key={i} className="flex items-center gap-2">✓ {r}</li>) : <li>Оценка: {aiScore.score}/100</li>}
+              </ul>
+            </div>
             <ListingHeader
               title={item.title ?? ''}
               city={item.city ?? ''}
@@ -321,6 +342,44 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
               totalFloors={item.totalFloors ?? null}
               typeLabel="Квартира"
             />
+            {/* ОПИСАНИЕ */}
+            {item.description && (
+              <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
+                <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Описание</h2>
+                <p className={cn('text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')}>
+                  {item.description}
+                </p>
+                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-3 text-[13px] font-medium text-violet-600">
+                  {isDescriptionExpanded ? 'Свернуть' : 'Развернуть'}
+                </button>
+              </div>
+            )}
+            {/* УДОБСТВА */}
+            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
+              {amenities.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(showAllAmenities ? amenities : amenities.slice(0, 8)).map((label, i) => (
+                      <div key={i} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-gray-50/80 border border-[var(--border)]">
+                        <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-[13px] font-medium text-[#1C1F26]">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {amenities.length > 8 && (
+                    <button type="button" onClick={() => setShowAllAmenities((p) => !p)} className="mt-4 text-[13px] font-medium text-violet-600">
+                      {showAllAmenities ? 'Свернуть' : 'Показать все'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="text-[14px] text-[#6B7280]">Удобства не указаны.</p>
+              )}
+            </div>
+            {/* ХОЗЯИН */}
             {!owner.id ? (
               <div className="bg-[var(--card)] rounded-2xl p-4 md:p-6 shadow-[var(--shadow-card)] border border-[var(--border)] animate-pulse">
                 <div className="h-5 w-24 bg-gray-200 rounded mb-3" />
@@ -346,68 +405,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                 onWrite={handleWrite}
               />
             )}
-            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Удобства</h2>
-              {amenities.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(showAllAmenities ? amenities : amenities.slice(0, 8)).map((label, i) => (
-                      <div key={i} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-gray-50/80 border border-[var(--border)]">
-                        <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-[13px] font-medium text-[#1C1F26]">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {amenities.length > 8 && (
-                    <button type="button" onClick={() => setShowAllAmenities((p) => !p)} className="mt-4 text-[13px] font-medium text-violet-600">
-                      {showAllAmenities ? 'Свернуть' : 'Показать все'}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <p className="text-[14px] text-[#6B7280]">Удобства не указаны.</p>
-              )}
-            </div>
-            {item.description && (
-<div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Описание</h2>
-                <p className={cn('text-[15px] text-[#6B7280] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')}>
-                  {item.description}
-                </p>
-                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-3 text-[13px] font-medium text-violet-600">
-                  {isDescriptionExpanded ? 'Свернуть' : 'Развернуть'}
-                </button>
-              </div>
-            )}
-            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Расположение</h2>
-              {item.addressLine ? (
-                <p className="text-[14px] text-[#6B7280]">{item.addressLine}</p>
-              ) : (
-                <p className="text-[13px] text-[#9CA3AF] flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  Адрес доступен после бронирования
-                </p>
-              )}
-              {item.lat && item.lng && (
-                <div className="mt-3 h-40 md:h-52 rounded-xl overflow-hidden bg-gray-100">
-                  <iframe
-                    src={`https://yandex.ru/map-widget/v1/?ll=${item.lng},${item.lat}&z=15&pt=${item.lng},${item.lat}`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    title="Карта"
-                  />
-                </div>
-              )}
-            </div>
-            <div id="listing-booking" className="lg:hidden">
-              <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
-            </div>
+            {/* ОТЗЫВЫ */}
             <div id="reviews-section" className={cn('bg-[var(--card)] rounded-2xl p-5 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
               {/* Блок 1: заголовок + кнопка */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -546,6 +544,36 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
                   }}
                 />
               </div>
+            </div>
+
+            {/* КАРТА */}
+            <div className={cn('bg-[var(--card)] rounded-2xl p-4 md:p-6', 'shadow-[var(--shadow-card)] border border-[var(--border)]')}>
+              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Расположение</h2>
+              {item.addressLine ? (
+                <p className="text-[14px] text-[#6B7280]">{item.addressLine}</p>
+              ) : (
+                <p className="text-[13px] text-[#9CA3AF] flex items-center gap-2">
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Адрес доступен после бронирования
+                </p>
+              )}
+              {item.lat && item.lng && (
+                <div className="mt-3 h-40 md:h-52 rounded-xl overflow-hidden bg-gray-100">
+                  <iframe
+                    src={`https://yandex.ru/map-widget/v1/?ll=${item.lng},${item.lat}&z=15&pt=${item.lng},${item.lat}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    title="Карта"
+                  />
+                </div>
+              )}
+            </div>
+            {/* БРОНИРОВАНИЕ (в потоке; фикс-бар — ниже) */}
+            <div id="listing-booking" className="lg:hidden">
+              <ListingBooking listingId={item.id} pricePerNight={priceValue || 0} onConfirm={handleBookingConfirm} />
             </div>
           </div>
 

@@ -494,7 +494,7 @@ function MessagesTab() {
             return (
               <Link
                 key={c.id}
-                href={`/chat/${c.id}`}
+                href={`/messages?chat=${c.id}`}
                 className={cn(
                   'flex items-center gap-4 p-4 rounded-[18px] bg-[var(--bg-card)] border border-[var(--border-main)]',
                   'shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:border-violet-200'

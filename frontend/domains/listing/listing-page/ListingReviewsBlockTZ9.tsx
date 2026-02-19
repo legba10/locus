@@ -134,14 +134,11 @@ export function ListingReviewsBlockTZ9({
         </div>
       )}
 
-      {/* AI-сводка отзывов */}
+      {/* ТЗ-11: AI-разбор отзывов */}
       <div className="mb-6 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)]/50 p-4">
-        <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">AI-вывод:</p>
-        <p className="text-[13px] text-[var(--text-secondary)] mb-1">
-          Гости чаще всего хвалят: чистота, район, интерьер
-        </p>
+        <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">AI анализ:</p>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          Недостатки: слабый интернет, шум во дворе
+          Гости довольны чистотой и расположением. Иногда отмечают шум ночью.
         </p>
       </div>
 
