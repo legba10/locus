@@ -22,6 +22,7 @@ const nextConfig = {
       { source: "/profile/income", destination: "/profile/finance", permanent: false },
       { source: "/profile/payments", destination: "/profile/settings", permanent: false },
       { source: "/profile/docs", destination: "/profile/settings", permanent: false },
+      { source: "/listing/:id", destination: "/listings/:id", permanent: false },
     ];
   },
 };

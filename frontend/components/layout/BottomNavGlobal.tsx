@@ -36,11 +36,12 @@ export function BottomNavGlobal() {
   return (
     <nav
       className={cn(
-        'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around py-2 px-1',
+        'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around px-1',
         'bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]',
-        'pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]',
+        'min-h-[72px] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]',
         isListingDetail && 'opacity-90'
       )}
+      style={{ height: 'max(72px, calc(72px + env(safe-area-inset-bottom, 0px)))' }}
       aria-label="Основная навигация"
       data-listing-detail={isListingDetail ? 'true' : undefined}
     >
