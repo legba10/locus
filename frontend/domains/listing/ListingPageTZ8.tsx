@@ -67,7 +67,8 @@ function LazyBox({ children, fallback }: { children: React.ReactNode; fallback?:
 
 export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, hasRole } = useAuthStore()
+  const isAdmin = hasRole?.('admin') ?? false
   const [isFavorite, setIsFavorite] = useState(false)
   const [writeLoading, setWriteLoading] = useState(false)
   const [isGalleryOpen, setGalleryOpen] = useState(false)
@@ -76,6 +77,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [amenitiesModalOpen, setAmenitiesModalOpen] = useState(false)
   /** ТЗ-12: Mobile — нижняя панель; по тапу «Забронировать» открывается календарь (bottom sheet) */
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false)
+  const [aiMetricsExpanded, setAiMetricsExpanded] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -232,18 +234,20 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const distribution: Record<number, number> = ratingSummary?.distribution ?? { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 } as Record<number, number>
   const baseReviews = reviewsData?.items ?? []
   const isCurrentUserOwner = user?.id && owner?.id && user.id === owner.id
+  const isCurrentUserAdmin = (user as any)?.isAdmin || user?.role === 'admin'
+
+  /** Редизайн v2: 1 Галерея 2 Trust (название, рейтинг, цена доминирует) 3 AI сжатый 4 Описание 5 Удобства 6 Владелец 7 Отзывы+AI 8 Карта. Фиксированный CTA снизу. */
+  const district = (item as any).district ?? (item as any).addressLine ?? ''
+  const guestsCount = (item as any).capacityGuests ?? (item as any).maxGuests ?? 2
+  const roomsCount = item.bedrooms ?? 1
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
-        <Link href="/listings" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)] mb-6">
-          ← Назад к поиску
-        </Link>
-
-        {/* ТЗ-11: Порядок — фото, заголовок, AI-оценка, цена, описание, удобства, отзывы, карта, похожие. Отступы 24px. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[60%_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-8">
           <div className="min-w-0 space-y-6">
-            <section>
+            {/* 1. Галерея (Hero) — swipe, индикатор 1/N, полупрозрачные blur-кнопки, градиент снизу */}
+            <section className="-mx-4 md:mx-0">
               <GalleryTZ8
                 photos={photos}
                 isFavorite={isFavorite}
@@ -252,47 +256,52 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             </section>
 
-            {/* ТЗ-11: Блок ключевой информации — название, район, метро, рейтинг, отзывы */}
-            <section>
-              <h1 className="text-[20px] md:text-[22px] font-bold text-[var(--text-primary)] leading-tight">
-                {item.title || typeLabel}
+            {/* 2. Trust block — название, город, рейтинг, факты, цена доминирует */}
+            <section className="lg:hidden rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
+              <h1 className="text-[18px] font-bold text-[var(--text-primary)] leading-tight">
+                {typeLabel}{district ? ` · ${district}` : ''}
               </h1>
-              <p className="text-[14px] text-[var(--text-secondary)] mt-1">{locationLine || item.city}</p>
-              {(item as any).metro && <p className="text-[13px] text-[var(--text-muted)] mt-0.5">{(item as any).metro}</p>}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+              <p className="text-[14px] text-[var(--text-secondary)] mt-1">{item.city || ''}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-2">
                 {ratingAvg != null && (
-                  <span className="inline-flex items-center gap-1 text-[16px] font-bold text-amber-600">
+                  <span className="inline-flex items-center gap-1 text-[14px] font-semibold text-amber-600">
                     ★ {ratingAvg.toFixed(1)}
-                  </span>
-                )}
-                {ratingCount > 0 && (
-                  <span className="text-[14px] text-[var(--text-secondary)]">
-                    {ratingCount} {ratingCount === 1 ? 'отзыв' : ratingCount < 5 ? 'отзыва' : 'отзывов'}
+                    {ratingCount > 0 && <span className="text-[var(--text-muted)] font-normal">({ratingCount} отзывов)</span>}
                   </span>
                 )}
               </div>
               <p className="text-[13px] text-[var(--text-muted)] mt-2">
-                {(item as any).capacityGuests ?? 2} гостя · {item.bedrooms ?? 1} комн.
-                {item.area != null ? ` · ${item.area} м²` : ''} · {metroText}
+                {guestsCount} гостей · {roomsCount} комнаты · {(item as any).metro || metroText}
               </p>
-              <div className="mt-4 pt-4 border-t border-[var(--border-main)] lg:hidden">
-                <p className="text-[22px] font-bold text-[var(--text-primary)]">
+              <div className="mt-5 pt-4 border-t border-[var(--border-main)]">
+                <p className="text-[28px] md:text-[32px] font-bold text-[var(--text-primary)] tracking-tight">
                   {priceValue > 0 ? `${priceValue.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
-                  <span className="text-[14px] font-normal text-[var(--text-muted)]"> / ночь</span>
+                  <span className="text-[16px] font-normal text-[var(--text-muted)]"> / ночь</span>
                 </p>
-                {pricePerMonth > 0 && <p className="text-[14px] text-[var(--text-secondary)]">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>}
-                {priceValue > 0 && <p className="text-[12px] text-[var(--text-muted)]">комиссия 7% включена</p>}
+                {pricePerMonth > 0 && <p className="text-[15px] text-[var(--text-secondary)] mt-0.5">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>}
+                {priceValue > 0 && <p className="text-[13px] text-[var(--text-muted)] mt-0.5">Комиссия 7% включена</p>}
               </div>
             </section>
 
-            {/* ТЗ-11: AI-оценка жилья — главный блок (сразу после заголовка) */}
-            <AIMetricsCardTZ9 listingId={item.id} />
+            {/* 4. AI анализ — после цены, перед описанием */}
+            {aiReasons.length > 0 && (
+              <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
+                <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">AI анализ</h2>
+                <ul className="space-y-2">
+                  {aiReasons.slice(0, 5).map((r, i) => (
+                    <li key={i} className="flex items-center gap-2 text-[14px] text-[var(--text-secondary)]">
+                      <span className="text-[var(--accent)]">•</span> {r}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-            {/* ТЗ-6: Описание — всегда после AI. Свернуто 4 строки, кнопка «Показать полностью». */}
+            {/* 5. Описание — свернуто 5 строк */}
             {item.description && (
               <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
                 <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Описание</h2>
-                <p className={cn('text-[14px] text-[var(--text-secondary)] whitespace-pre-line', !descExpanded && 'line-clamp-4')}>
+                <p className={cn('text-[14px] text-[var(--text-secondary)] whitespace-pre-line', !descExpanded && 'line-clamp-5')}>
                   {item.description}
                 </p>
                 {item.description.length > 200 && (
@@ -320,7 +329,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     onClick={() => setAmenitiesModalOpen(true)}
                     className="mt-3 text-[14px] font-medium text-[var(--accent)] hover:underline"
                   >
-                    Все удобства
+                    Все удобства ({amenities.length})
                   </button>
                 )}
               </section>
@@ -348,7 +357,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </div>
             )}
 
-            {/* ТЗ-6: Владелец — карточка с кнопками «Написать» и «Профиль», отвечает быстро. */}
+            {/* 7. Владелец — после удобств */}
             <section className="lg:hidden rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
               <ListingOwner
                 owner={{
@@ -365,7 +374,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             </section>
 
-            {/* ТЗ-11: Lazy load отзывов */}
+            {/* 8. AI-метрики квартиры — после владельца */}
+            <AIMetricsCardTZ9 listingId={item.id} />
+
+            {/* 9. Отзывы */}
             <LazyBox>
               <ListingReviewsBlockTZ9
                 listingId={id}
@@ -401,6 +413,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[14px]">Карта</div>
                   )}
                 </div>
+                {(item as any).lat && (item as any).lng && (
+                  <a href={`https://yandex.ru/maps/?ll=${(item as any).lng},${(item as any).lat}&z=15`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-[14px] font-medium text-[var(--accent)] hover:underline">
+                    Открыть карту
+                  </a>
+                )}
               </section>
             </LazyBox>
 
@@ -460,10 +477,15 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 />
               )}
               {!isCurrentUserOwner && (
-                <button type="button" onClick={() => setIsFavorite((f) => !f)} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
-                  <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                  {isFavorite ? 'В избранном' : 'В избранное'}
-                </button>
+                <>
+                  <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
+                    Написать
+                  </button>
+                  <button type="button" onClick={() => setIsFavorite((f) => !f)} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
+                    <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    {isFavorite ? 'В избранном' : 'В избранное'}
+                  </button>
+                </>
               )}
               <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
                 <ListingOwner
@@ -485,38 +507,43 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
         </div>
       </div>
 
-      {/* ТЗ-12: Нижняя панель действий (Mobile) — 64px, [Цена] [♡] [Забронировать]. Избранное только здесь + в фото. */}
+      {/* Редизайн v2: Фиксированный CTA — [♡] цена / ночь [Одна кнопка]. Гость→Забронировать, Владелец→Редактировать, Админ→Модерация. */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center justify-between gap-3 px-4 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb"
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center gap-3 px-4 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb"
         style={{ height: 64, minHeight: 64, paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
       >
-        {priceValue > 0 ? (
-          <p className="text-[14px] font-bold text-[var(--text-primary)] shrink-0">
-            от {priceValue.toLocaleString('ru-RU')} ₽
-            <span className="text-[12px] font-normal text-[var(--text-muted)]"> / ночь</span>
-          </p>
-        ) : (
-          <span className="text-[14px] text-[var(--text-muted)]">Цена по запросу</span>
-        )}
         <button
           type="button"
           onClick={() => setIsFavorite((f) => !f)}
-          className="shrink-0 w-12 h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center transition-all duration-200 hover:bg-[var(--bg-secondary)] active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-input)] active:scale-95 shrink-0"
           aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
         >
-          <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+          <svg className={cn('w-5 h-5', isFavorite && 'fill-red-500 text-red-500')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
         </button>
-        {isCurrentUserOwner ? (
-          <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="shrink-0 h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95 active:scale-[0.98] transition-transform">
+        {priceValue > 0 ? (
+          <p className="text-[15px] font-bold text-[var(--text-primary)] shrink-0 min-w-0 truncate">
+            {priceValue.toLocaleString('ru-RU')} ₽
+            <span className="text-[12px] font-normal text-[var(--text-muted)]"> / ночь</span>
+          </p>
+        ) : (
+          <span className="text-[14px] text-[var(--text-muted)] shrink-0">Цена по запросу</span>
+        )}
+        <div className="flex-1 min-w-0" />
+        {isAdmin ? (
+          <Link href="/admin" className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0">
+            Модерация
+          </Link>
+        ) : isCurrentUserOwner ? (
+          <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0">
             Редактировать
           </Link>
         ) : (
           <button
             type="button"
             onClick={handleMobileBookClick}
-            className="shrink-0 h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95 active:scale-[0.98] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            {isAuthenticated() ? 'Забронировать' : 'Войти чтобы забронировать'}
+            {isAuthenticated() ? 'Забронировать' : 'Забронировать'}
           </button>
         )}
       </div>
@@ -654,34 +681,37 @@ function GalleryTZ8({
             <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-4xl">📷</div>
           )}
         </div>
+        {/* Редизайн v2: semi-transparent blur кнопки, без огромных серых кругов */}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 pointer-events-none">
-          <Link href="/listings" className="pointer-events-auto w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center" aria-label="Назад">
+          <Link href="/listings" className="pointer-events-auto w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30" aria-label="Назад">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </Link>
           <div className="flex items-center gap-2 pointer-events-auto">
-            <button type="button" onClick={onToggleFavorite} className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
-              <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            <button type="button" onClick={onToggleFavorite} className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30 active:scale-95" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
+              <svg className={cn('w-5 h-5', isFavorite && 'fill-red-400')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
             </button>
-            <button type="button" onClick={handleShare} className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center" aria-label="Поделиться">
+            <button type="button" onClick={handleShare} className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30" aria-label="Поделиться">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
             </button>
-            {onOpenFullscreen && (
-              <button type="button" onClick={onOpenFullscreen} className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center" aria-label="Открыть галерею">
+            {onOpenFullscreen && count > 1 && (
+              <button type="button" onClick={onOpenFullscreen} className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/30" aria-label="Все фото">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </button>
             )}
           </div>
         </div>
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 pointer-events-auto">
-          {photos.slice(0, Math.min(count, 12)).map((_, i) => (
-            <button key={i} type="button" onClick={() => setActiveIndex(i)} className={cn('w-2 h-2 rounded-full transition-all bg-white/70', activeIndex === i && 'bg-white scale-110')} aria-label={`Фото ${i + 1}`} />
-          ))}
+        {/* Градиент затемнения снизу + минималистичный индикатор 1/N + кнопка «Все фото» */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" aria-hidden />
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-auto">
+          <span className="rounded-full bg-black/40 backdrop-blur-sm px-2.5 py-1 text-[12px] font-medium text-white tabular-nums">
+            {activeIndex + 1}/{count || 1}
+          </span>
         </div>
         {onOpenFullscreen && count > 1 && (
           <button
             type="button"
             onClick={onOpenFullscreen}
-            className="absolute bottom-3 right-3 px-3 py-1.5 rounded-[10px] bg-black/60 text-white text-[13px] font-medium pointer-events-auto"
+            className="absolute bottom-3 right-3 px-3 py-1.5 rounded-[10px] bg-white/20 backdrop-blur-md text-white text-[13px] font-medium hover:bg-white/30 pointer-events-auto"
           >
             Все фото
           </button>
