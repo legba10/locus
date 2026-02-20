@@ -21,14 +21,14 @@ export function StickyActions({
 }: StickyActionsProps) {
   return (
     <>
-      {/* Mobile: фикс снизу 72px, backdrop-blur */}
+      {/* TZ-28: Sticky-панель | ♡ | Написать | Забронировать |. 64–72px, скругление 16px, safe-area. */}
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)]',
-          'h-[72px] flex items-center gap-2 px-4',
-          'backdrop-blur-[20px] bg-[var(--bg-glass)] border-t border-[var(--border)]',
-          'pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-          'md:hidden'
+          'fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] md:hidden',
+          'flex items-center gap-2 px-4 min-h-[64px]',
+          'rounded-t-[16px] shadow-[0_-4px_24px_rgba(0,0,0,0.12)]',
+          'bg-[var(--bg-card)] border border-b-0 border-[var(--border-main)]',
+          'pt-3 pb-[max(12px,env(safe-area-inset-bottom))]'
         )}
       >
         <button
@@ -52,15 +52,10 @@ export function StickyActions({
         <button
           type="button"
           onClick={onBook}
-          className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] font-semibold text-[14px] active:scale-[0.98] transition-transform"
+          className="flex-1 min-h-[48px] rounded-[16px] border-2 border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--text-primary)] font-semibold text-[14px] active:scale-[0.98] transition-transform"
         >
           Забронировать
         </button>
-        {price != null && price > 0 && (
-          <span className="text-[13px] font-semibold text-[var(--text-main)] shrink-0 hidden sm:inline">
-            от {price.toLocaleString('ru-RU')} ₽
-          </span>
-        )}
       </div>
 
       {/* Desktop: плавающий блок справа 320px sticky top 100px */}

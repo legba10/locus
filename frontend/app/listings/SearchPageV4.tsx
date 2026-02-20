@@ -8,9 +8,8 @@ import { cn } from '@/shared/utils/cn'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
 import { useFilterStore } from '@/core/filters'
-import { FilterPanel, QuickAIModal, FiltersModal } from '@/components/filters'
+import { QuickAIModal, FiltersModal, ActiveFilterChips } from '@/components/filters'
 import { FilterBar } from '@/components/search/FilterBar'
-import { MobileFilters } from '@/components/search/MobileFilters'
 
 interface SearchResponse {
   items: any[]
@@ -54,14 +53,6 @@ export function SearchPageV4() {
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
   const [filtersModalOpen, setFiltersModalOpen] = useState(false)
   const [quickAIOpen, setQuickAIOpen] = useState(false)
-  const [isMobileView, setIsMobileView] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)')
-    setIsMobileView(mq.matches)
-    const fn = () => setIsMobileView(mq.matches)
-    mq.addEventListener('change', fn)
-    return () => mq.removeEventListener('change', fn)
-  }, [])
 
   const priceMin = getBudgetQuery().priceMin
   const priceMax = getBudgetQuery().priceMax
@@ -334,21 +325,12 @@ export function SearchPageV4() {
             </button>
           </div>
 
-          {/* ТЗ-4.3: мобильная панель фильтров — Bottom Sheet; desktop — FiltersModal */}
-          {isMobileView ? (
-            <MobileFilters
-              open={filtersModalOpen}
-              onClose={() => setFiltersModalOpen(false)}
-              onApply={() => { setFiltersModalOpen(false); handleSearch(); }}
-              resultCount={sortedListings.length}
-            />
-          ) : (
-            <FiltersModal
-              open={filtersModalOpen}
-              onClose={() => setFiltersModalOpen(false)}
-              onApply={handleSearch}
-            />
-          )}
+          {/* TZ-29: единый FiltersModal для mobile и desktop */}
+          <FiltersModal
+            open={filtersModalOpen}
+            onClose={() => setFiltersModalOpen(false)}
+            onApply={handleSearch}
+          />
 
           <QuickAIModal
             open={quickAIOpen}
@@ -386,9 +368,11 @@ export function SearchPageV4() {
                 </p>
               </div>
             )}
-            {/* AI панель — если включён Умный подбор и есть результаты */}
-            {/* ТЗ-20: блок «Подобрано AI» + текст про лучшие варианты */}
-            {aiMode && !isLoading && sortedListings.length > 0 && (
+            {/* TZ-29: chips активных фильтров */}
+            <ActiveFilterChips className="mb-4" />
+
+            {/* AI панель — если включён Умный подбор */}
+            {aiMode && !isLoading && (sortedListings.length > 0 ? (
               <div className="search-tz7-ai-panel rounded-[18px] border border-[var(--border)] p-5 mb-6 bg-[var(--color-surface-2)]">
                 <div className="flex items-center gap-2 mb-3">
                   <svg className="w-5 h-5 search-tz7-icon text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20">
@@ -407,7 +391,11 @@ export function SearchPageV4() {
                   </p>
                 )}
               </div>
-            )}
+            ) : (
+              <div className="rounded-[18px] border border-[var(--border)] bg-[var(--color-surface-2)] p-4 mb-6">
+                <p className="text-[14px] text-[var(--text-main)]">Подбираем варианты под вас…</p>
+              </div>
+            ))}
 
             {/* Результаты + сортировка */}
             <div className="mb-6 flex items-center justify-between">

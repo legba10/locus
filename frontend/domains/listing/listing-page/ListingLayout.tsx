@@ -86,6 +86,7 @@ function formatPrice(amount: number) {
 
 export function ListingLayout(props: ListingLayoutProps) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [mapOpen, setMapOpen] = useState(false)
   const {
     listingId,
     title,
@@ -137,13 +138,13 @@ export function ListingLayout(props: ListingLayoutProps) {
   if (floor != null) chars.push(totalFloors ? `${floor}/${totalFloors} эт.` : `${floor} эт.`)
   const characteristics = chars.join(' · ')
 
+  /* TZ-28: Вертикальная сетка: фото → 12px → заголовок → 6px → город+рейтинг → 12px → цена → 16px → описание. */
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
+    <div className="min-h-screen bg-[var(--bg-main)] pb-[88px] md:pb-8">
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-4 md:py-6">
-        {/* ТЗ-17: контейнер объявления — border-radius 24px, padding 24px, grid 2 колонки (фото/контент 65%, бронирование 35%) */}
         <div className="md:rounded-[24px] md:border md:border-[var(--border)] md:bg-[var(--bg-card)] md:p-6 md:shadow-[var(--shadow-card)] overflow-hidden">
         {/* 1. Галерея */}
-        <div className="mb-4 md:mb-6">
+        <div className="mb-3">
           <Gallery
             photos={photos}
             title={title}
@@ -154,68 +155,67 @@ export function ListingLayout(props: ListingLayoutProps) {
           />
         </div>
 
-        {/* ТЗ восстановление: левая колонка — контент, правая — бронирование 360px */}
-        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:gap-6 md:items-start">
-          {/* Основной контент */}
-          <div className="space-y-6 md:space-y-[24px]">
-            {/* 3. Основной инфо-блок */}
-            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
-              <p className="text-[28px] font-bold text-[var(--text-main)]">{formatPrice(price)} ₽ <span className="text-[14px] font-normal text-[var(--text-secondary)]">/ ночь</span></p>
-              <p className="text-[14px] text-[var(--text-secondary)] mt-1">{city}</p>
-              {characteristics && <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">{characteristics}</p>}
-              {aiScore > 0 && (
-                <span className="inline-block mt-3 px-3 py-1.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-semibold text-[13px]">
-                  Подходит на {aiScore}%
-                </span>
+        <div className="grid md:grid-cols-[1fr_360px] gap-6 md:items-start">
+          <div className="space-y-4 md:space-y-5">
+            {/* 2. Заголовок — 12px после фото */}
+            <h1 className="text-[22px] md:text-[26px] font-bold text-[var(--text-main)] leading-tight">{title}</h1>
+
+            {/* 3. Город + рейтинг — 6px после заголовка */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-[var(--text-secondary)]">
+              <span>{city}</span>
+              {ratingAvg != null && ratingCount > 0 && (
+                <span className="text-amber-600 font-medium">★ {ratingAvg.toFixed(1)} ({ratingCount})</span>
               )}
             </div>
 
-            {/* 4. Sticky — на desktop в правой колонке ниже */}
-            <div className="md:hidden" aria-hidden />
+            {/* 4. Цена — 12px после мета */}
+            <div className="flex flex-wrap items-baseline gap-2">
+              <p className="text-[24px] md:text-[28px] font-bold text-[var(--text-main)]">{formatPrice(price)} ₽ <span className="text-[14px] font-normal text-[var(--text-secondary)]">/ ночь</span></p>
+              {aiScore > 0 && (
+                <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] font-semibold text-[13px]">Подходит на {aiScore}%</span>
+              )}
+            </div>
 
-            {/* 5. Владелец */}
-            {owner.id && (
-              <OwnerCard owner={owner} onWrite={onWrite} />
+            {/* 5. Краткие характеристики */}
+            {characteristics && <p className="text-[14px] text-[var(--text-secondary)]">{characteristics}</p>}
+
+            {/* 6. Строка карты: 📍 Город · 5 мин до метро · Показать на карту → modal (TZ-28) */}
+            {(addressLine || (lat != null && lng != null)) && (
+              <button
+                type="button"
+                onClick={() => setMapOpen(true)}
+                className="flex items-center gap-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+              >
+                <span aria-hidden>📍</span>
+                <span>{city}</span>
+                <span className="text-[var(--accent)] font-medium">Показать на карте</span>
+              </button>
             )}
 
-            {/* 6. Метрики AI */}
-            <AIMetrics listingId={listingId} />
+            <div className="md:hidden" aria-hidden />
 
-            {/* 7. Удобства */}
-            <Amenities items={amenities} />
-
-            {/* 8. Описание */}
+            {/* 7. Описание — 16px после цены/характеристик */}
             {description && (
-              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
-                <h2 className="text-[18px] font-bold text-[var(--text-main)] mb-3">Описание</h2>
+              <div className="rounded-[16px] border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5">
+                <h2 className="text-[16px] font-bold text-[var(--text-main)] mb-2">Описание</h2>
                 <p className={cn('text-[15px] text-[var(--text-main)] leading-relaxed whitespace-pre-line', !isDescriptionExpanded && 'line-clamp-3')} style={{ lineHeight: 1.6 }}>
                   {description}
                 </p>
-                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-3 text-[14px] font-semibold text-[var(--accent)]">
+                <button type="button" onClick={() => setIsDescriptionExpanded((p) => !p)} className="mt-2 text-[14px] font-semibold text-[var(--accent)]">
                   {isDescriptionExpanded ? 'Свернуть' : 'Показать полностью'}
                 </button>
               </div>
             )}
 
-            {/* Расположение */}
-            {(addressLine || (lat && lng)) && (
-              <div className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
-                <h2 className="text-[18px] font-bold text-[var(--text-main)] mb-3">Расположение</h2>
-                {addressLine && <p className="text-[14px] text-[var(--text-secondary)]">{addressLine}</p>}
-                {lat != null && lng != null && (
-                  <div className="mt-3 h-40 md:h-52 rounded-xl overflow-hidden bg-[var(--bg-glass)]">
-                    <iframe
-                      src={`https://yandex.ru/map-widget/v1/?ll=${lng},${lat}&z=15&pt=${lng},${lat}`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      title="Карта"
-                    />
-                  </div>
-                )}
-              </div>
+            {/* 8. Удобства */}
+            <Amenities items={amenities} />
+
+            {/* 9. AI-оценка — компактно, макс 12px между строками (TZ-28) */}
+            <AIMetrics listingId={listingId} />
+
+            {/* 10. Владелец */}
+            {owner.id && (
+              <OwnerCard owner={owner} onWrite={onWrite} />
             )}
 
             {/* ТЗ-8: Бронирование в потоке (мобильный) — ровный блок, отступы 12–16px */}
@@ -223,7 +223,7 @@ export function ListingLayout(props: ListingLayoutProps) {
               <ListingBooking listingId={listingId} pricePerNight={price} onConfirm={onBookingConfirm} />
             </div>
 
-            {/* 9. Отзывы */}
+            {/* 11. Отзывы */}
             <div id="reviews-section" className="rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <h2 className="text-[20px] font-bold text-[var(--text-main)]">Отзывы</h2>
@@ -315,6 +315,24 @@ export function ListingLayout(props: ListingLayoutProps) {
         </div>
         </div>
       </div>
+
+      {/* TZ-28: Модал карты — 70–80% высоты, крестик закрытия */}
+      {mapOpen && lat != null && lng != null && (
+        <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="Карта">
+          <div className="relative w-full h-[75vh] sm:h-[70vh] sm:max-w-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--bg-card)] shadow-xl">
+            <button type="button" onClick={() => setMapOpen(false)} className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-[var(--text-main)] flex items-center justify-center shadow" aria-label="Закрыть">×</button>
+            <iframe
+              src={`https://yandex.ru/map-widget/v1/?ll=${lng},${lat}&z=15&pt=${lng},${lat}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              title="Карта"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Mobile: StickyActions внизу */}
       <div className="md:hidden">

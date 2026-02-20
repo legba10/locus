@@ -14,16 +14,29 @@ const nextConfig = {
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
     ],
   },
-  // ТЗ-2, ТЗ-4: нормализованные роуты кабинета. В настройках только Аккаунт, Безопасность, Уведомления, Интерфейс.
+  // ТЗ-27: единая навигация — только /profile. Удаление дублей /dashboard.
   async redirects() {
     return [
       { source: "/create", destination: "/create-listing", permanent: false },
-      { source: "/owner/dashboard", destination: "/dashboard/listings/create", permanent: false, has: [{ type: "query", key: "tab", value: "add" }] },
+      { source: "/owner/dashboard", destination: "/profile/listings/create", permanent: false, has: [{ type: "query", key: "tab", value: "add" }] },
       { source: "/profile/income", destination: "/profile/finance", permanent: false },
       { source: "/profile/payments", destination: "/profile/settings", permanent: false },
       { source: "/profile/docs", destination: "/profile/settings", permanent: false },
       { source: "/listing/:id", destination: "/listings/:id", permanent: false },
+      { source: "/dashboard", destination: "/profile", permanent: false },
+      { source: "/dashboard/listings", destination: "/profile/listings", permanent: false },
+      { source: "/dashboard/listings/create", destination: "/profile/listings/create", permanent: false },
+      { source: "/dashboard/billing", destination: "/profile/finance", permanent: false },
+      { source: "/dashboard/promo", destination: "/profile/finance", permanent: false },
+      { source: "/dashboard/profile", destination: "/profile/settings", permanent: false },
+      { source: "/dashboard/settings", destination: "/profile/settings", permanent: false },
+      { source: "/dashboard/messages", destination: "/messages", permanent: false },
+      { source: "/bookings", destination: "/profile/bookings", permanent: false },
     ];
+  },
+  // ТЗ-30: кабинет в /profile; страницы profile/listings, bookings и т.д. — реальные, без rewrites
+  async rewrites() {
+    return [];
   },
 };
 

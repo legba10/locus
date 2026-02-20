@@ -1,7 +1,5 @@
 export { Header } from './Header'
-export { MobileMenu } from './MobileMenu'
 export { BottomNavGlobal } from './BottomNavGlobal'
 export { AppSidebarTZ14 } from './AppSidebarTZ14'
 export { NotificationsPanel } from './NotificationsPanel'
-export type { MobileMenuProps } from './MobileMenu'
 export type { NotificationsPanelProps, NotificationItem } from './NotificationsPanel'

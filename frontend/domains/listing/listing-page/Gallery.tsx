@@ -139,10 +139,21 @@ export function Gallery({
                 </button>
               </>
             )}
-            {/* Индикатор 1/N */}
+            {/* TZ-28: индикатор 1/N + кнопка «Все фото» */}
             {count > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/60 text-white text-[12px] font-medium tabular-nums">
-                {activeIndex + 1}/{count}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-full bg-black/60 text-white text-[12px] font-medium tabular-nums">
+                  {activeIndex + 1}/{count}
+                </span>
+                {onOpenFullscreen && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onOpenFullscreen() }}
+                    className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/70 text-white text-[12px] font-medium"
+                  >
+                    Все фото
+                  </button>
+                )}
               </div>
             )}
           </>

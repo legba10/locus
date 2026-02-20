@@ -5,51 +5,18 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search, HelpCircle, Mail, User, LayoutDashboard, FileText, MessageCircle, Wallet, Megaphone, Settings, LogOut, Tag } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
-import { MobileMenu } from './MobileMenu'
 import { useSearchOverlayStore } from '@/core/searchOverlay/searchOverlayStore'
 
-const menuIconWrap = 'flex shrink-0 [&>svg]:w-[22px] [&>svg]:h-[22px] [&>svg]:stroke-[1.8]'
-const iconSm = 'w-[18px] h-[18px] shrink-0'
-
-/** TZ-5: пункт меню — full width, текст слева, иконка справа */
-function NavItem({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <li className="menu-item">
-      <button
-        type="button"
-        onClick={onClick}
-        className="menu-item-btn w-full text-[15px] flex items-center justify-between gap-3 min-h-[44px] px-3 rounded-[var(--radius-md)] transition-colors"
-        style={{ fontSize: 'var(--font-size-md, 16px)' }}
-      >
-        <span>{label}</span>
-        <span className={cn('menu-icon-wrap', menuIconWrap)}>{icon}</span>
-      </button>
-    </li>
-  )
-}
-
 /**
- * ТЗ-8: Единый Header для всего сайта.
- * Высота: mobile 64px, desktop 72px. Safe-area. Grid: [burger][logo][bell].
- * Логотип по теме (logo-dark / logo-light). Бургер 24px, колокольчик 22px, badge 8px.
+ * ТЗ-27: Единый Header без бургера. Только: логотип LOCUS, поиск, колокол, аватар.
  */
-/** ТЗ-14: один логотип /logo.svg + надпись LOCUS, без смены по теме, стабильно везде */
 export function Header() {
   const router = useRouter()
   const { user, isAuthenticated, hasRole, logout } = useAuthStore()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [avatarOpen, setAvatarOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
@@ -71,8 +38,6 @@ export function Header() {
     return () => document.removeEventListener('click', close)
   }, [avatarOpen])
 
-  const handleLogoClick = () => setIsMenuOpen(false)
-
   useEffect(() => {
     if (typeof window === 'undefined') return
     setIsTelegram(Boolean((window as any).Telegram?.WebApp))
@@ -86,14 +51,9 @@ export function Header() {
 
   if (authed && user === undefined) return null
 
-  const handleNavigate = (path: string) => {
-    setIsMenuOpen(false)
-    router.push(path)
-  }
-
   const headerTop = isTelegram ? 48 : 0
 
-  /* Режимы header по ТЗ: Desktop ≥1280 — всё; Tablet 768–1279 — menu, logo, search icon, notifications, avatar; Mobile <768 — menu, logo (центр), search icon, avatar */
+  /* ТЗ-27: Header без бургера — логотип, поиск, колокол, аватар. */
   return (
     <header
       className={cn(
@@ -106,25 +66,12 @@ export function Header() {
         paddingTop: headerTop ? `${headerTop}px` : 'env(safe-area-inset-top, 0px)',
       }}
     >
-      {/* TZ-21: [бургер] LOCUS [поиск] [уведомления] [аватар]. Лого прижат к бургеру слева, центр пустой, аватар справа. */}
       <div className="layout-header__inner-tz2 h-full flex items-center gap-2">
-        {/* Слева: бургер + логотип (mobile всегда, desktop без бургера) */}
+        {/* Слева: только логотип */}
         <div className="flex items-center shrink-0 gap-1 min-w-0">
-          <div className="flex shrink-0 lg:hidden">
-            <IconButton
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              ariaLabel={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            >
-              <span className="flex flex-col gap-1.5" aria-hidden>
-                <span className="block w-5 h-0.5 bg-current rounded-full" />
-                <span className="block w-5 h-0.5 bg-current rounded-full" />
-                <span className="block w-5 h-0.5 bg-current rounded-full" />
-              </span>
-            </IconButton>
-          </div>
           <Link
             href="/"
-            onClick={() => { handleLogoClick(); setAvatarOpen(false); }}
+            onClick={() => setAvatarOpen(false)}
             className="logo-wrap inline-flex items-center justify-center h-10 shrink-0"
             aria-label="LOCUS — на главную"
           >
@@ -160,7 +107,7 @@ export function Header() {
           )}
           {/* ТЗ-21: CTA «Сдать жильё» — только desktop (sm+). */}
           <Link
-            href={authed ? '/dashboard/listings/create' : `/auth/login?redirect=${encodeURIComponent('/dashboard/listings/create')}`}
+            href={authed ? '/profile/listings/create' : `/auth/login?redirect=${encodeURIComponent('/profile/listings/create')}`}
             className="hidden sm:flex h-9 px-4 items-center justify-center rounded-xl text-sm font-medium shrink-0 bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-95"
           >
             Сдать жильё
@@ -185,8 +132,8 @@ export function Header() {
                     <Link href="/profile" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)] rounded-t-[12px]" role="menuitem">Профиль</Link>
                     {isLandlord && (
                       <>
-                        <Link href="/owner/dashboard?tab=listings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Мои объявления</Link>
-                        <Link href="/owner/dashboard?tab=bookings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Бронирования</Link>
+                        <Link href="/profile/listings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Мои объявления</Link>
+                        <Link href="/bookings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Бронирования</Link>
                       </>
                     )}
                     <Link href="/profile/settings" onClick={() => setAvatarOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]" role="menuitem">Настройки</Link>
@@ -206,52 +153,6 @@ export function Header() {
           )}
         </div>
       </div>
-
-      {/* TZ-21: Боковое меню. Гость: поиск, помощь, контакты, войти. Авторизован: обзор, объявления, сообщения, избранное, финансы, продвижение, настройки, выйти. */}
-      {!authed && (
-        <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
-          <div className="mobile-menu-header-row flex items-center justify-end">
-            <button type="button" onClick={() => setIsMenuOpen(false)} className="mobile-menu-close text-[var(--text-main)]" aria-label="Закрыть меню">
-              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
-          <div className="mobile-menu-separator" aria-hidden />
-          <nav className="mobile-menu-nav menu" aria-label="Меню гостя">
-            <ul className="menu-list">
-              <NavItem icon={<Search size={22} strokeWidth={1.8} />} label="Поиск" onClick={() => handleNavigate('/listings')} />
-              <NavItem icon={<Tag size={22} strokeWidth={1.8} />} label="Тарифы" onClick={() => handleNavigate('/pricing')} />
-              <NavItem icon={<HelpCircle size={22} strokeWidth={1.8} />} label="Помощь" onClick={() => handleNavigate('/help')} />
-              <NavItem icon={<Mail size={22} strokeWidth={1.8} />} label="Контакты" onClick={() => handleNavigate('/contacts')} />
-              <NavItem icon={<User size={22} strokeWidth={1.8} />} label="Войти" onClick={() => handleNavigate('/auth/login')} />
-            </ul>
-          </nav>
-        </MobileMenu>
-      )}
-      {authed && (
-        <MobileMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)}>
-          <div className="mobile-menu-header-row flex items-center justify-end">
-            <button type="button" onClick={() => setIsMenuOpen(false)} className="mobile-menu-close text-[var(--text-main)]" aria-label="Закрыть меню">
-              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
-          <div className="mobile-menu-separator" aria-hidden />
-          <nav className="mobile-menu-nav menu" aria-label="Кабинет">
-            <ul className="menu-list">
-              <NavItem icon={<LayoutDashboard size={22} strokeWidth={1.8} />} label="Кабинет" onClick={() => handleNavigate('/dashboard')} />
-              {isLandlord && <NavItem icon={<FileText size={22} strokeWidth={1.8} />} label="Мои объявления" onClick={() => handleNavigate('/dashboard/listings')} />}
-              <NavItem icon={<MessageCircle size={22} strokeWidth={1.8} />} label="Сообщения" onClick={() => handleNavigate('/messages')} />
-              {isLandlord && <NavItem icon={<Wallet size={22} strokeWidth={1.8} />} label="Финансы" onClick={() => handleNavigate('/dashboard/billing')} />}
-              {isLandlord && <NavItem icon={<Megaphone size={22} strokeWidth={1.8} />} label="Продвижение" onClick={() => handleNavigate('/dashboard/promo')} />}
-              <NavItem icon={<Settings size={22} strokeWidth={1.8} />} label="Настройки" onClick={() => handleNavigate('/dashboard/profile')} />
-              <NavItem icon={<LogOut size={22} strokeWidth={1.8} />} label="Выйти" onClick={() => { setIsMenuOpen(false); logout(); router.push('/'); }} />
-            </ul>
-          </nav>
-        </MobileMenu>
-      )}
     </header>
   )
 }

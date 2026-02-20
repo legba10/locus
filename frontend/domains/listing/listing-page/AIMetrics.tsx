@@ -37,22 +37,28 @@ export function AIMetrics({ listingId }: { listingId: string }) {
 
   if (display.length === 0) return null
 
+  /* TZ-28: AI-блок компактно, общий индекс крупно, категории макс 12px между строками */
+  const avgPct = display.length > 0 ? Math.round(display.reduce((s, d) => s + d.avgValue, 0) / display.length) : 0
+
   return (
-    <div className={cn('section-ai-metrics rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] p-5 md:p-6')}>
-      <h2 className="text-[18px] font-bold text-[var(--text-main)]">Метрики AI</h2>
-      <div className="section-ai-metrics__rows">
+    <div className={cn('section-ai-metrics rounded-[16px] border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5')}>
+      <h2 className="text-[16px] font-bold text-[var(--text-main)] mb-2">AI-оценка</h2>
+      {avgPct > 0 && (
+        <p className="text-[28px] font-bold text-[var(--accent)] tabular-nums mb-3">{avgPct}%</p>
+      )}
+      <div className="space-y-3">
         {display.map(({ key, avgValue }) => {
           const pct = Math.round(avgValue)
           const label = LABEL_OVERRIDE[key] ?? metricLabelByKey(key)
           return (
-            <div key={key} className="flex flex-col gap-1.5">
-              <div className="flex justify-between text-[14px]">
+            <div key={key} className="flex flex-col gap-1">
+              <div className="flex justify-between text-[13px]">
                 <span className="font-medium text-[var(--text-main)]">{label}</span>
                 <span className="tabular-nums font-semibold text-[var(--text-main)]">{pct}%</span>
               </div>
-              <div className="section-ai-metrics__bar">
+              <div className="section-ai-metrics__bar h-1.5 rounded-full bg-[var(--bg-glass)] overflow-hidden">
                 <div
-                  className="section-ai-metrics__bar-fill"
+                  className="section-ai-metrics__bar-fill h-full rounded-full transition-all"
                   style={{
                     width: `${pct}%`,
                     background: 'linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%)',

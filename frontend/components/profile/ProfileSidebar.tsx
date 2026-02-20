@@ -1,43 +1,39 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useMemo } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
 import { useRouter } from 'next/navigation'
 
-/** ТЗ-19: Профиль — только разделы: Основное (Мои объявления, Бронирования, Сообщения, Избранное), Для арендодателя (Финансы, Продвижение), Система (Настройки, Выйти). Без админ-дашборда, без дублей. */
+/** TZ-27: Единая навигация — только /profile. Назад в профиль. */
 function useCabinetTabs() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const { user, hasRole } = useAuthStore()
   const isLandlord = hasRole?.('landlord') || user?.role === 'landlord' || (user && (user as any).listingUsed > 0)
 
   return useMemo(() => {
     const tabs: Array<{ href: string; label: string; isActive: boolean; section?: string }> = []
-    // ТЗ-21: Основное — Мои объявления только если landlord, затем Бронирования, Сообщения, Избранное
     if (isLandlord) {
-      tabs.push({ href: '/owner/dashboard?tab=listings', label: 'Мои объявления', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'listings', section: 'main' })
+      tabs.push({ href: '/profile/listings', label: 'Мои объявления', isActive: pathname?.startsWith('/profile/listings'), section: 'main' })
     }
     tabs.push(
-      { href: '/owner/dashboard?tab=bookings', label: 'Бронирования', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'bookings', section: 'main' },
+      { href: '/profile/bookings', label: 'Бронирования', isActive: pathname?.startsWith('/profile/bookings'), section: 'main' },
       { href: '/messages', label: 'Сообщения', isActive: pathname?.startsWith('/messages'), section: 'main' },
       { href: '/favorites', label: 'Избранное', isActive: pathname === '/favorites', section: 'main' }
     )
-    // ТЗ-21: Для арендодателя — Продвижение, Финансы. Без доходов, аналитики, дашборда, админа.
     if (isLandlord) {
       tabs.push(
-        { href: '/owner/dashboard?tab=promotion', label: 'Продвижение', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'promotion', section: 'landlord' },
-        { href: '/owner/dashboard?tab=finances', label: 'Финансы', isActive: pathname === '/owner/dashboard' && searchParams?.get('tab') === 'finances', section: 'landlord' }
+        { href: '/profile/promo', label: 'Продвижение', isActive: pathname?.startsWith('/profile/promo'), section: 'landlord' },
+        { href: '/profile/finance', label: 'Финансы', isActive: pathname?.startsWith('/profile/finance'), section: 'landlord' }
       )
     }
-    // Система (только Настройки; Выйти — отдельная кнопка)
     tabs.push(
       { href: '/profile/settings', label: 'Настройки', isActive: pathname?.startsWith('/profile/settings'), section: 'system' }
     )
     return { tabs, isLandlord }
-  }, [pathname, searchParams, isLandlord])
+  }, [pathname, isLandlord])
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -114,6 +110,9 @@ export function ProfileSidebar() {
         {mobileOpen && (
           <div className="mt-2 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/80 backdrop-blur overflow-hidden">
             <div className="py-2">
+              <Link href="/profile" onClick={() => setMobileOpen(false)} className="block px-4 py-3 text-[14px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]">
+                ← Назад в профиль
+              </Link>
               {renderNav()}
             </div>
             <div className="border-t border-[var(--border-main)] mt-1 pt-1">
@@ -127,6 +126,9 @@ export function ProfileSidebar() {
 
       {/* Desktop: сайдбар с группами */}
       <aside className="hidden lg:block rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/80 backdrop-blur p-4 shadow-[0_4px_20px_rgba(0,0,0,0.06)] sticky top-6">
+        <Link href="/profile" className="block px-4 py-2 mb-2 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+          ← Назад в профиль
+        </Link>
         {renderNav()}
         <div className="border-t border-[var(--border-main)] mt-2 pt-2">
           <button type="button" onClick={handleLogout} className="block w-full px-4 py-3 rounded-[12px] text-left text-[14px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]">

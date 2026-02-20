@@ -12,20 +12,21 @@ export function BottomNavGlobal() {
   const { isAuthenticated } = useAuthStore()
 
   const isAdmin = pathname?.startsWith('/admin')
+  const isListingDetail = pathname?.match(/^\/listings\/[^/]+$/)
   if (isAdmin) return null
+  if (isListingDetail) return null
 
   const base = pathname?.replace(/\/$/, '') || ''
-  const isListingDetail = pathname?.match(/^\/listings\/[^/]+$/)
   const isHome = base === '' || base === '/'
   const isSearch = (base === '/listings' || base.startsWith('/listings')) && !isListingDetail
   const isMessages = base === '/messages' || base.startsWith('/messages')
-  const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/dashboard/listings/create')
-  const isDashboard = base === '/dashboard' || base.startsWith('/dashboard') || base === '/profile' || base.startsWith('/profile') || base.startsWith('/auth')
+  const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/profile/listings/create')
+  const isDashboard = base === '/profile' || base.startsWith('/profile') || base.startsWith('/auth')
 
   const authed = isAuthenticated()
   const messagesHref = authed ? '/messages' : '/auth/login?redirect=/messages'
-  const profileHref = authed ? '/dashboard' : '/auth/login?redirect=/dashboard'
-  const addHref = authed ? '/dashboard/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/dashboard/listings/create')
+  const profileHref = authed ? '/profile' : '/auth/login?redirect=/profile'
+  const addHref = authed ? '/profile/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/profile/listings/create')
 
   const linkCls = (active: boolean) =>
     cn(
@@ -38,8 +39,7 @@ export function BottomNavGlobal() {
       className={cn(
         'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around px-1',
         'bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]',
-        'min-h-[72px] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]',
-        isListingDetail && 'opacity-90'
+        'min-h-[72px] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]'
       )}
       style={{ height: 'max(72px, calc(72px + env(safe-area-inset-bottom, 0px)))' }}
       aria-label="Основная навигация"
