@@ -314,6 +314,8 @@ model Listing {
 
   // Views
   views        ListingView[]
+  // TZ-38 analytics counters
+  listingStats ListingStats?
 
   conversations Conversation[]
 
@@ -448,6 +450,20 @@ model ListingView {
   @@unique([listingId, sessionId])
   @@index([listingId])
   @@index([sessionId])
+}
+
+/// TZ-38: aggregated listing analytics counters
+model ListingStats {
+  listingId  String   @id @map("listing_id")
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  views      Int      @default(0)
+  favorites  Int      @default(0)
+  messages   Int      @default(0)
+  bookings   Int      @default(0)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([updatedAt])
+  @@map("listing_stats")
 }
 
 model Amenity {

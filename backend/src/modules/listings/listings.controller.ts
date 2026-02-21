@@ -57,6 +57,40 @@ export class ListingsController {
     return this.reviewsService.getReviewAnalytics(id);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, RolesGuard)
+  @Get(":id/stats")
+  @ApiOperation({ summary: "TZ-38: listing analytics for owner/admin" })
+  async getListingStats(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Query("days") days?: string
+  ) {
+    const d = Number(days) === 7 ? 7 : 30;
+    return this.listings.getListingStatsForOwnerOrAdmin(id, req.user.id, d);
+  }
+
+  @Post(":id/stats/increment")
+  @ApiOperation({ summary: "TZ-38: increment listing metric counter" })
+  async incrementListingStats(
+    @Param("id") id: string,
+    @Body("metric") metric?: "views" | "favorites" | "messages" | "bookings"
+  ) {
+    const m = metric ?? "views";
+    if (!["views", "favorites", "messages", "bookings"].includes(m)) {
+      return { ok: false, error: "Invalid metric" };
+    }
+    return this.listings.incrementListingStatsMetric(id, m);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, ModerationGuard)
+  @Post(":id/stats/reset")
+  @ApiOperation({ summary: "TZ-38: reset listing stats (admin only)" })
+  async resetListingStats(@Param("id") id: string) {
+    return this.listings.resetListingStatsByAdmin(id);
+  }
+
   @Get(":id")
   async getOne(@Req() req: any, @Res({ passthrough: true }) res: Response, @Param("id") id: string) {
     let sessionId = req.cookies?.locus_view_session as string | undefined;

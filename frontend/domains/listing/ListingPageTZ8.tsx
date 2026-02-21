@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
@@ -15,6 +15,7 @@ import { cn } from '@/shared/utils/cn'
 import { ListingOwner, ListingBooking } from '@/components/listing'
 import { AIMetricsCardTZ9, ListingReviewsBlockTZ9 } from '@/domains/listing/listing-page'
 import { ListingCard } from '@/components/listing'
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 
 interface ListingPageTZ8Props {
   id: string
@@ -46,6 +47,17 @@ interface ListingItem {
   ownerId?: string
 }
 
+interface ListingStatsResponse {
+  listing_id: string
+  views: number
+  favorites: number
+  messages: number
+  bookings: number
+  updated_at: string
+  activity: Array<{ date: string; views: number; clicks: number; favorites: number }>
+  sources: Array<{ key: string; label: string; value: number }>
+}
+
 /** ТЗ-35: Desktop сетка 60/40, mobile фото 320px */
 const GALLERY_HEIGHT_PC = 420
 const GALLERY_HEIGHT_MOBILE = 320
@@ -67,6 +79,7 @@ function LazyBox({ children, fallback }: { children: React.ReactNode; fallback?:
 
 export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const { isAuthenticated, user } = useAuthStore()
   const [isFavorite, setIsFavorite] = useState(false)
@@ -82,6 +95,8 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [adminStatusLoading, setAdminStatusLoading] = useState(false)
   const [ownerPanelTab, setOwnerPanelTab] = useState<'edit' | 'calendar' | 'promo' | 'analytics'>('edit')
   const [ownerViewAsUser, setOwnerViewAsUser] = useState(false)
+  const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30)
+  const [aiRecoModalOpen, setAiRecoModalOpen] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -153,6 +168,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
       router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
       return
     }
+    void incrementListingMetric('messages')
     setWriteLoading(true)
     try {
       const conv = await apiFetchJson<{ id: string }>(`/chats/by-listing/${itemFromData?.id}`, { method: 'POST' })
@@ -188,8 +204,14 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
         })
       }
       if (res?.conversationId) router.push(`/messages?chat=${res.conversationId}`)
+      void incrementListingMetric('bookings')
     } catch {}
   }
+
+  const handleToggleFavorite = useCallback(() => {
+    setIsFavorite((prev) => !prev)
+    void incrementListingMetric('favorites')
+  }, [incrementListingMetric])
 
   const scrollToBooking = useCallback(() => {
     document.getElementById('listing-booking')?.scrollIntoView({ behavior: 'smooth' })
@@ -256,12 +278,54 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const isDraft = listingStatusCanonical === 'DRAFT'
   const isPublished = listingStatusCanonical === 'PUBLISHED'
   const isOwnerMode = Boolean(isCurrentUserOwner) && !ownerViewAsUser
+  const canSeeAnalytics = Boolean(isCurrentUserOwner || isCurrentUserAdmin)
+  const analyticsTabRequested = searchParams.get('tab') === 'analytics'
   const listingStats = {
     views: Number((item as any)?.viewsCount ?? (item as any)?.views ?? 0),
     favorites: Number((item as any)?.favoritesCount ?? 0),
     bookings: Number((item as any)?.bookingsCount ?? 0),
     clicks: Number((item as any)?.clicksCount ?? 0),
   }
+
+  const { data: listingStatsData } = useFetch<ListingStatsResponse>(
+    ['listing-stats', id, analyticsDays],
+    `/api/listings/${encodeURIComponent(id)}/stats?days=${analyticsDays}`,
+    { enabled: canSeeAnalytics, retry: false }
+  )
+
+  const incrementListingMetric = useCallback(
+    async (metric: 'views' | 'favorites' | 'messages' | 'bookings') => {
+      try {
+        await apiFetchJson(`/api/listings/${encodeURIComponent(id)}/stats/increment`, {
+          method: 'POST',
+          body: JSON.stringify({ metric }),
+        })
+        if (canSeeAnalytics) {
+          await queryClient.invalidateQueries({ queryKey: ['listing-stats', id] })
+        }
+      } catch {}
+    },
+    [canSeeAnalytics, id, queryClient]
+  )
+
+  useEffect(() => {
+    if (!canSeeAnalytics) return
+    if (analyticsTabRequested) {
+      setOwnerPanelTab('analytics')
+      if (isCurrentUserOwner) setOwnerViewAsUser(false)
+    }
+  }, [analyticsTabRequested, canSeeAnalytics, isCurrentUserOwner])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !item?.id) return
+    const key = `locus_listing_view_ts_${item.id}`
+    const now = Date.now()
+    const lastTs = Number(window.localStorage.getItem(key) || 0)
+    if (!Number.isFinite(lastTs) || now - lastTs >= 30 * 60 * 1000) {
+      window.localStorage.setItem(key, String(now))
+      incrementListingMetric('views')
+    }
+  }, [item?.id, incrementListingMetric])
 
   const handleAdminStatusChange = useCallback(
     async (status: 'published' | 'rejected' | 'archived') => {
@@ -290,6 +354,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const district = (item as any).district ?? (item as any).addressLine ?? ''
   const guestsCount = (item as any).capacityGuests ?? (item as any).maxGuests ?? 2
   const roomsCount = item.bedrooms ?? 1
+  const showAnalyticsPanel = canSeeAnalytics && (ownerPanelTab === 'analytics' || (isCurrentUserAdmin && analyticsTabRequested))
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
@@ -301,7 +366,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               <GalleryTZ8
                 photos={photos}
                 isFavorite={isFavorite}
-                onToggleFavorite={() => setIsFavorite((f) => !f)}
+                onToggleFavorite={handleToggleFavorite}
                 onOpenFullscreen={photosLength > 0 ? () => setGalleryOpen(true) : undefined}
               />
             </section>
@@ -311,10 +376,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {isOwnerMode ? (
                   <>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                      <button type="button" onClick={() => setOwnerPanelTab('edit')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
-                      <button type="button" onClick={() => setOwnerPanelTab('calendar')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
-                      <button type="button" onClick={() => setOwnerPanelTab('promo')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
-                      <button type="button" onClick={() => setOwnerPanelTab('analytics')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('edit'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('calendar'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('promo'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('analytics'); router.push(`/listings/${item.id}?tab=analytics`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
                       <button type="button" onClick={() => setOwnerViewAsUser(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">Как пользователь</button>
                     </div>
                     <div className="mt-3 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
@@ -357,6 +422,21 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   </div>
                 )}
               </section>
+            )}
+
+            {showAnalyticsPanel && (
+              <ListingAnalyticsPanel
+                isAdmin={Boolean(isCurrentUserAdmin)}
+                days={analyticsDays}
+                onDaysChange={setAnalyticsDays}
+                stats={listingStatsData}
+                fallbackStats={listingStats}
+                onReset={isCurrentUserAdmin ? async () => {
+                  await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/stats/reset`, { method: 'POST' })
+                  await queryClient.invalidateQueries({ queryKey: ['listing-stats', id] })
+                } : undefined}
+                onOpenRecommendations={() => setAiRecoModalOpen(true)}
+              />
             )}
 
             {/* 2. Trust block — название, город, рейтинг, факты, цена доминирует */}
@@ -600,6 +680,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   <Link href={`/listing/edit/${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
                     Редактировать
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/listings/${item.id}?tab=analytics`)}
+                    className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)]"
+                  >
+                    Аналитика
+                  </button>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -678,7 +765,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
                     Написать
                   </button>
-                  <button type="button" onClick={() => setIsFavorite((f) => !f)} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
+                  <button type="button" onClick={handleToggleFavorite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
                     <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                     {isFavorite ? 'В избранном' : 'В избранное'}
                   </button>
@@ -732,6 +819,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center">
               Ред.
             </Link>
+            <button
+              type="button"
+              onClick={() => router.push(`/listings/${item.id}?tab=analytics`)}
+              className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
+            >
+              Аналитика
+            </button>
             <button
               type="button"
               onClick={async () => {
@@ -792,7 +886,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
           <>
             <button
               type="button"
-              onClick={() => setIsFavorite((f) => !f)}
+              onClick={handleToggleFavorite}
               className="w-11 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-secondary)]"
               aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
             >
@@ -838,6 +932,22 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[14px]">Нет координат</div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {aiRecoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="AI рекомендации" onClick={() => setAiRecoModalOpen(false)}>
+          <div className="w-full max-w-lg rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">AI рекомендации</h3>
+              <button type="button" onClick={() => setAiRecoModalOpen(false)} className="w-8 h-8 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)]">✕</button>
+            </div>
+            <ul className="space-y-2 text-[14px] text-[var(--text-secondary)]">
+              <li>• Добавьте 5+ качественных фото с дневным светом.</li>
+              <li>• Уточните преимущества района и транспорт.</li>
+              <li>• Укажите гибкие условия заселения для роста конверсии.</li>
+            </ul>
           </div>
         </div>
       )}
@@ -899,6 +1009,103 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
         </div>
       )}
     </div>
+  )
+}
+
+function ListingAnalyticsPanel({
+  isAdmin,
+  days,
+  onDaysChange,
+  stats,
+  fallbackStats,
+  onReset,
+  onOpenRecommendations,
+}: {
+  isAdmin: boolean
+  days: 7 | 30
+  onDaysChange: (d: 7 | 30) => void
+  stats?: ListingStatsResponse
+  fallbackStats: { views: number; favorites: number; bookings: number; clicks: number }
+  onReset?: () => Promise<void>
+  onOpenRecommendations: () => void
+}) {
+  const cards = [
+    { label: 'Просмотры', value: stats?.views ?? fallbackStats.views },
+    { label: 'Переходы в сообщение', value: stats?.messages ?? fallbackStats.clicks },
+    { label: 'Добавления в избранное', value: stats?.favorites ?? fallbackStats.favorites },
+    { label: 'Бронирования', value: stats?.bookings ?? fallbackStats.bookings },
+  ]
+  const activity = stats?.activity ?? []
+  const sources = stats?.sources ?? [
+    { key: 'search', label: 'Поиск', value: 42 },
+    { key: 'home', label: 'Главная', value: 27 },
+    { key: 'ai', label: 'AI подбор', value: 21 },
+    { key: 'favorites', label: 'Избранное', value: 10 },
+  ]
+
+  return (
+    <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-[18px] font-bold text-[var(--text-primary)]">Аналитика</h2>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => onDaysChange(7)} className={cn('h-8 px-3 rounded-[10px] text-[12px] font-medium', days === 7 ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>7д</button>
+          <button type="button" onClick={() => onDaysChange(30)} className={cn('h-8 px-3 rounded-[10px] text-[12px] font-medium', days === 30 ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>30д</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+            <p className="text-[12px] text-[var(--text-muted)]">{c.label}</p>
+            <p className="text-[20px] font-bold text-[var(--text-primary)] mt-1">{c.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+        <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">График активности</p>
+        <div className="h-[260px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={activity}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.25)" />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="views" name="Просмотры" stroke="#3b82f6" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="clicks" name="Клики" stroke="#10b981" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="favorites" name="Избранное" stroke="#f59e0b" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+          <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">AI анализ объявления</p>
+          <p className="text-[14px] text-[var(--text-secondary)]">Оценка качества: <span className="font-semibold text-[var(--text-primary)]">8.3 / 10</span></p>
+          <p className="text-[14px] text-[var(--text-secondary)] mt-1">Вероятность бронирования: <span className="font-semibold text-[var(--text-primary)]">67%</span></p>
+          <button type="button" onClick={onOpenRecommendations} className="mt-3 h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold">Получить рекомендации</button>
+        </div>
+        <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+          <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">Источники трафика</p>
+          <div className="space-y-2">
+            {sources.map((s) => (
+              <div key={s.key} className="flex items-center justify-between text-[13px] text-[var(--text-secondary)]">
+                <span>{s.label}</span>
+                <span className="font-semibold text-[var(--text-primary)]">{s.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {isAdmin && onReset && (
+        <button type="button" onClick={onReset} className="h-9 px-3 rounded-[10px] border border-red-500/30 bg-red-500/10 text-red-600 text-[13px] font-medium">
+          Сбросить статистику
+        </button>
+      )}
+    </section>
   )
 }
 

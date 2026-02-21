@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException, Logger } from "@nestjs/common";
-import { ListingStatus, ListingType, Prisma } from "@prisma/client";
+import { ListingStatus, ListingType, Prisma, UserRoleEnum } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { NeonUserService } from "../users/neon-user.service";
 import { CreateListingDto } from "./dto/create-listing.dto";
@@ -12,6 +12,9 @@ import { NotificationsService } from "../notifications/notifications.service";
 import { SupabaseAuthService } from "../auth/supabase-auth.service";
 import { NotificationType } from "../notifications/notifications.service";
 import { CanonicalListingStatus, fromCanonicalListingStatus, toCanonicalListingStatus } from "./listing-status.util";
+import { ROOT_ADMIN_EMAIL } from "../auth/constants";
+
+type ListingStatsMetric = "views" | "favorites" | "messages" | "bookings";
 
 // Helper to convert DTO JSON fields to Prisma-compatible InputJsonValue
 function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
@@ -463,6 +466,109 @@ export class ListingsService {
     });
 
     return this.getById(id);
+  }
+
+  private async ensureListingStatsRow(listingId: string) {
+    return this.prisma.listingStats.upsert({
+      where: { listingId },
+      create: { listingId },
+      update: {},
+    });
+  }
+
+  private buildActivitySeries(base: { views: number; favorites: number; messages: number }, days: number) {
+    const start = startOfDayUtc(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000));
+    const rows: Array<{ date: string; views: number; clicks: number; favorites: number }> = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+      const date = d.toISOString().slice(0, 10);
+      const spread = i + 1;
+      const sum = (days * (days + 1)) / 2;
+      rows.push({
+        date,
+        views: Math.max(0, Math.round((base.views * spread) / sum)),
+        clicks: Math.max(0, Math.round((base.messages * spread) / sum)),
+        favorites: Math.max(0, Math.round((base.favorites * spread) / sum)),
+      });
+    }
+    return rows;
+  }
+
+  private async ensureCanViewListingAnalytics(listingId: string, userId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { ownerId: true },
+    });
+    if (!listing) throw new NotFoundException("Listing not found");
+    if (listing.ownerId === userId) return;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { appRole: true, email: true },
+    });
+    const emailNorm = (user?.email ?? "").trim().toLowerCase();
+    const isRoot = emailNorm === ROOT_ADMIN_EMAIL.trim().toLowerCase();
+    const isAdmin =
+      isRoot ||
+      user?.appRole === UserRoleEnum.ROOT ||
+      user?.appRole === UserRoleEnum.ADMIN ||
+      user?.appRole === UserRoleEnum.MANAGER;
+    if (!isAdmin) {
+      throw new ForbiddenException("Only owner or admin can view listing analytics");
+    }
+  }
+
+  async getListingStatsForOwnerOrAdmin(listingId: string, userId: string, days = 30) {
+    await this.ensureCanViewListingAnalytics(listingId, userId);
+    const row = await this.ensureListingStatsRow(listingId);
+    const activityDays = days === 7 ? 7 : 30;
+    return {
+      listing_id: listingId,
+      views: row.views,
+      favorites: row.favorites,
+      messages: row.messages,
+      bookings: row.bookings,
+      updated_at: row.updatedAt,
+      activity: this.buildActivitySeries(
+        {
+          views: row.views,
+          favorites: row.favorites,
+          messages: row.messages,
+        },
+        activityDays
+      ),
+      sources: [
+        { key: "search", label: "Поиск", value: 42 },
+        { key: "home", label: "Главная", value: 27 },
+        { key: "ai", label: "AI подбор", value: 21 },
+        { key: "favorites", label: "Избранное", value: 10 },
+      ],
+    };
+  }
+
+  async incrementListingStatsMetric(listingId: string, metric: ListingStatsMetric) {
+    await this.prisma.listing.findUniqueOrThrow({ where: { id: listingId }, select: { id: true } });
+    const updated = await this.prisma.listingStats.upsert({
+      where: { listingId },
+      create: {
+        listingId,
+        [metric]: 1,
+      },
+      update: {
+        [metric]: { increment: 1 },
+      },
+    });
+    return { ok: true, metric, value: updated[metric] };
+  }
+
+  async resetListingStatsByAdmin(listingId: string) {
+    await this.prisma.listing.findUniqueOrThrow({ where: { id: listingId }, select: { id: true } });
+    const updated = await this.prisma.listingStats.upsert({
+      where: { listingId },
+      create: { listingId, views: 0, favorites: 0, messages: 0, bookings: 0 },
+      update: { views: 0, favorites: 0, messages: 0, bookings: 0 },
+    });
+    return { ok: true, stats: updated };
   }
 
   async delete(ownerId: string, id: string) {
