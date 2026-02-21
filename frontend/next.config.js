@@ -18,6 +18,7 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/create", destination: "/create-listing", permanent: false },
+      { source: "/add", destination: "/profile/listings/create", permanent: false },
       { source: "/owner/dashboard", destination: "/profile/listings/create", permanent: false, has: [{ type: "query", key: "tab", value: "add" }] },
       { source: "/profile/income", destination: "/profile/finance", permanent: false },
       { source: "/profile/payments", destination: "/profile/settings", permanent: false },
@@ -32,6 +33,9 @@ const nextConfig = {
       { source: "/dashboard/settings", destination: "/profile/settings", permanent: false },
       { source: "/dashboard/messages", destination: "/messages", permanent: false },
       { source: "/bookings", destination: "/profile/bookings", permanent: false },
+      { source: "/search", destination: "/listings", permanent: false },
+      { source: "/profile/sessions", destination: "/profile/security", permanent: false },
+      { source: "/profile/analytics/stats", destination: "/profile/analytics", permanent: false },
     ];
   },
   // ТЗ-30: кабинет в /profile; страницы profile/listings, bookings и т.д. — реальные, без rewrites

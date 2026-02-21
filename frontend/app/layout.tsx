@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Providers } from './providers'
-import { Header, BottomNavGlobal, AppSidebarTZ14 } from '@/components/layout'
+import { Header, BottomNavGlobal } from '@/components/layout'
 import { Footer } from '@/shared/ui/Footer'
 import ThemeProvider from '@/providers/ThemeProvider'
 import ErrorBoundaryWrapper from './ErrorBoundaryWrapper'
@@ -58,10 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <AppPreloader />
               <div className="min-h-screen flex flex-col">
                 <Header />
-                <div className="flex flex-1 min-h-0">
-                  <AppSidebarTZ14 />
-                  <main className="flex-1 main-with-header pb-20 md:pb-0 min-w-0">{children}</main>
-                </div>
+                <main className="flex-1 main-with-header pb-[100px] md:pb-0 min-w-0">{children}</main>
                 <Footer />
                 <BottomNavGlobal />
                 <ModalRoot />

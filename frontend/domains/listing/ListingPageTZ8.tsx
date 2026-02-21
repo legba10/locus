@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { addPendingReminder } from '@/shared/reviews/reviewReminderStorage'
 import { useAuthStore } from '@/domains/auth'
@@ -46,9 +46,9 @@ interface ListingItem {
   ownerId?: string
 }
 
-/** ТЗ-11: Desktop сетка 60/40, mobile высота 320–360px */
+/** ТЗ-35: Desktop сетка 60/40, mobile фото 320px */
 const GALLERY_HEIGHT_PC = 420
-const GALLERY_HEIGHT_MOBILE = 340
+const GALLERY_HEIGHT_MOBILE = 320
 const PHOTOS_DISPLAY = 12
 
 /** ТЗ-3: Lazy load — рендерит children только при появлении во viewport. */
@@ -67,8 +67,8 @@ function LazyBox({ children, fallback }: { children: React.ReactNode; fallback?:
 
 export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const router = useRouter()
-  const { isAuthenticated, user, hasRole } = useAuthStore()
-  const isAdmin = hasRole?.('admin') ?? false
+  const queryClient = useQueryClient()
+  const { isAuthenticated, user } = useAuthStore()
   const [isFavorite, setIsFavorite] = useState(false)
   const [writeLoading, setWriteLoading] = useState(false)
   const [isGalleryOpen, setGalleryOpen] = useState(false)
@@ -77,7 +77,9 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [amenitiesModalOpen, setAmenitiesModalOpen] = useState(false)
   /** ТЗ-12: Mobile — нижняя панель; по тапу «Забронировать» открывается календарь (bottom sheet) */
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false)
+  const [mapModalOpen, setMapModalOpen] = useState(false)
   const [aiMetricsExpanded, setAiMetricsExpanded] = useState(false)
+  const [adminStatusLoading, setAdminStatusLoading] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -235,6 +237,45 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const baseReviews = reviewsData?.items ?? []
   const isCurrentUserOwner = user?.id && owner?.id && user.id === owner.id
   const isCurrentUserAdmin = (user as any)?.isAdmin || user?.role === 'admin'
+  const listingStatusRaw = String((item as any)?.statusCanonical ?? (item as any)?.status ?? '').toUpperCase()
+  const listingStatusCanonical: 'DRAFT' | 'MODERATION' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED' =
+    listingStatusRaw === 'PUBLISHED'
+      ? 'PUBLISHED'
+      : listingStatusRaw === 'REJECTED'
+        ? 'REJECTED'
+        : listingStatusRaw === 'ARCHIVED' || listingStatusRaw === 'BLOCKED'
+          ? 'ARCHIVED'
+          : listingStatusRaw === 'MODERATION' || listingStatusRaw === 'PENDING_REVIEW' || listingStatusRaw === 'AWAITING_PAYMENT'
+            ? 'MODERATION'
+            : 'DRAFT'
+  const moderationNote = (item as any)?.moderation_note ?? (item as any)?.moderationNote ?? (item as any)?.moderationComment ?? ''
+  const isPendingModeration = listingStatusCanonical === 'MODERATION'
+  const isRejected = listingStatusCanonical === 'REJECTED'
+  const isDraft = listingStatusCanonical === 'DRAFT'
+  const isPublished = listingStatusCanonical === 'PUBLISHED'
+
+  const handleAdminStatusChange = useCallback(
+    async (status: 'published' | 'rejected' | 'archived') => {
+      if (adminStatusLoading) return
+      setAdminStatusLoading(true)
+      try {
+        await apiFetchJson(`/api/listings/${encodeURIComponent(id)}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status,
+            moderation_note: status === 'rejected' ? 'Отклонено модератором' : undefined,
+          }),
+        })
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['listing', id] }),
+          queryClient.invalidateQueries({ queryKey: ['profile-listings'] }),
+        ])
+      } finally {
+        setAdminStatusLoading(false)
+      }
+    },
+    [adminStatusLoading, id, queryClient]
+  )
 
   /** Редизайн v2: 1 Галерея 2 Trust (название, рейтинг, цена доминирует) 3 AI сжатый 4 Описание 5 Удобства 6 Владелец 7 Отзывы+AI 8 Карта. Фиксированный CTA снизу. */
   const district = (item as any).district ?? (item as any).addressLine ?? ''
@@ -245,7 +286,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-8">
-          <div className="min-w-0 space-y-6">
+          <div className="min-w-0 space-y-3">
             {/* 1. Галерея (Hero) — swipe, индикатор 1/N, полупрозрачные blur-кнопки, градиент снизу */}
             <section className="-mx-4 md:mx-0">
               <GalleryTZ8
@@ -259,9 +300,20 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             {/* 2. Trust block — название, город, рейтинг, факты, цена доминирует */}
             <section className="lg:hidden rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
               <h1 className="text-[18px] font-bold text-[var(--text-primary)] leading-tight">
-                {typeLabel}{district ? ` · ${district}` : ''}
+                {typeLabel}
               </h1>
-              <p className="text-[14px] text-[var(--text-secondary)] mt-1">{item.city || ''}</p>
+              <div className="mt-1 flex items-center gap-2 text-[14px] text-[var(--text-secondary)]">
+                <span>{[item.city, district].filter(Boolean).join(' · ') || item.city || '—'}</span>
+                {(item as any).lat && (item as any).lng && (
+                  <button
+                    type="button"
+                    onClick={() => setMapModalOpen(true)}
+                    className="h-8 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[12px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                  >
+                    Показать на карте
+                  </button>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-2">
                 {ratingAvg != null && (
                   <span className="inline-flex items-center gap-1 text-[14px] font-semibold text-amber-600">
@@ -282,6 +334,19 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {priceValue > 0 && <p className="text-[13px] text-[var(--text-muted)] mt-0.5">Комиссия 7% включена</p>}
               </div>
             </section>
+
+            {isCurrentUserOwner && (isDraft || isPendingModeration || isRejected) && (
+              <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
+                <p className="text-[14px] font-semibold text-[var(--text-primary)]">
+                  {isDraft && 'Черновик'}
+                  {isPendingModeration && 'На проверке'}
+                  {isRejected && 'Отклонено'}
+                </p>
+                {isRejected && moderationNote && (
+                  <p className="text-[13px] text-[var(--text-secondary)] mt-1">Причина: {moderationNote}</p>
+                )}
+              </section>
+            )}
 
             {/* 4. AI анализ — после цены, перед описанием */}
             {aiReasons.length > 0 && (
@@ -393,33 +458,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             </LazyBox>
 
-            {/* ТЗ-3: Lazy load карты */}
-            <LazyBox>
-              <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
-                <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Район</h2>
-                <p className="text-[14px] text-[var(--text-secondary)] mb-3">{metroText} • карта</p>
-                <div className="h-48 rounded-[12px] overflow-hidden bg-[var(--bg-input)]">
-                  {(item as any).lat && (item as any).lng ? (
-                    <iframe
-                      src={`https://yandex.ru/map-widget/v1/?ll=${(item as any).lng},${(item as any).lat}&z=15&pt=${(item as any).lng},${(item as any).lat}`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      title="Карта"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[14px]">Карта</div>
-                  )}
-                </div>
-                {(item as any).lat && (item as any).lng && (
-                  <a href={`https://yandex.ru/maps/?ll=${(item as any).lng},${(item as any).lat}&z=15`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-[14px] font-medium text-[var(--accent)] hover:underline">
-                    Открыть карту
-                  </a>
-                )}
-              </section>
-            </LazyBox>
+            {/* TZ-35: карта вынесена в кнопку рядом с городом + modal (50vh) */}
 
             {/* ТЗ-3: Lazy load похожих объявлений */}
             {similarListings.length > 0 && (
@@ -461,10 +500,83 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   {priceValue > 0 && <p className="text-[12px] text-[var(--text-muted)] mt-1">Комиссия 7%. Итог при бронировании.</p>}
                 </div>
               </div>
-              {isCurrentUserOwner ? (
-                <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
-                  Редактировать объявление
-                </Link>
+              {isCurrentUserAdmin ? (
+                <div className="space-y-2">
+                  {isPendingModeration ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        disabled={adminStatusLoading}
+                        onClick={() => handleAdminStatusChange('published')}
+                        className="h-11 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] flex items-center justify-center hover:opacity-95 disabled:opacity-60"
+                      >
+                        Одобрить
+                      </button>
+                      <button
+                        type="button"
+                        disabled={adminStatusLoading}
+                        onClick={() => handleAdminStatusChange('rejected')}
+                        className="h-11 rounded-[12px] border border-red-500/30 bg-red-500/10 text-red-600 font-semibold text-[14px] flex items-center justify-center disabled:opacity-60"
+                      >
+                        Отклонить
+                      </button>
+                    </div>
+                  ) : isPublished ? (
+                    <button
+                      type="button"
+                      disabled={adminStatusLoading}
+                      onClick={() => handleAdminStatusChange('archived')}
+                      className="w-full h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] text-[14px] font-medium flex items-center justify-center disabled:opacity-60"
+                    >
+                      Снять с публикации
+                    </button>
+                  ) : (
+                    <div className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-secondary)] text-[14px] font-medium flex items-center justify-center">
+                      {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
+                    </div>
+                  )}
+                  <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
+                    Редактировать
+                  </Link>
+                </div>
+              ) : isCurrentUserOwner ? (
+                <div className="space-y-2">
+                  <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[13px] text-[var(--text-secondary)]">
+                    {isDraft && 'Черновик'}
+                    {isPendingModeration && 'На проверке'}
+                    {isRejected && (
+                      <>
+                        Отклонено
+                        {moderationNote ? `: ${moderationNote}` : ''}
+                      </>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] flex items-center justify-center hover:opacity-95">
+                      {isRejected ? 'Исправить' : 'Редактировать'}
+                    </Link>
+                    {isDraft || isRejected ? (
+                      <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/publish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
+                        {isRejected ? 'Отправить заново' : 'На модерацию'}
+                      </button>
+                    ) : isPendingModeration ? (
+                      <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
+                        Отменить
+                      </button>
+                    ) : (
+                      <Link href="/profile/calendar" className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px] flex items-center justify-center">
+                        Календарь
+                      </Link>
+                    )}
+                  </div>
+                  {isPublished && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Link href="/profile/promo" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Продвижение</Link>
+                      <Link href="/profile/analytics" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Аналитика</Link>
+                      <Link href="/profile/calendar" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Календарь</Link>
+                    </div>
+                  )}
+                </div>
               ) : !isAuthenticated() ? (
                 <Link href={`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
                   Войти чтобы забронировать
@@ -476,7 +588,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   onConfirm={handleBookingConfirm}
                 />
               )}
-              {!isCurrentUserOwner && (
+              {!isCurrentUserOwner && !isCurrentUserAdmin && (
                 <>
                   <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
                     Написать
@@ -509,44 +621,120 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
 
       {/* Редизайн v2: Фиксированный CTA — [♡] цена / ночь [Одна кнопка]. Гость→Забронировать, Владелец→Редактировать, Админ→Модерация. */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center gap-3 px-4 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb"
-        style={{ height: 64, minHeight: 64, paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center gap-2 px-3 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb"
+        style={{ height: 72, minHeight: 72, paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
       >
-        <button
-          type="button"
-          onClick={() => setIsFavorite((f) => !f)}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-input)] active:scale-95 shrink-0"
-          aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
-        >
-          <svg className={cn('w-5 h-5', isFavorite && 'fill-red-500 text-red-500')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-        </button>
-        {priceValue > 0 ? (
-          <p className="text-[15px] font-bold text-[var(--text-primary)] shrink-0 min-w-0 truncate">
-            {priceValue.toLocaleString('ru-RU')} ₽
-            <span className="text-[12px] font-normal text-[var(--text-muted)]"> / ночь</span>
-          </p>
-        ) : (
-          <span className="text-[14px] text-[var(--text-muted)] shrink-0">Цена по запросу</span>
-        )}
-        <div className="flex-1 min-w-0" />
-        {isAdmin ? (
-          <Link href="/admin" className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0">
-            Модерация
-          </Link>
+        {isCurrentUserAdmin ? (
+          <>
+            {isPendingModeration ? (
+              <>
+                <button type="button" disabled={adminStatusLoading} onClick={() => handleAdminStatusChange('published')} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center disabled:opacity-60">
+                  Одобрить
+                </button>
+                <button type="button" disabled={adminStatusLoading} onClick={() => handleAdminStatusChange('rejected')} className="h-11 px-3 rounded-[10px] border border-red-500/30 bg-red-500/10 text-red-600 font-semibold text-[13px] flex items-center justify-center disabled:opacity-60">
+                  Отклонить
+                </button>
+              </>
+            ) : isPublished ? (
+              <button type="button" disabled={adminStatusLoading} onClick={() => handleAdminStatusChange('archived')} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center disabled:opacity-60">
+                Снять с публикации
+              </button>
+            ) : (
+              <div className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-secondary)] font-semibold text-[13px] flex items-center justify-center">
+                {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
+              </div>
+            )}
+            <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center">
+              Ред.
+            </Link>
+          </>
         ) : isCurrentUserOwner ? (
-          <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0">
-            Редактировать
-          </Link>
+          <>
+            {isDraft || isRejected || isPendingModeration ? (
+              <>
+                <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
+                  {isRejected ? 'Исправить' : 'Редактировать'}
+                </Link>
+                {(isDraft || isRejected) ? (
+                  <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/publish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                    {isRejected ? 'Отправить заново' : 'На модерацию'}
+                  </button>
+                ) : (
+                  <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                    Отменить
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
+                  Редактировать
+                </Link>
+                <Link href="/profile/calendar" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  Календарь
+                </Link>
+                <Link href="/profile/promo" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  Продвиж.
+                </Link>
+                <Link href="/profile/analytics" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  Аналитика
+                </Link>
+              </>
+            )}
+          </>
         ) : (
-          <button
-            type="button"
-            onClick={handleMobileBookClick}
-            className="h-12 px-5 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-          >
-            {isAuthenticated() ? 'Забронировать' : 'Забронировать'}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setIsFavorite((f) => !f)}
+              className="w-11 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-secondary)]"
+              aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+            >
+              <svg className={cn('w-5 h-5', isFavorite && 'fill-red-500 text-red-500')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleWrite}
+              className="flex-1 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]"
+            >
+              Написать
+            </button>
+            <button
+              type="button"
+              onClick={handleMobileBookClick}
+              className="flex-1 h-11 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            >
+              Забронировать
+            </button>
+          </>
         )}
       </div>
+
+      {mapModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-label="Карта" onClick={() => setMapModalOpen(false)}>
+          <div className="w-full max-w-2xl rounded-[16px] overflow-hidden bg-[var(--bg-card)] border border-[var(--border-main)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)]">
+              <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">Карта</h3>
+              <button type="button" onClick={() => setMapModalOpen(false)} className="w-9 h-9 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)]" aria-label="Закрыть карту">✕</button>
+            </div>
+            <div className="h-[50vh] bg-[var(--bg-input)]">
+              {(item as any).lat && (item as any).lng ? (
+                <iframe
+                  src={`https://yandex.ru/map-widget/v1/?ll=${(item as any).lng},${(item as any).lat}&z=15&pt=${(item as any).lng},${(item as any).lat}`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  title="Карта"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[14px]">Нет координат</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ТЗ-12: Bottom sheet с календарём и «Написать владельцу» (только mobile) */}
       {bookingSheetOpen && (

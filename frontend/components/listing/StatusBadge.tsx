@@ -6,14 +6,14 @@ import { cn } from "@/shared/utils/cn";
 export type ListingStatusBadge =
   | "active"    // активно — зеленый
   | "pending"  // на проверке — оранж
-  | "hidden"   // скрыто — серый
+  | "rejected" // отклонено — красный
   | "archived" // архив — muted
   | "draft";   // черновик — серый
 
 const LABELS: Record<ListingStatusBadge, string> = {
   active: "Активно",
   pending: "На проверке",
-  hidden: "Скрыто",
+  rejected: "Отклонено",
   archived: "Архив",
   draft: "Черновик",
 };
@@ -21,19 +21,20 @@ const LABELS: Record<ListingStatusBadge, string> = {
 const STYLES: Record<ListingStatusBadge, string> = {
   active: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
   pending: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
-  hidden: "bg-[var(--bg-input)] text-[var(--text-secondary)] border-[var(--border-main)]",
+  rejected: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
   archived: "bg-[var(--bg-input)] text-[var(--text-muted)] border-[var(--border-main)]",
   draft: "bg-[var(--bg-input)] text-[var(--text-secondary)] border-[var(--border-main)]",
 };
 
-/** Маппинг бэкенд status → наш badge (Prisma ListingStatus). */
+/** Маппинг backend status (legacy/new) -> badge */
 export function apiStatusToBadge(apiStatus: string | undefined): ListingStatusBadge {
   if (!apiStatus) return "draft";
-  const s = String(apiStatus).toUpperCase();
+  const s = String(apiStatus).toUpperCase().trim();
   if (s === "PUBLISHED") return "active";
-  if (s === "PENDING_REVIEW") return "pending";
-  if (s === "ARCHIVED") return "archived";
-  if (s === "DRAFT" || s === "REJECTED" || s === "BLOCKED") return s === "DRAFT" ? "draft" : "hidden";
+  if (s === "MODERATION" || s === "PENDING_REVIEW" || s === "AWAITING_PAYMENT") return "pending";
+  if (s === "REJECTED") return "rejected";
+  if (s === "ARCHIVED" || s === "BLOCKED") return "archived";
+  if (s === "DRAFT") return "draft";
   return "draft";
 }
 

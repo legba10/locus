@@ -61,8 +61,15 @@
   --space-40: 40px;
   --space-48: 48px;
   --space-64: 64px;
-  --space-xs: 8px;
-  --space-sm: 12px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 40px;
+  --spacing-block: 48px;
+  --space-xs: 4px;
+  --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
 
@@ -70,7 +77,6 @@
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
-  --space-xs: 6px;
   --font-size-sm: 13px;
   --font-size-md: 16px;
   --font-size-lg: 18px;

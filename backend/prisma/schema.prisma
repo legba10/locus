@@ -275,8 +275,14 @@ model Listing {
   houseRules   Json?
 
   status       ListingStatus  @default(DRAFT)
-  /// Причина отклонения (при status = REJECTED)
+  /// Причина отклонения (legacy field, kept for backward compatibility)
   moderationComment String?
+  /// TZ-36: canonical moderation note (shown in owner UI)
+  moderationNote    String?       @map("moderation_note")
+  /// TZ-36: publication timestamp
+  publishedAt       DateTime?     @map("published_at")
+  /// TZ-36: rejection timestamp
+  rejectedAt        DateTime?     @map("rejected_at")
   /// Кто одобрил/отклонил (User id)
   moderatedById     String?
   moderatedBy        User?     @relation("ListingModerator", fields: [moderatedById], references: [id], onDelete: SetNull)

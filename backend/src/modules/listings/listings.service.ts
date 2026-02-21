@@ -11,6 +11,7 @@ import { ListingsPhotosService } from "./listings-photos.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { SupabaseAuthService } from "../auth/supabase-auth.service";
 import { NotificationType } from "../notifications/notifications.service";
+import { CanonicalListingStatus, fromCanonicalListingStatus, toCanonicalListingStatus } from "./listing-status.util";
 
 // Helper to convert DTO JSON fields to Prisma-compatible InputJsonValue
 function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
@@ -37,6 +38,21 @@ export class ListingsService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  private normalizeListingForUi<T extends Record<string, any>>(listing: T): T & {
+    statusCanonical: CanonicalListingStatus;
+    moderation_note: string | null;
+    published_at: Date | null;
+    rejected_at: Date | null;
+  } {
+    return {
+      ...listing,
+      statusCanonical: toCanonicalListingStatus(listing.status),
+      moderation_note: (listing.moderationNote ?? listing.moderationComment ?? null) as string | null,
+      published_at: (listing.publishedAt ?? null) as Date | null,
+      rejected_at: (listing.rejectedAt ?? null) as Date | null,
+    };
+  }
+
   async getAll(params: { city?: string; limit?: number } = {}) {
     const { city, limit = 50 } = params;
     const where = {
@@ -56,7 +72,7 @@ export class ListingsService {
       }),
       this.prisma.listing.count({ where }),
     ]);
-    return { items, total };
+    return { items: items.map((item) => this.normalizeListingForUi(item)), total };
   }
 
   async getMine(ownerId: string) {
@@ -76,7 +92,7 @@ export class ListingsService {
         },
       },
     });
-    const enriched = items.map((x: any) => ({
+    const enriched = items.map((x: any) => this.normalizeListingForUi({
       ...x,
       bookingsCount: x?._count?.bookings ?? 0,
       favoritesCount: x?._count?.favoritedBy ?? 0,
@@ -112,7 +128,7 @@ export class ListingsService {
     const reviewsCount = reviews.length;
 
     if (!owner) {
-      return {
+      return this.normalizeListingForUi({
         ...listingWithRelations,
         owner: {
           id: "",
@@ -123,7 +139,7 @@ export class ListingsService {
           reviews_count: 0,
           listingsCount: 0,
         },
-      };
+      });
     }
 
     const rawEmail = owner.email ?? "";
@@ -137,7 +153,7 @@ export class ListingsService {
       where: { ownerId: owner.id },
     });
 
-    return {
+    return this.normalizeListingForUi({
       ...listingWithRelations,
       owner: {
         id: owner.id,
@@ -148,7 +164,7 @@ export class ListingsService {
         reviews_count: reviewsCount,
         listingsCount,
       },
-    };
+    });
   }
 
   private async trackView(listingId: string, sessionId: string, userId?: string | null) {
@@ -255,7 +271,7 @@ export class ListingsService {
         bathrooms: dto.bathrooms ?? 1,
         type: (dto.type as ListingType | undefined) ?? ListingType.APARTMENT,
         houseRules: toJsonValue(dto.houseRules),
-        status: ListingStatus.PENDING_REVIEW,
+        status: ListingStatus.DRAFT,
         photos: dto.photos?.length
           ? {
               create: dto.photos.map((p) => ({
@@ -302,10 +318,6 @@ export class ListingsService {
       this.aiRisk.risk({ listingId: listing.id }),
     ]);
 
-    this.notifications
-      .createForAdmins(NotificationType.NEW_LISTING_PENDING, "Новое объявление на модерацию", dto.title || listing.id)
-      .catch((err) => this.logger.warn(`Failed to notify admins: ${err?.message}`));
-
     return this.getById(listing.id);
   }
 
@@ -319,6 +331,8 @@ export class ListingsService {
     if (listing.status === ListingStatus.REJECTED) {
       data.status = ListingStatus.PENDING_REVIEW;
       data.moderationComment = null;
+      data.moderationNote = null;
+      data.rejectedAt = null;
     }
 
     await this.prisma.listing.update({
@@ -364,15 +378,25 @@ export class ListingsService {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
+    if (![ListingStatus.DRAFT, ListingStatus.REJECTED].includes(listing.status)) {
+      throw new ForbiddenException("Listing can be submitted only from draft/rejected status");
+    }
 
     const photosCount = await this.prisma.listingPhoto.count({ where: { listingId: id } });
     if (photosCount === 0) {
       throw new ForbiddenException("Listing must have at least one photo before publish");
     }
 
+    const data: Prisma.ListingUpdateInput = {
+      status: ListingStatus.PENDING_REVIEW,
+      moderationComment: null,
+      moderationNote: null,
+      rejectedAt: null,
+    };
+
     await this.prisma.listing.update({
       where: { id },
-      data: { status: ListingStatus.PENDING_REVIEW, moderationComment: null },
+      data,
     });
     this.notifications
       .create(ownerId, NotificationType.LISTING_SUBMITTED, "Объявление отправлено на модерацию", null)
@@ -392,7 +416,52 @@ export class ListingsService {
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
 
-    await this.prisma.listing.update({ where: { id }, data: { status: ListingStatus.DRAFT } });
+    const nextStatus = listing.status === ListingStatus.PUBLISHED ? ListingStatus.ARCHIVED : ListingStatus.DRAFT;
+    await this.prisma.listing.update({ where: { id }, data: { status: nextStatus } });
+    return this.getById(id);
+  }
+
+  async updateStatusByAdmin(
+    adminId: string,
+    id: string,
+    nextStatus: CanonicalListingStatus,
+    moderationNote?: string | null
+  ) {
+    const listing = await this.prisma.listing.findUnique({ where: { id } });
+    if (!listing) throw new NotFoundException("Listing not found");
+
+    const current = toCanonicalListingStatus(listing.status);
+    const allowed =
+      (current === "moderation" && (nextStatus === "published" || nextStatus === "rejected")) ||
+      (current === "published" && nextStatus === "archived");
+
+    if (!allowed) {
+      throw new ForbiddenException(`Invalid transition: ${current} -> ${nextStatus}`);
+    }
+
+    const target = fromCanonicalListingStatus(nextStatus);
+    const now = new Date();
+    const data: Prisma.ListingUpdateInput = {
+      status: target,
+      moderatedById: adminId,
+    };
+
+    if (nextStatus === "published") {
+      data.publishedAt = now;
+      data.rejectedAt = null;
+      data.moderationNote = null;
+      data.moderationComment = null;
+    } else if (nextStatus === "rejected") {
+      data.rejectedAt = now;
+      data.moderationNote = moderationNote ?? null;
+      data.moderationComment = moderationNote ?? null;
+    }
+
+    await this.prisma.listing.update({
+      where: { id },
+      data,
+    });
+
     return this.getById(id);
   }
 

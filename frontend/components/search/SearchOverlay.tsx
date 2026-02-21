@@ -114,10 +114,11 @@ export function SearchOverlay() {
   if (roomsStr) queryParams.set('rooms', roomsStr)
   if (sort && sort !== 'popular') queryParams.set('sort', sort)
 
+  const searchQs = queryParams.toString()
   const { data, isLoading } = useFetch<SearchResponse>(
     ['search-overlay', city, priceMin, priceMax, typeStr, roomsStr, sort],
-    `/api/search?${queryParams.toString()}`,
-    { enabled: isOpen }
+    searchQs && searchQs !== 'limit=24' ? `/api/search?${searchQs}` : '/api/listings?limit=24',
+    { enabled: isOpen, retry: false }
   )
 
   const items = (data?.items ?? []).map(mapListingToCard)

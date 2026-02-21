@@ -4,7 +4,6 @@
 
 import Link from 'next/link'
 import { useAuthStore } from '@/domains/auth'
-import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 const CARD_CLS = 'rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]'
@@ -31,13 +30,7 @@ export default function ProfilePromoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <Link href="/profile" className="inline-flex items-center gap-1 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
-          <ChevronLeft className="w-4 h-4" />
-          Назад в профиль
-        </Link>
-
+    <>
         <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-6">Продвижение</h1>
 
         <div className="space-y-6">
@@ -69,7 +62,6 @@ export default function ProfilePromoPage() {
             Подключить продвижение
           </Link>
         </div>
-      </div>
-    </div>
+    </>
   )
 }

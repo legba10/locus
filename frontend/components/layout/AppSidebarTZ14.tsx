@@ -25,13 +25,13 @@ export function AppSidebarTZ14() {
   const base = pathname?.replace(/\/$/, '') || ''
   const isHome = base === '' || base === '/'
   const isSearch = base === '/listings' || base.startsWith('/listings')
-  const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/dashboard/listings/create')
+  const isAdd = pathname?.startsWith('/create-listing') || pathname?.startsWith('/profile/listings/create')
   const isMessages = base === '/messages' || base.startsWith('/messages')
-  const isDashboard = base === '/dashboard' || base.startsWith('/dashboard') || base === '/profile' || base.startsWith('/profile')
+  const isDashboard = base === '/profile' || base.startsWith('/profile')
 
   const authed = isAuthenticated()
-  const addHref = authed ? '/dashboard/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/dashboard/listings/create')
-  const profileHref = authed ? '/dashboard' : '/auth/login?redirect=' + encodeURIComponent('/dashboard')
+  const addHref = authed ? '/profile/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/profile/listings/create')
+  const profileHref = authed ? '/profile' : '/auth/login?redirect=' + encodeURIComponent('/profile')
   const messagesHref = authed ? '/messages' : '/auth/login?redirect=/messages'
   const isAdmin = hasRole?.('admin') ?? false
 

@@ -5,12 +5,13 @@ import { NotificationsModule } from "../notifications/notifications.module";
 import { ReviewsModule } from "../reviews/reviews.module";
 import { UsersModule } from "../users/users.module";
 import { ListingsController } from "./listings.controller";
+import { ListingStatusController } from "./listing-status.controller";
 import { ListingsPhotosService } from "./listings-photos.service";
 import { ListingsService } from "./listings.service";
 
 @Module({
   imports: [AiOrchestratorModule, AuthModule, UsersModule, NotificationsModule, ReviewsModule],
-  controllers: [ListingsController],
+  controllers: [ListingsController, ListingStatusController],
   providers: [ListingsService, ListingsPhotosService],
   exports: [ListingsService, ListingsPhotosService],
 })

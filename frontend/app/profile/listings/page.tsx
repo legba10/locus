@@ -10,7 +10,6 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { ListingCardCabinetV2 } from '@/components/cabinet'
 import type { ListingPlan } from '@/shared/contracts/api'
-import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 export default function ProfileListingsPage() {
@@ -49,7 +48,7 @@ export default function ProfileListingsPage() {
     title: item.title ?? 'Без названия',
     price: Number(item.basePrice ?? item.pricePerNight ?? 0),
     cover: item.photos?.[0]?.url ?? item.images?.[0]?.url ?? null,
-    status: item.status ?? 'DRAFT',
+    status: item.statusCanonical ?? item.status ?? 'DRAFT',
     plan: (item.plan as ListingPlan) ?? 'free',
     createdAt: item.createdAt,
     views: (item as any).viewsCount ?? (item as any).views ?? 0,
@@ -68,13 +67,7 @@ export default function ProfileListingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <Link href="/profile" className="inline-flex items-center gap-1 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
-          <ChevronLeft className="w-4 h-4" />
-          Назад в профиль
-        </Link>
-
+    <>
         <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-6">Мои объявления</h1>
 
         {isLoading && (
@@ -107,14 +100,45 @@ export default function ProfileListingsPage() {
         {!isLoading && items.length > 0 && (
           <div className="space-y-4">
             {items.map((item) => (
-              <ListingCardCabinetV2
-                key={item.id}
-                listing={toCardData(item)}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onHide={handleHide}
-                onPromote={(id) => router.push(`/owner/dashboard?tab=promotion&promote=${id}`)}
-              />
+              <div key={item.id} className="space-y-3">
+                <ListingCardCabinetV2
+                  listing={toCardData(item)}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onHide={handleHide}
+                  onPromote={(id) => router.push(`/owner/dashboard?tab=promotion&promote=${id}`)}
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(item.id)}
+                    className="h-10 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                  >
+                    Редактировать
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/owner/dashboard?tab=promotion&promote=${item.id}`)}
+                    className="h-10 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                  >
+                    Продвижение
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/profile/calendar')}
+                    className="h-10 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                  >
+                    Календарь
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/profile/analytics')}
+                    className="h-10 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                  >
+                    Аналитика
+                  </button>
+                </div>
+              </div>
             ))}
             <Link
               href="/profile/listings/create"
@@ -127,7 +151,6 @@ export default function ProfileListingsPage() {
             </Link>
           </div>
         )}
-      </div>
-    </div>
+    </>
   )
 }

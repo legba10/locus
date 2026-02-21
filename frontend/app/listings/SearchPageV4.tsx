@@ -102,11 +102,13 @@ export function SearchPageV4() {
   if (priceMax) queryParams.set('priceMax', priceMax)
   if (typeParam) queryParams.set('type', typeParam)
   if (roomsStr) queryParams.set('rooms', roomsStr)
-  if (sort) queryParams.set('sort', sort)
+  if (sort && sort !== 'popular') queryParams.set('sort', sort)
 
+  const searchQueryString = queryParams.toString()
   const { data, isLoading } = useFetch<SearchResponse>(
     ['search', city, priceMin, priceMax, typeParam, roomsStr, sort],
-    `/api/search?${queryParams.toString()}`
+    searchQueryString ? `/api/search?${searchQueryString}` : '/api/listings?limit=24',
+    { retry: false }
   )
 
   // AI поиск при включенном AI режиме

@@ -5,8 +5,10 @@ import { Response } from "express";
 import { randomUUID } from "crypto";
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { ModerationGuard } from "../auth/guards/moderation.guard";
 import { CreateListingDto } from "./dto/create-listing.dto";
 import { UpdateListingDto } from "./dto/update-listing.dto";
+import { UpdateListingStatusDto } from "./dto/update-listing-status.dto";
 import { ListingsService } from "./listings.service";
 import { ListingsPhotosService } from "./listings-photos.service";
 import { ReviewsService } from "../reviews/reviews.service";
@@ -88,6 +90,24 @@ export class ListingsController {
   @Patch(":id")
   async update(@Req() req: any, @Param("id") id: string, @Body() dto: UpdateListingDto) {
     return { item: await this.listings.update(req.user.id, id, dto) };
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SupabaseAuthGuard, ModerationGuard)
+  @Patch(":id/status")
+  async updateStatusByAdmin(
+    @Req() req: any,
+    @Param("id") id: string,
+    @Body() dto: UpdateListingStatusDto
+  ) {
+    return {
+      item: await this.listings.updateStatusByAdmin(
+        req.user.id,
+        id,
+        dto.status,
+        dto.moderation_note ?? null
+      ),
+    };
   }
 
   @ApiBearerAuth()

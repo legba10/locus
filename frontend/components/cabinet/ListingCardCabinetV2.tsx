@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/shared/utils/cn'
-import { StatusBadge, apiStatusToBadge, type ListingStatusBadge } from '@/components/listing/StatusBadge'
+import { StatusBadge, apiStatusToBadge } from '@/components/listing/StatusBadge'
 import { ListingPlanBadge } from '@/components/monetization/ListingPlanBadge'
 import type { ListingPlan } from '@/shared/contracts/api'
 

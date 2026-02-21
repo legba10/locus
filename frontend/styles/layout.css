@@ -35,3 +35,12 @@
     max-width: 1180px;
   }
 }
+
+/* TZ-33: контейнер страницы — max-width 680px, padding 0 16px, вертикальный ритм */
+.page-container-tz33 {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}

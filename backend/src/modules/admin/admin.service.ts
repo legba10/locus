@@ -246,6 +246,9 @@ export class AdminService {
   async approveListing(listingId: string, adminId: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException('Listing not found');
+    if (listing.status !== ListingStatus.PENDING_REVIEW) {
+      throw new ForbiddenException('Only listings on moderation can be approved');
+    }
 
     const updated = await this.prisma.listing.update({
       where: { id: listingId },
@@ -253,6 +256,9 @@ export class AdminService {
         status: ListingStatus.PUBLISHED,
         moderatedById: adminId,
         moderationComment: null,
+        moderationNote: null,
+        publishedAt: new Date(),
+        rejectedAt: null,
       },
     });
 
@@ -269,6 +275,9 @@ export class AdminService {
   async rejectListing(listingId: string, adminId: string, reason?: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException('Listing not found');
+    if (listing.status !== ListingStatus.PENDING_REVIEW) {
+      throw new ForbiddenException('Only listings on moderation can be rejected');
+    }
 
     const updated = await this.prisma.listing.update({
       where: { id: listingId },
@@ -276,6 +285,8 @@ export class AdminService {
         status: ListingStatus.REJECTED,
         moderatedById: adminId,
         moderationComment: reason ?? null,
+        moderationNote: reason ?? null,
+        rejectedAt: new Date(),
       },
     });
 

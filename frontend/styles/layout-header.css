@@ -9,28 +9,34 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* ТЗ восстановление: контейнер header — max-width 1280px, padding 24px, flex space-between */
+/* TZ-33: header height 64px, padding 0 16px, gap между иконками 16px */
+.layout-header {
+  height: 64px;
+  min-height: 64px;
+}
 .layout-header__inner-tz2 {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
   height: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
-/* TZ-23: header 56px, sticky, без прыжков */
+/* TZ-33: мобильный — те же 64px и 16px */
 @media (max-width: 767px) {
   .layout-header {
-    height: var(--header-height, 56px);
-    min-height: var(--header-height, 56px);
+    height: 64px;
+    min-height: 64px;
   }
   .layout-header__inner-tz2 {
     padding: 0 16px;
-    height: var(--header-height, 56px);
-    min-height: var(--header-height, 56px);
+    height: 64px;
+    min-height: 64px;
+    gap: 16px;
   }
   .layout-header .logo-wrap {
     position: relative;
@@ -47,7 +53,7 @@
 .layout-header-overflow-fix .layout-header__right,
 .layout-header-overflow-fix .header-actions {
   flex-shrink: 0;
-  gap: 12px;
+  gap: 16px;
 }
 
 /* ТЗ-1: аватар и меню профиля — выше остального, клик срабатывает, dropdown не обрезается */
@@ -392,7 +398,7 @@
 
 /* TZ-23: отступ main под header — 56px + safe-area */
 .main-with-header {
-  padding-top: calc(var(--header-height, 56px) + env(safe-area-inset-top, 0px));
+  padding-top: calc(64px + env(safe-area-inset-top, 0px));
 }
 
 /* ТЗ-3: аватар в шапке — ровный круг, без белых краёв, object-fit cover */

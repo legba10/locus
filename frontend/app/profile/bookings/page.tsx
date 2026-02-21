@@ -9,7 +9,6 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { BookingCard, formatBookingDates, type BookingCardData } from '@/components/booking/BookingCard'
 import { BookingsEmptyState } from '@/components/booking/EmptyState'
-import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 function toCardData(item: any): BookingCardData {
@@ -60,13 +59,7 @@ export default function ProfileBookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <Link href="/profile" className="inline-flex items-center gap-1 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6">
-          <ChevronLeft className="w-4 h-4" />
-          Назад в профиль
-        </Link>
-
+    <>
         <h1 className="text-[24px] font-bold text-[var(--text-primary)] mb-6">Бронирования</h1>
 
         {isLoading && (
@@ -96,7 +89,6 @@ export default function ProfileBookingsPage() {
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </>
   )
 }

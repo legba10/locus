@@ -1,10 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/shared/utils/cn'
-import { ProfileSidebar } from './ProfileSidebar'
+import { ChevronLeft } from 'lucide-react'
 
-/** ТЗ-27: На главной /profile — без сайдбара (единый кабинет). На подстраницах — сайдбар для навигации назад. */
+/** TZ-32: Один источник навигации — экран профиля. Без вложенного меню (сайдбара). Подстраницы: только «Назад в профиль» + контент. */
 export function ProfileLayoutV2({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isProfileRoot = pathname === '/profile' || pathname === '/profile/'
@@ -14,16 +14,16 @@ export function ProfileLayoutV2({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)]">
-      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          <div className="lg:col-span-1">
-            <ProfileSidebar />
-          </div>
-          <main className="lg:col-span-3 space-y-6">
-            {children}
-          </main>
-        </div>
+    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
+      <div className="max-w-2xl mx-auto px-4 py-6 lg:py-8">
+        <Link
+          href="/profile"
+          className="inline-flex items-center gap-1 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Назад в профиль
+        </Link>
+        <main className="space-y-6">{children}</main>
       </div>
     </div>
   )
