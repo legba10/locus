@@ -7,6 +7,7 @@ const soundSrc = {
   booking: '/sounds/booking.mp3',
   success: '/sounds/success.mp3',
   error: '/sounds/error.mp3',
+  login: '/sounds/login.mp3',
 } as const
 
 type SoundType = keyof typeof soundSrc
@@ -15,12 +16,16 @@ const soundMap: Partial<Record<SoundType, HTMLAudioElement>> = {}
 const lastPlayedAt: Partial<Record<SoundType, number>> = {}
 let unlockBound = false
 let audioUnlocked = false
+let loginSoundPlayed = false
+
+const OAUTH_LOGIN_INTENT_KEY = 'locus_oauth_login_intent'
 
 function getAudio(type: SoundType): HTMLAudioElement | null {
   if (typeof window === 'undefined') return null
   if (!soundMap[type]) {
     const audio = new Audio(soundSrc[type])
     audio.preload = 'auto'
+    if (type === 'login') audio.volume = 0.5
     soundMap[type] = audio
   }
   return soundMap[type] ?? null
@@ -69,6 +74,28 @@ export function playSound(type: SoundType): void {
   } catch {
     console.warn('Sound blocked by browser')
   }
+}
+
+export function playLoginSoundOnce(): void {
+  if (loginSoundPlayed) return
+  playSound('login')
+  loginSoundPlayed = true
+}
+
+export function resetLoginSoundPlayed(): void {
+  loginSoundPlayed = false
+}
+
+export function markOAuthLoginIntent(): void {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.setItem(OAUTH_LOGIN_INTENT_KEY, '1')
+}
+
+export function consumeOAuthLoginIntent(): boolean {
+  if (typeof window === 'undefined') return false
+  const hasIntent = window.sessionStorage.getItem(OAUTH_LOGIN_INTENT_KEY) === '1'
+  if (hasIntent) window.sessionStorage.removeItem(OAUTH_LOGIN_INTENT_KEY)
+  return hasIntent
 }
 
 export type { SoundType }

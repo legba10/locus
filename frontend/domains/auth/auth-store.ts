@@ -11,6 +11,7 @@ import { getPrimaryRole, normalizeRole } from "@/shared/utils/roles";
 import { logger } from "@/shared/utils/logger";
 import type { User as DomainUser } from "@/shared/domain/user.model";
 import { ActionDispatcher, FeatureFlags } from "@/shared/runtime";
+import { playLoginSoundOnce, resetLoginSoundPlayed } from "@/lib/system/soundManager";
 
 /**
  * StoredUser — user object stored in zustand state
@@ -112,6 +113,9 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false, error: error.message ?? "Неверный email или пароль" });
             throw new AuthApiError(error.message ?? "Invalid login credentials", 401);
           }
+          if (signInData?.session) {
+            playLoginSoundOnce();
+          }
           // Сессия сохранена в Supabase (localStorage). Дёргаем /me для полного профиля.
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse);
@@ -182,6 +186,7 @@ export const useAuthStore = create<AuthState>()(
         }
         const prevUser = get().user;
         clearTokens();
+        resetLoginSoundPlayed();
         set({ user: null, accessToken: null });
         await dispatchAuth("logout", prevUser);
       },

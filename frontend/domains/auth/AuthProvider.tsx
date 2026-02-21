@@ -8,6 +8,7 @@ import { supabase } from "@/shared/supabase-client";
 import { clearTokens } from "@/shared/auth/token-storage";
 import { initAuth } from "./initAuth";
 import type { Session } from "@supabase/supabase-js";
+import { consumeOAuthLoginIntent, playLoginSoundOnce } from "@/lib/system/soundManager";
 
 /**
  * AuthProvider — блокирующая инициализация auth.
@@ -34,8 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* Единый источник auth: при смене сессии Supabase синхронизируем store. */
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        if (event === "SIGNED_IN" && consumeOAuthLoginIntent()) {
+          playLoginSoundOnce();
+        }
         useAuthStore.getState().refresh();
       } else {
         clearTokens();

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { pollTelegramLoginStatus } from "@/shared/telegram/telegram.bridge";
 import { useAuthStore } from "@/domains/auth";
+import { playLoginSoundOnce } from "@/lib/system/soundManager";
 import Loader from "@/components/lottie/Loader";
 import TelegramStatus from "@/components/lottie/TelegramStatus";
 import ErrorAnim from "@/components/lottie/ErrorAnim";
@@ -33,6 +34,7 @@ function CompleteContent() {
           try {
             const ok = await refresh();
             if (!ok) throw new Error("refresh failed");
+            playLoginSoundOnce();
             setStatus("success");
             setMessage("Вход выполнен. Перенаправление...");
             router.replace("/");
