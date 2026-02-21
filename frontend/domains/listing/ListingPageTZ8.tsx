@@ -12,6 +12,7 @@ import { useAuthStore } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { scoring, type Listing } from '@/domains/ai/ai-engine'
 import { cn } from '@/shared/utils/cn'
+import { AiHostPanel } from '@/components/ai/AiHostPanel'
 import { ListingOwner, ListingBooking } from '@/components/listing'
 import { AIMetricsCardTZ9, ListingReviewsBlockTZ9 } from '@/domains/listing/listing-page'
 import { ListingCard } from '@/components/listing'
@@ -100,6 +101,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30)
   const [aiRecoModalOpen, setAiRecoModalOpen] = useState(false)
   const [analysisRefreshKey, setAnalysisRefreshKey] = useState(0)
+  const [aiHostOpen, setAiHostOpen] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -281,6 +283,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const isDraft = listingStatusCanonical === 'DRAFT'
   const isPublished = listingStatusCanonical === 'PUBLISHED'
   const isOwnerMode = Boolean(isCurrentUserOwner) && !ownerViewAsUser
+  const canUseHostAi = Boolean(isCurrentUserAdmin || isOwnerMode)
   const canSeeAnalytics = Boolean(isCurrentUserOwner || isCurrentUserAdmin)
   const analyticsTabRequested = searchParams.get('tab') === 'analytics'
   const listingStats = {
@@ -358,6 +361,18 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const guestsCount = (item as any).capacityGuests ?? (item as any).maxGuests ?? 2
   const roomsCount = item.bedrooms ?? 1
   const showAnalyticsPanel = canSeeAnalytics && (ownerPanelTab === 'analytics' || (isCurrentUserAdmin && analyticsTabRequested))
+  const hostAiPayload = {
+    id: String(item.id),
+    title: item.title ?? '',
+    description: item.description ?? '',
+    photosCount: photos.length,
+    price: Number(priceValue),
+    city: item.city ?? '',
+    district: String((item as any).district ?? ''),
+    floor: (item as any).floor ?? null,
+    amenities: amenities.map((x) => String(x)),
+    metroDistanceMin: (item as any).metroDistanceMin ?? null,
+  }
   const aiAnalysis: ListingAnalyzerResult = useMemo(() => {
     const hasKitchenPhoto = photos.some((p) =>
       /(kitchen|кухн)/i.test(String(p?.alt ?? '')) || /(kitchen|кухн)/i.test(String(p?.url ?? ''))
@@ -408,11 +423,12 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               <section className="sticky top-[76px] md:top-[80px] z-20 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur p-3">
                 {isOwnerMode ? (
                   <>
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                       <button type="button" onClick={() => { setOwnerPanelTab('edit'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
                       <button type="button" onClick={() => { setOwnerPanelTab('calendar'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
                       <button type="button" onClick={() => { setOwnerPanelTab('promo'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
                       <button type="button" onClick={() => { setOwnerPanelTab('analytics'); router.push(`/listings/${item.id}?tab=analytics`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
+                      <button type="button" onClick={() => setAiHostOpen(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">AI-помощник</button>
                       <button type="button" onClick={() => setOwnerViewAsUser(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">Как пользователь</button>
                     </div>
                     <div className="mt-3 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
@@ -722,6 +738,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   >
                     Аналитика
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setAiHostOpen(true)}
+                    className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)]"
+                  >
+                    AI-помощник
+                  </button>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -777,10 +800,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     )}
                   </div>
                   {isPublished && (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <Link href="/profile/promo" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Продвижение</Link>
                       <Link href="/profile/analytics" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Аналитика</Link>
                       <Link href="/profile/calendar" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Календарь</Link>
+                      <button type="button" onClick={() => setAiHostOpen(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)]">AI-помощник</button>
                     </div>
                   )}
                 </div>
@@ -863,6 +887,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             </button>
             <button
               type="button"
+              onClick={() => setAiHostOpen(true)}
+              className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
+            >
+              AI
+            </button>
+            <button
+              type="button"
               onClick={async () => {
                 await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' })
                 await queryClient.invalidateQueries({ queryKey: ['listing', id] })
@@ -914,6 +945,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 <Link href="/profile/analytics" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
                   Аналитика
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setAiHostOpen(true)}
+                  className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
+                >
+                  AI
+                </button>
               </>
             )}
           </>
@@ -969,6 +1007,14 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             </div>
           </div>
         </div>
+      )}
+      {canUseHostAi && (
+        <AiHostPanel
+          open={aiHostOpen}
+          onClose={() => setAiHostOpen(false)}
+          listing={hostAiPayload}
+          isAdmin={Boolean(isCurrentUserAdmin)}
+        />
       )}
 
       {aiRecoModalOpen && (

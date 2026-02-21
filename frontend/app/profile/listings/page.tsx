@@ -4,21 +4,25 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetch } from '@/shared/utils/apiFetch'
 import { ListingCardCabinetV2 } from '@/components/cabinet'
+import { AiHostPanel } from '@/components/ai/AiHostPanel'
 import type { ListingPlan } from '@/shared/contracts/api'
 import { cn } from '@/shared/utils/cn'
 
 export default function ProfileListingsPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const [aiPanelListingId, setAiPanelListingId] = useState<string | null>(null)
 
   const { data, isLoading } = useFetch<{ items: any[] }>(['profile-listings'], '/api/listings/my', { enabled: isAuthenticated() })
   const items = data?.items ?? []
+  const canUseOwnerAi = user?.role === 'landlord' || user?.role === 'admin' || Boolean((user as any)?.isAdmin)
 
   const handleDelete = async (id: string) => {
     if (!confirm('Удалить объявление? Это действие необратимо.')) return
@@ -54,6 +58,22 @@ export default function ProfileListingsPage() {
     views: (item as any).viewsCount ?? (item as any).views ?? 0,
     favorites: (item as any).favoritesCount ?? 0,
   })
+
+  const activeAiListing = items.find((item) => item.id === aiPanelListingId) ?? null
+  const activeAiListingPayload = activeAiListing
+    ? {
+        id: String(activeAiListing.id),
+        title: activeAiListing.title ?? '',
+        description: activeAiListing.description ?? '',
+        photosCount: (activeAiListing.photos?.length ?? activeAiListing.images?.length ?? 0) as number,
+        price: Number(activeAiListing.basePrice ?? activeAiListing.pricePerNight ?? 0),
+        city: activeAiListing.city ?? '',
+        district: (activeAiListing as any).district ?? '',
+        floor: (activeAiListing as any).floor ?? null,
+        amenities: Array.isArray(activeAiListing.amenities) ? activeAiListing.amenities.map((x: unknown) => String(x)) : [],
+        metroDistanceMin: (activeAiListing as any).metroDistanceMin ?? null,
+      }
+    : null
 
   if (!isAuthenticated()) {
     return (
@@ -108,7 +128,7 @@ export default function ProfileListingsPage() {
                   onHide={handleHide}
                   onPromote={(id) => router.push(`/owner/dashboard?tab=promotion&promote=${id}`)}
                 />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   <button
                     type="button"
                     onClick={() => handleEdit(item.id)}
@@ -137,6 +157,15 @@ export default function ProfileListingsPage() {
                   >
                     Аналитика
                   </button>
+                  {canUseOwnerAi && (
+                    <button
+                      type="button"
+                      onClick={() => setAiPanelListingId(item.id)}
+                      className="h-10 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-main)]"
+                    >
+                      AI-помощник
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -150,6 +179,14 @@ export default function ProfileListingsPage() {
               + Добавить объявление
             </Link>
           </div>
+        )}
+        {canUseOwnerAi && activeAiListingPayload && (
+          <AiHostPanel
+            open={Boolean(aiPanelListingId)}
+            onClose={() => setAiPanelListingId(null)}
+            listing={activeAiListingPayload}
+            isAdmin={Boolean((user as any)?.isAdmin || user?.role === 'admin')}
+          />
         )}
     </>
   )
