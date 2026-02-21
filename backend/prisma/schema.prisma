@@ -316,6 +316,8 @@ model Listing {
   views        ListingView[]
   // TZ-38 analytics counters
   listingStats ListingStats?
+  // TZ-39 AI listing metrics snapshot
+  listingAiMetrics ListingAiMetrics?
 
   conversations Conversation[]
 
@@ -464,6 +466,19 @@ model ListingStats {
 
   @@index([updatedAt])
   @@map("listing_stats")
+}
+
+/// TZ-39: AI recommendations snapshot for listing
+model ListingAiMetrics {
+  listingId   String   @id @map("listing_id")
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  score       Float
+  conversion  Int
+  tipsJson    Json     @map("tips_json")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([updatedAt])
+  @@map("listing_ai_metrics")
 }
 
 model Amenity {

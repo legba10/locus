@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -16,6 +16,7 @@ import { ListingOwner, ListingBooking } from '@/components/listing'
 import { AIMetricsCardTZ9, ListingReviewsBlockTZ9 } from '@/domains/listing/listing-page'
 import { ListingCard } from '@/components/listing'
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts'
+import { analyzeListing, type ListingAnalyzerResult } from '@/lib/ai/listingAnalyzer'
 
 interface ListingPageTZ8Props {
   id: string
@@ -45,6 +46,7 @@ interface ListingItem {
   amenities?: unknown
   owner?: { id: string; name: string; avatar: string | null; rating?: number | null; listingsCount?: number }
   ownerId?: string
+  updatedAt?: string
 }
 
 interface ListingStatsResponse {
@@ -97,6 +99,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [ownerViewAsUser, setOwnerViewAsUser] = useState(false)
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30>(30)
   const [aiRecoModalOpen, setAiRecoModalOpen] = useState(false)
+  const [analysisRefreshKey, setAnalysisRefreshKey] = useState(0)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -355,6 +358,36 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const guestsCount = (item as any).capacityGuests ?? (item as any).maxGuests ?? 2
   const roomsCount = item.bedrooms ?? 1
   const showAnalyticsPanel = canSeeAnalytics && (ownerPanelTab === 'analytics' || (isCurrentUserAdmin && analyticsTabRequested))
+  const aiAnalysis: ListingAnalyzerResult = useMemo(() => {
+    const hasKitchenPhoto = photos.some((p) =>
+      /(kitchen|кухн)/i.test(String(p?.alt ?? '')) || /(kitchen|кухн)/i.test(String(p?.url ?? ''))
+    )
+    return analyzeListing({
+      title: item?.title,
+      description: item?.description,
+      basePrice: priceValue,
+      photosCount: photos.length,
+      hasKitchenPhoto,
+      views: listingStatsData?.views ?? listingStats.views,
+      messages: listingStatsData?.messages ?? listingStats.clicks,
+    })
+  }, [
+    analysisRefreshKey,
+    item?.title,
+    item?.description,
+    item?.updatedAt,
+    photos,
+    priceValue,
+    listingStatsData?.views,
+    listingStatsData?.messages,
+    listingStats.views,
+    listingStats.clicks,
+  ])
+
+  useEffect(() => {
+    if (!showAnalyticsPanel) return
+    setAnalysisRefreshKey((k) => k + 1)
+  }, [showAnalyticsPanel, item?.updatedAt])
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
@@ -436,6 +469,8 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   await queryClient.invalidateQueries({ queryKey: ['listing-stats', id] })
                 } : undefined}
                 onOpenRecommendations={() => setAiRecoModalOpen(true)}
+                ai={aiAnalysis}
+                onRefreshAnalysis={() => setAnalysisRefreshKey((k) => k + 1)}
               />
             )}
 
@@ -948,6 +983,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               <li>• Уточните преимущества района и транспорт.</li>
               <li>• Укажите гибкие условия заселения для роста конверсии.</li>
             </ul>
+            <p className="mt-3 text-[13px] text-[var(--text-muted)]">Авто-редактирование подготовлено как mock и пока не меняет данные объявления.</p>
+            <div className="mt-3 flex items-center gap-2">
+              <button type="button" className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold">Предложить авто-редактирование</button>
+              <button type="button" onClick={() => setAiRecoModalOpen(false)} className="h-9 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px]">Закрыть</button>
+            </div>
           </div>
         </div>
       )}
@@ -1020,6 +1060,8 @@ function ListingAnalyticsPanel({
   fallbackStats,
   onReset,
   onOpenRecommendations,
+  ai,
+  onRefreshAnalysis,
 }: {
   isAdmin: boolean
   days: 7 | 30
@@ -1028,7 +1070,11 @@ function ListingAnalyticsPanel({
   fallbackStats: { views: number; favorites: number; bookings: number; clicks: number }
   onReset?: () => Promise<void>
   onOpenRecommendations: () => void
+  ai: ListingAnalyzerResult
+  onRefreshAnalysis: () => void
 }) {
+  const [aiCollapsed, setAiCollapsed] = useState(true)
+  const [aiDetailsOpen, setAiDetailsOpen] = useState(false)
   const cards = [
     { label: 'Просмотры', value: stats?.views ?? fallbackStats.views },
     { label: 'Переходы в сообщение', value: stats?.messages ?? fallbackStats.clicks },
@@ -1050,6 +1096,7 @@ function ListingAnalyticsPanel({
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onDaysChange(7)} className={cn('h-8 px-3 rounded-[10px] text-[12px] font-medium', days === 7 ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>7д</button>
           <button type="button" onClick={() => onDaysChange(30)} className={cn('h-8 px-3 rounded-[10px] text-[12px] font-medium', days === 30 ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>30д</button>
+          <button type="button" onClick={onRefreshAnalysis} className="h-8 px-3 rounded-[10px] text-[12px] font-medium border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)]">Обновить анализ</button>
         </div>
       </div>
 
@@ -1080,13 +1127,34 @@ function ListingAnalyticsPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
-          <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">AI анализ объявления</p>
-          <p className="text-[14px] text-[var(--text-secondary)]">Оценка качества: <span className="font-semibold text-[var(--text-primary)]">8.3 / 10</span></p>
-          <p className="text-[14px] text-[var(--text-secondary)] mt-1">Вероятность бронирования: <span className="font-semibold text-[var(--text-primary)]">67%</span></p>
-          <button type="button" onClick={onOpenRecommendations} className="mt-3 h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold">Получить рекомендации</button>
+      <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] font-semibold text-[var(--text-primary)]">AI рекомендации</p>
+          <button type="button" onClick={() => setAiCollapsed((v) => !v)} className="md:hidden h-8 px-2 rounded-[8px] text-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)]">
+            {aiCollapsed ? 'Показать' : 'Свернуть'}
+          </button>
         </div>
+        <div className={cn('space-y-2 mt-2', aiCollapsed ? 'hidden md:block' : 'block')}>
+          <p className="text-[14px] text-[var(--text-secondary)]">AI оценка: <span className="font-semibold text-[var(--text-primary)]">{ai.score.toFixed(1)} / 10</span></p>
+          <p className="text-[14px] text-[var(--text-secondary)]">Вероятность бронирования: <span className="font-semibold text-[var(--text-primary)]">{ai.conversionChance}%</span></p>
+          <ul className="space-y-1 text-[13px] text-[var(--text-secondary)]">
+            {ai.tips.map((tip, idx) => (
+              <li key={`${idx}-${tip}`}>— {tip}</li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button type="button" onClick={onOpenRecommendations} className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold">Применить улучшения</button>
+            <button type="button" onClick={() => setAiDetailsOpen(true)} className="h-9 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px] font-medium">Подробнее</button>
+            {isAdmin && (
+              <button type="button" onClick={onOpenRecommendations} className="h-9 px-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[13px] font-medium">
+                Принудительно улучшить
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
         <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
           <p className="text-[13px] font-semibold text-[var(--text-primary)] mb-2">Источники трафика</p>
           <div className="space-y-2">
@@ -1104,6 +1172,31 @@ function ListingAnalyticsPanel({
         <button type="button" onClick={onReset} className="h-9 px-3 rounded-[10px] border border-red-500/30 bg-red-500/10 text-red-600 text-[13px] font-medium">
           Сбросить статистику
         </button>
+      )}
+
+      {aiDetailsOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end md:items-center justify-center" onClick={() => setAiDetailsOpen(false)} role="dialog" aria-modal="true" aria-label="AI подробный отчет">
+          <div className="w-full md:max-w-2xl h-[100vh] md:h-auto md:max-h-[85vh] overflow-y-auto rounded-none md:rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">AI подробный отчет</h3>
+              <button type="button" onClick={() => setAiDetailsOpen(false)} className="w-8 h-8 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)]">✕</button>
+            </div>
+            <div className="space-y-3 text-[14px] text-[var(--text-secondary)]">
+              <div>
+                <p className="font-semibold text-[var(--text-primary)]">Рекомендации по тексту</p>
+                <p>Проверьте длину описания, добавьте преимущества района и правила заселения.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--text-primary)]">Рекомендации по фото</p>
+                <p>Добавьте фото кухни, ванной и общий план помещений (минимум 5 фото).</p>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--text-primary)]">Рекомендации по цене</p>
+                <p>Оптимизируйте цену относительно похожих предложений для роста конверсии.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   )
