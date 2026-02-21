@@ -1,24 +1,24 @@
 'use client'
 
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { cn } from '@/shared/utils/cn'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
+import { AiSearchModal } from '@/components/ai/AiSearchModal'
 import { useAuthStore } from '@/domains/auth'
+import type { AiListingCandidate } from '@/lib/ai/searchEngine'
 import { useFilterStore } from '@/core/filters'
-import { BUDGET_PRESETS, PROPERTY_TYPES, ROOMS_OPTIONS } from '@/core/filters'
-import { FilterPanel, QuickAIModal, CitySelect, AIWizardModal } from '@/components/filters'
+import { BUDGET_PRESETS, PROPERTY_TYPES } from '@/core/filters'
+import { FilterPanel, CitySelect } from '@/components/filters'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Hero } from '@/components/home/Hero'
 import { StatsBlock } from '@/components/home/StatsBlock'
 import { AIPopup } from '@/components/home/AIPopup'
 import { ModeSwitchBlock } from '@/components/home/ModeSwitchBlock'
 import { PopularCities } from '@/components/home/PopularCities'
-import SearchIcon from '@/components/lottie/SearchIcon'
 import { track } from '@/shared/analytics/events'
-import { cityIn } from '@/shared/lib/cityDeclension'
 import { useHomeListingCards } from './home/useHomeListingCards'
 
 interface ListingsResponse {
@@ -57,10 +57,9 @@ export function HomePageV6() {
   const [aiPreparing, setAiPreparing] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
-  const [viewsCount, setViewsCount] = useState(0)
   const [showHelpNudge, setShowHelpNudge] = useState(false)
-  const [showQuickFab, setShowQuickFab] = useState(false)
   const [highlightFirstCard, setHighlightFirstCard] = useState(false)
+  const [aiMatchMap, setAiMatchMap] = useState<Map<string, number>>(new Map())
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [showAIWizard, setShowAIWizard] = useState(false)
   const [showCityHint, setShowCityHint] = useState(false)
@@ -122,6 +121,7 @@ export function HomePageV6() {
   )
   const allListingCards = useHomeListingCards(allListingsData)
   const isLandlord = user?.role === 'landlord'
+  const canUseAi = user?.role !== 'landlord'
   const isPaidTariff = user?.tariff === 'landlord_basic' || user?.tariff === 'landlord_pro'
   const hostCtaHref = !isAuthenticated() ? '/auth/login?redirect=/dashboard/listings/create' : (isLandlord && isPaidTariff ? '/dashboard/listings/create' : '/pricing?reason=host')
 
@@ -164,13 +164,6 @@ export function HomePageV6() {
     setTimeout(() => setSearching(false), 2000)
   }
 
-  /** ТЗ-9: из модалки фильтра — переход на страницу поиска с выбранными параметрами */
-  const handleFilterApplyAndGo = () => {
-    const params = buildSearchParams()
-    router.push(`/listings?${params.toString()}`)
-    setFilterSheetOpen(false)
-  }
-
   /** ТЗ-6: на главной «Применить» в фильтре — обновить выдачу ниже, без перехода на /listings */
   const handleFilterApplyLocal = () => {
     setFilterSheetOpen(false)
@@ -179,30 +172,9 @@ export function HomePageV6() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  /** ТЗ-20: при нажатии «Подобрать жильё» — loader в кнопке, затем переход к результатам с ai=true */
-  const handleSmartSearch = () => {
-    setCtaLoading(true)
-    const params = new URLSearchParams()
-    params.set('ai', 'true')
-    if (city) params.set('city', city)
-    const { priceMin, priceMax } = getBudgetQuery()
-    if (priceMin) params.set('priceMin', priceMin)
-    if (priceMax) params.set('priceMax', priceMax)
-    const typeVal = Array.isArray(type) ? type[0] : type
-    if (typeVal) params.set('type', typeVal)
-    if (duration) params.set('rentPeriod', duration)
-    track('smart_match_open', { city })
-    router.push(`/listings?${params.toString()}`)
-    setTimeout(() => setCtaLoading(false), 1200)
-  }
-
-  const handleQuickAILaunch = () => {
-    setShowQuickFab(false)
-    handleSmartSearch()
-  }
-
   /** ТЗ-2 (жёсткое): кнопка «Подобрать жильё» только открывает модал подбора. Без редиректа, без проверки авторизации. */
   const handleHeroCta = () => {
+    if (!canUseAi) return
     setShowAIWizard(true)
   }
 
@@ -229,8 +201,6 @@ export function HomePageV6() {
           if (prefs.period) useFilterStore.setState({ duration: prefs.period === 'long' ? 'long' : prefs.period === 'short' ? 'short' : '' })
         } catch (_) {}
       }
-      const viewed = Number(localStorage.getItem('locus_viewed_count') || '0')
-      setViewsCount(Number.isFinite(viewed) ? viewed : 0)
       const firstMatchSeen = localStorage.getItem('locus_first_match_seen') === 'true'
       setHighlightFirstCard(!firstMatchSeen)
     }
@@ -251,22 +221,6 @@ export function HomePageV6() {
     const onOpen = () => setFilterSheetOpen(true)
     window.addEventListener('locus-open-city-picker', onOpen)
     return () => window.removeEventListener('locus-open-city-picker', onOpen)
-  }, [])
-
-  useEffect(() => {
-    const onCardViewed = () => {
-      if (typeof window === 'undefined') return
-      const next = Number(localStorage.getItem('locus_viewed_count') || '0')
-      setViewsCount(next)
-    }
-    if (typeof window !== 'undefined') {
-      window.addEventListener('locus:listing-viewed', onCardViewed)
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('locus:listing-viewed', onCardViewed)
-      }
-    }
   }, [])
 
   useEffect(() => {
@@ -309,15 +263,6 @@ export function HomePageV6() {
     }
   }, [aiPreparing, listingCount, highlightFirstCard])
 
-  const smartHeroText = useMemo(() => {
-    const hasBudget = budgetMin !== '' || budgetMax !== ''
-    if (!city && !hasBudget) return null
-    const minStr = budgetMin !== '' ? Number(budgetMin).toLocaleString('ru') : ''
-    const maxStr = budgetMax !== '' ? `${Number(budgetMax).toLocaleString('ru')} ₽` : ''
-    const budgetLabel = hasBudget ? ` до ${minStr}${minStr && maxStr ? ' — ' : ''}${maxStr}` : ''
-    return `Подбор для вас ${city ? cityIn(city) : 'в вашем городе'}${budgetLabel}`
-  }, [city, budgetMin, budgetMax])
-
   const saveOnboarding = () => {
     if (typeof window === 'undefined') return
     const budgetStr = budgetMin !== '' && budgetMax !== '' ? `${budgetMin}-${budgetMax}` : ''
@@ -329,6 +274,17 @@ export function HomePageV6() {
   }
 
   const listingCards = useHomeListingCards(data);
+  const aiModalListings: AiListingCandidate[] = (allListingsData?.items || data?.items || []).map((listing: any) => ({
+    id: String(listing.id),
+    city: listing.city || undefined,
+    district: listing.district || undefined,
+    title: listing.title || undefined,
+    description: listing.description || undefined,
+    price: Number(listing.pricePerNight || listing.basePrice || 0),
+    rooms: Number(listing.bedrooms ?? listing.rooms ?? 0),
+    rating: Number(listing.ratingCache?.rating ?? listing.rating ?? 0),
+    responseRate: Number(listing.responseRate ?? 0),
+  }))
 
   return (
     <div className="home-tz18 home-tz3 home-tz6 min-h-screen font-sans antialiased bg-[var(--background)]">
@@ -366,7 +322,7 @@ export function HomePageV6() {
 
       {/* ═══ ТЗ-6: порядок 1.Hero 2.Быстрый поиск 3.Города 4.Расширенный поиск 5.Объявления 6.AI 7.Новости 8.Статистика ═══ */}
       {/* 1. Hero — кнопка скроллит к поиску, под кнопкой сразу поиск */}
-      <Hero onCtaClick={handleHeroCta} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} selectedCity={city ?? ''} />
+      <Hero onCtaClick={canUseAi ? handleHeroCta : undefined} onOpenFilters={() => setFilterSheetOpen(true)} ctaLoading={ctaLoading} selectedCity={city ?? ''} />
 
       {/* ТЗ: финальное выравнивание — единая колонка: hero → фильтр → переключатель → подпись → список */}
       <section id="home-filter" className="home-filter-section-tz-final home-filter-section-tz9 relative z-20" aria-label="Поиск жилья">
@@ -560,7 +516,7 @@ export function HomePageV6() {
                   availableFrom={listing.availableFrom ?? undefined}
                   aiRecommendTooltip={listing.aiRecommendTooltip}
                   minNights={listing.minNights}
-                  aiMatchScore={listing.aiMatchScore}
+                  aiMatchScore={aiMatchMap.get(String(listing.id)) ?? listing.aiMatchScore}
                   highlight={highlightFirstCard && listing.id === listingCards[0]?.id}
                 />
               ))
@@ -634,7 +590,7 @@ export function HomePageV6() {
                   availableFrom={listing.availableFrom ?? undefined}
                   aiRecommendTooltip={listing.aiRecommendTooltip}
                   minNights={listing.minNights}
-                  aiMatchScore={listing.aiMatchScore}
+                  aiMatchScore={aiMatchMap.get(String(listing.id)) ?? listing.aiMatchScore}
                   className="listing-card-tz19"
                 />
               ))
@@ -673,26 +629,28 @@ export function HomePageV6() {
       </section>
 
       {/* ТЗ-5: блок «Подберём жильё за 10 секунд» — открывает модалку пошагового подбора, не переход на поиск */}
-      <section className="home-tz6-block" aria-label="Умный подбор">
-        <div className="market-container">
-          <div className="w-full max-w-[900px] mx-auto rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)]">
-            <h2 className="text-[20px] md:text-[22px] font-bold text-[var(--text-main)]">
-              Подберём жильё за 10 секунд
-            </h2>
-            <p className="text-[14px] md:text-[15px] text-[var(--text-secondary)] mt-1">
-              AI найдёт лучшие варианты под вас
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowAIWizard(true)}
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px] hover:opacity-95 transition-opacity"
-              aria-label="Начать подбор"
-            >
-              Начать подбор
-            </button>
+      {canUseAi && (
+        <section className="home-tz6-block" aria-label="Умный подбор">
+          <div className="market-container">
+            <div className="w-full max-w-[900px] mx-auto rounded-[20px] border border-[var(--border)] bg-[var(--card-bg)] p-4 md:p-5 shadow-[var(--shadow-card)]">
+              <h2 className="text-[20px] md:text-[22px] font-bold text-[var(--text-main)]">
+                Найдите жильё, которое подходит вам
+              </h2>
+              <p className="text-[14px] md:text-[15px] text-[var(--text-secondary)] mt-1">
+                Один AI-движок применяет ваши критерии к текущей выдаче.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAIWizard(true)}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold text-[15px] hover:opacity-95 transition-opacity"
+                aria-label="Подобрать с AI"
+              >
+                Подобрать с AI
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 7. Новости рынка — ТЗ-6 экран 6: цены, тренды, районы */}
       <section className="home-tz6-block" aria-label="Новости рынка">
@@ -890,37 +848,38 @@ export function HomePageV6() {
           </div>
         </div>
       )}
-      {/* ТЗ-7: Умный подбор — единый QuickAIModal на store */}
-      <QuickAIModal
-        open={showQuickFab}
-        onClose={() => setShowQuickFab(false)}
-        city={city ?? ''}
-        budgetMin={budgetMin}
-        budgetMax={budgetMax}
-        type={Array.isArray(type) ? type[0] ?? '' : (type ?? '')}
-        onCityChange={(v) => setCity(v || null)}
-        onBudgetChange={setBudget}
-        onTypeChange={setType}
-        onLaunch={handleQuickAILaunch}
-      />
-      {/* ТЗ-9: AI wizard — 5 шагов, затем выдача 5 вариантов с «Почему подходит» */}
-      {/* ТЗ-2/ТЗ-4: AI-подбор доступен всем (неавторизован и авторизован). Только переход в /listings (список результатов). Никаких блокировок по user, редиректа на login, перехода в объявление. */}
-      <AIWizardModal
-        open={showAIWizard}
-        onClose={() => setShowAIWizard(false)}
-        initialCity={city ?? ''}
-        onComplete={(params) => {
-          const p = new URLSearchParams()
-          p.set('ai', 'true')
-          if (params.city) p.set('city', params.city)
-          if (params.budgetMin != null) p.set('priceMin', String(params.budgetMin))
-          if (params.budgetMax != null) p.set('priceMax', String(params.budgetMax))
-          if (params.propertyTypes?.length) p.set('type', params.propertyTypes[0])
-          if (params.dateFrom) p.set('dateFrom', params.dateFrom)
-          if (params.dateTo) p.set('dateTo', params.dateTo)
-          router.push(`/listings?${p.toString()}`)
-        }}
-      />
+      {canUseAi && (
+        <>
+          <AiSearchModal
+            open={showAIWizard}
+            onClose={() => setShowAIWizard(false)}
+            listings={aiModalListings}
+            defaults={{
+              city: city ?? undefined,
+              budgetMin: budgetMin === '' ? undefined : Number(budgetMin),
+              budgetMax: budgetMax === '' ? undefined : Number(budgetMax),
+            }}
+            onApply={({ parsed, items }) => {
+              setShowAIWizard(false)
+              setAiMode(true)
+              setCity(parsed.city ? parsed.city : null)
+              setBudget(parsed.budgetMin ?? '', parsed.budgetMax ?? '')
+              setRooms(parsed.rooms ? String(parsed.rooms) : '')
+              setAiMatchMap(new Map(items.map((item) => [String(item.id), item.aiMatchScore])))
+              setSearchApplied(true)
+              const el = typeof document !== 'undefined' ? document.getElementById('listings') : null
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowAIWizard(true)}
+            className="fixed bottom-[96px] right-4 z-[70] h-12 rounded-full bg-[var(--accent)] px-4 text-[13px] font-semibold text-[var(--text-on-accent)] shadow-[0_10px_30px_rgba(0,0,0,0.18)] md:right-6"
+          >
+            AI помощник
+          </button>
+        </>
+      )}
 
     </div>
   )

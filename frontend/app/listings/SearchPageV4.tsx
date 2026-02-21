@@ -6,9 +6,12 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/api/client'
 import { cn } from '@/shared/utils/cn'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
+import { AiSearchModal } from '@/components/ai/AiSearchModal'
 import { scoring, type Listing, type UserParams } from '@/domains/ai/ai-engine'
+import type { AiListingCandidate } from '@/lib/ai/searchEngine'
+import { useAuthStore } from '@/domains/auth'
 import { useFilterStore } from '@/core/filters'
-import { QuickAIModal, FiltersModal, ActiveFilterChips } from '@/components/filters'
+import { FiltersModal, ActiveFilterChips } from '@/components/filters'
 import { FilterBar } from '@/components/search/FilterBar'
 
 interface SearchResponse {
@@ -28,6 +31,7 @@ interface SearchResponse {
 export function SearchPageV4() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuthStore()
   const hydrated = useRef(false)
   const {
     city,
@@ -35,24 +39,22 @@ export function SearchPageV4() {
     budgetMax,
     type,
     rooms,
-    duration,
     aiMode,
     setCity,
     setBudget,
-    setType,
     setRooms,
-    setDuration,
     setAiMode,
     getBudgetQuery,
-    reset,
     sort,
     setSort,
   } = useFilterStore()
 
   const [aiResults, setAiResults] = useState<{ reason: string; score: number } | null>(null)
   const [aiScoresMap, setAiScoresMap] = useState<Map<string, { score: number; reasons: string[] }>>(new Map())
+  const [aiMatchMap, setAiMatchMap] = useState<Map<string, number>>(new Map())
   const [filtersModalOpen, setFiltersModalOpen] = useState(false)
-  const [quickAIOpen, setQuickAIOpen] = useState(false)
+  const [aiModalOpen, setAiModalOpen] = useState(false)
+  const canUseAi = user?.role !== 'landlord'
 
   const priceMin = getBudgetQuery().priceMin
   const priceMax = getBudgetQuery().priceMax
@@ -295,9 +297,18 @@ export function SearchPageV4() {
   const handleSearch = () => {
     setFiltersModalOpen(false)
   }
-  const handleSmartSearch = () => {
-    setQuickAIOpen(true)
-  }
+
+  const aiModalListings: AiListingCandidate[] = (data?.items || []).map((listing: any) => ({
+    id: String(listing.id),
+    city: listing.city || undefined,
+    district: listing.district || undefined,
+    title: listing.title || undefined,
+    description: listing.description || undefined,
+    price: Number(listing.pricePerNight || listing.basePrice || 0),
+    rooms: Number(listing.bedrooms ?? listing.rooms ?? 0),
+    rating: Number(listing.ratingCache?.rating ?? listing.rating ?? 0),
+    responseRate: Number(listing.responseRate ?? 0),
+  }))
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
@@ -318,13 +329,15 @@ export function SearchPageV4() {
               <span className="text-[18px]" aria-hidden>⚙</span>
               Фильтры
             </button>
-            <button
-              type="button"
-              onClick={() => setQuickAIOpen(true)}
-              className="search-hero-ai-tz7 h-10 min-h-[40px] px-4 rounded-[10px] shrink-0"
-            >
-              Умный подбор
-            </button>
+            {canUseAi && (
+              <button
+                type="button"
+                onClick={() => setAiModalOpen(true)}
+                className="search-hero-ai-tz7 h-10 min-h-[40px] px-4 rounded-[10px] shrink-0"
+              >
+                AI-подбор
+              </button>
+            )}
           </div>
 
           {/* TZ-29: единый FiltersModal для mobile и desktop */}
@@ -334,26 +347,24 @@ export function SearchPageV4() {
             onApply={handleSearch}
           />
 
-          <QuickAIModal
-            open={quickAIOpen}
-            onClose={() => setQuickAIOpen(false)}
-            city={city ?? ''}
-            budgetMin={budgetMin}
-            budgetMax={budgetMax}
-            type={typeStr ?? ''}
-            onCityChange={(v) => setCity(v || null)}
-            onBudgetChange={setBudget}
-            onTypeChange={setType}
-            onLaunch={() => {
-              setQuickAIOpen(false)
-              const params = new URLSearchParams()
-              params.set('ai', 'true')
-              if (city) params.set('city', city)
-              if (priceMin) params.set('priceMin', priceMin)
-              if (priceMax) params.set('priceMax', priceMax)
-              if (typeStr) params.set('type', typeStr)
-              if (roomsStr) params.set('rooms', roomsStr)
-              router.push(`/listings?${params.toString()}`)
+          <AiSearchModal
+            open={aiModalOpen}
+            onClose={() => setAiModalOpen(false)}
+            listings={aiModalListings}
+            defaults={{
+              city: city ?? undefined,
+              budgetMin: budgetMin === '' ? undefined : Number(budgetMin),
+              budgetMax: budgetMax === '' ? undefined : Number(budgetMax),
+              rooms: roomsStr ? Number(roomsStr.split(',')[0]) : undefined,
+            }}
+            onApply={({ parsed, items }) => {
+              setAiModalOpen(false)
+              setAiMode(true)
+              setCity(parsed.city ? parsed.city : null)
+              setBudget(parsed.budgetMin ?? '', parsed.budgetMax ?? '')
+              setRooms(parsed.rooms ? String(parsed.rooms) : '')
+              setSort('popular')
+              setAiMatchMap(new Map(items.map((item) => [String(item.id), item.aiMatchScore])))
             }}
           />
 
@@ -368,6 +379,13 @@ export function SearchPageV4() {
                 <p className="text-[14px] text-[var(--text-secondary)] mt-1">
                   Ниже — варианты по вашим параметрам. Можете изменить фильтры в панели выше.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setAiModalOpen(true)}
+                  className="mt-3 inline-flex h-9 items-center rounded-[10px] border border-[var(--border)] px-3 text-[13px] font-medium text-[var(--text-main)]"
+                >
+                  Уточнить подбор
+                </button>
               </div>
             )}
             {/* TZ-29: chips активных фильтров */}
@@ -458,6 +476,7 @@ export function SearchPageV4() {
                     aiReasons={listing.aiReasons}
                     badges={listing.badges}
                     rating={listing.rating}
+                    aiMatchScore={aiMatchMap.get(String(listing.id)) ?? (aiMode ? Number(listing.aiScore || 0) : undefined)}
                     aiRecommendTooltip={aiMode && index === 0 ? 'Лучшее соотношение цена/качество' : undefined}
                   />
                 ))}
@@ -489,6 +508,15 @@ export function SearchPageV4() {
           </div>
         </div>
       </div>
+      {canUseAi && (
+        <button
+          type="button"
+          onClick={() => setAiModalOpen(true)}
+          className="fixed bottom-[96px] right-4 z-[70] h-12 rounded-full bg-[var(--accent)] px-4 text-[13px] font-semibold text-[var(--text-on-accent)] shadow-[0_10px_30px_rgba(0,0,0,0.18)] md:right-6"
+        >
+          AI помощник
+        </button>
+      )}
     </div>
   )
 }

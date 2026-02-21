@@ -31,21 +31,23 @@ export function HeroSection({
         <p className="hero-tz18-subtitle leading-relaxed mt-1">
           LOCUS анализирует рынок, проверяет объявления и подбирает варианты под ваш запрос
         </p>
-        <button
-          type="button"
-          onClick={onCtaClick}
-          disabled={ctaLoading}
-          className="hero-tz18-cta hero-cta-tz11 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none mt-5"
-        >
-          {ctaLoading ? (
-            <>
-              <span className="inline-block w-5 h-5 border-2 border-[var(--text-on-accent)]/40 border-t-[var(--text-on-accent)] rounded-full animate-spin shrink-0" aria-hidden />
-              Ищем варианты…
-            </>
-          ) : (
-            'Подобрать жильё'
-          )}
-        </button>
+        {onCtaClick && (
+          <button
+            type="button"
+            onClick={onCtaClick}
+            disabled={ctaLoading}
+            className="hero-tz18-cta hero-cta-tz11 bg-[var(--accent)] text-[var(--text-on-accent)] font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-90 disabled:pointer-events-none mt-5"
+          >
+            {ctaLoading ? (
+              <>
+                <span className="inline-block w-5 h-5 border-2 border-[var(--text-on-accent)]/40 border-t-[var(--text-on-accent)] rounded-full animate-spin shrink-0" aria-hidden />
+                Ищем варианты…
+              </>
+            ) : (
+              'Подобрать жильё'
+            )}
+          </button>
+        )}
       </div>
     </section>
   )

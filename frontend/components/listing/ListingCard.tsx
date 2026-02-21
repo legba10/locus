@@ -42,6 +42,7 @@ export interface ListingCardProps {
   reviewCount?: number | null
   amenities?: ('wifi' | 'parking' | 'center' | 'metro')[]
   aiRecommendTooltip?: string
+  aiMatchScore?: number | null
   /** ТЗ 15: цена за месяц (при показе по ночам) */
   pricePerMonth?: number | null
   /** ТЗ 15: процент ответов владельца */
@@ -98,6 +99,7 @@ function ListingCardComponent(props: ListingCardProps) {
     responseRate,
     aiDistrictScore,
     shortDescription,
+    aiMatchScore,
   } = props
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
@@ -329,6 +331,12 @@ function ListingCardComponent(props: ListingCardProps) {
                 <span className="text-[var(--accent)]">AI район: {Number(aiDistrictScore).toFixed(1)}</span>
               )}
             </div>
+          )}
+
+          {aiMatchScore != null && aiMatchScore > 0 && (
+            <p className="mt-1 text-[12px] font-medium text-[var(--accent)]">
+              Подходит вам на {Math.max(1, Math.min(99, Math.round(aiMatchScore)))}%
+            </p>
           )}
 
           {/* Мини-описание (1 строка) */}
