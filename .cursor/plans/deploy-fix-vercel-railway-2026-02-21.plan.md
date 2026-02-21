@@ -10,4 +10,4 @@
 - [x] Исправить Prisma update для модератора (`moderatedBy` relation).
 - [x] Прогнать `frontend` build.
 - [x] Прогнать `backend` build.
-- [ ] Обновить план, сделать commit и push.
+- [x] Обновить план, сделать commit и push.
