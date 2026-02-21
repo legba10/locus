@@ -381,7 +381,7 @@ export class ListingsService {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
-    if (![ListingStatus.DRAFT, ListingStatus.REJECTED].includes(listing.status)) {
+    if (listing.status !== ListingStatus.DRAFT && listing.status !== ListingStatus.REJECTED) {
       throw new ForbiddenException("Listing can be submitted only from draft/rejected status");
     }
 
@@ -446,7 +446,7 @@ export class ListingsService {
     const now = new Date();
     const data: Prisma.ListingUpdateInput = {
       status: target,
-      moderatedById: adminId,
+      moderatedBy: { connect: { id: adminId } },
     };
 
     if (nextStatus === "published") {
