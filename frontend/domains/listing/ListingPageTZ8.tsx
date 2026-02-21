@@ -80,6 +80,8 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [mapModalOpen, setMapModalOpen] = useState(false)
   const [aiMetricsExpanded, setAiMetricsExpanded] = useState(false)
   const [adminStatusLoading, setAdminStatusLoading] = useState(false)
+  const [ownerPanelTab, setOwnerPanelTab] = useState<'edit' | 'calendar' | 'promo' | 'analytics'>('edit')
+  const [ownerViewAsUser, setOwnerViewAsUser] = useState(false)
 
   const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
@@ -253,6 +255,13 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const isRejected = listingStatusCanonical === 'REJECTED'
   const isDraft = listingStatusCanonical === 'DRAFT'
   const isPublished = listingStatusCanonical === 'PUBLISHED'
+  const isOwnerMode = Boolean(isCurrentUserOwner) && !ownerViewAsUser
+  const listingStats = {
+    views: Number((item as any)?.viewsCount ?? (item as any)?.views ?? 0),
+    favorites: Number((item as any)?.favoritesCount ?? 0),
+    bookings: Number((item as any)?.bookingsCount ?? 0),
+    clicks: Number((item as any)?.clicksCount ?? 0),
+  }
 
   const handleAdminStatusChange = useCallback(
     async (status: 'published' | 'rejected' | 'archived') => {
@@ -297,6 +306,59 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             </section>
 
+            {Boolean(isCurrentUserOwner) && (
+              <section className="sticky top-[76px] md:top-[80px] z-20 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur p-3">
+                {isOwnerMode ? (
+                  <>
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                      <button type="button" onClick={() => setOwnerPanelTab('edit')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
+                      <button type="button" onClick={() => setOwnerPanelTab('calendar')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
+                      <button type="button" onClick={() => setOwnerPanelTab('promo')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
+                      <button type="button" onClick={() => setOwnerPanelTab('analytics')} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
+                      <button type="button" onClick={() => setOwnerViewAsUser(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">Как пользователь</button>
+                    </div>
+                    <div className="mt-3 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] p-3">
+                      {ownerPanelTab === 'edit' && (
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[13px] text-[var(--text-secondary)]">Управление фото, описанием, ценой, адресом и удобствами.</p>
+                          <Link href={`/listing/edit/${item.id}`} className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold inline-flex items-center">Открыть</Link>
+                        </div>
+                      )}
+                      {ownerPanelTab === 'calendar' && (
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[13px] text-[var(--text-secondary)]">Занятые/свободные даты и цена по дням.</p>
+                          <Link href="/profile/calendar" className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold inline-flex items-center">Открыть</Link>
+                        </div>
+                      )}
+                      {ownerPanelTab === 'promo' && (
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[13px] text-[var(--text-secondary)]">Поднять, выделить и AI‑рекомендации (mock).</p>
+                          <Link href="/profile/promo" className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold inline-flex items-center">Открыть</Link>
+                        </div>
+                      )}
+                      {ownerPanelTab === 'analytics' && (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[12px]">
+                            <div className="rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-main)] px-2 py-1.5">👁 {listingStats.views}</div>
+                            <div className="rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-main)] px-2 py-1.5">🖱 {listingStats.clicks}</div>
+                            <div className="rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-main)] px-2 py-1.5">❤ {listingStats.favorites}</div>
+                            <div className="rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-main)] px-2 py-1.5">📅 {listingStats.bookings}</div>
+                            <div className="rounded-[10px] bg-[var(--bg-card)] border border-[var(--border-main)] px-2 py-1.5">⭐ {ratingCount}</div>
+                          </div>
+                          <Link href="/profile/analytics" className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold inline-flex items-center">Открыть аналитику</Link>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[13px] text-[var(--text-secondary)]">Режим просмотра как пользователь.</p>
+                    <button type="button" onClick={() => setOwnerViewAsUser(false)} className="h-9 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[13px] font-semibold">Вернуться в режим владельца</button>
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* 2. Trust block — название, город, рейтинг, факты, цена доминирует */}
             <section className="lg:hidden rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
               <h1 className="text-[18px] font-bold text-[var(--text-primary)] leading-tight">
@@ -335,7 +397,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </div>
             </section>
 
-            {isCurrentUserOwner && (isDraft || isPendingModeration || isRejected) && (
+            {isOwnerMode && (isDraft || isPendingModeration || isRejected) && (
               <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
                 <p className="text-[14px] font-semibold text-[var(--text-primary)]">
                   {isDraft && 'Черновик'}
@@ -535,11 +597,34 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                       {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
                     </div>
                   )}
-                  <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
+                  <Link href={`/listing/edit/${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
                     Редактировать
                   </Link>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' })
+                        await queryClient.invalidateQueries({ queryKey: ['listing', id] })
+                      }}
+                      className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]"
+                    >
+                      Скрыть
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm('Удалить объявление?')) return
+                        await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}`, { method: 'DELETE' })
+                        router.push('/profile/listings')
+                      }}
+                      className="h-10 rounded-[10px] border border-red-500/30 bg-red-500/10 text-[13px] font-medium text-red-600"
+                    >
+                      Удалить
+                    </button>
+                  </div>
                 </div>
-              ) : isCurrentUserOwner ? (
+              ) : isOwnerMode ? (
                 <div className="space-y-2">
                   <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[13px] text-[var(--text-secondary)]">
                     {isDraft && 'Черновик'}
@@ -552,7 +637,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] flex items-center justify-center hover:opacity-95">
+                    <Link href={`/listing/edit/${item.id}`} className="h-11 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] flex items-center justify-center hover:opacity-95">
                       {isRejected ? 'Исправить' : 'Редактировать'}
                     </Link>
                     {isDraft || isRejected ? (
@@ -588,7 +673,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   onConfirm={handleBookingConfirm}
                 />
               )}
-              {!isCurrentUserOwner && !isCurrentUserAdmin && (
+              {!isOwnerMode && !isCurrentUserAdmin && (
                 <>
                   <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
                     Написать
@@ -644,15 +729,36 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
               </div>
             )}
-            <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center">
+            <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center">
               Ред.
             </Link>
+            <button
+              type="button"
+              onClick={async () => {
+                await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' })
+                await queryClient.invalidateQueries({ queryKey: ['listing', id] })
+              }}
+              className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
+            >
+              Скрыть
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!confirm('Удалить объявление?')) return
+                await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}`, { method: 'DELETE' })
+                router.push('/profile/listings')
+              }}
+              className="h-11 px-3 rounded-[10px] border border-red-500/30 bg-red-500/10 text-red-600 font-medium text-[13px] flex items-center justify-center"
+            >
+              Удалить
+            </button>
           </>
-        ) : isCurrentUserOwner ? (
+        ) : isOwnerMode ? (
           <>
             {isDraft || isRejected || isPendingModeration ? (
               <>
-                <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
+                <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
                   {isRejected ? 'Исправить' : 'Редактировать'}
                 </Link>
                 {(isDraft || isRejected) ? (
@@ -667,7 +773,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </>
             ) : (
               <>
-                <Link href={`/owner/dashboard?tab=edit&id=${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
+                <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
                   Редактировать
                 </Link>
                 <Link href="/profile/calendar" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
