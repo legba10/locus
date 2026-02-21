@@ -433,7 +433,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-8">
-          <div className="min-w-0 space-y-3">
+          <div className="min-w-0 space-y-2">
             {/* 1. Галерея (Hero) — swipe, индикатор 1/N, полупрозрачные blur-кнопки, градиент снизу */}
             <section className="-mx-4 md:mx-0">
               <GalleryTZ8
@@ -528,7 +528,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     onClick={() => setMapModalOpen(true)}
                     className="h-8 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[12px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                   >
-                    Показать на карте
+                    📍 {item.city || 'Локация'} · открыть карту
                   </button>
                 )}
               </div>
@@ -829,7 +829,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                       <Link href="/profile/promo" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Продвижение</Link>
                       <Link href="/profile/analytics" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Аналитика</Link>
                       <Link href="/profile/calendar" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Календарь</Link>
-                      <button type="button" onClick={() => setAiHostOpen(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)]">AI-помощник</button>
+                      <Link href={`/listing/edit/${item.id}`} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Редактировать</Link>
                     </div>
                   )}
                 </div>
@@ -961,22 +961,15 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[13px] flex items-center justify-center">
                   Редактировать
                 </Link>
-                <Link href="/profile/calendar" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
-                  Календарь
-                </Link>
-                <Link href="/profile/promo" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
-                  Продвиж.
-                </Link>
                 <Link href="/profile/analytics" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
                   Аналитика
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => setAiHostOpen(true)}
-                  className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
-                >
-                  AI
-                </button>
+                <Link href="/profile/promo" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  Продвижение
+                </Link>
+                <Link href="/profile/calendar" className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  Календарь
+                </Link>
               </>
             )}
           </>

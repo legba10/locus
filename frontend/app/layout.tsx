@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { Viewport } from 'next'
 import dynamic from 'next/dynamic'
 import { Providers } from './providers'
 import { Header, BottomNavGlobal } from '@/components/layout'
@@ -24,6 +25,14 @@ export const metadata: Metadata = {
     ],
     apple: '/placeholder.svg',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -87,7 +87,7 @@ export default function MessagesInner() {
       )}
       style={{
         top: 'var(--header-height, 56px)',
-        height: 'calc(100vh - var(--header-height, 56px))',
+        height: 'calc(100dvh - var(--header-height, 56px))',
         overflow: 'hidden',
       }}
     >

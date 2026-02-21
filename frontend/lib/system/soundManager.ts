@@ -1,6 +1,13 @@
 'use client'
 
-import { useSoundStore } from '@/core/sound/useSoundStore'
+import {
+  bindAudioUnlockOnFirstInteraction as bindCoreAudioUnlockOnFirstInteraction,
+  playCoreAudio,
+  playLoginAudioOnce,
+  preloadAudio,
+  resetLoginAudioOnce,
+  unlockAudio as unlockCoreAudio,
+} from '@/core/audio/audioEngine'
 
 const soundSrc = {
   message: '/sounds/message.mp3',
@@ -12,78 +19,35 @@ const soundSrc = {
 
 type SoundType = keyof typeof soundSrc
 
-const soundMap: Partial<Record<SoundType, HTMLAudioElement>> = {}
 const lastPlayedAt: Partial<Record<SoundType, number>> = {}
-let unlockBound = false
-let audioUnlocked = false
-let loginSoundPlayed = false
 
 const OAUTH_LOGIN_INTENT_KEY = 'locus_oauth_login_intent'
 
-function getAudio(type: SoundType): HTMLAudioElement | null {
-  if (typeof window === 'undefined') return null
-  if (!soundMap[type]) {
-    const audio = new Audio(soundSrc[type])
-    audio.preload = 'auto'
-    if (type === 'login') audio.volume = 0.5
-    soundMap[type] = audio
-  }
-  return soundMap[type] ?? null
-}
-
 export async function unlockAudio(): Promise<void> {
-  if (typeof window === 'undefined' || audioUnlocked) return
-  try {
-    const keys = Object.keys(soundSrc) as SoundType[]
-    await Promise.all(
-      keys.map(async (key) => {
-        const audio = getAudio(key)
-        if (!audio) return
-        audio.muted = true
-        audio.currentTime = 0
-        await audio.play().catch(() => undefined)
-        audio.pause()
-        audio.currentTime = 0
-        audio.muted = false
-      })
-    )
-    audioUnlocked = true
-  } catch {
-    // no-op: browser may block until user gesture
-  }
+  await unlockCoreAudio()
 }
 
 export function bindAudioUnlockOnFirstInteraction(): void {
-  if (typeof document === 'undefined' || unlockBound) return
-  unlockBound = true
-  document.addEventListener('click', unlockAudio, { once: true })
+  preloadAudio()
+  bindCoreAudioUnlockOnFirstInteraction()
 }
 
 export function playSound(type: SoundType): void {
-  if (typeof window === 'undefined') return
-  if (!useSoundStore.getState().soundEnabled) return
   const now = Date.now()
   const prev = lastPlayedAt[type] ?? 0
   if (now - prev < 600) return
   lastPlayedAt[type] = now
-  const audio = getAudio(type)
-  if (!audio) return
-  try {
-    audio.currentTime = 0
-    void audio.play()
-  } catch {
-    console.warn('Sound blocked by browser')
-  }
+  if (type === 'message') return playCoreAudio('message')
+  if (type === 'login') return playCoreAudio('login')
+  return playCoreAudio('notification')
 }
 
 export function playLoginSoundOnce(): void {
-  if (loginSoundPlayed) return
-  playSound('login')
-  loginSoundPlayed = true
+  playLoginAudioOnce()
 }
 
 export function resetLoginSoundPlayed(): void {
-  loginSoundPlayed = false
+  resetLoginAudioOnce()
 }
 
 export function markOAuthLoginIntent(): void {

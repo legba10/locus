@@ -108,21 +108,6 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
     return 'success'
   }
 
-  const isSameActiveChat = (link?: string | null): boolean => {
-    if (!link || typeof window === 'undefined') return false
-    try {
-      const current = new URL(window.location.href)
-      const target = new URL(link, current.origin)
-      const currentPath = current.pathname
-      const targetPath = target.pathname
-      const currentChat = current.searchParams.get('chat')
-      const targetChat = target.searchParams.get('chat')
-      return currentPath === '/messages' && targetPath === '/messages' && Boolean(currentChat && targetChat && currentChat === targetChat)
-    } catch {
-      return false
-    }
-  }
-
   useEffect(() => {
     if (typeof window === 'undefined') return
     const update = () => setIsMobile(window.innerWidth < 768)
@@ -154,11 +139,6 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
         if (lastSoundNotificationIdRef.current === newestUnread.id) return
         lastSoundNotificationIdRef.current = newestUnread.id
         const soundType = detectSoundType(newestUnread)
-        if (soundType === 'message') {
-          const tabInactive = typeof document !== 'undefined' && document.visibilityState !== 'visible'
-          const notInThisChat = !isSameActiveChat(newestUnread.link)
-          if (!tabInactive && !notInThisChat) return
-        }
         playSound(soundType)
       })()
     }

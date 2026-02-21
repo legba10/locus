@@ -53,16 +53,16 @@ export function CityInput({
         autoComplete="off"
       />
       {open && (
-        <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-20 mt-2 w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg">
           <div className="max-h-64 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <div className="px-3 py-2 text-[13px] text-gray-500">Город не найден</div>
+              <div className="px-3 py-2 text-[13px] text-[var(--text-muted)]">Город не найден</div>
             ) : (
               filtered.map((city) => (
                 <button
                   key={city}
                   type="button"
-                  className="w-full text-left px-3 py-2 text-[14px] text-gray-800 hover:bg-violet-50"
+                  className="w-full text-left px-3 py-2 text-[14px] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
                   onClick={() => {
                     onChange(city)
                     setOpen(false)

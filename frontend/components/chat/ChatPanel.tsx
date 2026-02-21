@@ -139,6 +139,13 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
   }, [messagesLength, loading])
 
   useEffect(() => {
+    if (!messagesLength || loading) return
+    requestAnimationFrame(() => {
+      scrollToBottom('auto')
+    })
+  }, [messagesLength, loading, scrollToBottom])
+
+  useEffect(() => {
     if (!chatId || !isAuthenticated()) return
     apiFetchJson(`/chats/${chatId}/read`, { method: 'POST' }).catch(() => {})
   }, [chatId, isAuthenticated])
@@ -150,10 +157,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
     if (last.senderId === myId) return
     if (lastIncomingMessageIdRef.current === last.id) return
     lastIncomingMessageIdRef.current = last.id
-    const tabInactive = typeof document !== 'undefined' && document.visibilityState !== 'visible'
-    if (tabInactive) {
-      playSound('message')
-    }
+    playSound('message')
   }, [messages, myId])
 
   const send = async () => {
@@ -307,7 +311,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
       )}
 
       {/* ТЗ-5: поле ввода фиксировано снизу, padding 16px, кнопка справа */}
-      <footer className="flex-shrink-0 border-t border-[var(--border)] bg-[var(--card-bg)] p-4 safe-area-pb">
+      <footer className="sticky bottom-0 flex-shrink-0 border-t border-[var(--border)] bg-[var(--card-bg)] p-4 safe-area-pb">
         <form
           onSubmit={(e) => { e.preventDefault(); send() }}
           className="flex gap-2 items-center"
@@ -317,7 +321,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Сообщение..."
-            className="flex-1 min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-main)] px-4 py-3 text-[14px] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
+            className="flex-1 min-w-0 rounded-[14px] border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-main)] px-4 py-3 text-[16px] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
             disabled={sending}
           />
           <button

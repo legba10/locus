@@ -42,6 +42,24 @@ const STEP_LABELS = [
   'Публикация',
 ]
 
+function buildAiDescriptions(input: {
+  city: string
+  district: string
+  type: string
+  amenities: string[]
+  photosCount: number
+}): { short: string; sales: string; seo: string } {
+  const districtPart = input.district ? `, район ${input.district}` : ''
+  const amenityPart = input.amenities.length
+    ? `Удобства: ${input.amenities.slice(0, 5).join(', ')}.`
+    : 'Есть базовые удобства для комфортного проживания.'
+  return {
+    short: `${input.type} в ${input.city}${districtPart}. ${input.photosCount} фото, аккуратный интерьер и удобная локация.`,
+    sales: `${input.type} в ${input.city}${districtPart} для долгого и посуточного проживания. ${amenityPart} Подходит для комфортного заселения сразу после просмотра.`,
+    seo: `${input.type} аренда ${input.city} ${input.district} снять жилье ${input.city} ${input.amenities.join(' ')}`.trim(),
+  }
+}
+
 function uuid() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`
 }
@@ -382,7 +400,30 @@ export function CreateListingWizardTZ5({
         {step === 3 && (
           <StepPhotosV2 items={photoItems} coverIndex={coverPhotoIndex} onAddFiles={addPhotos} onRemove={removePhoto} onReorder={reorderPhotos} onSetCover={setCover} error={photoError} />
         )}
-        {step === 4 && <StepDescription title={title} description={description} onTitleChange={setTitle} onDescriptionChange={setDescription} onGenerateDescription={() => {}} />}
+        {step === 4 && (
+          <StepDescription
+            title={title}
+            description={description}
+            onTitleChange={setTitle}
+            onDescriptionChange={setDescription}
+            onGenerateDescription={() => {
+              const generated = buildAiDescriptions({
+                city: city || 'городе',
+                district: district || '',
+                type: TYPE_LABELS[type],
+                amenities: amenityKeys,
+                photosCount: photoItems.length,
+              })
+              setDescription(
+                [
+                  `Краткое описание:\n${generated.short}`,
+                  `\nПродающее описание:\n${generated.sales}`,
+                  `\nSEO текст:\n${generated.seo}`,
+                ].join('\n')
+              )
+            }}
+          />
+        )}
         {step === 5 && <StepAmenities amenityKeys={amenityKeys} onChange={setAmenityKeys} />}
         {step === 6 && (
           <StepPrice rentMode={rentMode} price={price} deposit={deposit} commission={commission} utilities={utilities} onPriceChange={setPrice} onDepositChange={setDeposit} onCommissionChange={setCommission} onUtilitiesChange={setUtilities} />

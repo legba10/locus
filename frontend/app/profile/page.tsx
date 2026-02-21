@@ -12,23 +12,16 @@ import {
   Megaphone,
   Settings,
   ChevronRight,
-  MessageCircle,
-  Heart,
   CalendarCheck,
-  Calendar as CalendarIcon,
   LogOut,
   BarChart3,
-  Shield,
-  LifeBuoy,
-  Users,
-  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
-const SPACE_SECTION = 'mb-8'
+const SPACE_SECTION = 'mb-6'
 const CARD_CLS = 'h-16 flex items-center justify-between gap-3 w-full px-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:bg-[var(--bg-input)] active:scale-[0.99] transition-all duration-200 text-left'
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
-const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-4'
+const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -60,7 +53,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="page-container-tz33 py-6">
+      <div className="page-container-tz33 py-4 px-4">
         <section className={SPACE_SECTION}>
           <div className="p-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
             <div className="flex items-center gap-3">
@@ -79,47 +72,14 @@ export default function ProfilePage() {
         </section>
 
         <section className={SPACE_SECTION}>
-          <h2 className={SECTION_TITLE}>Управление жильём</h2>
-          <div className="space-y-4">
-            {isAdmin ? (
-              <>
-                <Link href="/admin/moderation" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Модерация</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/admin" className={CARD_CLS}><span className="flex items-center gap-3"><Users className={ICON_CLS} />Пользователи</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/admin" className={CARD_CLS}><span className="flex items-center gap-3"><AlertTriangle className={ICON_CLS} />Жалобы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-              </>
-            ) : isLandlord ? (
-              <>
-                <Link href="/profile/listings" className={CARD_CLS}><span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/bookings" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/calendar" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarIcon className={ICON_CLS} />Календарь</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/promo" className={CARD_CLS}><span className="flex items-center gap-3"><Megaphone className={ICON_CLS} />Продвижение</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/finance" className={CARD_CLS}><span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-              </>
-            ) : (
-              <>
-                <Link href="/favorites" className={CARD_CLS}><span className="flex items-center gap-3"><Heart className={ICON_CLS} />Избранное</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/bookings" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-                <Link href="/profile/settings" className={CARD_CLS}><span className="flex items-center gap-3"><Settings className={ICON_CLS} />Настройки</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-              </>
-            )}
-          </div>
-        </section>
-
-        <section className={SPACE_SECTION}>
-          <h2 className={SECTION_TITLE}>Быстрые действия</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <Link href="/profile/listings/create" className={cn(CARD_CLS, 'h-[72px] justify-center text-center')}>Разместить объявление</Link>
-            <Link href="/profile/promo" className={cn(CARD_CLS, 'h-[72px] justify-center text-center')}>Продвинуть</Link>
-            <Link href="/profile/analytics" className={cn(CARD_CLS, 'h-[72px] justify-center text-center')}><BarChart3 className="w-4 h-4 mr-1" />Аналитика</Link>
-            <Link href="/messages" className={cn(CARD_CLS, 'h-[72px] justify-center text-center')}><MessageCircle className="w-4 h-4 mr-1" />Сообщения</Link>
-          </div>
-        </section>
-
-        <section className={SPACE_SECTION}>
-          <h2 className={SECTION_TITLE}>Система</h2>
-          <div className="space-y-4">
+          <h2 className={SECTION_TITLE}>Профиль</h2>
+          <div className="space-y-3">
+            <Link href="/profile/listings" className={CARD_CLS}><span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+            <Link href="/profile/bookings" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+            <Link href="/profile/finance" className={CARD_CLS}><span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+            <Link href="/profile/promo" className={CARD_CLS}><span className="flex items-center gap-3"><Megaphone className={ICON_CLS} />Продвижение</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+            <Link href="/profile/analytics" className={CARD_CLS}><span className="flex items-center gap-3"><BarChart3 className={ICON_CLS} />Аналитика</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <Link href="/profile/settings" className={CARD_CLS}><span className="flex items-center gap-3"><Settings className={ICON_CLS} />Настройки</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-            <Link href="/help" className={CARD_CLS}><span className="flex items-center gap-3"><LifeBuoy className={ICON_CLS} />Поддержка</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <button type="button" onClick={async () => { await logout(); router.push('/') }} className={cn(CARD_CLS, 'w-full text-[var(--text-secondary)] border-red-500/30 hover:bg-red-500/10')}>
               <span className="flex items-center gap-3"><LogOut className={ICON_CLS} />Выход</span>
             </button>
