@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import { useAuthStore } from '@/domains/auth'
+import { useSoundStore } from '@/core/sound/useSoundStore'
 import { ProfileCard } from '@/components/profile'
 import { ThemeSettings } from '@/components/ui/ThemeSettings'
 import { ChevronRight } from 'lucide-react'
@@ -14,6 +15,7 @@ const CARD_CLS =
 
 export default function ProfileSettingsPage() {
   const { isAuthenticated } = useAuthStore()
+  const { soundEnabled, toggleSoundEnabled } = useSoundStore()
 
   if (!isAuthenticated()) {
     return (
@@ -73,6 +75,31 @@ export default function ProfileSettingsPage() {
         >
           Настройки уведомлений <ChevronRight className="w-4 h-4" />
         </Link>
+        <div className="mt-4 pt-4 border-t border-[var(--border-main)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[14px] font-medium text-[var(--text-primary)]">🔔 Звуковые уведомления</p>
+              <p className="text-[12px] text-[var(--text-secondary)] mt-1">Входящие сообщения, бронирования и системные события</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={soundEnabled}
+              onClick={toggleSoundEnabled}
+              className={cn(
+                'relative h-6 w-11 rounded-full transition-colors',
+                soundEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--bg-input)]'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform',
+                  soundEnabled ? 'left-6' : 'left-1'
+                )}
+              />
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   )
