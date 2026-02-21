@@ -13,6 +13,7 @@ import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { scoring, type Listing } from '@/domains/ai/ai-engine'
 import { cn } from '@/shared/utils/cn'
 import { AiHostPanel } from '@/components/ai/AiHostPanel'
+import { playSound } from '@/lib/system/soundManager'
 import { ListingOwner, ListingBooking } from '@/components/listing'
 import { AIMetricsCardTZ9, ListingReviewsBlockTZ9 } from '@/domains/listing/listing-page'
 import { ListingCard } from '@/components/listing'
@@ -349,12 +350,36 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
           queryClient.invalidateQueries({ queryKey: ['listing', id] }),
           queryClient.invalidateQueries({ queryKey: ['profile-listings'] }),
         ])
+        if (status === 'published' || status === 'archived') playSound('success')
+        if (status === 'rejected') playSound('error')
+      } catch {
+        playSound('error')
       } finally {
         setAdminStatusLoading(false)
       }
     },
     [adminStatusLoading, id, queryClient]
   )
+
+  const handleOwnerPublish = useCallback(async () => {
+    try {
+      await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/publish`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['listing', id] })
+      playSound('success')
+    } catch {
+      playSound('error')
+    }
+  }, [id, item.id, queryClient])
+
+  const handleOwnerUnpublish = useCallback(async () => {
+    try {
+      await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' })
+      await queryClient.invalidateQueries({ queryKey: ['listing', id] })
+      playSound('success')
+    } catch {
+      playSound('error')
+    }
+  }, [id, item.id, queryClient])
 
   /** Редизайн v2: 1 Галерея 2 Trust (название, рейтинг, цена доминирует) 3 AI сжатый 4 Описание 5 Удобства 6 Владелец 7 Отзывы+AI 8 Карта. Фиксированный CTA снизу. */
   const district = (item as any).district ?? (item as any).addressLine ?? ''
@@ -786,11 +811,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                       {isRejected ? 'Исправить' : 'Редактировать'}
                     </Link>
                     {isDraft || isRejected ? (
-                      <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/publish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
+                      <button type="button" onClick={handleOwnerPublish} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
                         {isRejected ? 'Отправить заново' : 'На модерацию'}
                       </button>
                     ) : isPendingModeration ? (
-                      <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
+                      <button type="button" onClick={handleOwnerUnpublish} className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]">
                         Отменить
                       </button>
                     ) : (
@@ -922,11 +947,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   {isRejected ? 'Исправить' : 'Редактировать'}
                 </Link>
                 {(isDraft || isRejected) ? (
-                  <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/publish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  <button type="button" onClick={handleOwnerPublish} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
                     {isRejected ? 'Отправить заново' : 'На модерацию'}
                   </button>
                 ) : (
-                  <button type="button" onClick={async () => { await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' }); await queryClient.invalidateQueries({ queryKey: ['listing', id] }); }} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
+                  <button type="button" onClick={handleOwnerUnpublish} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center">
                     Отменить
                   </button>
                 )}

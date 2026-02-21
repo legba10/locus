@@ -7,6 +7,7 @@ import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { cn } from '@/shared/utils/cn'
+import { playSound } from '@/lib/system/soundManager'
 
 export type Message = {
   id: string
@@ -49,6 +50,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
   /** ТЗ-8: скролл вниз только 1 раз при открытии диалога, не при каждом ререндере */
   const initialScrollDoneRef = useRef(false)
   const shouldScrollToBottomRef = useRef(true)
+  const lastIncomingMessageIdRef = useRef<string | null>(null)
 
   /** ТЗ-12: подсказки показывать, пока пользователь ещё не отправлял сообщений в этом чате */
   const hasUserSent = (messages ?? []).some((m) => m.senderId === myId)
@@ -140,6 +142,19 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
     if (!chatId || !isAuthenticated()) return
     apiFetchJson(`/chats/${chatId}/read`, { method: 'POST' }).catch(() => {})
   }, [chatId, isAuthenticated])
+
+  useEffect(() => {
+    if (!Array.isArray(messages) || messages.length === 0) return
+    const last = messages[messages.length - 1]
+    if (!last || !last.id) return
+    if (last.senderId === myId) return
+    if (lastIncomingMessageIdRef.current === last.id) return
+    lastIncomingMessageIdRef.current = last.id
+    const tabInactive = typeof document !== 'undefined' && document.visibilityState !== 'visible'
+    if (tabInactive) {
+      playSound('message')
+    }
+  }, [messages, myId])
 
   const send = async () => {
     const text = input.trim()

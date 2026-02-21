@@ -12,6 +12,7 @@ const soundSrc = {
 type SoundType = keyof typeof soundSrc
 
 const soundMap: Partial<Record<SoundType, HTMLAudioElement>> = {}
+const lastPlayedAt: Partial<Record<SoundType, number>> = {}
 let unlockBound = false
 let audioUnlocked = false
 
@@ -56,6 +57,10 @@ export function bindAudioUnlockOnFirstInteraction(): void {
 export function playSound(type: SoundType): void {
   if (typeof window === 'undefined') return
   if (!useSoundStore.getState().soundEnabled) return
+  const now = Date.now()
+  const prev = lastPlayedAt[type] ?? 0
+  if (now - prev < 600) return
+  lastPlayedAt[type] = now
   const audio = getAudio(type)
   if (!audio) return
   try {

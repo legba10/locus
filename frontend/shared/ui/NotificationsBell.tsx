@@ -7,8 +7,8 @@ import { cn } from '@/shared/utils/cn'
 import IconButton from '@/components/ui/IconButton'
 import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
+import { playSound, type SoundType } from '@/lib/system/soundManager'
 
-const NOTIFY_SOUND = '/sounds/notify.mp3'
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
 const API_BASE = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : ''
 
@@ -64,6 +64,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   const [unreadCount, setUnreadCount] = useState(0)
   const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'ok' | 'denied' | 'no_vapid'>('idle')
   const prevCountRef = useRef<number>(0)
+  const lastSoundNotificationIdRef = useRef<string | null>(null)
 
   const fetchCount = async () => {
     try {
@@ -77,9 +78,48 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   const fetchList = async () => {
     try {
       const items = await apiFetch<typeof list>('/notifications')
-      setList(Array.isArray(items) ? items : [])
+      const normalized = Array.isArray(items) ? items : []
+      setList(normalized)
+      return normalized
     } catch {
       setList([])
+      return []
+    }
+  }
+
+  const detectSoundType = (n?: { type?: string; title?: string; text?: string | null; body?: string | null }): SoundType => {
+    const haystack = `${n?.type ?? ''} ${n?.title ?? ''} ${n?.text ?? ''} ${n?.body ?? ''}`.toLowerCase()
+    if (haystack.includes('message') || haystack.includes('сообщ')) return 'message'
+    if (haystack.includes('booking') || haystack.includes('бронир')) return 'booking'
+    if (
+      haystack.includes('reject') ||
+      haystack.includes('отклон') ||
+      haystack.includes('error') ||
+      haystack.includes('ошиб') ||
+      haystack.includes('payment_failed') ||
+      haystack.includes('оплата не прошла')
+    ) return 'error'
+    if (
+      haystack.includes('payment_success') ||
+      haystack.includes('оплата успешна') ||
+      haystack.includes('published') ||
+      haystack.includes('одобр')
+    ) return 'success'
+    return 'success'
+  }
+
+  const isSameActiveChat = (link?: string | null): boolean => {
+    if (!link || typeof window === 'undefined') return false
+    try {
+      const current = new URL(window.location.href)
+      const target = new URL(link, current.origin)
+      const currentPath = current.pathname
+      const targetPath = target.pathname
+      const currentChat = current.searchParams.get('chat')
+      const targetChat = target.searchParams.get('chat')
+      return currentPath === '/messages' && targetPath === '/messages' && Boolean(currentChat && targetChat && currentChat === targetChat)
+    } catch {
+      return false
     }
   }
 
@@ -103,14 +143,24 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   }, [])
 
   useEffect(() => {
-    if (unreadCount > prevCountRef.current && prevCountRef.current > 0) {
+    const prev = prevCountRef.current
+    if (unreadCount > prev && prev >= 0) {
       setBadgePop(true)
       setTimeout(() => setBadgePop(false), 220)
-      try {
-        const audio = new Audio(NOTIFY_SOUND)
-        audio.volume = 0.5
-        audio.play().catch(() => {})
-      } catch {}
+      void (async () => {
+        const items = await fetchList()
+        const newestUnread = items.find((x) => !(x.isRead ?? x.read))
+        if (!newestUnread) return
+        if (lastSoundNotificationIdRef.current === newestUnread.id) return
+        lastSoundNotificationIdRef.current = newestUnread.id
+        const soundType = detectSoundType(newestUnread)
+        if (soundType === 'message') {
+          const tabInactive = typeof document !== 'undefined' && document.visibilityState !== 'visible'
+          const notInThisChat = !isSameActiveChat(newestUnread.link)
+          if (!tabInactive && !notInThisChat) return
+        }
+        playSound(soundType)
+      })()
     }
     prevCountRef.current = unreadCount
   }, [unreadCount])
