@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service'
 import { supabase, LISTINGS_BUCKET, getSupabaseImageUrl } from '../../shared/lib/supabase'
 import * as crypto from 'crypto'
+import { ListingStatus, UserRoleEnum } from '@prisma/client'
+import { ROOT_ADMIN_EMAIL } from '../auth/constants'
 
 // Тип для файла из multer
 interface MulterFile {
@@ -17,6 +19,42 @@ interface MulterFile {
 export class ListingsPhotosService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async isPrivilegedUser(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { appRole: true, email: true },
+    })
+    if (!user) return false
+    const emailNorm = (user.email ?? '').trim().toLowerCase()
+    return (
+      emailNorm === ROOT_ADMIN_EMAIL.trim().toLowerCase() ||
+      user.appRole === UserRoleEnum.ROOT ||
+      user.appRole === UserRoleEnum.ADMIN ||
+      user.appRole === UserRoleEnum.MANAGER
+    )
+  }
+
+  private async markPendingIfPhotoChanged(listingId: string, actorId: string) {
+    const isPrivileged = await this.isPrivilegedUser(actorId)
+    if (isPrivileged) return
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { status: true },
+    })
+    if (!listing) return
+    if (listing.status === ListingStatus.PUBLISHED) {
+      await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          status: ListingStatus.PENDING_REVIEW,
+          moderationComment: null,
+          moderationNote: null,
+          rejectedAt: null,
+        },
+      })
+    }
+  }
+
   /**
    * Загружает файл в Supabase Storage и сохраняет URL в БД
    */
@@ -31,7 +69,8 @@ export class ListingsPhotosService {
       throw new NotFoundException('Объявление не найдено')
     }
 
-    if (listing.ownerId !== userId) {
+    const isPrivileged = await this.isPrivilegedUser(userId)
+    if (listing.ownerId !== userId && !isPrivileged) {
       throw new ForbiddenException('Нет доступа к этому объявлению')
     }
 
@@ -84,6 +123,7 @@ export class ListingsPhotosService {
       },
     })
 
+    await this.markPendingIfPhotoChanged(listingId, userId)
     return photo
   }
 
@@ -105,7 +145,8 @@ export class ListingsPhotosService {
       throw new NotFoundException('Фотография не найдена')
     }
 
-    if (photo.listing.ownerId !== userId) {
+    const isPrivileged = await this.isPrivilegedUser(userId)
+    if (photo.listing.ownerId !== userId && !isPrivileged) {
       throw new ForbiddenException('Нет доступа к этой фотографии')
     }
 
@@ -129,6 +170,7 @@ export class ListingsPhotosService {
       where: { id: photoId },
     })
 
+    await this.markPendingIfPhotoChanged(photo.listingId, userId)
     return { success: true }
   }
 
@@ -159,14 +201,16 @@ export class ListingsPhotosService {
       throw new NotFoundException('Фотография не найдена')
     }
 
-    if (photo.listing.ownerId !== userId) {
+    const isPrivileged = await this.isPrivilegedUser(userId)
+    if (photo.listing.ownerId !== userId && !isPrivileged) {
       throw new ForbiddenException('Нет доступа к этой фотографии')
     }
-
-    return this.prisma.listingPhoto.update({
+    const updated = await this.prisma.listingPhoto.update({
       where: { id: photoId },
       data: { sortOrder },
     })
+    await this.markPendingIfPhotoChanged(photo.listingId, userId)
+    return updated
   }
 
   /**
@@ -182,7 +226,8 @@ export class ListingsPhotosService {
       throw new NotFoundException('Объявление не найдено')
     }
 
-    if (listing.ownerId !== userId) {
+    const isPrivileged = await this.isPrivilegedUser(userId)
+    if (listing.ownerId !== userId && !isPrivileged) {
       throw new ForbiddenException('Нет доступа к этому объявлению')
     }
 
@@ -200,6 +245,7 @@ export class ListingsPhotosService {
 
     await this.prisma.listingPhoto.deleteMany({ where: { listingId } })
 
+    await this.markPendingIfPhotoChanged(listingId, userId)
     return { success: true, count: photos.length }
   }
 

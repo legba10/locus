@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
-import { CreateListingWizardTZ5 } from '@/domains/listings/CreateListingWizardTZ5'
+import { ListingWizard } from '@/modules/listingForm'
 
 export default function ProfileCreateListingPage() {
   const router = useRouter()
@@ -35,7 +35,7 @@ export default function ProfileCreateListingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] py-6 pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4">
-        <CreateListingWizardTZ5
+        <ListingWizard
           onSuccess={() => router.push('/profile/listings')}
           onCancel={() => router.push('/profile')}
           onLimitReached={() => router.push('/pricing?reason=limit')}

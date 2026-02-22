@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { CreateListingWizardTZ5 } from '@/domains/listings/CreateListingWizardTZ5'
+import { ListingWizard } from '@/modules/listingForm'
 
 /** ТЗ-5: Продолжить черновик /create-listing/draft/:id */
 export default function CreateListingDraftPage() {
@@ -70,7 +70,7 @@ export default function CreateListingDraftPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] py-6 pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4">
-        <CreateListingWizardTZ5
+        <ListingWizard
           initialListing={listing}
           onSuccess={() => router.push('/owner/dashboard?tab=listings')}
           onCancel={() => router.push('/profile')}

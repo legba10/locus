@@ -41,6 +41,34 @@ export class ListingsService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  private async isPrivilegedUser(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { appRole: true, email: true },
+    });
+    if (!user) return false;
+    const emailNorm = (user.email ?? "").trim().toLowerCase();
+    const isRootByEmail = emailNorm === ROOT_ADMIN_EMAIL.trim().toLowerCase();
+    return (
+      isRootByEmail ||
+      user.appRole === UserRoleEnum.ROOT ||
+      user.appRole === UserRoleEnum.ADMIN ||
+      user.appRole === UserRoleEnum.MANAGER
+    );
+  }
+
+  private shouldReModerateOnListingPatch(
+    listing: { type: ListingType; city: string; addressLine: string | null; lat: number | null; lng: number | null },
+    dto: UpdateListingDto
+  ): boolean {
+    const typeChanged = dto.type !== undefined && dto.type !== listing.type;
+    const cityChanged = dto.city !== undefined && dto.city !== listing.city;
+    const addressChanged = dto.addressLine !== undefined && dto.addressLine !== (listing.addressLine ?? null);
+    const latChanged = dto.lat !== undefined && dto.lat !== (listing.lat ?? null);
+    const lngChanged = dto.lng !== undefined && dto.lng !== (listing.lng ?? null);
+    return typeChanged || cityChanged || addressChanged || latChanged || lngChanged;
+  }
+
   private normalizeListingForUi<T extends Record<string, any>>(listing: T): T & {
     statusCanonical: CanonicalListingStatus;
     moderation_note: string | null;
@@ -223,37 +251,40 @@ export class ListingsService {
     // Ensure Neon User exists for FK (ownerId = Supabase ID)
     await this.neonUser.ensureUserExists(ownerId, ctx?.email ?? null);
     this.logger.debug(`Creating listing for owner: ${ownerId}`);
+    const isPrivileged = await this.isPrivilegedUser(ownerId);
 
     // FINAL LOGIC: limit is tracked in Supabase profile (listing_used/listing_limit).
     // Fallback: if Supabase is unavailable/misconfigured, use Neon limits + listing count.
-    const reserve = await this.supabaseAuth.reserveListingSlot(ownerId).catch(() => null);
-    if (reserve) {
-      if (reserve.usedBefore >= reserve.limit) {
-        throw new ForbiddenException({
-          code: "LIMIT_REACHED",
-          message: "Лимит объявлений на вашем тарифе исчерпан",
-          plan: "FREE",
-          used: reserve.usedBefore,
-          limit: reserve.limit,
+    if (!isPrivileged) {
+      const reserve = await this.supabaseAuth.reserveListingSlot(ownerId).catch(() => null);
+      if (reserve) {
+        if (reserve.usedBefore >= reserve.limit) {
+          throw new ForbiddenException({
+            code: "LIMIT_REACHED",
+            message: "Лимит объявлений на вашем тарифе исчерпан",
+            plan: "FREE",
+            used: reserve.usedBefore,
+            limit: reserve.limit,
+          });
+        }
+      } else {
+        const userRow = await this.prisma.user.findUnique({
+          where: { id: ownerId },
+          select: { plan: true, listingLimit: true },
         });
-      }
-    } else {
-      const userRow = await this.prisma.user.findUnique({
-        where: { id: ownerId },
-        select: { plan: true, listingLimit: true },
-      });
-      const limit = userRow?.listingLimit ?? 1;
-      const used = await this.prisma.listing.count({
-        where: { ownerId, status: { not: ListingStatus.ARCHIVED } },
-      });
-      if (used >= limit) {
-        throw new ForbiddenException({
-          code: "LIMIT_REACHED",
-          message: "Лимит объявлений на вашем тарифе исчерпан",
-          plan: userRow?.plan ?? "FREE",
-          used,
-          limit,
+        const limit = userRow?.listingLimit ?? 1;
+        const used = await this.prisma.listing.count({
+          where: { ownerId, status: { not: ListingStatus.ARCHIVED } },
         });
+        if (used >= limit) {
+          throw new ForbiddenException({
+            code: "LIMIT_REACHED",
+            message: "Лимит объявлений на вашем тарифе исчерпан",
+            plan: userRow?.plan ?? "FREE",
+            used,
+            limit,
+          });
+        }
       }
     }
 
@@ -327,11 +358,21 @@ export class ListingsService {
   async update(ownerId: string, id: string, dto: UpdateListingDto) {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
-    if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
+    const isPrivileged = await this.isPrivilegedUser(ownerId);
+    if (listing.ownerId !== ownerId && !isPrivileged) throw new ForbiddenException("Not your listing");
 
     const { amenityKeys: _, ...listingFields } = dto;
     const data: any = { ...listingFields, houseRules: toJsonValue(dto.houseRules) };
     if (listing.status === ListingStatus.REJECTED) {
+      data.status = ListingStatus.PENDING_REVIEW;
+      data.moderationComment = null;
+      data.moderationNote = null;
+      data.rejectedAt = null;
+    } else if (
+      !isPrivileged &&
+      listing.status === ListingStatus.PUBLISHED &&
+      this.shouldReModerateOnListingPatch(listing, dto)
+    ) {
       data.status = ListingStatus.PENDING_REVIEW;
       data.moderationComment = null;
       data.moderationNote = null;
@@ -380,7 +421,8 @@ export class ListingsService {
   async publish(ownerId: string, id: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
-    if (listing.ownerId !== ownerId) throw new ForbiddenException("Not your listing");
+    const isPrivileged = await this.isPrivilegedUser(ownerId);
+    if (listing.ownerId !== ownerId && !isPrivileged) throw new ForbiddenException("Not your listing");
     if (listing.status !== ListingStatus.DRAFT && listing.status !== ListingStatus.REJECTED) {
       throw new ForbiddenException("Listing can be submitted only from draft/rejected status");
     }
@@ -390,27 +432,38 @@ export class ListingsService {
       throw new ForbiddenException("Listing must have at least one photo before publish");
     }
 
-    const data: Prisma.ListingUpdateInput = {
-      status: ListingStatus.PENDING_REVIEW,
-      moderationComment: null,
-      moderationNote: null,
-      rejectedAt: null,
-    };
+    const data: Prisma.ListingUpdateInput = isPrivileged
+      ? {
+          status: ListingStatus.PUBLISHED,
+          publishedAt: new Date(),
+          moderationComment: null,
+          moderationNote: null,
+          rejectedAt: null,
+          moderatedBy: { connect: { id: ownerId } },
+        }
+      : {
+          status: ListingStatus.PENDING_REVIEW,
+          moderationComment: null,
+          moderationNote: null,
+          rejectedAt: null,
+        };
 
     await this.prisma.listing.update({
       where: { id },
       data,
     });
-    this.notifications
-      .create(ownerId, NotificationType.LISTING_SUBMITTED, "Объявление отправлено на модерацию", null)
-      .catch(() => {});
-    this.notifications
-      .createForAdmins(
-        NotificationType.NEW_LISTING_PENDING,
-        "Новое объявление на модерации",
-        listing.title
-      )
-      .catch(() => {});
+    if (!isPrivileged) {
+      this.notifications
+        .create(ownerId, NotificationType.LISTING_SUBMITTED, "Объявление отправлено на модерацию", null)
+        .catch(() => {});
+      this.notifications
+        .createForAdmins(
+          NotificationType.NEW_LISTING_PENDING,
+          "Новое объявление на модерации",
+          listing.title
+        )
+        .catch(() => {});
+    }
     return this.getById(id);
   }
 

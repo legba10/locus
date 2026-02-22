@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
-import { CreateListingWizardTZ5 } from '@/domains/listings/CreateListingWizardTZ5'
+import { ListingWizard } from '@/modules/listingForm'
 
 /** ТЗ-5: Единая точка входа в мастер создания объявления. Не авторизован → логин → сюда. */
 export default function CreateListingPage() {
@@ -34,7 +34,7 @@ export default function CreateListingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] py-6 pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4">
-        <CreateListingWizardTZ5
+        <ListingWizard
           onSuccess={(listingId) => {
             router.push('/owner/dashboard?tab=listings')
           }}
