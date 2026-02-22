@@ -139,6 +139,9 @@ export interface UserContract {
   tariff?: UserTariff;
   supabaseId?: string;
   roles?: Array<AppRole | "admin">;
+  settings?: {
+    sound?: boolean;
+  };
 }
 
 // ——— API responses

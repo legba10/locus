@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  bindAudioUnlockOnFirstInteraction as bindCoreAudioUnlockOnFirstInteraction,
-  playCoreAudio,
-  playLoginAudioOnce,
-  preloadAudio,
-  resetLoginAudioOnce,
-  unlockAudio as unlockCoreAudio,
-} from '@/core/audio/audioEngine'
+import { soundEngine } from '@/services/soundEngine'
 
 const soundSrc = {
   message: '/sounds/message.mp3',
@@ -24,12 +17,12 @@ const lastPlayedAt: Partial<Record<SoundType, number>> = {}
 const OAUTH_LOGIN_INTENT_KEY = 'locus_oauth_login_intent'
 
 export async function unlockAudio(): Promise<void> {
-  await unlockCoreAudio()
+  soundEngine.init()
 }
 
 export function bindAudioUnlockOnFirstInteraction(): void {
-  preloadAudio()
-  bindCoreAudioUnlockOnFirstInteraction()
+  soundEngine.init()
+  soundEngine.bindUnlockOnFirstInteraction()
 }
 
 export function playSound(type: SoundType): void {
@@ -37,17 +30,17 @@ export function playSound(type: SoundType): void {
   const prev = lastPlayedAt[type] ?? 0
   if (now - prev < 600) return
   lastPlayedAt[type] = now
-  if (type === 'message') return playCoreAudio('message')
-  if (type === 'login') return playCoreAudio('login')
-  return playCoreAudio('notification')
+  if (type === 'message') return soundEngine.playMessage()
+  if (type === 'login') return soundEngine.playLogin()
+  return soundEngine.playNotify()
 }
 
 export function playLoginSoundOnce(): void {
-  playLoginAudioOnce()
+  soundEngine.playLoginOnce()
 }
 
 export function resetLoginSoundPlayed(): void {
-  resetLoginAudioOnce()
+  soundEngine.resetLoginOnce()
 }
 
 export function markOAuthLoginIntent(): void {

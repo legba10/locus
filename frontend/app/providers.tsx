@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { AuthProvider } from '@/domains/auth/AuthProvider'
 import { ModalProvider } from '@/shared/contexts/ModalContext'
 import { ToastProvider } from '@/shared/contexts/ToastContext'
-import { bindAudioUnlockOnFirstInteraction } from '@/lib/system/soundManager'
+import { soundEngine } from '@/services/soundEngine'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const safeMode = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
@@ -29,7 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }))
 
   useEffect(() => {
-    bindAudioUnlockOnFirstInteraction()
+    soundEngine.init()
   }, [])
 
   return (

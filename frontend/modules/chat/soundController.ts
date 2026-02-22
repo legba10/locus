@@ -1,6 +1,6 @@
 'use client'
 
-import { soundService } from '@/services/soundService'
+import { soundEngine } from '@/services/soundEngine'
 
 export interface IncomingMessageSoundContext {
   incomingChatId: string
@@ -10,7 +10,8 @@ export interface IncomingMessageSoundContext {
 }
 
 export function initChatSoundController() {
-  soundService.bindUnlockOnFirstInteraction()
+  soundEngine.init()
+  soundEngine.bindUnlockOnFirstInteraction()
 }
 
 export function playMessageSoundWhenAllowed(ctx: IncomingMessageSoundContext) {
@@ -21,5 +22,5 @@ export function playMessageSoundWhenAllowed(ctx: IncomingMessageSoundContext) {
   if (isOwnMessage) return
   if (!isActiveTab) return
   if (isSameChat) return
-  soundService.playMessage()
+  soundEngine.playMessage()
 }

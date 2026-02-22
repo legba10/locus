@@ -9,7 +9,7 @@ import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
 import { playSound, type SoundType } from '@/lib/system/soundManager'
 import { playMessageSoundWhenAllowed } from '@/modules/chat/soundController'
-import { soundService } from '@/services/soundService'
+import { soundEngine } from '@/services/soundEngine'
 
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
 const API_BASE = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : ''
@@ -147,7 +147,8 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   }, [])
 
   useEffect(() => {
-    soundService.bindUnlockOnFirstInteraction()
+    soundEngine.init()
+    soundEngine.bindUnlockOnFirstInteraction()
   }, [])
 
   useEffect(() => {
@@ -177,7 +178,7 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
           return
         }
         if (soundType === 'booking' || soundType === 'success' || soundType === 'error') {
-          soundService.playNotify()
+          soundEngine.playNotify()
           return
         }
         playSound(soundType)

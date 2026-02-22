@@ -69,6 +69,9 @@ function userFromBackend(response: MeResponse, sessionEmail?: string | null): St
     profileCompleted: payload.profileCompleted,
     needsRoleSelection: payload.needsRoleSelection,
     profile_role_raw: payload.profile_role_raw ?? null,
+    settings: {
+      sound: payload?.settings?.sound ?? true,
+    },
   };
 }
 
@@ -196,6 +199,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const backendResponse = await fetchMe();
           const meUser = userFromBackend(backendResponse);
+          playLoginSoundOnce();
           set({ user: meUser, accessToken: null });
           return true;
         } catch (e) {
