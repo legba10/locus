@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useSearchStore } from '@/search/store'
 
 interface Chip {
@@ -8,8 +8,11 @@ interface Chip {
   label: string
 }
 
+const CHIP_STYLE = 'min-h-[36px] inline-flex items-center gap-2 rounded-[20px] border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-[14px] py-2 text-[13px] text-[var(--accent)] transition-[opacity,transform] duration-200 ease-out'
+
 export function SelectedChips({ onChange }: { onChange: () => void }) {
   const { filters, setFilter, setFilters } = useSearchStore()
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   const chips = useMemo<Chip[]>(() => {
     const items: Chip[] = []
@@ -36,9 +39,7 @@ export function SelectedChips({ onChange }: { onChange: () => void }) {
     return items
   }, [filters])
 
-  if (!chips.length) return null
-
-  const removeChip = (id: string) => {
+  const doRemove = useCallback((id: string) => {
     if (id === 'city') setFilter('city', null)
     if (id === 'price') setFilters({ priceFrom: null, priceTo: null })
     if (id === 'rooms') setFilter('rooms', null)
@@ -49,17 +50,27 @@ export function SelectedChips({ onChange }: { onChange: () => void }) {
     if (id === 'metro') setFilter('metro', null)
     if (id === 'district') setFilter('district', null)
     onChange()
+  }, [setFilter, setFilters, onChange])
+
+  const removeChip = (id: string) => {
+    setRemovingId(id)
+    setTimeout(() => {
+      doRemove(id)
+      setRemovingId(null)
+    }, 200)
   }
+
+  if (!chips.length) return null
 
   return (
     <div className="mb-3 flex flex-wrap gap-2">
       {chips.map((chip) => (
         <span
           key={chip.id}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-3 py-1.5 text-[13px] text-[var(--accent)]"
+          className={`${CHIP_STYLE} ${removingId === chip.id ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
         >
           {chip.label}
-          <button type="button" onClick={() => removeChip(chip.id)} className="rounded-full px-1 hover:bg-[var(--accent)]/20" aria-label={`Удалить ${chip.label}`}>
+          <button type="button" onClick={() => removeChip(chip.id)} className="rounded-full p-1 hover:bg-[var(--accent)]/20 shrink-0" aria-label={`Удалить ${chip.label}`}>
             ×
           </button>
         </span>

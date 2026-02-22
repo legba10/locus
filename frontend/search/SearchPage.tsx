@@ -36,7 +36,7 @@ function mapStoreToFilterState(filters: SearchFilters): FilterState {
 export function SearchPage() {
   const router = useRouter()
   const sp = useSearchParams()
-  const { filters, setFilter, setFilters, toQuery } = useSearchStore()
+  const { filters, setFilter, setFilters, toQuery, reset } = useSearchStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [aiModalOpen, setAiModalOpen] = useState(false)
@@ -135,46 +135,52 @@ export function SearchPage() {
     responseRate: Number(listing.responseRate ?? 0),
   }))
 
+  const handleResetFilters = () => {
+    reset()
+    setPage(1)
+  }
+
+  const searchBtnCls = 'h-11 min-h-[44px] rounded-[12px] font-medium text-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] whitespace-nowrap'
+  const modeBtnCls = 'h-11 min-h-[44px] flex-1 min-w-0 rounded-[12px] font-medium text-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
+
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
       <div className="market-container py-4">
-        <div className="mb-3 flex items-center gap-2">
-          <button type="button" className="lg:hidden rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2.5" onClick={() => setMobileOpen(true)}>
-            Фильтры
-          </button>
-          <div className="inline-flex rounded-[12px] border border-[var(--border-main)] overflow-hidden">
-            <button
-              type="button"
-              onClick={() => {
-                setFilter('aiMode', false)
-                setPage(1)
-              }}
-              className={`px-3 py-2 text-[13px] ${!filters.aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)]' : 'bg-[var(--bg-card)] text-[var(--text-primary)]'}`}
-              title="Обычный поиск по выбранным фильтрам"
-            >
-              Обычный поиск
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFilter('aiMode', true)
-                setPage(1)
-              }}
-              className={`px-3 py-2 text-[13px] ${filters.aiMode ? 'bg-[var(--accent)] text-[var(--text-on-accent)]' : 'bg-[var(--bg-card)] text-[var(--text-primary)]'}`}
-              title="AI-поиск подбирает лучшие варианты по вашим фильтрам"
-            >
-              AI-поиск
-            </button>
-          </div>
-          <button type="button" onClick={() => setAiModalOpen(true)} className="ml-auto rounded-[12px] bg-[var(--accent)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-on-accent)]">
-            Подобрать за 10 секунд
+        {/* Ряд 1: режим поиска — Обычный | AI-подбор */}
+        <div className="mb-3 grid grid-cols-2 gap-2 max-w-md">
+          <button
+            type="button"
+            onClick={() => { setFilter('aiMode', false); setPage(1) }}
+            className={!filters.aiMode ? `${modeBtnCls} bg-[var(--accent)] text-[var(--text-on-accent)]` : `${modeBtnCls} bg-transparent border border-[var(--border-main)] text-[var(--text-primary)]`}
+            title="Обычный поиск по фильтрам"
+          >
+            Обычный
           </button>
           <button
             type="button"
-            onClick={() => aiController.openPanel('search')}
-            className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2.5 text-[13px] font-medium text-[var(--text-primary)]"
+            onClick={() => { setFilter('aiMode', true); setPage(1) }}
+            className={filters.aiMode ? `${modeBtnCls} bg-[var(--accent)] text-[var(--text-on-accent)]` : `${modeBtnCls} bg-transparent border border-[var(--border-main)] text-[var(--text-primary)]`}
+            title="AI подбирает лучшие варианты"
           >
             AI-подбор
+          </button>
+        </div>
+
+        {/* Ряд 2: действия — Фильтры | Подобрать за 10 секунд */}
+        <div className="mb-3 flex flex-wrap gap-2 items-stretch">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className={`${searchBtnCls} flex-1 min-w-[120px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] px-4`}
+          >
+            Фильтры
+          </button>
+          <button
+            type="button"
+            onClick={() => setAiModalOpen(true)}
+            className={`${searchBtnCls} flex-1 min-w-0 px-3 sm:px-4 bg-[var(--accent)] text-[var(--text-on-accent)]`}
+          >
+            Подобрать за 10 секунд
           </button>
         </div>
 
@@ -197,9 +203,14 @@ export function SearchPage() {
                 {Array.from({ length: 9 }).map((_, i) => <ListingCardSkeleton key={i} />)}
               </div>
             ) : items.length === 0 ? (
-              <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 text-center">
-                <h3 className="text-[18px] font-semibold">Нет точных совпадений</h3>
-                <p className="mt-1 text-[14px] text-[var(--text-secondary)]">Попробуйте расширить фильтры или включить AI-поиск.</p>
+              <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 text-center flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-[var(--bg-input)] flex items-center justify-center text-[var(--text-muted)]" aria-hidden>
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+                <p className="text-[16px] font-medium text-[var(--text-primary)]">По данным фильтрам ничего не найдено</p>
+                <button type="button" onClick={handleResetFilters} className="h-11 min-h-[44px] rounded-[12px] px-5 font-medium text-[14px] bg-[var(--accent)] text-[var(--text-on-accent)] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                  Сбросить фильтры
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
