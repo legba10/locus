@@ -1,7 +1,7 @@
 'use client'
 
-import { SearchPageTZ11 } from './SearchPageTZ11'
+import { SearchPage } from '@/search'
 
 export default function PageClient() {
-  return <SearchPageTZ11 />
+  return <SearchPage />
 }
