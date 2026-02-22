@@ -39,6 +39,11 @@ export class SearchQueryDto {
   @IsIn(["APARTMENT", "HOUSE", "ROOM", "STUDIO"])
   type?: "APARTMENT" | "HOUSE" | "ROOM" | "STUDIO";
 
+  @ApiPropertyOptional({ description: "CSV список типов жилья", example: "APARTMENT,HOUSE" })
+  @IsOptional()
+  @IsString()
+  types?: string;
+
   @ApiPropertyOptional({ description: "Количество комнат", example: 2 })
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
@@ -46,15 +51,23 @@ export class SearchQueryDto {
   @Min(0)
   rooms?: number;
 
+  @ApiPropertyOptional({ description: "Радиус в км от центра города", example: 5 })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  radiusKm?: number;
+
   @ApiPropertyOptional({ description: "amenities keys csv", example: "wifi,parking" })
   @IsOptional()
   @IsString()
   amenities?: string;
 
-  @ApiPropertyOptional({ enum: ["newest", "price_asc", "price_desc"], default: "newest" })
+  @ApiPropertyOptional({ enum: ["popular", "newest", "price_asc", "price_desc"], default: "popular" })
   @IsOptional()
-  @IsIn(["newest", "price_asc", "price_desc"])
-  sort?: "newest" | "price_asc" | "price_desc";
+  @IsIn(["popular", "newest", "price_asc", "price_desc"])
+  sort?: "popular" | "newest" | "price_asc" | "price_desc";
 
   @ApiPropertyOptional({ description: "Use AI search reranking", example: "1" })
   @IsOptional()
@@ -68,12 +81,12 @@ export class SearchQueryDto {
   @Min(1)
   page?: number;
 
-  @ApiPropertyOptional({ description: "Page size (max 50)", example: 20, default: 50 })
+  @ApiPropertyOptional({ description: "Page size (max 20)", example: 20, default: 20 })
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
   @IsInt()
   @Min(1)
-  @Max(50)
+  @Max(20)
   limit?: number;
 }
 

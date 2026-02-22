@@ -12,7 +12,7 @@ export interface FilterFieldBase {
   display: string
 }
 
-export type SortOption = 'popular' | 'price_asc' | 'price_desc'
+export type SortOption = 'popular' | 'price_asc' | 'price_desc' | 'newest'
 
 /** ТЗ-4.1: каноническое ядро состояния фильтров */
 export interface FilterStateCore {

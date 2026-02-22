@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ListingStatus } from "@prisma/client";
+import { ListingStatus, ListingType, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiSearchService } from "../ai-orchestrator/services/ai-search.service";
 import { SearchQueryDto, SearchBodyDto } from "./dto/search-query.dto";
@@ -21,6 +21,100 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label = "timeout"): Pro
 }
 
 type AiResult = Awaited<ReturnType<AiSearchService["search"]>>;
+type SearchSort = "popular" | "newest" | "price_asc" | "price_desc";
+
+const CITY_CENTER_COORDS: Record<string, { lat: number; lng: number }> = {
+  "Москва": { lat: 55.7558, lng: 37.6176 },
+  "Санкт-Петербург": { lat: 59.9343, lng: 30.3351 },
+  "Сургут": { lat: 61.254, lng: 73.3962 },
+  "Новосибирск": { lat: 55.0084, lng: 82.9357 },
+  "Екатеринбург": { lat: 56.8389, lng: 60.6057 },
+  "Казань": { lat: 55.7963, lng: 49.1088 },
+};
+
+function normalizeTypes(dto: SearchQueryDto): ListingType[] {
+  const fromSingle = dto.type ? [dto.type] : [];
+  const fromCsv =
+    dto.types
+      ?.split(",")
+      .map((x) => x.trim().toUpperCase())
+      .filter((x): x is ListingType => ["APARTMENT", "HOUSE", "ROOM", "STUDIO"].includes(x)) ?? [];
+  return Array.from(new Set([...fromSingle, ...fromCsv]));
+}
+
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function buildOrderBy(sort: SearchSort): Prisma.ListingOrderByWithRelationInput {
+  if (sort === "price_asc") return { basePrice: "asc" };
+  if (sort === "price_desc") return { basePrice: "desc" };
+  if (sort === "newest") return { createdAt: "desc" };
+  return { viewsCount: "desc" };
+}
+
+function buildWhere(dto: SearchQueryDto): Prisma.ListingWhereInput {
+  const amenityKeys =
+    dto.amenities?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+  const selectedTypes = normalizeTypes(dto);
+  const and: Prisma.ListingWhereInput[] = [];
+
+  if (dto.city) and.push({ city: dto.city });
+  if (dto.guests) and.push({ capacityGuests: { gte: dto.guests } });
+  if (selectedTypes.length > 0) and.push({ type: { in: selectedTypes } });
+  if (dto.rooms != null) and.push({ bedrooms: { gte: dto.rooms } });
+  if (dto.priceMin != null || dto.priceMax != null) {
+    and.push({
+      basePrice: {
+        ...(dto.priceMin != null ? { gte: dto.priceMin } : {}),
+        ...(dto.priceMax != null ? { lte: dto.priceMax } : {}),
+      },
+    });
+  }
+  if (dto.q) {
+    and.push({
+      OR: [
+        { title: { contains: dto.q, mode: "insensitive" } },
+        { description: { contains: dto.q, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (amenityKeys.length > 0) {
+    for (const key of amenityKeys) {
+      and.push({
+        amenities: { some: { amenity: { key } } },
+      });
+    }
+  }
+
+  return {
+    status: ListingStatus.PUBLISHED,
+    photos: { some: {} },
+    ...(and.length ? { AND: and } : {}),
+  };
+}
+
+function applyRadiusFilterIfNeeded<T extends { lat: number | null; lng: number | null; city: string }>(
+  rows: T[],
+  city?: string,
+  radiusKm?: number
+): T[] {
+  if (!city || !radiusKm) return rows;
+  const center = CITY_CENTER_COORDS[city];
+  if (!center) return rows;
+  return rows.filter((x) => {
+    if (x.lat == null || x.lng == null) return false;
+    return distanceKm(center.lat, center.lng, x.lat, x.lng) <= radiusKm;
+  });
+}
 
 @Injectable()
 export class SearchService {
@@ -31,12 +125,17 @@ export class SearchService {
 
   async search(dto: SearchQueryDto) {
     const page = dto.page ?? 1;
-    const limit = dto.limit ?? 50;
-    const take = Math.min(Math.max(limit, 1), 50);
+    const limit = dto.limit ?? 20;
+    const take = Math.min(Math.max(limit, 1), 20);
     const skip = (page - 1) * take;
-
-    const amenityKeys =
-      dto.amenities?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+    const sort = (dto.sort ?? "popular") as SearchSort;
+    const where = buildWhere(dto);
+    const include = {
+      photos: { orderBy: { sortOrder: "asc" as const }, take: 1 },
+      amenities: { include: { amenity: true } },
+      aiScores: true,
+      intelligence: true,
+    };
 
     if (dto.ai === "1" && dto.q) {
       const ai = await withTimeout<AiResult>(
@@ -50,90 +149,46 @@ export class SearchService {
 
       if (ai) {
         const ids = ai.results.map((r) => r.listingId);
-        const listings = await this.prisma.listing.findMany({
-          where: { id: { in: ids }, status: ListingStatus.PUBLISHED, photos: { some: {} } },
-          include: {
-            photos: { orderBy: { sortOrder: "asc" }, take: 1 },
-            amenities: { include: { amenity: true } },
-            aiScores: true,
-            intelligence: true,
-          },
+        const listingsRaw = await this.prisma.listing.findMany({
+          where: { ...where, id: { in: ids } },
+          include,
         });
-
-        // preserve AI rank order
+        const listings = applyRadiusFilterIfNeeded(listingsRaw, dto.city, dto.radiusKm);
         const byId = new Map(listings.map((l) => [l.id, l]));
-        const items = ids.map((id) => byId.get(id)).filter(Boolean);
+        const ranked = ids
+          .map((id) => byId.get(id))
+          .filter((x): x is NonNullable<typeof x> => Boolean(x))
+          .slice(0, 30);
+        const paged = ranked.slice(skip, skip + take);
 
         return {
-          items,
+          items: paged,
+          total: ranked.length,
+          page,
+          limit: take,
           ai,
         };
       }
     }
 
-    const orderBy =
-      dto.sort === "price_asc"
-        ? { basePrice: "asc" as const }
-        : dto.sort === "price_desc"
-          ? { basePrice: "desc" as const }
-          : { createdAt: "desc" as const };
-
-    const where = {
-      status: ListingStatus.PUBLISHED,
-      ...(dto.city ? { city: dto.city } : {}),
-      ...(dto.guests ? { capacityGuests: { gte: dto.guests } } : {}),
-      ...(dto.type ? { type: dto.type } : {}),
-      ...(dto.rooms != null ? { bedrooms: { gte: dto.rooms } } : {}),
-      ...(dto.priceMin || dto.priceMax
-        ? {
-            basePrice: {
-              ...(dto.priceMin != null ? { gte: dto.priceMin } : {}),
-              ...(dto.priceMax != null ? { lte: dto.priceMax } : {}),
-            },
-          }
-        : {}),
-      ...(dto.q
-        ? {
-            OR: [
-              { title: { contains: dto.q, mode: "insensitive" as const } },
-              { description: { contains: dto.q, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-      ...(amenityKeys.length
-        ? {
-            amenities: {
-              some: { amenity: { key: { in: amenityKeys } } },
-            },
-          }
-        : {}),
-      photos: { some: {} },
-    };
-
-    const items = await this.prisma.listing.findMany({
+    const rows = await this.prisma.listing.findMany({
       where,
-      orderBy,
-      take,
-      skip,
-      include: {
-        photos: { orderBy: { sortOrder: "asc" }, take: 1 },
-        amenities: { include: { amenity: true } },
-        aiScores: true,
-        intelligence: true,
-      },
+      orderBy: buildOrderBy(sort),
+      take: dto.radiusKm && dto.city ? 300 : take,
+      skip: dto.radiusKm && dto.city ? 0 : skip,
+      include,
     });
-
-    return { items };
+    const filtered = applyRadiusFilterIfNeeded(rows, dto.city, dto.radiusKm);
+    const items = dto.radiusKm && dto.city ? filtered.slice(skip, skip + take) : filtered;
+    const total = dto.radiusKm && dto.city ? filtered.length : await this.prisma.listing.count({ where });
+    return { items, total, page, limit: take };
   }
 
   // Advanced POST search with AI scoring
   async searchAdvanced(dto: SearchBodyDto) {
     const useAi = dto.useAi !== false;
     
-    // Build where clause
-    const where: any = {
-      status: ListingStatus.PUBLISHED,
-    };
+    const where: any = { status: ListingStatus.PUBLISHED };
 
     if (dto.city) {
       where.city = dto.city;
@@ -166,9 +221,10 @@ export class SearchService {
     }
 
     if (dto.amenities && dto.amenities.length > 0) {
-      where.amenities = {
-        some: { amenity: { key: { in: dto.amenities } } },
-      };
+      where.AND = [
+        ...(where.AND ?? []),
+        ...dto.amenities.map((key) => ({ amenities: { some: { amenity: { key } } } })),
+      ];
     }
 
     where.photos = { some: {} };
@@ -186,14 +242,14 @@ export class SearchService {
         orderBy = { intelligence: { qualityScore: "desc" } };
         break;
       default:
-        orderBy = { createdAt: "desc" };
+        orderBy = { viewsCount: "desc" };
     }
 
     // Fetch listings
     let items = await this.prisma.listing.findMany({
       where,
       orderBy,
-      take: 50,
+      take: 30,
       include: {
         photos: { orderBy: { sortOrder: "asc" }, take: 3 },
         amenities: { include: { amenity: true } },

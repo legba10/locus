@@ -28,10 +28,11 @@ export interface FiltersModalProps {
   open: boolean
   onClose: () => void
   onApply: () => void
+  previewCount?: number
   className?: string
 }
 
-export function FiltersModal({ open, onClose, onApply, className }: FiltersModalProps) {
+export function FiltersModal({ open, onClose, onApply, previewCount = 0, className }: FiltersModalProps) {
   const {
     city,
     budgetMin,
@@ -286,7 +287,7 @@ export function FiltersModal({ open, onClose, onApply, className }: FiltersModal
             onClick={handleApply}
             className="flex-[2] min-h-[48px] rounded-[16px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] hover:opacity-95 transition-opacity"
           >
-            Применить
+            Показать {previewCount} вариантов
           </button>
         </div>
       </div>
