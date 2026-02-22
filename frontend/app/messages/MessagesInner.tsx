@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { ChatPanel } from '@/components/chat/ChatPanel'
+import { ChatPage } from '@/modules/chat'
 import { cn } from '@/shared/utils/cn'
 
 type ChatItem = {
@@ -29,8 +29,6 @@ export default function MessagesInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const activeChatId = searchParams.get('chat') ?? ''
-  const suggestedCheckIn = searchParams.get('checkIn') ?? undefined
-  const suggestedCheckOut = searchParams.get('checkOut') ?? undefined
   const { isAuthenticated, user } = useAuthStore()
   const { data: chats, isLoading } = useFetch<ChatItem[]>(['chats'], '/chats', { enabled: isAuthenticated() })
   const currentUserId = user?.id ?? ''
@@ -188,12 +186,10 @@ export default function MessagesInner() {
       <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col chat-column-mobile-pb md:pb-0', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
         {activeChatId ? (
           <div className="flex flex-col h-full min-h-0">
-            <ChatPanel
+            <ChatPage
               chatId={activeChatId}
               onBack={goBack}
               embedded
-              suggestedCheckIn={suggestedCheckIn}
-              suggestedCheckOut={suggestedCheckOut}
             />
           </div>
         ) : (

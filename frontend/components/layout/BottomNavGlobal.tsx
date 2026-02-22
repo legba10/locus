@@ -13,8 +13,10 @@ export function BottomNavGlobal() {
 
   const isAdmin = pathname?.startsWith('/admin')
   const isListingDetail = pathname?.match(/^\/listings\/[^/]+$/)
+  const isChatRoute = pathname?.startsWith('/messages') || pathname?.startsWith('/chat')
   if (isAdmin) return null
   if (isListingDetail) return null
+  if (isChatRoute) return null
 
   const base = pathname?.replace(/\/$/, '') || ''
   const isHome = base === '' || base === '/'

@@ -8,6 +8,8 @@ import IconButton from '@/components/ui/IconButton'
 import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
 import { playSound, type SoundType } from '@/lib/system/soundManager'
+import { playMessageSoundWhenAllowed } from '@/modules/chat/soundController'
+import { soundService } from '@/services/soundService'
 
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''
 const API_BASE = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : ''
@@ -19,6 +21,23 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
   const out = new Uint8Array(raw.length)
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
   return out
+}
+
+function extractChatIdFromLink(link?: string | null): string | null {
+  if (!link) return null
+  try {
+    const parsed = link.startsWith('http')
+      ? new URL(link)
+      : new URL(link, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+    if (parsed.pathname.startsWith('/messages')) return parsed.searchParams.get('chat')
+    if (parsed.pathname.startsWith('/chat/')) {
+      const part = parsed.pathname.split('/').filter(Boolean)[1]
+      return part ?? null
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 async function subscribeBrowserPush(): Promise<string | null> {
@@ -128,6 +147,10 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
   }, [])
 
   useEffect(() => {
+    soundService.bindUnlockOnFirstInteraction()
+  }, [])
+
+  useEffect(() => {
     const prev = prevCountRef.current
     if (unreadCount > prev && prev >= 0) {
       setBadgePop(true)
@@ -139,6 +162,24 @@ export function NotificationsBell({ compactBadge = false }: NotificationsBellPro
         if (lastSoundNotificationIdRef.current === newestUnread.id) return
         lastSoundNotificationIdRef.current = newestUnread.id
         const soundType = detectSoundType(newestUnread)
+        if (soundType === 'message') {
+          const incomingChatId = extractChatIdFromLink(newestUnread.link)
+          const current = typeof window !== 'undefined' ? new URL(window.location.href) : null
+          const activeChatId = current?.pathname.startsWith('/messages') ? current.searchParams.get('chat') : null
+          if (incomingChatId) {
+            playMessageSoundWhenAllowed({
+              incomingChatId,
+              activeChatId,
+              senderId: 'other',
+              currentUserId: 'me',
+            })
+          }
+          return
+        }
+        if (soundType === 'booking' || soundType === 'success' || soundType === 'error') {
+          soundService.playNotify()
+          return
+        }
         playSound(soundType)
       })()
     }
