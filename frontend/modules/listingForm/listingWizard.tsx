@@ -12,9 +12,11 @@ import { AddressStep } from './steps/AddressStep'
 import { PhotosStep } from './steps/PhotosStep'
 import { ReviewStep } from './steps/ReviewStep'
 import { PublishStep } from './steps/PublishStep'
+import { AiListingPanel } from '@/components/ai/AiListingPanel'
 import { buildAiDescription } from './aiDescription'
 import { addFilesToPhotos, buildPhotoMetaForHouseRules, removePhoto, setPhotoCover, setPhotoType } from './photoController'
 import { useListingWizardStore } from './listingStore'
+import { useAiController } from '@/ai/aiController'
 
 const STEP_TITLES = [
   'Тип жилья',
@@ -81,6 +83,7 @@ export function ListingWizard({
   const [error, setError] = useState<string | null>(null)
   const [aiPreview, setAiPreview] = useState<string | null>(null)
   const [removedExistingPhotoIds, setRemovedExistingPhotoIds] = useState<string[]>([])
+  const aiController = useAiController()
 
   const isEdit = Boolean(initialListing?.id)
   const totalSteps = 8
@@ -279,13 +282,22 @@ export function ListingWizard({
           />
         )}
         {step === 3 && (
-          <StepDescription
-            title={title}
-            description={description}
-            onTitleChange={(v) => setField('title', v)}
-            onDescriptionChange={(v) => setField('description', v)}
-            onGenerateDescription={onGenerateDescription}
-          />
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => aiController.openPanel('listing')}
+              className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-[13px] font-medium text-[var(--text-primary)]"
+            >
+              Улучшить объявление AI
+            </button>
+            <StepDescription
+              title={title}
+              description={description}
+              onTitleChange={(v) => setField('title', v)}
+              onDescriptionChange={(v) => setField('description', v)}
+              onGenerateDescription={onGenerateDescription}
+            />
+          </div>
         )}
         {step === 4 && (
           <StepAmenities amenityKeys={amenityKeys} onChange={(keys) => setField('amenityKeys', keys)} />
@@ -340,6 +352,25 @@ export function ListingWizard({
           {error}
         </div>
       )}
+
+      <AiListingPanel
+        open={aiController.open && aiController.mode === 'listing'}
+        onClose={aiController.closePanel}
+        listing={{
+          title,
+          description,
+          photosCount: photos.length,
+          price: Number(price || 0),
+          city,
+          district,
+          amenities: amenityKeys,
+          typeLabel: TYPE_LABELS[type] ?? 'Жилье',
+        }}
+        onApplyDescription={(text) => {
+          setField('description', text)
+          aiController.closePanel()
+        }}
+      />
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur px-4 py-3">
         <div className="mx-auto max-w-[680px] flex items-center justify-between gap-3">

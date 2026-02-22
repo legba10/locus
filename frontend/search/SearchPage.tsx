@@ -5,12 +5,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { AiSearchModal } from '@/components/ai/AiSearchModal'
+import { AiSearchPanel } from '@/components/ai/AiSearchPanel'
 import type { AiListingCandidate } from '@/lib/ai/searchEngine'
 import { runAiSearch, runManualSearch } from '@/core/search'
 import type { FilterState } from '@/core/filters'
 import { useSearchStore } from './searchStore'
 import { FiltersPanel } from './FiltersPanel'
 import { ActiveFiltersBar } from './ActiveFiltersBar'
+import { useAiController } from '@/ai/aiController'
 
 function mapStoreToFilterState(s: ReturnType<typeof useSearchStore.getState>): FilterState {
   const types = s.type ? [s.type] : []
@@ -37,6 +39,7 @@ export function SearchPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [aiModalOpen, setAiModalOpen] = useState(false)
+  const aiController = useAiController()
   const [aiScores, setAiScores] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
@@ -140,6 +143,13 @@ export function SearchPage() {
           <button type="button" onClick={() => setAiModalOpen(true)} className="ml-auto rounded-[12px] bg-[var(--accent)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-on-accent)]">
             Подобрать за 10 секунд
           </button>
+          <button
+            type="button"
+            onClick={() => aiController.openPanel('search')}
+            className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2.5 text-[13px] font-medium text-[var(--text-primary)]"
+          >
+            AI-подбор
+          </button>
         </div>
 
         <ActiveFiltersBar onChange={() => setPage(1)} />
@@ -220,6 +230,15 @@ export function SearchPage() {
           })
           setAiScores(new Map(aiItems.map((x) => [String(x.id), x.aiMatchScore])))
           setAiModalOpen(false)
+          setPage(1)
+        }}
+      />
+
+      <AiSearchPanel
+        open={aiController.open && aiController.mode === 'search'}
+        onClose={aiController.closePanel}
+        onApply={(patch) => {
+          s.setMany(patch)
           setPage(1)
         }}
       />

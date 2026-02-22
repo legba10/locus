@@ -7,6 +7,9 @@ import { useSearchParams } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch } from '@/shared/utils/apiFetch'
+import { getAiAdminMockReviewMetrics } from '@/ai/aiAdmin'
+import { useAiController } from '@/ai/aiController'
+import { AiAdminPanel } from '@/components/ai/AiAdminPanel'
 
 type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'chats' | 'settings'
 const ADMIN_TAB_IDS: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
@@ -85,6 +88,7 @@ export function AdminDashboardV2() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams?.get('tab') as AdminTab | null
   const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && ADMIN_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'dashboard')
+  const aiController = useAiController()
 
   useEffect(() => {
     if (tabFromUrl && tabFromUrl !== activeTab && ADMIN_TAB_IDS.includes(tabFromUrl)) {
@@ -131,6 +135,13 @@ export function AdminDashboardV2() {
             <Link href="/admin/ai" className="px-4 py-2 rounded-[14px] bg-violet-500/20 text-violet-300 text-[14px] font-medium hover:bg-violet-500/30 border border-[var(--admin-card-border)]">
               AI
             </Link>
+            <button
+              type="button"
+              onClick={() => aiController.openPanel('admin')}
+              className="px-4 py-2 rounded-[14px] bg-violet-500/20 text-violet-300 text-[14px] font-medium hover:bg-violet-500/30 border border-[var(--admin-card-border)]"
+            >
+              AI-анализ
+            </button>
             <Link href="/" className="px-4 py-2 rounded-[14px] bg-[var(--admin-input-bg)] text-[var(--admin-text-primary)] text-[14px] font-medium hover:bg-[var(--admin-row-hover)] border border-[var(--admin-card-border)]">
               ← На главную
             </Link>
@@ -168,6 +179,7 @@ export function AdminDashboardV2() {
           </div>
         </main>
       </div>
+      <AiAdminPanel open={aiController.open && aiController.mode === 'admin'} onClose={aiController.closePanel} />
     </div>
   )
 }
@@ -270,6 +282,7 @@ function DashboardTab() {
   const revenueMax = Math.max(...revenueData, 1)
   const bookingsMax = Math.max(...bookingsChartData, 1)
   const usersMax = Math.max(...usersChartData, 1)
+  const aiReviews = getAiAdminMockReviewMetrics()
 
   return (
     <div className="flex flex-col admin-gap-section">
@@ -321,6 +334,31 @@ function DashboardTab() {
           <div className="admin-chart-wrap">
             <SimpleBarChart data={usersChartData.slice(-14)} max={usersMax} color="bg-blue-500" height={220} />
           </div>
+        </div>
+      </section>
+
+      <section className="admin-card p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-[16px] font-semibold text-[var(--admin-text-primary)]">AI-анализ отзывов (mock)</h3>
+          <span className="text-[12px] text-[var(--admin-text-muted)]">Готово к API</span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="rounded-[12px] bg-emerald-500/10 border border-emerald-500/30 p-3">
+            <p className="text-[12px] text-emerald-300">Позитив</p>
+            <p className="text-[20px] font-semibold text-emerald-200">{aiReviews.positive}%</p>
+          </div>
+          <div className="rounded-[12px] bg-red-500/10 border border-red-500/30 p-3">
+            <p className="text-[12px] text-red-300">Негатив</p>
+            <p className="text-[20px] font-semibold text-red-200">{aiReviews.negative}%</p>
+          </div>
+        </div>
+        <div className="mt-3 rounded-[12px] border border-[var(--admin-card-border)] p-3">
+          <p className="text-[12px] text-[var(--admin-text-secondary)] mb-1">Основные проблемы</p>
+          <ul className="space-y-1 text-[13px] text-[var(--admin-text-primary)]">
+            {aiReviews.commonProblems.map((problem) => (
+              <li key={problem}>• {problem}</li>
+            ))}
+          </ul>
         </div>
       </section>
 
