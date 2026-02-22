@@ -62,10 +62,23 @@ interface ListingStatsResponse {
   sources: Array<{ key: string; label: string; value: number }>
 }
 
-/** ТЗ-35: Desktop сетка 60/40, mobile фото 320px */
+/** ТЗ-35 + ТЗ-48: Desktop сетка 60/40, mobile фото 280px */
 const GALLERY_HEIGHT_PC = 420
-const GALLERY_HEIGHT_MOBILE = 320
+const GALLERY_HEIGHT_MOBILE = 280
 const PHOTOS_DISPLAY = 12
+
+/** ТЗ-48: Строгая система статусов. Никогда не показывать «На модерации» при status === active (PUBLISHED). */
+type ListingStatusCanonical = 'DRAFT' | 'MODERATION' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED'
+const LISTING_STATUS_LABEL: Record<ListingStatusCanonical, string> = {
+  DRAFT: 'Черновик',
+  MODERATION: 'На модерации',
+  PUBLISHED: 'Активно',
+  REJECTED: 'Отклонено',
+  ARCHIVED: 'Скрыто',
+}
+function getListingStatusLabel(status: ListingStatusCanonical): string {
+  return LISTING_STATUS_LABEL[status] ?? status
+}
 
 /** ТЗ-3: Lazy load — рендерит children только при появлении во viewport. */
 function LazyBox({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
@@ -268,7 +281,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const isCurrentUserOwner = user?.id && owner?.id && user.id === owner.id
   const isCurrentUserAdmin = (user as any)?.isAdmin || user?.role === 'admin'
   const listingStatusRaw = String((item as any)?.statusCanonical ?? (item as any)?.status ?? '').toUpperCase()
-  const listingStatusCanonical: 'DRAFT' | 'MODERATION' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED' =
+  const listingStatusCanonical: ListingStatusCanonical =
     listingStatusRaw === 'PUBLISHED'
       ? 'PUBLISHED'
       : listingStatusRaw === 'REJECTED'
@@ -553,12 +566,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </div>
             </section>
 
-            {isOwnerMode && (isDraft || isPendingModeration || isRejected) && (
+            {/* ТЗ-48: статус только по канону; при active не показываем блок «На модерации» */}
+            {(isOwnerMode || isCurrentUserAdmin) && !isPublished && (
               <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
                 <p className="text-[14px] font-semibold text-[var(--text-primary)]">
-                  {isDraft && 'Черновик'}
-                  {isPendingModeration && 'На проверке'}
-                  {isRejected && 'Отклонено'}
+                  {getListingStatusLabel(listingStatusCanonical)}
                 </p>
                 {isRejected && moderationNote && (
                   <p className="text-[13px] text-[var(--text-secondary)] mt-1">Причина: {moderationNote}</p>
@@ -707,16 +719,19 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
 
           {/* ТЗ-3: Правая колонка desktop — sticky top 80px. CTA: гость → Войти; владелец → Редактировать; иначе форма брони. */}
           <div className="hidden lg:block">
+            {/* ТЗ-48: вертикальный стек — Цена, Адрес, Рейтинг, затем кнопки действий */}
             <div id="listing-booking" className="sticky top-20 space-y-5">
-              <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
-                <div>
-                  <p className="text-[24px] font-bold text-[var(--text-primary)]">
-                    {priceValue > 0 ? `${priceValue.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
-                    <span className="text-[16px] font-normal text-[var(--text-muted)]"> / ночь</span>
-                  </p>
-                  {pricePerMonth > 0 && <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>}
-                  {priceValue > 0 && <p className="text-[12px] text-[var(--text-muted)] mt-1">Комиссия 7%. Итог при бронировании.</p>}
-                </div>
+              <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5 space-y-3">
+                <p className="text-[24px] font-bold text-[var(--text-primary)]">
+                  {priceValue > 0 ? `${priceValue.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+                  <span className="text-[16px] font-normal text-[var(--text-muted)]"> / ночь</span>
+                </p>
+                {pricePerMonth > 0 && <p className="text-[14px] text-[var(--text-secondary)]">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>}
+                <p className="text-[14px] text-[var(--text-secondary)]">{[item.city, district].filter(Boolean).join(' · ') || item.city || '—'}</p>
+                {ratingAvg != null && (
+                  <p className="text-[14px] font-semibold text-amber-600">★ {ratingAvg.toFixed(1)}{ratingCount > 0 ? ` (${ratingCount})` : ''}</p>
+                )}
+                {priceValue > 0 && <p className="text-[12px] text-[var(--text-muted)]">Комиссия 7%. Итог при бронировании.</p>}
               </div>
               {isCurrentUserAdmin ? (
                 <div className="space-y-2">
@@ -750,18 +765,24 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     </button>
                   ) : (
                     <div className="h-11 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-secondary)] text-[14px] font-medium flex items-center justify-center">
-                      {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
+                      {getListingStatusLabel(listingStatusCanonical)}
                     </div>
                   )}
                   <Link href={`/listing/edit/${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
                     Редактировать
+                  </Link>
+                  <Link href="/admin?tab=moderation" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
+                    Модерация
+                  </Link>
+                  <Link href="/admin?tab=push" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
+                    Жалобы
                   </Link>
                   <button
                     type="button"
                     onClick={() => router.push(`/listings/${item.id}?tab=analytics`)}
                     className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)]"
                   >
-                    Аналитика
+                    Статистика
                   </button>
                   <button
                     type="button"
@@ -797,14 +818,8 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               ) : isOwnerMode ? (
                 <div className="space-y-2">
                   <div className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[13px] text-[var(--text-secondary)]">
-                    {isDraft && 'Черновик'}
-                    {isPendingModeration && 'На проверке'}
-                    {isRejected && (
-                      <>
-                        Отклонено
-                        {moderationNote ? `: ${moderationNote}` : ''}
-                      </>
-                    )}
+                    {getListingStatusLabel(listingStatusCanonical)}
+                    {isRejected && moderationNote ? `: ${moderationNote}` : ''}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Link href={`/listing/edit/${item.id}`} className="h-11 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] flex items-center justify-center hover:opacity-95">
@@ -825,12 +840,37 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                     )}
                   </div>
                   {isPublished && (
-                    <div className="grid grid-cols-4 gap-2">
-                      <Link href="/profile/promo" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Продвижение</Link>
-                      <Link href="/profile/analytics" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Аналитика</Link>
-                      <Link href="/profile/calendar" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Календарь</Link>
-                      <Link href={`/listing/edit/${item.id}`} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Редактировать</Link>
-                    </div>
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <Link href={`/listing/edit/${item.id}`} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Редактировать</Link>
+                        <Link href="/profile/calendar" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Календарь</Link>
+                        <Link href="/profile/promo" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Продвижение</Link>
+                        <Link href="/profile/analytics" className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] text-[var(--text-primary)] flex items-center justify-center">Аналитика</Link>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/unpublish`, { method: 'POST' })
+                            await queryClient.invalidateQueries({ queryKey: ['listing', id] })
+                          }}
+                          className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]"
+                        >
+                          Скрыть
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm('Удалить объявление?')) return
+                            await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}`, { method: 'DELETE' })
+                            router.push('/profile/listings')
+                          }}
+                          className="h-10 rounded-[10px] border border-red-500/30 bg-red-500/10 text-[13px] font-medium text-red-600"
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
               ) : !isAuthenticated() ? (
@@ -875,10 +915,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
         </div>
       </div>
 
-      {/* Редизайн v2: Фиксированный CTA — [♡] цена / ночь [Одна кнопка]. Гость→Забронировать, Владелец→Редактировать, Админ→Модерация. */}
+      {/* ТЗ-48: Фиксированная нижняя панель — z-50, blur 20px, safe-area. Одна архитектура, разные кнопки по роли. */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center gap-2 px-3 bg-[var(--bg-card)]/95 backdrop-blur border-t border-[var(--border-main)] safe-area-pb"
-        style={{ height: 72, minHeight: 72, paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex items-center gap-2 px-3 bg-[var(--bg-card)]/95 backdrop-blur-[20px] border-t border-[var(--border-main)]"
+        style={{ minHeight: 72, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
         {isCurrentUserAdmin ? (
           <>
@@ -897,7 +937,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </button>
             ) : (
               <div className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-secondary)] font-semibold text-[13px] flex items-center justify-center">
-                {isRejected ? 'Отклонено' : isDraft ? 'Черновик' : 'Архив'}
+                {getListingStatusLabel(listingStatusCanonical)}
               </div>
             )}
             <Link href={`/listing/edit/${item.id}`} className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-semibold text-[13px] flex items-center justify-center">
@@ -1326,8 +1366,8 @@ function GalleryTZ8({
           ))}
         </div>
       </div>
-      {/* ТЗ-11: Mobile — высота 320–360px, свайп, точки, кнопка «Все фото» */}
-      <div className="md:hidden relative w-full" style={{ height: GALLERY_HEIGHT_MOBILE, minHeight: 320 }}>
+      {/* ТЗ-11 + ТЗ-48: Mobile — высота 280px, свайп, счётчик по центру */}
+      <div className="md:hidden relative w-full" style={{ height: GALLERY_HEIGHT_MOBILE, minHeight: GALLERY_HEIGHT_MOBILE }}>
         <div
           className="absolute inset-0 overflow-hidden"
           onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
