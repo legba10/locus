@@ -2,26 +2,39 @@
 
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { CityInput } from '@/shared/components/CityInput'
-import { useSearchStore } from './searchStore'
+import { useSearchStore } from './store'
 
 interface FiltersPanelProps {
   open: boolean
   onClose: () => void
   onApply: () => void
   previewCount: number
+  onQuickApply: () => void
 }
 
-function PanelContent({ onApply }: { onApply: () => void }) {
+function PanelContent({ onApply, onQuickApply, previewCount }: { onApply: () => void; onQuickApply: () => void; previewCount: number }) {
   const s = useSearchStore()
+  const { filters } = s
 
   return (
     <div className="filters-panel flex h-full flex-col">
       <div className="filters-panel flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ WebkitOverflowScrolling: 'touch' as any }}>
         <div>
+          <p className="mb-2 block text-[12px] text-[var(--text-muted)]">Быстрые фильтры</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => { s.applyQuickFilter('today'); onQuickApply() }} className="h-8 rounded-full border border-[var(--border-main)] px-3 text-[12px]">Сегодня</button>
+            <button type="button" onClick={() => { s.applyQuickFilter('budget50'); onQuickApply() }} className="h-8 rounded-full border border-[var(--border-main)] px-3 text-[12px]">До 50к</button>
+            <button type="button" onClick={() => { s.applyQuickFilter('pets'); onQuickApply() }} className="h-8 rounded-full border border-[var(--border-main)] px-3 text-[12px]">С животными</button>
+            <button type="button" onClick={() => { s.applyQuickFilter('month'); onQuickApply() }} className="h-8 rounded-full border border-[var(--border-main)] px-3 text-[12px]">На месяц</button>
+            <button type="button" onClick={() => { s.applyQuickFilter('studio'); onQuickApply() }} className="h-8 rounded-full border border-[var(--border-main)] px-3 text-[12px]">Студия</button>
+          </div>
+        </div>
+
+        <div>
           <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Город</label>
           <CityInput
-            value={s.city ?? ''}
-            onChange={(v) => s.setField('city', v || null)}
+            value={filters.city ?? ''}
+            onChange={(v) => s.setFilter('city', v || null)}
             className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-4 py-3 text-[14px] text-[var(--text-primary)]"
           />
         </div>
@@ -29,18 +42,18 @@ function PanelContent({ onApply }: { onApply: () => void }) {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Цена от</label>
-            <input type="number" value={s.priceMin ?? ''} onChange={(e) => s.setField('priceMin', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
+            <input type="number" value={filters.priceFrom ?? ''} onChange={(e) => s.setFilter('priceFrom', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
           </div>
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Цена до</label>
-            <input type="number" value={s.priceMax ?? ''} onChange={(e) => s.setField('priceMax', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
+            <input type="number" value={filters.priceTo ?? ''} onChange={(e) => s.setFilter('priceTo', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Комнаты</label>
-            <select value={s.rooms ?? ''} onChange={(e) => s.setField('rooms', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
+            <select value={filters.rooms ?? ''} onChange={(e) => s.setFilter('rooms', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
               <option value="">Любое</option>
               <option value="1">1</option>
               <option value="2">2</option>
@@ -50,7 +63,7 @@ function PanelContent({ onApply }: { onApply: () => void }) {
           </div>
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Тип жилья</label>
-            <select value={s.type ?? ''} onChange={(e) => s.setField('type', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
+            <select value={filters.type ?? ''} onChange={(e) => s.setFilter('type', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
               <option value="">Любой</option>
               <option value="apartment">Квартира</option>
               <option value="house">Дом</option>
@@ -63,7 +76,7 @@ function PanelContent({ onApply }: { onApply: () => void }) {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Срок аренды</label>
-            <select value={s.duration ?? ''} onChange={(e) => s.setField('duration', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
+            <select value={filters.rentType ?? ''} onChange={(e) => s.setFilter('rentType', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]">
               <option value="">Любой</option>
               <option value="daily">Посуточно</option>
               <option value="long">Долгосрочно</option>
@@ -71,59 +84,69 @@ function PanelContent({ onApply }: { onApply: () => void }) {
           </div>
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Район</label>
-            <input value={s.district ?? ''} onChange={(e) => s.setField('district', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" placeholder="Район" />
+            <input value={filters.district ?? ''} onChange={(e) => s.setFilter('district', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" placeholder="Район" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Метро</label>
-            <input value={s.metro ?? ''} onChange={(e) => s.setField('metro', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" placeholder="Станция метро" />
+            <input value={filters.metro ?? ''} onChange={(e) => s.setFilter('metro', e.target.value || null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" placeholder="Станция метро" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex items-center gap-2 text-[14px] mt-6">
-              <input type="checkbox" checked={s.pets} onChange={(e) => s.setField('pets', e.target.checked)} />
+              <input type="checkbox" checked={Boolean(filters.pets)} onChange={(e) => s.setFilter('pets', e.target.checked)} />
               С животными
             </label>
             <label className="flex items-center gap-2 text-[14px] mt-6">
-              <input type="checkbox" checked={s.furniture} onChange={(e) => s.setField('furniture', e.target.checked)} />
+              <input type="checkbox" checked={filters.furniture} onChange={(e) => s.setFilter('furniture', e.target.checked)} />
               Мебель
             </label>
           </div>
         </div>
 
+        <div>
+          <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Гости</label>
+          <input type="number" value={filters.guests ?? ''} onChange={(e) => s.setFilter('guests', e.target.value ? Number(e.target.value) : null)} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" placeholder="2" />
+        </div>
+
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Дата заезда</label>
-            <input type="date" value={s.dates?.checkIn ?? ''} onChange={(e) => s.setField('dates', { checkIn: e.target.value, checkOut: s.dates?.checkOut ?? '' })} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
+            <input type="date" value={filters.dates?.checkIn ?? ''} onChange={(e) => s.setFilter('dates', { checkIn: e.target.value, checkOut: filters.dates?.checkOut ?? '' })} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
           </div>
           <div>
             <label className="mb-1 block text-[12px] text-[var(--text-muted)]">Дата выезда</label>
-            <input type="date" value={s.dates?.checkOut ?? ''} onChange={(e) => s.setField('dates', { checkIn: s.dates?.checkIn ?? '', checkOut: e.target.value })} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
+            <input type="date" value={filters.dates?.checkOut ?? ''} onChange={(e) => s.setFilter('dates', { checkIn: filters.dates?.checkIn ?? '', checkOut: e.target.value })} className="w-full rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[14px]" />
           </div>
         </div>
       </div>
-      <div className="border-t border-[var(--border-main)] p-4">
-        <button type="button" onClick={onApply} className="w-full rounded-[14px] bg-[var(--accent)] px-4 py-3 text-[15px] font-semibold text-[var(--text-on-accent)]">
-          Применить
-        </button>
+      <div className="sticky bottom-0 border-t border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => { s.reset(); onQuickApply() }} className="rounded-[14px] border border-[var(--border-main)] px-4 py-3 text-[14px] font-medium text-[var(--text-primary)]">
+            Сбросить
+          </button>
+          <button type="button" onClick={onApply} className="rounded-[14px] bg-[var(--accent)] px-4 py-3 text-[15px] font-semibold text-[var(--text-on-accent)]">
+            Показать {previewCount}
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-export function FiltersPanel({ open, onClose, onApply, previewCount }: FiltersPanelProps) {
+export function FiltersPanel({ open, onClose, onApply, previewCount, onQuickApply }: FiltersPanelProps) {
   return (
     <>
       <div className="hidden lg:block w-[320px] shrink-0 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]">
-        <PanelContent onApply={onApply} />
+        <PanelContent onApply={onApply} previewCount={previewCount} onQuickApply={onQuickApply} />
       </div>
       <BottomSheet open={open} onClose={onClose} maxHeight="88vh" className="lg:hidden rounded-t-2xl border-0">
         <div className="px-4 py-3 border-b border-[var(--border-main)] flex items-center justify-between">
           <h3 className="text-[16px] font-semibold">Фильтры</h3>
           <span className="text-[13px] text-[var(--text-secondary)]">{previewCount} объявлений</span>
         </div>
-        <PanelContent onApply={onApply} />
+        <PanelContent onApply={onApply} previewCount={previewCount} onQuickApply={onQuickApply} />
       </BottomSheet>
     </>
   )

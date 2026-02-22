@@ -27,7 +27,17 @@ export function AiSearchPanel({ open, onClose, onApply }: AiSearchPanelProps) {
   const ai = useAiController()
   const [answers, setAnswers] = useState<AiSearchAnswers>(defaults)
 
-  const canApply = useMemo(() => answers.city.trim().length > 0, [answers.city])
+  const canApply = useMemo(() => {
+    return (
+      answers.city.trim().length > 0 ||
+      answers.budget != null ||
+      answers.duration != null ||
+      answers.people != null ||
+      answers.pets ||
+      answers.when != null ||
+      answers.type != null
+    )
+  }, [answers])
 
   return (
     <Drawer open={open} onClose={onClose} side="right" width={460}>

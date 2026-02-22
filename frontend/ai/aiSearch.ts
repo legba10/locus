@@ -24,19 +24,20 @@ export const AI_SEARCH_QUICK_HINTS = [
 ] as const
 
 export function buildSearchStorePatchFromAi(answers: AiSearchAnswers): Partial<SearchStoreState> {
-  return {
-    city: answers.city || null,
-    priceMax: answers.budget ?? null,
-    duration: answers.duration ?? null,
-    rooms: answers.people != null ? Math.max(1, Math.min(answers.people, 4)) : null,
-    pets: answers.pets,
-    dates:
-      answers.when === 'dates' && answers.checkIn && answers.checkOut
-        ? { checkIn: answers.checkIn, checkOut: answers.checkOut }
-        : null,
-    aiMode: true,
-    type: answers.type ?? null,
+  const patch: Partial<SearchStoreState['filters']> = { aiMode: true }
+  if (answers.city.trim()) patch.city = answers.city.trim()
+  if (answers.budget != null) patch.priceTo = answers.budget
+  if (answers.duration) patch.rentType = answers.duration
+  if (answers.people != null) {
+    patch.rooms = Math.max(1, Math.min(answers.people, 4))
+    patch.guests = Math.max(1, answers.people)
   }
+  if (answers.pets) patch.pets = true
+  if (answers.when === 'dates' && answers.checkIn && answers.checkOut) {
+    patch.dates = { checkIn: answers.checkIn, checkOut: answers.checkOut }
+  }
+  if (answers.type) patch.type = answers.type
+  return { filters: patch }
 }
 
 export function parseQuickHintToAi(quick: string): Partial<AiSearchAnswers> {
