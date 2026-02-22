@@ -15,10 +15,14 @@ import {
   CalendarCheck,
   LogOut,
   BarChart3,
+  Shield,
+  AlertTriangle,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
-const SPACE_SECTION = 'mb-6'
+const SPACE_SECTION = 'space-y-3'
+const ROOT_GAP = 'space-y-6'
 const CARD_CLS = 'h-16 flex items-center justify-between gap-3 w-full px-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:bg-[var(--bg-input)] active:scale-[0.99] transition-all duration-200 text-left'
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
 const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3'
@@ -52,9 +56,9 @@ export default function ProfilePage() {
   const roleLabel = isAdmin ? 'Администратор' : isLandlord ? 'Арендодатель' : 'Пользователь'
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="page-container-tz33 py-4 px-4">
-        <section className={SPACE_SECTION}>
+    <div className="bg-[var(--bg-main)] pb-24 md:pb-8">
+      <div className={cn('page-container-tz33 px-4 pt-4 md:pt-3', ROOT_GAP)}>
+        <section className="pt-0">
           <div className="p-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[20px] font-semibold text-[var(--text-muted)]">
@@ -71,9 +75,21 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        <section className={SPACE_SECTION}>
+        {isAdmin && (
+          <section>
+            <h2 className={SECTION_TITLE}>Администрирование</h2>
+            <div className={SPACE_SECTION}>
+              <Link href="/admin" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Админ панель</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+              <Link href="/admin?tab=moderation" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Модерация</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+              <Link href="/admin?tab=push" className={CARD_CLS}><span className="flex items-center gap-3"><AlertTriangle className={ICON_CLS} />Жалобы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+              <Link href="/admin?tab=users" className={CARD_CLS}><span className="flex items-center gap-3"><Users className={ICON_CLS} />Управление пользователями</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+            </div>
+          </section>
+        )}
+
+        <section>
           <h2 className={SECTION_TITLE}>Профиль</h2>
-          <div className="space-y-3">
+          <div className={SPACE_SECTION}>
             <Link href="/profile/listings" className={CARD_CLS}><span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <Link href="/profile/bookings" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <Link href="/profile/finance" className={CARD_CLS}><span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
