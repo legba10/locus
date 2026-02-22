@@ -20,21 +20,25 @@ export interface StepTypeProps {
   onRentModeChange: (m: RentMode) => void
 }
 
+/** ТЗ-49: карточки типа — высота 88px, radius 16px, padding 16px, gap 12px, 2 в ряд, активная — рамка 2px */
+const TYPE_CARD_CLS = 'h-[88px] min-h-[88px] rounded-[16px] p-4 border-2 text-left font-semibold text-[15px] transition-all flex items-center'
+const RENT_BTN_CLS = 'h-[88px] min-h-[88px] flex-1 rounded-[16px] p-4 border-2 font-semibold text-[15px] transition-all'
+
 export function StepType({ type, rentMode, onTypeChange, onRentModeChange }: StepTypeProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <p className="text-[14px] font-medium text-[var(--text-secondary)] mb-3">Тип жилья</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {TYPES.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => onTypeChange(t.id)}
               className={cn(
-                'rounded-[16px] p-5 border-2 text-left font-semibold text-[15px] transition-all',
+                TYPE_CARD_CLS,
                 type === t.id
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow-[0_2px_12px_rgba(124,58,237,0.2)]'
+                  ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
                   : 'border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:border-[var(--accent)]/50'
               )}
             >
@@ -44,13 +48,13 @@ export function StepType({ type, rentMode, onTypeChange, onRentModeChange }: Ste
         </div>
       </div>
       <div>
-        <p className="text-[14px] font-medium text-[var(--text-secondary)] mb-3">Режим</p>
+        <p className="text-[14px] font-medium text-[var(--text-secondary)] mb-3">Режим аренды</p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => onRentModeChange('night')}
             className={cn(
-              'flex-1 rounded-[16px] p-4 border-2 font-semibold text-[15px] transition-all',
+              RENT_BTN_CLS,
               rentMode === 'night'
                 ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
                 : 'border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:border-[var(--accent)]/50'
@@ -62,7 +66,7 @@ export function StepType({ type, rentMode, onTypeChange, onRentModeChange }: Ste
             type="button"
             onClick={() => onRentModeChange('month')}
             className={cn(
-              'flex-1 rounded-[16px] p-4 border-2 font-semibold text-[15px] transition-all',
+              RENT_BTN_CLS,
               rentMode === 'month'
                 ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
                 : 'border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] hover:border-[var(--accent)]/50'

@@ -230,22 +230,25 @@ export function ListingWizard({
     }
   }
 
+  const currentStep = step + 1
+  const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
+
   return (
-    <div className="mx-auto max-w-[680px] px-4 pb-28 space-y-4">
+    <div className="min-h-[100dvh] mx-auto max-w-[680px] px-4 pb-24 space-y-4">
       <div className="space-y-1">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
         </h1>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          Шаг {step + 1} из {totalSteps}: {STEP_TITLES[step]}
+          Шаг {currentStep} из {totalSteps}: {STEP_TITLES[step]}
         </p>
       </div>
 
       <div className="h-2 w-full rounded-full bg-[var(--bg-input)] overflow-hidden">
-        <div className="h-full rounded-full bg-[var(--accent)] transition-all" style={{ width: `${((step + 1) / totalSteps) * 100}%` }} />
+        <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
       </div>
 
-      <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+      <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 space-y-4">
         {step === 0 && (
           <StepType
             type={type}
@@ -372,12 +375,22 @@ export function ListingWizard({
         }}
       />
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur px-4 py-3">
-        <div className="mx-auto max-w-[680px] flex items-center justify-between gap-3">
+      {/* ТЗ-49: фиксированная навигация — 48px кнопки, равная ширина, safe-area, blur */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)]"
+        style={{
+          padding: 16,
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+          background: 'rgba(10,10,20,0.9)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+      >
+        <div className="mx-auto max-w-[680px] flex items-center gap-3">
           <button
             type="button"
             onClick={step === 0 ? onCancel : prevStep}
-            className="rounded-[12px] px-5 py-3 border border-[var(--border-main)] text-[14px] font-semibold text-[var(--text-primary)]"
+            className="h-12 min-h-[48px] flex-1 rounded-[12px] border-2 border-[var(--border-main)] bg-transparent text-[14px] font-medium text-[var(--text-primary)]"
           >
             Назад
           </button>
@@ -390,10 +403,10 @@ export function ListingWizard({
                 nextStep()
               }}
               className={cn(
-                'rounded-[12px] px-5 py-3 text-[14px] font-semibold',
+                'h-12 min-h-[48px] flex-1 rounded-[12px] text-[14px] font-medium',
                 canNext
-                  ? 'bg-[var(--accent)] text-[var(--button-primary-text)]'
-                  : 'bg-[var(--bg-input)] text-[var(--text-muted)] cursor-not-allowed'
+                  ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-2 border-transparent'
+                  : 'bg-[var(--bg-input)] text-[var(--text-muted)] cursor-not-allowed border-2 border-transparent'
               )}
             >
               Далее
@@ -403,7 +416,7 @@ export function ListingWizard({
               type="button"
               onClick={() => void submit()}
               disabled={isSubmitting}
-              className="rounded-[12px] px-5 py-3 bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold disabled:opacity-60"
+              className="h-12 min-h-[48px] flex-1 rounded-[12px] bg-[var(--accent)] text-[var(--text-on-accent)] text-[14px] font-medium disabled:opacity-60 border-2 border-transparent"
             >
               {isSubmitting ? 'Публикация…' : 'Опубликовать'}
             </button>
