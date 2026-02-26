@@ -48,8 +48,10 @@ export function HeaderLight() {
   const limit = user?.listingLimit ?? 1
   const used = user?.listingUsed ?? 0
   const canCreateListing = authed
-  const createHref = canCreateListing && used >= limit ? '/pricing?reason=limit' : '/dashboard/listings/create'
   const isAdmin = Boolean((user as any)?.isAdmin) || user?.role === 'admin'
+  const createHref = canCreateListing
+    ? (isAdmin ? '/profile/listings/create' : (used >= limit ? '/pricing?reason=limit' : '/profile/listings/create'))
+    : '#'
   const displayName = user?.full_name ?? user?.username ?? null
   const displayAvatar = user?.avatar_url ?? null
   const profileCompletion = Math.round(

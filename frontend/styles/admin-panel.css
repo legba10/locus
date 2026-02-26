@@ -176,10 +176,11 @@
   color: var(--admin-text-primary);
 }
 
-/* Кнопки табов и ссылки в админке */
+/* TZ-47: активный таб — без glow, только цвет */
 .admin-panel .admin-tab-active {
-  background: var(--accent, #7c3aed) !important;
-  color: white !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #8b5cf6 !important;
 }
 .admin-panel .admin-tab-inactive {
   color: var(--admin-text-secondary) !important;

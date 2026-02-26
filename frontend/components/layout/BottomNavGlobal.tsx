@@ -30,10 +30,11 @@ export function BottomNavGlobal() {
   const profileHref = authed ? '/profile' : '/auth/login?redirect=/profile'
   const addHref = authed ? '/profile/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/profile/listings/create')
 
+  /* TZ-47: активный таб — color #8b5cf6, без glow/background/box-shadow */
   const linkCls = (active: boolean) =>
     cn(
       'flex flex-col items-center gap-0.5 py-2 px-2 rounded-[12px] text-[10px] font-medium transition-colors min-w-[52px]',
-      active ? 'text-[var(--accent)] bg-[var(--accent)]/10' : 'text-[var(--text-muted)]'
+      active ? 'text-[#8b5cf6] bg-transparent !shadow-none' : 'text-[var(--text-muted)]'
     )
 
   return (

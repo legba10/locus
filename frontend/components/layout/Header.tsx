@@ -4,15 +4,15 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { cn } from '@/shared/utils/cn'
 import { useAuthStore } from '@/domains/auth'
-import { Search } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
 import { NotificationsBell } from '@/shared/ui/NotificationsBell'
 import IconButton from '@/components/ui/IconButton'
 import UserAvatar from '@/components/ui/UserAvatar'
 import { useSearchOverlayStore } from '@/core/searchOverlay/searchOverlayStore'
 
 /**
- * ТЗ-31: Desktop header — только логотип, поиск, колокольчик, аватар.
- * Без «Сдать жильё» и без «Сообщения» (есть в сайдбаре/нижнем меню).
+ * ТЗ-31: Desktop header — логотип, поиск, колокольчик, аватар.
+ * TZ-47: Desktop — кнопка «+ Разместить» справа.
  */
 export function Header() {
   const { user, isAuthenticated } = useAuthStore()
@@ -83,6 +83,16 @@ export function Header() {
             <span className="flex w-9 h-9 items-center justify-center rounded-lg text-[var(--text-muted)]" aria-hidden>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-6-6 6 6 0 00-6 6v3.159c0 .538-.214 1.055-.595 1.436L7 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </span>
+          )}
+          {/* TZ-47: Desktop — кнопка «Разместить объявление» */}
+          {authed && (
+            <Link
+              href="/profile/listings/create"
+              className="hidden md:flex items-center gap-1.5 h-9 px-4 rounded-xl text-[14px] font-medium bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90 shrink-0"
+            >
+              <Plus className="w-4 h-4" strokeWidth={2.2} />
+              Разместить
+            </Link>
           )}
           {/* TZ-34: выпадающее меню из аватара удалено. Аватар = переход в /profile */}
           {authed && (

@@ -234,7 +234,7 @@ export function ListingWizard({
   const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
 
   return (
-    <div className="min-h-[100dvh] mx-auto max-w-[680px] px-4 pb-24 space-y-4">
+    <div className="min-h-[100dvh] max-w-[680px] w-full mx-auto p-4 pb-24 flex flex-col gap-[20px]">
       <div className="space-y-1">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
@@ -248,7 +248,7 @@ export function ListingWizard({
         <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
       </div>
 
-      <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 space-y-4">
+      <div className="w-full rounded-[16px] card-tz47 p-[18px] flex flex-col gap-[12px]">
         {step === 0 && (
           <StepType
             type={type}
@@ -375,18 +375,15 @@ export function ListingWizard({
         }}
       />
 
-      {/* ТЗ-49: фиксированная навигация — 48px кнопки, равная ширина, safe-area, blur */}
+      {/* TZ-47: нижняя панель шагов — sticky, padding 12px 16px, background inherit */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)]"
+        className="sticky bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] flex justify-between items-center bg-[var(--bg-main)]"
         style={{
-          padding: 16,
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          background: 'rgba(10,10,20,0.9)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          padding: '12px 16px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
       >
-        <div className="mx-auto max-w-[680px] flex items-center gap-3">
+        <div className="mx-auto max-w-[680px] w-full flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={step === 0 ? onCancel : prevStep}

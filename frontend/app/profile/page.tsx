@@ -21,11 +21,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
-const SPACE_SECTION = 'space-y-3'
-const ROOT_GAP = 'space-y-6'
-const CARD_CLS = 'h-16 flex items-center justify-between gap-3 w-full px-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:bg-[var(--bg-input)] active:scale-[0.99] transition-all duration-200 text-left'
+/** TZ-47: карточки меню — height 56px, border-radius 14px, padding 0 16px */
+const CARD_CLS = 'h-14 min-h-[56px] flex items-center justify-between gap-3 w-full px-4 rounded-[14px] card-tz47 hover:translate-y-[-1px] active:scale-[0.99] transition-all duration-200 text-left'
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
-const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3'
+const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)]'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -57,9 +56,15 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className={cn('page-container-tz33 px-4 pt-4 md:pt-3', ROOT_GAP)}>
-        <section className="pt-0">
-          <div className="p-4 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <div className="profile-container-tz47 pt-4">
+        <Link
+          href="/profile/listings/create"
+          className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90"
+        >
+          Разместить объявление
+        </Link>
+        <section className="flex flex-col gap-3 mb-4">
+          <div className="p-4 rounded-[14px] card-tz47">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[20px] font-semibold text-[var(--text-muted)]">
                 {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : (user?.full_name || user?.username || '?').slice(0, 1).toUpperCase()}
@@ -76,9 +81,9 @@ export default function ProfilePage() {
         </section>
 
         {isAdmin && (
-          <section>
+          <section className="flex flex-col gap-3 mb-6">
             <h2 className={SECTION_TITLE}>Администрирование</h2>
-            <div className={SPACE_SECTION}>
+            <div className="flex flex-col gap-3">
               <Link href="/admin" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Админ панель</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
               <Link href="/admin?tab=moderation" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Модерация</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
               <Link href="/admin?tab=push" className={CARD_CLS}><span className="flex items-center gap-3"><AlertTriangle className={ICON_CLS} />Жалобы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
@@ -87,9 +92,9 @@ export default function ProfilePage() {
           </section>
         )}
 
-        <section>
+        <section className={cn('flex flex-col gap-3', isAdmin && 'mt-3')}>
           <h2 className={SECTION_TITLE}>Профиль</h2>
-          <div className={SPACE_SECTION}>
+          <div className="flex flex-col gap-3">
             <Link href="/profile/listings" className={CARD_CLS}><span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <Link href="/profile/bookings" className={CARD_CLS}><span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             <Link href="/profile/finance" className={CARD_CLS}><span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>

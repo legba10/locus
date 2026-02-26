@@ -253,6 +253,7 @@ export class ListingsService {
     this.logger.debug(`Creating listing for owner: ${ownerId}`);
     const isPrivileged = await this.isPrivilegedUser(ownerId);
 
+    // TZ-47: admin — размещает бесплатно (без лимита), moderation_skip в publish()
     // FINAL LOGIC: limit is tracked in Supabase profile (listing_used/listing_limit).
     // Fallback: if Supabase is unavailable/misconfigured, use Neon limits + listing count.
     if (!isPrivileged) {
@@ -297,7 +298,7 @@ export class ListingsService {
         addressLine: dto.addressLine,
         lat: dto.lat,
         lng: dto.lng,
-        basePrice: dto.basePrice,
+        basePrice: isPrivileged ? 0 : dto.basePrice,
         currency: dto.currency ?? "RUB",
         capacityGuests: dto.capacityGuests ?? 2,
         bedrooms: dto.bedrooms ?? 1,

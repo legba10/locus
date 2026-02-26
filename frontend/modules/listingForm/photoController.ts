@@ -1,6 +1,7 @@
 import type { ListingPhotoDraft, PhotoType } from './listingStore'
 
-const MAX_PHOTOS = 30
+/** TZ-48: до 10 фото */
+const MAX_PHOTOS = 10
 
 function uid() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`

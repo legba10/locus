@@ -131,7 +131,10 @@ export function AdminDashboardV2() {
             <h1 className="text-[24px] sm:text-[28px] font-bold text-[var(--admin-text-primary)] mb-0.5">Панель администратора</h1>
             <p className="text-[14px] text-[var(--admin-text-secondary)]">Управление платформой LOCUS</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/profile/listings/create" className="px-4 py-2 rounded-[14px] bg-[var(--accent)] text-white text-[14px] font-medium hover:opacity-90">
+              + Разместить объявление
+            </Link>
             <Link href="/admin/ai" className="px-4 py-2 rounded-[14px] bg-violet-500/20 text-violet-300 text-[14px] font-medium hover:bg-violet-500/30 border border-[var(--admin-card-border)]">
               AI
             </Link>
