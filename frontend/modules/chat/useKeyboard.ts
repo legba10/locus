@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from 'react'
 
+/** TZ-58: --keyboard-offset на document для padding-bottom чата (iOS клавиатура). */
+function setKeyboardOffsetCSS(px: number) {
+  if (typeof document === 'undefined') return
+  document.documentElement.style.setProperty('--keyboard-offset', `${px}px`)
+}
+
 export function useKeyboard() {
   const [keyboardOffset, setKeyboardOffset] = useState(0)
 
@@ -11,8 +17,9 @@ export function useKeyboard() {
     if (!vv) return
 
     const updateOffset = () => {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      const offset = Math.max(0, window.innerHeight - vv.height)
       setKeyboardOffset(offset)
+      setKeyboardOffsetCSS(offset)
     }
 
     updateOffset()
@@ -21,6 +28,7 @@ export function useKeyboard() {
     return () => {
       vv.removeEventListener('resize', updateOffset)
       vv.removeEventListener('scroll', updateOffset)
+      setKeyboardOffsetCSS(0)
     }
   }, [])
 

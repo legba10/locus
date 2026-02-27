@@ -31,6 +31,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
   const { keyboardOffset } = useKeyboard()
   const { listRef, onScroll, scrollToBottom, scrollOnNewMessage } = useAutoScroll()
   const lastMessageIdRef = useRef<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const loadMessages = useCallback(async () => {
     const res = await apiFetchJson<{ messages?: ChatMessage[] }>(`/chats/${chatId}/messages`)
@@ -49,7 +50,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
     void loadMessages()
       .then(() => {
         if (!mounted) return
-        requestAnimationFrame(() => scrollToBottom('auto'))
+        requestAnimationFrame(() => { scrollToBottom('auto'); messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }) })
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -70,7 +71,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
         }
         if (last.id !== lastMessageIdRef.current) {
           lastMessageIdRef.current = last.id
-          scrollOnNewMessage('smooth')
+          scrollOnNewMessage('smooth'); messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
         }
       })
     }, 4000)
@@ -88,7 +89,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
         body: JSON.stringify({ text }),
       })
       setMessages((prev) => [...prev, msg])
-      requestAnimationFrame(() => scrollToBottom('smooth'))
+      requestAnimationFrame(() => { scrollToBottom('smooth'); messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) })
     } catch {
       // ignore, existing error handling is noisy in chat flow
     } finally {
@@ -99,8 +100,8 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
   const showListingPreview = listingId || listingTitle || listingPhotoUrl
 
   return (
-    <section className={`chat-page ${embedded ? 'embedded h-full' : 'h-[100vh]'} flex flex-col bg-[var(--card-bg)]`}>
-      <header className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)]">
+    <section className={`chat-page ${embedded ? 'embedded' : ''} flex flex-col`}>
+      <header className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)] bg-[var(--card-bg)]">
         {onBack && (
           <button
             type="button"
@@ -114,7 +115,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
         <h2 className="text-[16px] font-semibold text-[var(--text-primary)] truncate">{title}</h2>
       </header>
       {showListingPreview && (
-        <div className="chat-listing-preview flex-shrink-0">
+        <div className="chat-listing-preview">
           {listingId ? (
             <Link href={`/listings/${listingId}`} className="flex items-center gap-3 w-full text-left">
               {listingPhotoUrl && (
@@ -136,10 +137,12 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
           )}
         </div>
       )}
-      <div className="chat-messages min-h-0">
-        <MessageList messages={messages} loading={loading} myId={myId} listRef={listRef} onScroll={onScroll} />
+      <div className="chat-messages" ref={listRef} onScroll={onScroll}>
+        <MessageList messages={messages} loading={loading} myId={myId} messagesEndRef={messagesEndRef} />
       </div>
-      <ChatInput value={input} onChange={setInput} onSend={send} sending={sending} bottomOffset={keyboardOffset} useStickyLayout />
+      <div className="chat-input-wrapper">
+        <ChatInput value={input} onChange={setInput} onSend={send} sending={sending} bottomOffset={keyboardOffset} useStickyLayout />
+      </div>
     </section>
   )
 }

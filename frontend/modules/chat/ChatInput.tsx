@@ -16,10 +16,10 @@ export function ChatInput({ value, onChange, onSend, sending, bottomOffset, useS
   return (
     <footer
       className={cn(
-        'chat-input border-t border-[var(--border-main)] bg-[var(--card-bg)] p-3',
-        useStickyLayout ? 'sticky bottom-0 z-10' : 'fixed left-0 right-0 z-20'
+        'chat-input',
+        useStickyLayout ? 'flex-shrink-0' : 'fixed left-0 right-0 z-20'
       )}
-      style={useStickyLayout ? { paddingBottom: `max(12px, env(safe-area-inset-bottom))` } : { bottom: `${bottomOffset}px` }}
+      style={useStickyLayout ? undefined : { bottom: `${bottomOffset}px` }}
     >
       <form
         onSubmit={(e) => {
@@ -42,7 +42,7 @@ export function ChatInput({ value, onChange, onSend, sending, bottomOffset, useS
         <button
           type="submit"
           disabled={sending || !value.trim()}
-          className="rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] px-5 py-3 text-[14px] font-semibold disabled:opacity-50"
+          className="btn-secondary rounded-[14px] px-5 py-3 text-[14px] font-semibold disabled:opacity-50 min-h-0 h-auto"
         >
           {sending ? '…' : 'Отправить'}
         </button>
