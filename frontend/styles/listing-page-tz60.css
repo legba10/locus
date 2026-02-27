@@ -60,10 +60,10 @@
   color: var(--text-primary);
 }
 
-/* Фиксированный блок действий — выше bottom-nav (70px) */
+/* Фиксированный блок действий — выше bottom-nav (78px) */
 .listing-actions {
   position: fixed;
-  bottom: 80px;
+  bottom: calc(var(--bottom-nav-height, 78px) + 2px);
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);

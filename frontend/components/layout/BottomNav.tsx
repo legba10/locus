@@ -1,27 +1,30 @@
 'use client'
 
-/** TZ-53: Нижняя навигация — без glow, стабильная в Telegram WebView и Safari/Android. */
+/** TZ-53/TZ-70: Нижняя навигация — Apple-grade liquid glass, без glow. */
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/domains/auth'
 import { cn } from '@/shared/utils/cn'
 import { Home, Search, MessageCircle, User, Plus } from 'lucide-react'
 
 type NavIcon = 'home' | 'search' | 'plus' | 'chat' | 'user'
 
+/** TZ-70: иконки 22px, stroke 1.8 — размер в CSS .nav-item svg */
 function NavIcon({ name }: { name: NavIcon }) {
+  const stroke = 1.8
   switch (name) {
     case 'home':
-      return <Home className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+      return <Home strokeWidth={stroke} aria-hidden />
     case 'search':
-      return <Search className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+      return <Search strokeWidth={stroke} aria-hidden />
     case 'plus':
-      return <Plus className="w-5 h-5" strokeWidth={2.2} aria-hidden />
+      return <Plus strokeWidth={stroke} aria-hidden />
     case 'chat':
-      return <MessageCircle className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+      return <MessageCircle strokeWidth={stroke} aria-hidden />
     case 'user':
-      return <User className="w-5 h-5" strokeWidth={1.8} aria-hidden />
+      return <User strokeWidth={stroke} aria-hidden />
     default:
       return null
   }
@@ -81,9 +84,13 @@ function NavItem({ icon, label, href, active, isAdd }: NavItemProps) {
   )
 }
 
+const SCROLL_THRESHOLD = 24
+
 export function BottomNav() {
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
+  const [scrolled, setScrolled] = useState(false)
+  const lastY = useRef(0)
 
   const isAdmin = pathname?.startsWith('/admin')
   const isListingDetail = pathname?.match(/^\/listings\/[^/]+$/)
@@ -104,8 +111,23 @@ export function BottomNav() {
   const profileHref = authed ? '/profile' : '/auth/login?redirect=/profile'
   const addHref = authed ? '/profile/listings/create' : '/auth/login?redirect=' + encodeURIComponent('/profile/listings/create')
 
+  useEffect(() => {
+    const onScroll = () => {
+      const y = typeof window !== 'undefined' ? window.scrollY : 0
+      if (y > SCROLL_THRESHOLD) setScrolled(true)
+      else setScrolled(false)
+      lastY.current = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <nav className="bottom-nav" aria-label="Основная навигация">
+    <nav
+      className={cn('bottom-nav', scrolled && 'scrolled')}
+      aria-label="Основная навигация"
+    >
       <NavItem icon="home" label="Главная" href="/" active={isHome} />
       <NavItem icon="search" label="Поиск" href="/listings" active={isSearch} />
       <NavItem icon="plus" label="Добавить" href={addHref} active={isAdd} isAdd />

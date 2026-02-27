@@ -1,0 +1,91 @@
+/**
+ * TZ-71: Elevation System 2.0 — единая система глубины, теней и z-index.
+ * E0–E4, без цветных glow, без двойных теней. Только физическая глубина.
+ */
+
+/* ─── E0: Базовый фон (без теней, без свечения) ─── */
+:root {
+  --bg-base-dark: #0f1425;
+  --bg-base-light: #f4f6fb;
+}
+
+/* Z-index задаётся в zindex.css: --z-base, --z-card, --z-glass, --z-floating, --z-e4 */
+
+/* Тени по уровням (одна тень на уровень, без цветных) */
+:root {
+  --shadow-e1: 0 8px 20px rgba(0, 0, 0, 0.25);
+  --shadow-e1-light: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-e2-outer: 0 -15px 40px rgba(0, 0, 0, 0.35);
+  --shadow-e2-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-e3: 0 12px 30px rgba(0, 0, 0, 0.45);
+  --shadow-e4: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+/* ─── E1: Карточки (Profile, Filters, Blocks) ─── */
+.elevation-1 {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  box-shadow: var(--shadow-e1);
+  z-index: var(--z-card);
+}
+
+[data-theme="light"] .elevation-1,
+:root[data-theme="light"] .elevation-1 {
+  background: var(--bg-card, #ffffff);
+  box-shadow: var(--shadow-e1);
+}
+
+.elevation-1:active {
+  transform: scale(0.98);
+  transition: transform 0.15s ease;
+}
+
+/* ─── E2: Стекло (Bottom Nav, Top Bar) ─── */
+.elevation-2 {
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  background: rgba(18, 22, 40, 0.55);
+  box-shadow: var(--shadow-e2-outer), var(--shadow-e2-inset);
+  z-index: var(--z-glass);
+}
+
+[data-theme="light"] .elevation-2,
+:root[data-theme="light"] .elevation-2 {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-e2-outer), var(--shadow-e2-inset);
+}
+
+/* ─── E3: Floating (AI кнопка, FAB) ─── */
+.elevation-3 {
+  box-shadow: var(--shadow-e3);
+  z-index: var(--z-floating);
+}
+
+.elevation-3:active {
+  transform: scale(0.98);
+}
+
+/* ─── E4: Модалки ─── */
+.elevation-4 {
+  box-shadow: var(--shadow-e4);
+  z-index: var(--z-e4, 40);
+}
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  z-index: calc(var(--z-e4, 40) - 1);
+}
+
+/* ─── Карточки: единая анимация вдавливания ─── */
+.card:active,
+[class*="card"]:active,
+[class*="Card"]:active {
+  transform: scale(0.98);
+  transition: transform 0.15s ease;
+}
+
+/* Отключаем дублирование, если уже есть transform */
+.elevation-1:active.card,
+.card.elevation-1:active {
+  transform: scale(0.98);
+}

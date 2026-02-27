@@ -1,50 +1,81 @@
 /**
- * TZ-53: Нижняя навигация — без glow, без градиентов, стабильная в WebView/Safari/Android.
- * TZ-68: центральная кнопка «Добавить» — 56px, var(--primary), мягкая тень, без засветки/radial-gradient.
- * Запрещено: box-shadow 0 0 40px purple, radial-gradient, outer glow, blur вокруг кнопки.
+ * TZ-53 / TZ-68 / TZ-70: Apple-grade liquid bottom navigation.
+ * Стеклянный слой, без неона, без пластика, без radial-gradient и outer glow.
  */
 
-/* TZ-55: «жидкое стекло» — лёгкий полупрозрачный фон, без тяжёлой границы */
+/* ─── TZ-70: структура слоя — высота, blur, тени, safe-area ─── */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
+
+  height: 78px;
   padding-bottom: env(safe-area-inset-bottom, 0);
-  min-height: calc(70px + env(safe-area-inset-bottom, 0px));
+  min-height: calc(78px + env(safe-area-inset-bottom, 0px));
 
   display: flex;
-  justify-content: space-around;
   align-items: center;
+  justify-content: space-around;
 
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
 
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.9);
   z-index: 1000;
 
-  box-shadow: none;
+  box-shadow: var(--shadow-e2-outer, 0 -15px 40px rgba(0,0,0,0.35)), var(--shadow-e2-inset, inset 0 1px 0 rgba(255,255,255,0.1));
+
+  transition: background 0.25s ease;
 }
 
+/* TZ-70: light mode — плотное стекло */
+.bottom-nav {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* TZ-70: dark mode — стекло, не чёрный прямоугольник */
 [data-theme="dark"] .bottom-nav,
 .dark .bottom-nav {
-  background: rgba(15, 23, 42, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: none;
+  background: rgba(18, 22, 40, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-e2-outer), var(--shadow-e2-inset);
 }
 
-/* Только на mobile */
+/* TZ-70: прозрачность при скролле вверх — панель чуть плотнее */
+.bottom-nav.scrolled {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .bottom-nav.scrolled,
+.dark .bottom-nav.scrolled {
+  background: rgba(18, 22, 40, 0.75);
+}
+
+/* TZ-70: glass edge — засветка верхнего края */
+.bottom-nav::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  pointer-events: none;
+}
+
 @media (min-width: 768px) {
   .bottom-nav {
     display: none;
   }
 }
 
-/* ─── Nav item: лёгкий, только смена цвета при active ─── */
+/* ─── TZ-70: иконки Apple-style 22px, stroke 1.8 ─── */
 .nav-item {
   display: flex;
   flex-direction: column;
@@ -61,12 +92,22 @@
   min-width: 56px;
 }
 
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+}
+
 .nav-item:hover {
   color: var(--text-primary);
 }
 
+/* TZ-70: active — сдержанный, без неона, micro-shift */
 .nav-item.active {
-  color: var(--accent);
+  color: var(--primary, var(--accent));
+}
+
+.nav-item.active svg {
+  transform: translateY(-1px);
 }
 
 .nav-item .nav-item__icon {
@@ -81,7 +122,7 @@
   line-height: 1.2;
 }
 
-/* TZ-68: центральная кнопка «Добавить» — интегрирована в liquid-bottom-nav, без пластикового свечения */
+/* TZ-68/TZ-70: центральная кнопка — в стекле, без glow */
 .nav-item.add .nav-item__add-btn {
   display: flex;
   align-items: center;
@@ -92,7 +133,7 @@
   background: var(--primary, var(--accent));
   color: #fff;
   border: none;
-  box-shadow: 0 8px 20px rgba(124, 77, 255, 0.35);
+  box-shadow: 0 10px 20px rgba(124, 77, 255, 0.35);
   transform: translateY(-14px);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -117,13 +158,10 @@
 }
 
 .nav-item.add.active .nav-item__label {
-  color: var(--accent);
+  color: var(--primary, var(--accent));
 }
 
-.nav-item.add:hover .nav-item__add-btn {
-  background: var(--accent-hover, var(--primary));
-}
-
+.nav-item.add:hover .nav-item__add-btn,
 .nav-item.add.active .nav-item__add-btn {
   background: var(--accent-hover, var(--primary));
 }
@@ -131,7 +169,7 @@
 [data-theme="dark"] .nav-item.add .nav-item__add-btn,
 .dark .nav-item.add .nav-item__add-btn {
   background: var(--primary, var(--accent));
-  box-shadow: 0 8px 20px rgba(124, 77, 255, 0.25);
+  box-shadow: 0 10px 20px rgba(124, 77, 255, 0.25);
 }
 
 [data-theme="dark"] .nav-item.add .nav-item__add-btn:active,

@@ -1,9 +1,13 @@
 /**
- * TZ-4: Единая z-index иерархия. Никаких 99999.
- * header: 100, dropdown: 200, overlay: 900, modal: 1000, toast: 1100.
+ * TZ-4 + TZ-71: Единая z-index иерархия. Никаких 99999.
+ * TZ-71 elevation scale: --z-e1..--z-e4 (1,10,20,40). Слой overlay/modal выше.
  */
 :root {
   --z-base: 1;
+  --z-card: 10;
+  --z-glass: 20;
+  --z-floating: 30;
+  --z-e4: 40;
   --z-header: 100;
   --z-bottom-bar: 60;
   --z-dropdown: 200;

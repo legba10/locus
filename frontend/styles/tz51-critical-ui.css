@@ -42,7 +42,7 @@ button,
 /* TZ-53: create-nav выше bottom-nav (wizard кнопки не перекрываются) */
 .create-nav {
   position: fixed;
-  bottom: 70px;
+  bottom: var(--bottom-nav-height, 78px);
   left: 0;
   right: 0;
   padding: 12px 16px;

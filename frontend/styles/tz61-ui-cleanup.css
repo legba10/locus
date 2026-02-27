@@ -2,21 +2,7 @@
  * TZ-61: Точечная стабилизация UI — liquid glass nav, светлый профиль, чат с клавиатурой, шаг характеристик.
  */
 
-/* ─── 1. Нижняя панель — liquid glass (полупрозрачность, blur, без плотного фона и градиента) ─── */
-.bottom-nav {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
-  background-image: none;
-}
-
-[data-theme="dark"] .bottom-nav,
-.dark .bottom-nav {
-  background: rgba(15, 20, 40, 0.55);
-  border-top-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
-}
+/* TZ-70: стили нижней панели перенесены в bottom-nav-tz53.css (Apple-grade liquid) */
 
 /* ─── 2. Профиль — светлый фон, карточки белые, без тёмно-синих плашек ─── */
 .profile-page {

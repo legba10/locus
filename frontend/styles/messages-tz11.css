@@ -57,7 +57,7 @@
 /* TZ-24: поле ввода чата над bottom bar — отступ = высота навбара (72px) + safe-area */
 @media (max-width: 767px) {
   .chat-column-mobile-pb {
-    padding-bottom: max(var(--bottom-nav-height, 72px), calc(72px + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: max(var(--bottom-nav-height, 78px), calc(78px + env(safe-area-inset-bottom, 0px)));
   }
 }
 

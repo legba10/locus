@@ -6,6 +6,7 @@
 @import './tokens.css';
 @import './variables.css';
 @import './zindex.css';
+@import './elevation-system-tz71.css';
 @import './layers.css';
 @import './layout.css';
 @import './layout-header.css';
@@ -1477,15 +1478,9 @@ button:active,
   transform: scale(0.96);
 }
 
-/* Premium AI/search CTA pulse */
+/* TZ-71: неон запрещён — убрана glowPulse. AI кнопка без цветного свечения. */
 .ai-button {
-  animation: glowPulse 3s infinite;
-}
-
-@keyframes glowPulse {
-  0% { box-shadow: 0 0 0 rgba(120, 150, 255, 0); }
-  50% { box-shadow: 0 0 30px rgba(120, 150, 255, 0.35); }
-  100% { box-shadow: 0 0 0 rgba(120, 150, 255, 0); }
+  box-shadow: var(--shadow-e3, 0 12px 30px rgba(0, 0, 0, 0.45));
 }
 
 /* Page/route appearance helpers */
@@ -2235,13 +2230,14 @@ button,
   transform: scale(0.98);
 }
 
+/* TZ-71: без radial подсветок — базовый фон */
 .home-hero {
-  background: radial-gradient(circle at 20% 20%, rgba(123, 97, 255, 0.15), transparent 60%);
+  background: var(--bg-base-light, var(--bg-main));
 }
 
 [data-theme="dark"] .home-hero,
 .dark .home-hero {
-  background: radial-gradient(circle at 20% 20%, rgba(123, 97, 255, 0.25), transparent 60%);
+  background: var(--bg-base-dark, var(--bg-main));
 }
 
 .home-hero-subtitle {
@@ -2289,13 +2285,9 @@ button,
   transform: rotate(12deg);
 }
 
+/* TZ-71: без цветного glow на иконке поиска */
 .hero-search-submit .search-icon {
-  animation: searchPulse 2.8s ease-in-out infinite;
-}
-
-@keyframes searchPulse {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(123, 97, 255, 0)); }
-  50% { filter: drop-shadow(0 0 6px rgba(123, 97, 255, 0.35)); }
+  filter: none;
 }
 
 button,
