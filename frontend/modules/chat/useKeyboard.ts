@@ -20,6 +20,10 @@ export function useKeyboard() {
       const offset = Math.max(0, window.innerHeight - vv.height)
       setKeyboardOffset(offset)
       setKeyboardOffsetCSS(offset)
+      /* TZ-61: iOS — при открытой клавиатуре подгоняем высоту body под visualViewport */
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.style.height = offset > 0 ? `${vv.height}px` : ''
+      }
     }
 
     updateOffset()
@@ -29,6 +33,7 @@ export function useKeyboard() {
       vv.removeEventListener('resize', updateOffset)
       vv.removeEventListener('scroll', updateOffset)
       setKeyboardOffsetCSS(0)
+      if (typeof document !== 'undefined' && document.body) document.body.style.height = ''
     }
   }, [])
 

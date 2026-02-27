@@ -23,7 +23,7 @@ export function StepAmenities({ amenityKeys, onChange }: StepAmenitiesProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="step-container space-y-6">
       {CATEGORIES.map((cat) => (
         <div key={cat.key}>
           <p className="text-[14px] font-medium text-[var(--text-secondary)] mb-3">{cat.label}</p>
@@ -35,11 +35,11 @@ export function StepAmenities({ amenityKeys, onChange }: StepAmenitiesProps) {
                 <label
                   key={key}
                   className={cn(
-                    'flex items-center gap-2 rounded-[12px] px-4 py-3 border cursor-pointer transition-colors',
-                    checked ? 'border-[var(--accent)] bg-[var(--accent)]/10' : 'border-[var(--border-main)] bg-[var(--bg-input)]'
+                    'feature-card flex items-center gap-2 px-4 py-3 cursor-pointer',
+                    checked && 'active'
                   )}
                 >
-                  <input type="checkbox" checked={checked} onChange={() => toggle(key)} className="rounded border-[var(--border-main)] text-[var(--accent)]" />
+                  <input type="checkbox" checked={checked} onChange={() => toggle(key)} className="rounded border-[var(--border-main)] text-[var(--accent)] accent-[var(--accent)]" />
                   <span className="text-[14px] font-medium text-[var(--text-primary)]">{label}</span>
                 </label>
               )

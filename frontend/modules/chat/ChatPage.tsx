@@ -100,7 +100,7 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
   const showListingPreview = listingId || listingTitle || listingPhotoUrl
 
   return (
-    <section className={`chat-page ${embedded ? 'embedded' : ''} flex flex-col`}>
+    <section className={`chat-page chat-container ${embedded ? 'embedded' : ''} flex flex-col`}>
       <header className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)] bg-[var(--card-bg)]">
         {onBack && (
           <button

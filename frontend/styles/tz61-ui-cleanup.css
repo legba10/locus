@@ -1,0 +1,137 @@
+/**
+ * TZ-61: Точечная стабилизация UI — liquid glass nav, светлый профиль, чат с клавиатурой, шаг характеристик.
+ */
+
+/* ─── 1. Нижняя панель — liquid glass (полупрозрачность, blur, без плотного фона и градиента) ─── */
+.bottom-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
+  background-image: none;
+}
+
+[data-theme="dark"] .bottom-nav,
+.dark .bottom-nav {
+  background: rgba(15, 20, 40, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* ─── 2. Профиль — светлый фон, карточки белые, без тёмно-синих плашек ─── */
+.profile-page {
+  background: #f5f6fb;
+}
+
+[data-theme="dark"] .profile-page,
+.dark .profile-page {
+  background: var(--bg-primary);
+}
+
+.profile-page .profile-item,
+.profile-item {
+  background: #ffffff;
+  color: #111;
+  border-radius: 18px;
+  box-shadow: var(--shadow-card, 0 4px 20px rgba(0, 0, 0, 0.06));
+  border: none;
+}
+
+[data-theme="dark"] .profile-page .profile-item,
+[data-theme="dark"] .profile-item,
+.dark .profile-page .profile-item,
+.dark .profile-item {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.profile-admin-section {
+  background: #f0f1f5;
+}
+
+[data-theme="dark"] .profile-admin-section,
+.dark .profile-admin-section {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ─── 4. Шаг «Характеристики» — светлый фон, лёгкие карточки ─── */
+.step-container {
+  background: #f5f6fb;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.feature-card {
+  background: #fff;
+  border: 1px solid #e6e8f2;
+  border-radius: 16px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.feature-card.active,
+.feature-card:has(input:checked) {
+  border: 2px solid var(--accent);
+  background: rgba(124, 77, 255, 0.05);
+}
+
+[data-theme="dark"] .step-container,
+.dark .step-container {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .feature-card,
+.dark .feature-card {
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .feature-card.active,
+[data-theme="dark"] .feature-card:has(input:checked),
+.dark .feature-card.active,
+.dark .feature-card:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(124, 77, 255, 0.08);
+}
+
+/* ─── 5. Чат — сообщения видны при клавиатуре ─── */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 100vh;
+}
+
+.chat-container .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 120px;
+  scroll-padding-bottom: 100px;
+}
+
+.chat-container .chat-input-wrapper {
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+}
+
+/* ─── 6. Футер скрыт на мобиле в профиле (добавляется класс с JS) ─── */
+body.profile-route-mobile .footer-tz6 {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  body.profile-route-mobile .footer-tz6 {
+    display: block;
+  }
+}
+
+/* ─── 7. Отступ страниц от нижней панели ─── */
+.page-content {
+  padding-bottom: 110px;
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding-bottom: 0;
+  }
+}
