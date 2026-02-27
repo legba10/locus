@@ -1,6 +1,7 @@
 /**
  * TZ-53: Нижняя навигация — без glow, без градиентов, стабильная в WebView/Safari/Android.
- * Запрещено: box-shadow фиолетовый, radial-gradient, glow, фильтры на кнопках.
+ * TZ-68: центральная кнопка «Добавить» — 56px, var(--primary), мягкая тень, без засветки/radial-gradient.
+ * Запрещено: box-shadow 0 0 40px purple, radial-gradient, outer glow, blur вокруг кнопки.
  */
 
 /* TZ-55: «жидкое стекло» — лёгкий полупрозрачный фон, без тяжёлой границы */
@@ -80,28 +81,33 @@
   line-height: 1.2;
 }
 
-/* Центральная кнопка «Добавить» — выделена, без glow ─── */
-.nav-item.add {
-  transform: translateY(-4px);
-}
-
+/* TZ-68: центральная кнопка «Добавить» — интегрирована в liquid-bottom-nav, без пластикового свечения */
 .nav-item.add .nav-item__add-btn {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--primary, var(--accent));
   color: #fff;
   border: none;
-  box-shadow: none;
-  transition: background 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 8px 20px rgba(124, 77, 255, 0.35);
+  transform: translateY(-14px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .nav-item.add .nav-item__add-btn .nav-item__icon {
   margin-bottom: 0;
+}
+
+.nav-item.add .nav-item__add-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-item.add .nav-item__add-btn:active {
+  transform: translateY(-12px) scale(0.96);
 }
 
 .nav-item.add .nav-item__label {
@@ -115,9 +121,20 @@
 }
 
 .nav-item.add:hover .nav-item__add-btn {
-  background: var(--accent-hover);
+  background: var(--accent-hover, var(--primary));
 }
 
 .nav-item.add.active .nav-item__add-btn {
-  background: var(--accent-hover);
+  background: var(--accent-hover, var(--primary));
+}
+
+[data-theme="dark"] .nav-item.add .nav-item__add-btn,
+.dark .nav-item.add .nav-item__add-btn {
+  background: var(--primary, var(--accent));
+  box-shadow: 0 8px 20px rgba(124, 77, 255, 0.25);
+}
+
+[data-theme="dark"] .nav-item.add .nav-item__add-btn:active,
+.dark .nav-item.add .nav-item__add-btn:active {
+  transform: translateY(-12px) scale(0.96);
 }
