@@ -39,6 +39,7 @@ button,
   padding-bottom: 90px;
 }
 
+/* TZ-53: create-nav выше bottom-nav (wizard кнопки не перекрываются) */
 .create-nav {
   position: fixed;
   bottom: 70px;
@@ -50,7 +51,7 @@ button,
   align-items: center;
   background: var(--bg-main, #fff);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  z-index: 50;
+  z-index: 1100;
 }
 
 @media (min-width: 768px) {
@@ -63,28 +64,7 @@ button,
   }
 }
 
-/* ─── 5. Нижнее меню: без свечения, blur + rgba (светлая тема) ─── */
-.bottom-nav {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: none !important;
-  border: none !important;
-}
-
-[data-theme="light"] .bottom-nav,
-html:not([data-theme="dark"]) .bottom-nav {
-  background: rgba(255, 255, 255, 0.92) !important;
-}
-
-.bottom-nav a,
-.bottom-nav button {
-  background: transparent !important;
-}
-
-.bottom-nav a[aria-current="page"],
-.bottom-nav .active {
-  color: #7b5cff !important;
-}
+/* TZ-53: стили нижнего меню перенесены в bottom-nav-tz53.css */
 
 /* ─── 6. Блок поиска/фильтров: не перекрывать header ─── */
 .search-filters {

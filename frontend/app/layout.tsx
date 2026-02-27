@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import type { Viewport } from 'next'
 import dynamic from 'next/dynamic'
 import { Providers } from './providers'
-import { Header, BottomNavGlobal } from '@/components/layout'
+import { Header, BottomNav } from '@/components/layout'
 import { Footer } from '@/shared/ui/Footer'
 import ThemeProvider from '@/providers/ThemeProvider'
 import ErrorBoundaryWrapper from './ErrorBoundaryWrapper'
@@ -67,9 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <AppPreloader />
               <div className="min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-1 main-with-header pb-[100px] md:pb-0 min-w-0">{children}</main>
+                <main className="flex-1 main-with-header page-content pb-[90px] md:pb-0 min-w-0">{children}</main>
                 <Footer />
-                <BottomNavGlobal />
+                <BottomNav />
                 <ModalRoot />
                 <SearchOverlay />
                 <ReviewReminderPopup />
