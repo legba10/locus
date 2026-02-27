@@ -20,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           if (err?.status === 401) return false;
           return failureCount < 2;
         },
-        staleTime: 60_000, // 1 min
+        staleTime: 60_000, // TZ-67: 1 min — не дергать сервер при каждом переходе
         gcTime: 5 * 60_000, // 5 min
         refetchOnWindowFocus: false,
         networkMode: 'online',

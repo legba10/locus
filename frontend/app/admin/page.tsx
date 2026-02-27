@@ -1,14 +1,17 @@
 'use client'
 
-import { Suspense } from 'react'
-import PageClient from './PageClient'
+import dynamic from 'next/dynamic'
 
-export const dynamic = 'force-dynamic'
+/** TZ-67: админ-панель не грузится на главной — lazy load при переходе */
+const PageClient = dynamic(() => import('./PageClient'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[40vh] flex items-center justify-center text-[var(--text-muted)]">
+      Загрузка...
+    </div>
+  ),
+})
 
 export default function AdminPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PageClient />
-    </Suspense>
-  )
+  return <PageClient />
 }

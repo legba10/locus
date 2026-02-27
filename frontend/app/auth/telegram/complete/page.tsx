@@ -16,6 +16,7 @@ function CompleteContent() {
   const refresh = useAuthStore((s) => s.refresh);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Завершение входа...");
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!token) {
@@ -65,7 +66,7 @@ function CompleteContent() {
     }
 
     completeAuth();
-  }, [token, refresh, router]);
+  }, [token, refresh, router, retryCount]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-white to-gray-50">
@@ -102,9 +103,7 @@ function CompleteContent() {
                   onClick={() => {
                     setStatus("loading");
                     setMessage("Повторяем попытку...");
-                    // Re-run by simulating effect re-entry:
-                    // easiest is full reload keeping token in URL
-                    window.location.reload();
+                    setRetryCount((c) => c + 1);
                   }}
                 >
                   Повторить

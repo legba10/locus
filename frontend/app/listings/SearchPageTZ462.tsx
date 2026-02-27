@@ -11,6 +11,7 @@ import { useFilterStore } from '@/core/filters'
 import { ActiveFilterChips, FiltersModal } from '@/components/filters'
 import { FilterBar } from '@/components/search/FilterBar'
 import { applyAutoExpand, runAiSearch, runManualSearch } from '@/core/search'
+import { useDebounce } from '@/hooks/useDebounce'
 
 interface SearchResponse {
   items: any[]
@@ -19,14 +20,6 @@ interface SearchResponse {
   limit: number
 }
 
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebounced(value), delayMs)
-    return () => window.clearTimeout(t)
-  }, [value, delayMs])
-  return debounced
-}
 
 export function SearchPageTZ462() {
   const router = useRouter()
@@ -89,7 +82,7 @@ export function SearchPageTZ462() {
     () => JSON.stringify({ city, priceFrom, priceTo, rooms, type, radius, duration, sort, aiMode, page }),
     [city, priceFrom, priceTo, rooms, type, radius, duration, sort, aiMode, page]
   )
-  const debouncedSignature = useDebouncedValue(filtersSignature, 300)
+  const debouncedSignature = useDebounce(filtersSignature, 400)
 
   const query = useQuery<SearchResponse>({
     queryKey: ['search-v46-2', debouncedSignature],

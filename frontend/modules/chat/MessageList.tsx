@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useMemo } from 'react'
 import { cn } from '@/shared/utils/cn'
 
 export type ChatMessage = {
@@ -30,19 +31,42 @@ function formatDay(date: Date): string {
   return d.toLocaleDateString('ru', { day: 'numeric', month: 'long' })
 }
 
+/** TZ-67: мемоизированное сообщение — не перерисовывать весь список при новых сообщениях */
+const Message = React.memo(function Message({
+  id,
+  text,
+  senderId,
+  createdAt,
+  myId,
+}: ChatMessage & { myId: string }) {
+  const time = useMemo(
+    () => new Date(createdAt).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
+    [createdAt]
+  )
+  return (
+    <div className={cn('message', senderId === myId ? 'sent' : 'received')}>
+      <div className="message__text">{text}</div>
+      <div className="message__time">{time}</div>
+    </div>
+  )
+})
+
 export function MessageList({ messages, loading, myId, messagesEndRef, typing }: MessageListProps) {
-  const groups: { date: string; items: ChatMessage[] }[] = []
-  let lastDate = ''
-  for (const m of messages) {
-    const d = new Date(m.createdAt)
-    const dateKey = d.toDateString()
-    if (dateKey !== lastDate) {
-      lastDate = dateKey
-      groups.push({ date: formatDay(d), items: [m] })
-    } else {
-      groups[groups.length - 1].items.push(m)
+  const groups = useMemo(() => {
+    const out: { date: string; items: ChatMessage[] }[] = []
+    let lastDate = ''
+    for (const m of messages) {
+      const d = new Date(m.createdAt)
+      const dateKey = d.toDateString()
+      if (dateKey !== lastDate) {
+        lastDate = dateKey
+        out.push({ date: formatDay(d), items: [m] })
+      } else {
+        out[out.length - 1].items.push(m)
+      }
     }
-  }
+    return out
+  }, [messages])
 
   return (
     <div className="chat-messages-inner">
@@ -64,15 +88,7 @@ export function MessageList({ messages, loading, myId, messagesEndRef, typing }:
             <div key={g.date} className="chat-messages-group">
               <div className="chat-messages-date">{g.date}</div>
               {g.items.map((m) => (
-                <div
-                  key={m.id}
-                  className={cn('message', m.senderId === myId ? 'sent' : 'received')}
-                >
-                  <div className="message__text">{m.text}</div>
-                  <div className="message__time">
-                    {new Date(m.createdAt).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
+                <Message key={m.id} {...m} myId={myId} />
               ))}
             </div>
           ))}
