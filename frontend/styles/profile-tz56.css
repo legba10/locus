@@ -1,0 +1,157 @@
+/**
+ * TZ-56: Полная переработка профиля — цельный экран, иерархия, без «оторванных» блоков.
+ */
+
+/* ─── Страница профиля: safe area под нижнюю панель ─── */
+.profile-page {
+  padding-bottom: 90px;
+  min-height: 100vh;
+}
+
+.profile-page .profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* ─── Единый блок шапки (Avatar + UserInfo + Edit) ─── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--bg-card, #fff);
+  box-shadow: var(--shadow-card);
+  border: none;
+}
+
+.profile-header__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.profile-header__user-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-header__username {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-header__role {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.6;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.profile-header__edit {
+  flex-shrink: 0;
+  /* компактная кнопка, без жирного градиента — btn-secondary */
+}
+
+/* ─── Кнопка «Разместить объявление»: стандартная primary, отступ сверху ─── */
+.create-listing-btn {
+  margin-top: 16px;
+}
+
+.create-listing-btn .btn-primary {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  /* без градиента — design-system-tz52 .btn-primary уже без градиента */
+}
+
+/* ─── Админ-блок: визуально выделен ─── */
+.profile-admin-section {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fafafa;
+}
+
+[data-theme="dark"] .profile-admin-section,
+.dark .profile-admin-section {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-admin-section__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+}
+
+.profile-admin-section .profile-item-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Секция «Профиль»: без лишнего фона, только заголовок + пункты ─── */
+.profile-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 16px 0 8px 0;
+}
+
+.profile-sections .profile-section-title:first-child {
+  margin-top: 0;
+}
+
+.profile-sections .profile-item-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Карточки меню: 60px, без жирных контуров и двойных теней ─── */
+.profile-page .profile-item {
+  height: 60px;
+  min-height: 60px;
+  border-radius: 16px;
+  background: var(--bg-card, #fff);
+  box-shadow: var(--shadow-card);
+  border: none;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-page .profile-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card);
+}
+
+.profile-page .profile-item:active {
+  transform: scale(0.99);
+}
