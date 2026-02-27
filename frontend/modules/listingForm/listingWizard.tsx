@@ -236,7 +236,7 @@ export function ListingWizard({
   const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
 
   return (
-    <div className="min-h-[100dvh] w-full max-w-[720px] lg:max-w-[820px] mx-auto px-4 py-4 pb-28 flex flex-col gap-[18px]">
+    <div className="create-page min-h-[100dvh] w-full max-w-[720px] lg:max-w-[820px] mx-auto px-4 py-4 pb-28 flex flex-col gap-[18px]">
       <div className="space-y-1">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
@@ -398,11 +398,10 @@ export function ListingWizard({
         }}
       />
 
-      {/* TZ-50: mobile — fixed внизу. Desktop — sticky внизу карточки. Первый шаг — Back скрыт. */}
+      {/* TZ-50/TZ-51: create-nav — выше нижнего меню (bottom: 70px), кнопки Назад/Далее всегда видны */}
       <div
-        className="fixed md:sticky bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] bg-[var(--bg-main)] md:mt-auto"
+        className="create-nav border-t border-transparent bg-[var(--bg-main)] md:mt-auto z-50"
         style={{
-          padding: '12px 16px',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
       >

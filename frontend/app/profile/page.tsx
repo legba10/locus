@@ -22,8 +22,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
-/** TZ-49: карточки меню — height 56px, padding 0 16px, border-radius 14px, gap 12px */
-const CARD_CLS = 'h-14 min-h-[56px] flex items-center justify-between gap-3 w-full px-4 rounded-[14px] card-tz47 hover:translate-y-[-1px] active:scale-[0.99] transition-all duration-200 text-left'
+/** TZ-49/TZ-51: карточки меню — height 56px, profile-item для overflow ─── */
+const CARD_CLS = 'profile-item h-14 min-h-[56px] flex items-center justify-between gap-3 w-full px-4 rounded-[14px] card-tz47 hover:translate-y-[-1px] active:scale-[0.99] transition-all duration-200 text-left'
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
 const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)]'
 
@@ -58,16 +58,7 @@ export default function ProfilePage() {
   return (
     <div className="bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="profile-container-tz47 pt-4">
-        {/* TZ-49: mobile — кнопка вверху профиля. Desktop — в header. */}
-        <Link
-          href="/profile/listings/create"
-          className="md:hidden flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90"
-        >
-          <Plus className="w-4 h-4" strokeWidth={2.2} />
-          Разместить объявление
-        </Link>
-
-        {/* TZ-49: header профиля — compact, max 90px, gap 14px */}
+        {/* TZ-49/TZ-51: header профиля — compact, max 90px; mobile CTA сразу после header */}
         <header className="flex items-center gap-[14px] p-4 rounded-[16px] card-tz47 max-h-[90px]">
           <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[18px] font-semibold text-[var(--text-muted)]">
             {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : (user?.full_name || user?.username || '?').slice(0, 1).toUpperCase()}
@@ -80,6 +71,15 @@ export default function ProfilePage() {
             Редактировать
           </Link>
         </header>
+
+        {/* TZ-51: mobile — кнопка «Разместить» сразу после header */}
+        <Link
+          href="/profile/listings/create"
+          className="md:hidden flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90 w-full"
+        >
+          <Plus className="w-4 h-4" strokeWidth={2.2} />
+          Разместить объявление
+        </Link>
 
         {/* TZ-49: блок админа — сразу под header, gap 10px, mt 6px */}
         {isAdmin && (

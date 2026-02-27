@@ -201,3 +201,12 @@
   border: none;
 }
 
+/* TZ-51: нижнее меню в тёмной теме — без glow */
+[data-theme="dark"] .bottom-nav,
+.dark .bottom-nav {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: none !important;
+}
+

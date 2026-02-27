@@ -1,0 +1,113 @@
+/**
+ * TZ-51: Критический UI fix — обводки, отступы, overflow, create-nav, нижнее меню, поиск.
+ * Только светлая тема; dark не трогаем.
+ */
+
+/* ─── 1. Светлая тема: убрать обводку (border-color transparent) ─── */
+[data-theme="light"] *,
+html:not([data-theme="dark"]) * {
+  border-color: transparent !important;
+}
+
+/* Карточки в светлой теме: без рамки, тень */
+[data-theme="light"] .card,
+html:not([data-theme="dark"]) .card {
+  border: none !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06) !important;
+  outline: none !important;
+}
+
+/* ─── 2. Box-sizing и overflow текста ─── */
+* {
+  box-sizing: border-box;
+}
+
+button,
+.profile-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  overflow: hidden;
+}
+
+/* ─── 4. Create listing: страница и навигация выше нижнего меню ─── */
+.create-page {
+  padding-bottom: 90px;
+}
+
+.create-nav {
+  position: fixed;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-main, #fff);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+}
+
+@media (min-width: 768px) {
+  .create-nav {
+    position: sticky;
+    bottom: auto;
+    margin-top: auto;
+    box-shadow: none;
+    border-top: 1px solid transparent;
+  }
+}
+
+/* ─── 5. Нижнее меню: без свечения, blur + rgba (светлая тема) ─── */
+.bottom-nav {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: none !important;
+  border: none !important;
+}
+
+[data-theme="light"] .bottom-nav,
+html:not([data-theme="dark"]) .bottom-nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.bottom-nav a,
+.bottom-nav button {
+  background: transparent !important;
+}
+
+.bottom-nav a[aria-current="page"],
+.bottom-nav .active {
+  color: #7b5cff !important;
+}
+
+/* ─── 6. Блок поиска/фильтров: не перекрывать header ─── */
+.search-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.search-filters button,
+.search-filters .search-filter-btn,
+.home-filter-btn-primary,
+.home-filter-btn-filters {
+  height: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.home-filter-section-tz-final {
+  margin-top: 12px;
+}
+
+/* ─── 7. Telegram Webview: safe area ─── */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
