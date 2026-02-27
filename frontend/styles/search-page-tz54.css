@@ -1,0 +1,202 @@
+/**
+ * TZ-54: Экран поиска — единая структура, без наложений и чёрных рамок.
+ */
+
+/* ─── Переключатель режима (Обычный / AI) ─── */
+.search-mode {
+  display: flex;
+  gap: 12px;
+}
+
+.search-mode button {
+  flex: 1;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+}
+
+.search-mode button:not(.active) {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.search-mode button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ─── Блок управления (Фильтры / Подобрать) ─── */
+.search-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.search-controls button {
+  flex: 1;
+  min-width: 120px;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.search-controls button.search-controls__filters {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.search-controls button.search-controls__primary {
+  background: var(--accent);
+  color: #fff;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Чипы фильтров — не вылезают за header ─── */
+.search-filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ─── Сетка объявлений ─── */
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 768px) {
+  .results-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .results-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ─── Карточка объявления (без чёрных контуров) ─── */
+.results-grid .listing-card,
+.listing-card {
+  border: none;
+  border-radius: 20px;
+  background: var(--bg-card, #fff);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  outline: none;
+}
+
+/* ─── Пустое состояние ─── */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  border-radius: 20px;
+  background: var(--bg-card, #fff);
+  box-shadow: var(--shadow-card);
+  border: none;
+}
+
+.empty-state .empty-state__btn {
+  margin-top: 16px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.empty-state .empty-state__btn:hover {
+  background: var(--accent-hover);
+}
+
+/* ─── Пагинация ─── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.pagination button {
+  height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: none;
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination button:not(:disabled):hover {
+  background: #e5e7eb;
+}
+
+.pagination .pagination__page {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ─── AI-помощник: фиксированный, не перекрывает контент ─── */
+.ai-helper {
+  position: fixed;
+  bottom: 90px;
+  right: 16px;
+  z-index: 100;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.ai-helper:hover {
+  background: var(--accent-hover);
+}
+
+@media (min-width: 768px) {
+  .ai-helper {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+/* Контент страницы поиска — отступ снизу под nav ─── */
+.search-page-content {
+  padding-bottom: 90px;
+}

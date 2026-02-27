@@ -1,11 +1,14 @@
 'use client'
 
+/** TZ-54: Экран поиска — Container, SearchModeToggle, SearchControls, ResultsGrid, EmptyState, Pagination, floating AI. */
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ListingCard, ListingCardSkeleton } from '@/components/listing'
 import { AiSearchModal } from '@/components/ai/AiSearchModal'
 import { AiSearchPanel } from '@/components/ai/AiSearchPanel'
+import { Container } from '@/components/ui'
 import type { AiListingCandidate } from '@/lib/ai/searchEngine'
 import { runAiSearch, runManualSearch } from '@/core/search'
 import type { FilterState } from '@/core/filters'
@@ -13,7 +16,9 @@ import { useSearchStore } from './store'
 import { FiltersPanel } from './FiltersPanel'
 import { SelectedChips } from '@/filters/SelectedChips'
 import { useAiController } from '@/ai/aiController'
+import { cn } from '@/shared/utils/cn'
 import type { SearchFilters } from './store'
+import { Sparkles } from 'lucide-react'
 
 function mapStoreToFilterState(filters: SearchFilters): FilterState {
   const types = filters.type ? [filters.type] : []
@@ -60,8 +65,6 @@ export function SearchPage() {
       type: type || filters.type,
       aiMode: ai === '1' ? true : filters.aiMode,
     })
-    // run only on first mount and URL changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp])
 
   useEffect(() => {
@@ -140,110 +143,139 @@ export function SearchPage() {
     setPage(1)
   }
 
-  const searchBtnCls = 'h-11 min-h-[44px] rounded-[12px] font-medium text-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] whitespace-nowrap'
-  const modeBtnCls = 'h-11 min-h-[44px] flex-1 min-w-0 rounded-[12px] font-medium text-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
-
   return (
-    <div className="min-h-screen bg-[var(--bg-main)]">
-      <div className="market-container py-4">
-        {/* Ряд 1: режим поиска — Обычный | AI-подбор */}
-        <div className="mb-3 grid grid-cols-2 gap-2 max-w-md">
+    <div className="search-page-content min-h-screen bg-[var(--bg-primary)]">
+      <Container className="py-4">
+        {/* 1. Переключатель режима Обычный / AI */}
+        <div className="search-mode" role="group" aria-label="Режим поиска">
           <button
             type="button"
+            className={cn(!filters.aiMode && 'active')}
             onClick={() => { setFilter('aiMode', false); setPage(1) }}
-            className={!filters.aiMode ? `${modeBtnCls} bg-[var(--accent)] text-[var(--text-on-accent)]` : `${modeBtnCls} bg-transparent border border-[var(--border-main)] text-[var(--text-primary)]`}
             title="Обычный поиск по фильтрам"
           >
             Обычный
           </button>
           <button
             type="button"
+            className={cn(filters.aiMode && 'active')}
             onClick={() => { setFilter('aiMode', true); setPage(1) }}
-            className={filters.aiMode ? `${modeBtnCls} bg-[var(--accent)] text-[var(--text-on-accent)]` : `${modeBtnCls} bg-transparent border border-[var(--border-main)] text-[var(--text-primary)]`}
             title="AI подбирает лучшие варианты"
           >
             AI-подбор
           </button>
         </div>
 
-        {/* Ряд 2: действия — Фильтры | Подобрать за 10 секунд */}
-        <div className="mb-3 flex flex-wrap gap-2 items-stretch">
+        {/* 2. Блок управления */}
+        <div className="search-controls">
           <button
             type="button"
+            className="search-controls__filters"
             onClick={() => setMobileOpen(true)}
-            className={`${searchBtnCls} flex-1 min-w-[120px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] px-4`}
           >
             Фильтры
           </button>
           <button
             type="button"
+            className="search-controls__primary"
             onClick={() => setAiModalOpen(true)}
-            className={`${searchBtnCls} flex-1 min-w-0 px-3 sm:px-4 bg-[var(--accent)] text-[var(--text-on-accent)]`}
           >
             Подобрать за 10 секунд
           </button>
         </div>
 
-        <SelectedChips onChange={() => setPage(1)} />
+        {/* Чипы выбранных фильтров */}
+        <div className="search-filters-chips">
+          <SelectedChips onChange={() => setPage(1)} />
+        </div>
 
-        <div className="flex gap-4">
-          <FiltersPanel
-            open={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            onApply={applyFiltersAndScroll}
-            onQuickApply={() => setPage(1)}
-            previewCount={total}
-          />
+        <FiltersPanel
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          onApply={applyFiltersAndScroll}
+          onQuickApply={() => setPage(1)}
+          previewCount={total}
+        />
 
-          <div ref={resultsRef} className="min-w-0 flex-1">
-            <div className="mb-3 text-[14px] text-[var(--text-secondary)]">Найдено: <span className="font-semibold text-[var(--text-primary)]">{total}</span></div>
+        <div ref={resultsRef}>
+          {/* 3. Результаты */}
+          <div className="text-[14px] text-[var(--text-secondary)] mt-4">
+            Найдено: <span className="font-semibold text-[var(--text-primary)]">{total}</span>
+          </div>
 
-            {query.isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 9 }).map((_, i) => <ListingCardSkeleton key={i} />)}
+          {query.isLoading ? (
+            <div className="results-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ListingCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="empty-state mt-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--bg-input)] flex items-center justify-center mx-auto text-[var(--text-muted)]" aria-hidden>
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-            ) : items.length === 0 ? (
-              <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-8 text-center flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-[var(--bg-input)] flex items-center justify-center text-[var(--text-muted)]" aria-hidden>
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <p className="text-[16px] font-medium text-[var(--text-primary)]">По данным фильтрам ничего не найдено</p>
-                <button type="button" onClick={handleResetFilters} className="h-11 min-h-[44px] rounded-[12px] px-5 font-medium text-[14px] bg-[var(--accent)] text-[var(--text-on-accent)] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-                  Сбросить фильтры
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map((listing: any) => (
-                  <ListingCard
-                    key={listing.id}
-                    id={listing.id}
-                    photo={listing.photos?.[0]?.url}
-                    title={listing.title}
-                    price={listing.basePrice}
-                    city={listing.city}
-                    district={listing.district || undefined}
-                    rooms={listing.bedrooms}
-                    area={listing.area ?? 0}
-                    rating={listing.ratingCache?.rating ?? null}
-                    aiMatchScore={aiScores.get(String(listing.id))}
-                  />
-                ))}
-              </div>
-            )}
+              <p className="text-[16px] font-medium text-[var(--text-primary)] mt-4">По данным фильтрам ничего не найдено</p>
+              <button type="button" className="empty-state__btn" onClick={handleResetFilters}>
+                Сбросить фильтры
+              </button>
+            </div>
+          ) : (
+            <div className="results-grid">
+              {items.map((listing: any) => (
+                <ListingCard
+                  key={listing.id}
+                  id={listing.id}
+                  photo={listing.photos?.[0]?.url}
+                  title={listing.title}
+                  price={listing.basePrice}
+                  city={listing.city}
+                  district={listing.district || undefined}
+                  rooms={listing.bedrooms}
+                  area={listing.area ?? 0}
+                  rating={listing.ratingCache?.rating ?? null}
+                  aiMatchScore={aiScores.get(String(listing.id))}
+                  className="listing-card"
+                />
+              ))}
+            </div>
+          )}
 
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="rounded-[10px] border border-[var(--border-main)] px-4 py-2 disabled:opacity-40">
+          {/* 4. Пагинация */}
+          {items.length > 0 && (
+            <div className="pagination">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                aria-label="Предыдущая страница"
+              >
                 Назад
               </button>
-              <span className="text-[13px] text-[var(--text-secondary)]">Стр. {page}</span>
-              <button type="button" disabled={items.length < 20} onClick={() => setPage((p) => p + 1)} className="rounded-[10px] border border-[var(--border-main)] px-4 py-2 disabled:opacity-40">
+              <span className="pagination__page">Стр. {page}</span>
+              <button
+                type="button"
+                disabled={items.length < 20}
+                onClick={() => setPage((p) => p + 1)}
+                aria-label="Следующая страница"
+              >
                 Вперёд
               </button>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </Container>
+
+      {/* Floating AI-помощник */}
+      <button
+        type="button"
+        className="ai-helper"
+        onClick={() => aiController.openPanel('search')}
+        aria-label="Открыть AI-подбор"
+      >
+        <Sparkles className="w-6 h-6" strokeWidth={1.8} />
+      </button>
 
       <AiSearchModal
         open={aiModalOpen}
