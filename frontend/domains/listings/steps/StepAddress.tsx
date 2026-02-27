@@ -17,7 +17,7 @@ export interface StepAddressProps {
 
 const inputCls = cn(
   'w-full rounded-[12px] px-4 py-3 border border-[var(--border-main)] bg-[var(--bg-input)]',
-  'text-[#fff] placeholder:text-[#888] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20'
+  'text-[var(--text-primary)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 placeholder:text-[var(--text-secondary)]'
 )
 
 export function StepAddress({

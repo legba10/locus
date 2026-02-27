@@ -32,9 +32,9 @@ export function CreateListingLayout({
         <span className="text-[14px] font-medium text-[var(--text-secondary)] tabular-nums">
           {currentStep} / {totalSteps}
         </span>
-        <div className="flex-1 mx-4 h-2 rounded-full bg-[var(--bg-input)] overflow-hidden">
+        <div className="progress-bg flex-1 mx-4 h-2 rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full bg-[var(--accent)] transition-all duration-300"
+            className="progress-fill h-full rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -42,9 +42,9 @@ export function CreateListingLayout({
 
       <div
         className={cn(
-          'rounded-[16px] border border-[var(--border-main)] p-6 sm:p-[24px]',
-          'bg-[var(--bg-card)]/80 backdrop-blur-sm',
-          'shadow-[0_4px_24px_rgba(0,0,0,0.06)]'
+          'form-step form-step-box rounded-[16px] border p-6 sm:p-[24px]',
+          'border-[var(--border-main)] bg-[var(--bg-card)]',
+          'shadow-[var(--shadow-card)]'
         )}
       >
         {children}

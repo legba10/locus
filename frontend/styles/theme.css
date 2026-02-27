@@ -4,7 +4,21 @@
  */
 
 /* ТЗ-52: глобальные design tokens (единый источник размеров и цветов) */
+/* TZ-62: токены формы размещения (контраст, dark-mode) */
 :root {
+  /* TZ-62 form tokens — светлые/тёмные значения для формы */
+  --bg-light: #f5f6fb;
+  --bg-dark: #0f1220;
+  --card-light: #ffffff;
+  --card-dark: #161a2f;
+  --text-light: #111111;
+  --text-dark: #f3f4f8;
+  --text-secondary-light: #6b6f80;
+  --text-secondary-dark: #9ca3b5;
+  --border-light: #e6e8f2;
+  --border-dark: #2a2f4a;
+  --primary: #7c4dff;
+
   /* Colors — TZ-52 canonical */
   --bg-primary: #f5f6fa;
   --bg-card: #ffffff;
@@ -127,31 +141,31 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ №1: без засветов, текст #e6eaf2 (не #ffffff), фон #070b17, карточка #0f1629 */
+/* Dark — ТЗ №1 + TZ-62: фон #0f1220 (не чистый чёрный), текст читаемый */
 :root[data-theme="dark"],
 .dark {
-  --background: #070b17;
-  --bg: #070b17;
-  --card: #0f1629;
-  --text: #e6eaf2;
-  --sub: #9aa3b2;
+  --background: #0f1220;
+  --bg: #0f1220;
+  --card: #161a2f;
+  --text: #f3f4f8;
+  --sub: #9ca3b5;
   --border: rgba(255, 255, 255, 0.08);
   --accent1: #8b5cf6;
   --accent2: #6366f1;
 }
 
 :root[data-theme="dark"] {
-  --bg-main: #070b17;
-  --bg-secondary: #0f1629;
-  --bg-surface: #0c1324;
-  --bg-card: #0f1629;
-  --bg-elevated: #161b2e;
-  --bg-modal: #0f1629;
+  --bg-main: #0f1220;
+  --bg-secondary: #161a2f;
+  --bg-surface: #161a2f;
+  --bg-card: #161a2f;
+  --bg-elevated: #1a1f38;
+  --bg-modal: #161a2f;
 
-  --text-primary: #e6eaf2;
-  --text-main: #e6eaf2;
-  --text-secondary: #9aa3b2;
-  --text-muted: #6b7280;
+  --text-primary: #f3f4f8;
+  --text-main: #f3f4f8;
+  --text-secondary: #9ca3b5;
+  --text-muted: #9ca3b5;
 
   --border-main: rgba(255, 255, 255, 0.08);
 
@@ -173,10 +187,10 @@
   --surface-primary: #161b2e;
   --surface-secondary: #111827;
   --header-bg: #161b2e;
-  --border-primary: rgba(255, 255, 255, 0.08);
-  --input-bg: #0c1324;
-  --bg-input: #0c1324;
-  --icon-primary: #e6eaf2;
+  --border-primary: #2a2f4a;
+  --input-bg: #161a2f;
+  --bg-input: #161a2f;
+  --icon-primary: #f3f4f8;
   --danger: #ef4444;
 }
 

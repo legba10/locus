@@ -1,0 +1,139 @@
+/**
+ * TZ-62: Форма размещения объявления — контраст и читаемость в dark-mode.
+ * Только переменные (токены), без #fff/#000/#111.
+ */
+
+/* ─── Область формы (добавить класс create-listing-wizard на корень визарда) ─── */
+
+/* 3. Фон шагов создания объявления */
+.create-listing-wizard .form-step {
+  background: var(--bg-light);
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .create-listing-wizard .form-step,
+.dark .create-listing-wizard .form-step {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+/* 4. Карточки (WiFi, ТВ и т.д.) */
+.create-listing-wizard .feature-card {
+  background: var(--card-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .create-listing-wizard .feature-card,
+.dark .create-listing-wizard .feature-card {
+  background: var(--card-dark);
+  border: 1px solid var(--border-dark);
+  color: var(--text-dark);
+}
+
+.create-listing-wizard .step-container {
+  background: var(--bg-light);
+}
+
+[data-theme="dark"] .create-listing-wizard .step-container,
+.dark .create-listing-wizard .step-container {
+  background: var(--bg-dark);
+}
+
+/* 5. Input / Textarea / Select (критично для видимости текста) */
+.create-listing-wizard input,
+.create-listing-wizard textarea,
+.create-listing-wizard select {
+  background: var(--card-light);
+  color: var(--text-light);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .create-listing-wizard input,
+[data-theme="dark"] .create-listing-wizard textarea,
+[data-theme="dark"] .create-listing-wizard select,
+.dark .create-listing-wizard input,
+.dark .create-listing-wizard textarea,
+.dark .create-listing-wizard select {
+  background: var(--card-dark);
+  color: var(--text-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.create-listing-wizard input::placeholder,
+.create-listing-wizard textarea::placeholder {
+  color: var(--text-secondary-light);
+}
+
+[data-theme="dark"] .create-listing-wizard input::placeholder,
+[data-theme="dark"] .create-listing-wizard textarea::placeholder,
+.dark .create-listing-wizard input::placeholder,
+.dark .create-listing-wizard textarea::placeholder {
+  color: var(--text-secondary-dark);
+}
+
+/* Лейблы и подзаголовки в форме */
+.create-listing-wizard label,
+.create-listing-wizard .text-muted-form {
+  color: var(--text-secondary-light);
+}
+
+[data-theme="dark"] .create-listing-wizard label,
+[data-theme="dark"] .create-listing-wizard .text-muted-form,
+.dark .create-listing-wizard label,
+.dark .create-listing-wizard .text-muted-form {
+  color: var(--text-secondary-dark);
+}
+
+/* 7. Прогресс-бар (шаги 1 из 8) */
+.create-listing-wizard .progress-bg {
+  background: var(--border-light);
+}
+
+[data-theme="dark"] .create-listing-wizard .progress-bg,
+.dark .create-listing-wizard .progress-bg {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.create-listing-wizard .progress-fill {
+  background: var(--primary);
+}
+
+/* Кнопки: primary — одна на экран; secondary — outline */
+.create-listing-wizard .button-primary-form {
+  background: var(--primary);
+  color: var(--button-primary-text);
+  border: none;
+}
+
+.create-listing-wizard .button-secondary-form {
+  background: transparent;
+  border: 1px solid var(--border-dark);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .create-listing-wizard .button-secondary-form,
+.dark .create-listing-wizard .button-secondary-form {
+  border-color: var(--border-dark);
+  color: var(--text-dark);
+}
+
+/* Ошибки и подсказки — видимые в dark */
+.create-listing-wizard [role="alert"],
+.create-listing-wizard .text-error-form {
+  color: var(--danger);
+}
+
+/* Карточка контейнера шага (CreateListingLayout) — фон и граница по токенам */
+.create-listing-wizard .form-step-box {
+  background: var(--card-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .create-listing-wizard .form-step-box,
+.dark .create-listing-wizard .form-step-box {
+  background: var(--card-dark);
+  border: 1px solid var(--border-dark);
+  color: var(--text-dark);
+}

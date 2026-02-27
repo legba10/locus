@@ -346,7 +346,7 @@ export function CreateListingWizardV2({
   const currentStepDisplay = step + 1
 
   return (
-    <div ref={topRef} className="space-y-6">
+    <div ref={topRef} className="create-listing-wizard space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
@@ -368,7 +368,7 @@ export function CreateListingWizardV2({
       </div>
 
       {error && (
-        <p className="text-[14px] font-medium text-red-600" role="alert">
+        <p className="text-[14px] font-medium text-[var(--danger)]" role="alert">
           {error}
         </p>
       )}

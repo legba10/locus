@@ -236,7 +236,7 @@ export function ListingWizard({
   const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
 
   return (
-    <div className="create-page min-h-[100dvh] w-full max-w-[720px] lg:max-w-[820px] mx-auto px-4 py-4 pb-28 flex flex-col gap-[18px]">
+    <div className="create-listing-wizard create-page min-h-[100dvh] w-full max-w-[720px] lg:max-w-[820px] mx-auto px-4 py-4 pb-28 flex flex-col gap-[18px]">
       <div className="space-y-1">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
@@ -246,14 +246,14 @@ export function ListingWizard({
         </p>
       </div>
 
-      {/* TZ-50: прогресс — height 6px, border-radius 6px */}
-      <div className="h-1.5 w-full rounded-[6px] overflow-hidden bg-[var(--bg-input)]">
-        <div className="h-full rounded-[6px] bg-[var(--accent)] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+      {/* TZ-50 + TZ-62: прогресс — progress-bg / progress-fill */}
+      <div className="progress-bg h-1.5 w-full rounded-[6px] overflow-hidden">
+        <div className="progress-fill h-full rounded-[6px] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
       </div>
 
       <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
         <div className="flex-1 min-w-0 flex flex-col">
-          <div className="w-full rounded-[20px] card-tz47 p-5 flex flex-col gap-4">
+          <div className="form-step w-full rounded-[20px] card-tz47 p-5 flex flex-col gap-4">
         {step === 0 && (
           <StepType
             type={type}
@@ -377,7 +377,7 @@ export function ListingWizard({
       )}
 
       {error && (
-        <div className="rounded-[12px] border border-red-500/30 bg-red-500/10 p-3 text-[13px] text-red-300">
+        <div className="rounded-[12px] border border-[var(--danger)]/30 bg-[var(--danger)]/10 p-3 text-[13px] text-[var(--danger)]" role="alert">
           {error}
         </div>
       )}
