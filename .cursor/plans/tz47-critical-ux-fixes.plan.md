@@ -18,6 +18,6 @@
 - `frontend/styles/layout.css` — контейнер профиля
 - `frontend/styles/theme.css` — карточки, бордеры
 - `frontend/modules/listingForm/listingWizard.tsx` — wizard
-- `frontend/shared/ui/HeaderLight.tsx` — CTA, createHref (admin без лимита)
+- `frontend/components/layout/Header.tsx` — CTA
 - `frontend/components/layout/BottomNavGlobal.tsx` — нижнее меню
 - `frontend/app/admin/AdminDashboardV2.tsx` — CTA в админке

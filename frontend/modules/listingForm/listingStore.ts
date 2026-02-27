@@ -130,7 +130,7 @@ export const useListingWizardStore = create<ListingWizardState>()(
       },
     }),
     {
-      name: 'locus-listing-wizard-v463',
+      name: 'locus-listing-wizard-tz48',
       storage:
         typeof window !== 'undefined'
           ? createJSONStorage(() => window.localStorage)
