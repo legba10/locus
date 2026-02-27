@@ -37,13 +37,18 @@ export function BottomNavGlobal() {
       active ? 'text-[#8b5cf6] bg-transparent !shadow-none' : 'text-[var(--text-muted)]'
     )
 
+  /* TZ-50: backdrop-filter blur(10px), background rgba(0,0,0,0.6), box-shadow none, без glow */
   return (
     <nav
       className={cn(
         'md:hidden fixed bottom-0 left-0 right-0 z-[var(--z-bottom-bar)] flex items-center justify-around px-1',
-        'bg-[var(--bg-card)]/90 backdrop-blur-md border-t border-[var(--border-main)] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]',
+        'backdrop-blur-[10px] border-t border-[var(--border-main)]',
         'min-h-[72px] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]'
       )}
+      style={{
+        background: 'rgba(0,0,0,0.6)',
+        boxShadow: 'none',
+      }}
       style={{ height: 'max(72px, calc(72px + env(safe-area-inset-bottom, 0px)))' }}
       aria-label="Основная навигация"
       data-listing-detail={isListingDetail ? 'true' : undefined}

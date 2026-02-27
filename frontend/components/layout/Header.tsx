@@ -84,14 +84,14 @@ export function Header() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-6-6 6 6 0 00-6 6v3.159c0 .538-.214 1.055-.595 1.436L7 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </span>
           )}
-          {/* TZ-47: Desktop — кнопка «Разместить объявление» */}
+          {/* TZ-49: Desktop — кнопка «Создать объявление» */}
           {authed && (
             <Link
               href="/profile/listings/create"
               className="hidden md:flex items-center gap-1.5 h-9 px-4 rounded-xl text-[14px] font-medium bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90 shrink-0"
             >
               <Plus className="w-4 h-4" strokeWidth={2.2} />
-              Разместить
+              Создать объявление
             </Link>
           )}
           {/* TZ-34: выпадающее меню из аватара удалено. Аватар = переход в /profile */}

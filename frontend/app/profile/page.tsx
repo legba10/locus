@@ -1,6 +1,6 @@
 'use client'
 
-/** TZ-34: Профиль = единый центр управления. Без дублей меню и вложенных панелей. */
+/** TZ-49: Профиль — компактный центр управления. Плотная структура, без пустот. */
 
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -18,10 +18,11 @@ import {
   Shield,
   AlertTriangle,
   Users,
+  Plus,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
-/** TZ-47: карточки меню — height 56px, border-radius 14px, padding 0 16px */
+/** TZ-49: карточки меню — height 56px, padding 0 16px, border-radius 14px, gap 12px */
 const CARD_CLS = 'h-14 min-h-[56px] flex items-center justify-between gap-3 w-full px-4 rounded-[14px] card-tz47 hover:translate-y-[-1px] active:scale-[0.99] transition-all duration-200 text-left'
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
 const SECTION_TITLE = 'text-[13px] font-semibold uppercase tracking-wider text-[var(--text-muted)]'
@@ -57,42 +58,44 @@ export default function ProfilePage() {
   return (
     <div className="bg-[var(--bg-main)] pb-24 md:pb-8">
       <div className="profile-container-tz47 pt-4">
+        {/* TZ-49: mobile — кнопка вверху профиля. Desktop — в header. */}
         <Link
           href="/profile/listings/create"
-          className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90"
+          className="md:hidden flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] text-[var(--button-primary-text)] text-[14px] font-semibold hover:opacity-90"
         >
+          <Plus className="w-4 h-4" strokeWidth={2.2} />
           Разместить объявление
         </Link>
-        <section className="flex flex-col gap-3 mb-4">
-          <div className="p-4 rounded-[14px] card-tz47">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[20px] font-semibold text-[var(--text-muted)]">
-                {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : (user?.full_name || user?.username || '?').slice(0, 1).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[16px] font-semibold text-[var(--text-primary)] truncate">{user?.full_name || user?.username || 'Пользователь'}</p>
-                <p className="text-[13px] text-[var(--text-muted)] mt-0.5">{roleLabel}</p>
-              </div>
-              <Link href="/profile/edit" className="shrink-0 px-3 py-2 rounded-[12px] text-[14px] font-medium bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90">
-                Редактировать
-              </Link>
-            </div>
-          </div>
-        </section>
 
+        {/* TZ-49: header профиля — compact, max 90px, gap 14px */}
+        <header className="flex items-center gap-[14px] p-4 rounded-[16px] card-tz47 max-h-[90px]">
+          <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[18px] font-semibold text-[var(--text-muted)]">
+            {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : (user?.full_name || user?.username || '?').slice(0, 1).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-semibold text-[var(--text-primary)] truncate">{user?.full_name || user?.username || 'Пользователь'}</p>
+            <p className="text-[12px] text-[var(--text-muted)] mt-0.5">{roleLabel}</p>
+          </div>
+          <Link href="/profile/edit" className="shrink-0 px-3 py-2 rounded-[12px] text-[13px] font-medium bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-90">
+            Редактировать
+          </Link>
+        </header>
+
+        {/* TZ-49: блок админа — сразу под header, gap 10px, mt 6px */}
         {isAdmin && (
-          <section className="flex flex-col gap-3 mb-6">
+          <section className="flex flex-col gap-[10px] mt-1.5">
             <h2 className={SECTION_TITLE}>Администрирование</h2>
             <div className="flex flex-col gap-3">
               <Link href="/admin" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Админ панель</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
               <Link href="/admin?tab=moderation" className={CARD_CLS}><span className="flex items-center gap-3"><Shield className={ICON_CLS} />Модерация</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
               <Link href="/admin?tab=push" className={CARD_CLS}><span className="flex items-center gap-3"><AlertTriangle className={ICON_CLS} />Жалобы</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
-              <Link href="/admin?tab=users" className={CARD_CLS}><span className="flex items-center gap-3"><Users className={ICON_CLS} />Управление пользователями</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
+              <Link href="/admin?tab=users" className={CARD_CLS}><span className="flex items-center gap-3"><Users className={ICON_CLS} />Пользователи</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>
             </div>
           </section>
         )}
 
-        <section className={cn('flex flex-col gap-3', isAdmin && 'mt-3')}>
+        {/* TZ-49: блок пользователя — gap 12px между карточками, 18px между секциями */}
+        <section className={cn('flex flex-col gap-3', isAdmin && 'mt-1')}>
           <h2 className={SECTION_TITLE}>Профиль</h2>
           <div className="flex flex-col gap-3">
             <Link href="/profile/listings" className={CARD_CLS}><span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span><ChevronRight className="w-5 h-5 text-[var(--text-muted)]" /></Link>

@@ -5,7 +5,6 @@
 import { useRef, useState } from 'react'
 import type { ListingPhotoDraft, PhotoType } from '../listingStore'
 import { PHOTO_TYPE_LABELS } from '../photoController'
-import { reorderPhotos } from '../photoController'
 
 interface PhotosStepProps {
   photos: ListingPhotoDraft[]

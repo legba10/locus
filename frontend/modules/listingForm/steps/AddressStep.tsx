@@ -16,16 +16,10 @@ interface AddressStepProps {
   onBuildingChange: (v: string) => void
 }
 
-const cityInputCls = cn(
-  'w-full rounded-[12px] px-4 py-3',
-  'bg-[#111827] text-[#fff] placeholder:text-[#888]',
-  'border border-[#4f46e5] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/30'
-)
-
-const defaultInputCls = cn(
-  'w-full rounded-[12px] px-4 py-3',
-  'bg-[#111827] text-[#fff] placeholder:text-[#888]',
-  'border border-[var(--border-main)] text-[14px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30'
+const inputCls = cn(
+  'w-full rounded-[12px] px-4 py-3 text-[14px]',
+  'bg-[var(--bg-input)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+  'border border-[var(--border-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30'
 )
 
 export function AddressStep(props: AddressStepProps) {
@@ -72,14 +66,14 @@ export function AddressStep(props: AddressStepProps) {
     <div className="space-y-4">
       <div>
         <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">Город</label>
-        <CityInput value={props.city} onChange={props.onCityChange} className={cityInputCls} />
+        <CityInput value={props.city} onChange={props.onCityChange} className={inputCls} />
       </div>
       <div>
         <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">Район</label>
         <input
           value={props.district}
           onChange={(e) => props.onDistrictChange(e.target.value)}
-          className={defaultInputCls}
+          className={inputCls}
           placeholder="Район"
         />
       </div>
@@ -94,7 +88,7 @@ export function AddressStep(props: AddressStepProps) {
             }}
             onFocus={() => setStreetOpen(true)}
             disabled={!canStreet}
-            className={cn(defaultInputCls, !canStreet && 'opacity-60 cursor-not-allowed')}
+            className={cn(inputCls, !canStreet && 'opacity-60 cursor-not-allowed')}
             placeholder={canStreet ? 'Начните вводить улицу' : 'Сначала выберите город'}
           />
           {streetOpen && streetSuggestions.length > 0 && (
@@ -127,7 +121,7 @@ export function AddressStep(props: AddressStepProps) {
             }}
             onFocus={() => setHouseOpen(true)}
             disabled={!canHouse}
-            className={cn(defaultInputCls, !canHouse && 'opacity-60 cursor-not-allowed')}
+            className={cn(inputCls, !canHouse && 'opacity-60 cursor-not-allowed')}
             placeholder={canHouse ? 'Номер дома' : 'Сначала выберите улицу'}
           />
           {houseOpen && houseSuggestions.length > 0 && (

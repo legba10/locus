@@ -33,7 +33,7 @@ export default function ProfileCreateListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)]">
+    <div className="min-h-screen bg-[var(--bg-main)] py-4">
       <ListingWizard
           onSuccess={() => router.push('/profile/listings')}
           onCancel={() => router.push('/profile')}

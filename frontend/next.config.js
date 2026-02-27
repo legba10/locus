@@ -17,7 +17,7 @@ const nextConfig = {
   // ТЗ-27: единая навигация — только /profile. Удаление дублей /dashboard.
   async redirects() {
     return [
-      { source: "/create", destination: "/create-listing", permanent: false },
+      { source: "/create", destination: "/profile/listings/create", permanent: false },
       { source: "/add", destination: "/profile/listings/create", permanent: false },
       { source: "/owner/dashboard", destination: "/profile/listings/create", permanent: false, has: [{ type: "query", key: "tab", value: "add" }] },
       { source: "/profile/income", destination: "/profile/finance", permanent: false },

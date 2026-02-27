@@ -14,7 +14,7 @@ export default function CreateListingPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!isAuthenticated()) {
-      router.replace(`/auth/login?redirect=${encodeURIComponent('/dashboard/listings/create')}`)
+      router.replace(`/auth/login?redirect=${encodeURIComponent('/profile/listings/create')}`)
     }
   }, [isAuthenticated, router])
 
@@ -23,7 +23,7 @@ export default function CreateListingPage() {
       <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-[var(--text-secondary)] mb-4">Требуется авторизация</p>
-          <Link href={`/auth/login?redirect=${encodeURIComponent('/dashboard/listings/create')}`} className="text-[var(--accent)] font-medium">
+          <Link href={`/auth/login?redirect=${encodeURIComponent('/profile/listings/create')}`} className="text-[var(--accent)] font-medium">
             Войти
           </Link>
         </div>
@@ -32,12 +32,10 @@ export default function CreateListingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] py-6 pb-24 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-[var(--bg-main)] py-4 pb-24 md:pb-8">
+      <div className="max-w-[820px] mx-auto px-4">
         <ListingWizard
-          onSuccess={(listingId) => {
-            router.push('/owner/dashboard?tab=listings')
-          }}
+          onSuccess={() => router.push('/profile/listings')}
           onCancel={() => router.push('/profile')}
           onLimitReached={() => router.push('/pricing?reason=limit')}
         />

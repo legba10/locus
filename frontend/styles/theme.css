@@ -195,7 +195,8 @@
 
 [data-theme="dark"] .card-tz47,
 .dark .card-tz47 {
-  background: #0f172a;
-  box-shadow: none;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  /* TZ-49: без белой обводки — background + shadow, border none */
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: none;
 }

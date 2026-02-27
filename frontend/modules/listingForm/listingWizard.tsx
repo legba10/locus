@@ -14,16 +14,17 @@ import { ReviewStep } from './steps/ReviewStep'
 import { PublishStep } from './steps/PublishStep'
 import { AiListingPanel } from '@/components/ai/AiListingPanel'
 import { buildAiDescription } from './aiDescription'
-import { addFilesToPhotos, buildPhotoMetaForHouseRules, removePhoto, setPhotoCover, setPhotoType } from './photoController'
+import { addFilesToPhotos, buildPhotoMetaForHouseRules, removePhoto, reorderPhotos, setPhotoCover, setPhotoType } from './photoController'
 import { useListingWizardStore } from './listingStore'
 import { useAiController } from '@/ai/aiController'
 
+/** TZ-50: wizard flow — Тип, Адрес, Характеристики, Фото, Описание, Цена, Проверка, Публикация */
 const STEP_TITLES = [
   'Тип жилья',
-  'Адрес и карта',
+  'Адрес',
+  'Характеристики',
   'Фото',
   'Описание',
-  'Удобства',
   'Цена',
   'Проверка',
   'Публикация',
@@ -97,10 +98,11 @@ export function ListingWizard({
     if (!initialListing) reset()
   }, [initialListing, hydrateFromListing, reset])
 
+  /** TZ-50: валидация — адрес (1), характеристики (2), фото (3), описание (4), цена (5) */
   const canNext = useMemo(() => {
     if (step === 1) return city.trim().length > 0
-    if (step === 2) return photos.length > 0
-    if (step === 3) return title.trim().length > 0
+    if (step === 3) return photos.length > 0
+    if (step === 4) return title.trim().length > 0
     if (step === 5) return Number(price) > 0
     return true
   }, [step, city, photos.length, title, price])
@@ -234,7 +236,7 @@ export function ListingWizard({
   const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
 
   return (
-    <div className="min-h-[100dvh] max-w-[680px] w-full mx-auto p-4 pb-24 flex flex-col gap-[20px]">
+    <div className="min-h-[100dvh] w-full max-w-[720px] lg:max-w-[820px] mx-auto px-4 py-4 pb-28 flex flex-col gap-[18px]">
       <div className="space-y-1">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
@@ -244,11 +246,14 @@ export function ListingWizard({
         </p>
       </div>
 
-      <div className="h-2 w-full rounded-full bg-[var(--bg-input)] overflow-hidden">
-        <div className="h-full rounded-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+      {/* TZ-50: прогресс — height 6px, border-radius 6px */}
+      <div className="h-1.5 w-full rounded-[6px] overflow-hidden bg-[var(--bg-input)]">
+        <div className="h-full rounded-[6px] bg-[var(--accent)] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
       </div>
 
-      <div className="w-full rounded-[16px] card-tz47 p-[18px] flex flex-col gap-[12px]">
+      <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="w-full rounded-[20px] card-tz47 p-5 flex flex-col gap-4">
         {step === 0 && (
           <StepType
             type={type}
@@ -270,11 +275,15 @@ export function ListingWizard({
           />
         )}
         {step === 2 && (
+          <StepAmenities amenityKeys={amenityKeys} onChange={(keys) => setField('amenityKeys', keys)} />
+        )}
+        {step === 3 && (
           <PhotosStep
             photos={photos}
             onAddFiles={(files) => setPhotos(addFilesToPhotos(photos, files))}
             onSetType={(id, type) => setPhotos(setPhotoType(photos, id, type))}
             onSetCover={(id) => setPhotos(setPhotoCover(photos, id))}
+            onReorder={(from, to) => setPhotos(reorderPhotos(photos, from, to))}
             onRemove={(id) => {
               const target = photos.find((p) => p.id === id)
               if (target && !target.isNew) {
@@ -284,8 +293,8 @@ export function ListingWizard({
             }}
           />
         )}
-        {step === 3 && (
-          <div className="space-y-3">
+        {step === 4 && (
+          <div className="grid gap-[14px]">
             <button
               type="button"
               onClick={() => aiController.openPanel('listing')}
@@ -301,9 +310,6 @@ export function ListingWizard({
               onGenerateDescription={onGenerateDescription}
             />
           </div>
-        )}
-        {step === 4 && (
-          <StepAmenities amenityKeys={amenityKeys} onChange={(keys) => setField('amenityKeys', keys)} />
         )}
         {step === 5 && (
           <StepPrice
@@ -322,6 +328,23 @@ export function ListingWizard({
           <ReviewStep photos={photos} title={title} description={description} price={price} />
         )}
         {step === 7 && <PublishStep isSubmitting={isSubmitting} onPublish={() => void submit()} />}
+          </div>
+        </div>
+
+        {/* TZ-48: Desktop — превью объявления справа */}
+        <aside className="hidden lg:block w-[280px] shrink-0">
+          <div className="sticky top-24 rounded-[16px] card-tz47 p-4 space-y-3">
+            <p className="text-[12px] font-semibold uppercase text-[var(--text-muted)]">Превью</p>
+            {photos[0] && (
+              <div className="aspect-[4/3] rounded-[12px] overflow-hidden bg-[var(--bg-input)]">
+                <img src={photos[0].url} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <p className="text-[14px] font-semibold text-[var(--text-primary)] truncate">{title || 'Заголовок'}</p>
+            <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2">{description || 'Описание'}</p>
+            {price && <p className="text-[16px] font-bold text-[var(--accent)]">{price} ₽</p>}
+          </div>
+        </aside>
       </div>
 
       {aiPreview && (
@@ -375,22 +398,32 @@ export function ListingWizard({
         }}
       />
 
-      {/* TZ-47: нижняя панель шагов — sticky, padding 12px 16px, background inherit */}
+      {/* TZ-50: mobile — fixed внизу. Desktop — sticky внизу карточки. Первый шаг — Back скрыт. */}
       <div
-        className="sticky bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] flex justify-between items-center bg-[var(--bg-main)]"
+        className="fixed md:sticky bottom-0 left-0 right-0 z-50 border-t border-[var(--border-main)] bg-[var(--bg-main)] md:mt-auto"
         style={{
           padding: '12px 16px',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
       >
-        <div className="mx-auto max-w-[680px] w-full flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={step === 0 ? onCancel : prevStep}
-            className="h-12 min-h-[48px] flex-1 rounded-[12px] border-2 border-[var(--border-main)] bg-transparent text-[14px] font-medium text-[var(--text-primary)]"
-          >
-            Назад
-          </button>
+        <div className="mx-auto max-w-[720px] lg:max-w-[820px] w-full flex items-center justify-between gap-3 px-1">
+          {step === 0 ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="h-12 min-h-[48px] flex-1 rounded-[12px] border-2 border-[var(--border-main)] bg-transparent text-[14px] font-medium text-[var(--text-primary)]"
+            >
+              Отмена
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={prevStep}
+              className="h-12 min-h-[48px] flex-1 rounded-[12px] border-2 border-[var(--border-main)] bg-transparent text-[14px] font-medium text-[var(--text-primary)]"
+            >
+              Назад
+            </button>
+          )}
           {step < 7 ? (
             <button
               type="button"

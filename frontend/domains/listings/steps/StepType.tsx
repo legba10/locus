@@ -20,9 +20,9 @@ export interface StepTypeProps {
   onRentModeChange: (m: RentMode) => void
 }
 
-/** ТЗ-49: карточки типа — высота 88px, radius 16px, padding 16px, gap 12px, 2 в ряд, активная — рамка 2px */
-const TYPE_CARD_CLS = 'h-[88px] min-h-[88px] rounded-[16px] p-4 border-2 text-left font-semibold text-[15px] transition-all flex items-center'
-const RENT_BTN_CLS = 'h-[88px] min-h-[88px] flex-1 rounded-[16px] p-4 border-2 font-semibold text-[15px] transition-all'
+/** TZ-50: карточки — height 72px, grid 2 cols, gap 12px, border-radius 14px */
+const TYPE_CARD_CLS = 'h-[72px] min-h-[72px] rounded-[14px] p-4 border-2 text-left font-semibold text-[15px] transition-all flex items-center justify-center'
+const RENT_BTN_CLS = 'h-[72px] min-h-[72px] flex-1 rounded-[14px] p-4 border-2 font-semibold text-[15px] transition-all flex items-center justify-center'
 
 export function StepType({ type, rentMode, onTypeChange, onRentModeChange }: StepTypeProps) {
   return (
