@@ -141,12 +141,13 @@
   --danger: #dc2626;
 }
 
-/* Dark — ТЗ №1 + TZ-62: фон #0f1220 (не чистый чёрный), текст читаемый */
+/* Dark — TZ-72 Block 8: всё тёмное, карточки #12182b */
 :root[data-theme="dark"],
-.dark {
-  --background: #0f1220;
-  --bg: #0f1220;
-  --card: #161a2f;
+.dark,
+html.theme-dark {
+  --background: #0f1425;
+  --bg: #0f1425;
+  --card: #12182b;
   --text: #f3f4f8;
   --sub: #9ca3b5;
   --border: rgba(255, 255, 255, 0.08);
@@ -154,13 +155,15 @@
   --accent2: #6366f1;
 }
 
-:root[data-theme="dark"] {
-  --bg-main: #0f1220;
-  --bg-secondary: #161a2f;
-  --bg-surface: #161a2f;
-  --bg-card: #161a2f;
-  --bg-elevated: #1a1f38;
-  --bg-modal: #161a2f;
+/* TZ-72 Block 8: dark = всё тёмное, карточки #12182b (дублируем в theme-isolation-tz72) */
+:root[data-theme="dark"],
+html.theme-dark {
+  --bg-main: #0f1425;
+  --bg-secondary: #12182b;
+  --bg-surface: #161b2e;
+  --bg-card: #12182b;
+  --bg-elevated: #161b2e;
+  --bg-modal: #12182b;
 
   --text-primary: #f3f4f8;
   --text-main: #f3f4f8;
@@ -215,11 +218,11 @@
   border-top-color: var(--border-main);
 }
 
-/* TZ-47 + TZ-71: карточки — одна тень из elevation (E1), без glow. Active: вдавливание. */
+/* TZ-47 + TZ-71 + TZ-77: карточки — только переменные темы */
 .card-tz47 {
   background: var(--bg-card);
-  box-shadow: var(--shadow-e1-light, 0 4px 16px rgba(0, 0, 0, 0.08));
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-e1-light, var(--shadow-card));
+  border: 1px solid var(--border-primary);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card-tz47:hover {
@@ -230,10 +233,11 @@
 }
 
 [data-theme="dark"] .card-tz47,
-.dark .card-tz47 {
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: var(--shadow-e1);
-  border: none;
+.dark .card-tz47,
+html.theme-dark .card-tz47 {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-e1, var(--shadow-card));
+  border: 1px solid var(--border-primary);
 }
 
 /* TZ-53: тёмная тема нижнего меню — в bottom-nav-tz53.css */

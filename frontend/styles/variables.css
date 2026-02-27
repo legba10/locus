@@ -3,9 +3,11 @@
  * Не переопределять --bg-main, --bg-card, --text-primary и т.д. — они в theme.css
  */
 
-/* ТЗ-12: отступы и сетка — единая система. TZ-23: header 56px, bottom nav для отступов. */
+/* ТЗ-12 + TZ-72 Block 6: сетка — max-width 720px, padding 16px, межблочный отступ 24px. */
 :root {
   --page-px: 16px;
+  --content-max-width: 720px;
+  --block-gap: 24px;
   --section-gap: 16px;
   --card-gap: 12px;
   --radius-card: 18px;

@@ -93,7 +93,7 @@ export function BottomNav() {
   const lastY = useRef(0)
 
   const isAdmin = pathname?.startsWith('/admin')
-  const isListingDetail = pathname?.match(/^\/listings\/[^/]+$/)
+  const isListingDetail = pathname?.match(/^\/listing\/[^/]+$/) || pathname?.match(/^\/listings\/[^/]+$/)
   const isChatRoute = pathname?.startsWith('/messages') || pathname?.startsWith('/chat')
   if (isAdmin) return null
   if (isListingDetail) return null

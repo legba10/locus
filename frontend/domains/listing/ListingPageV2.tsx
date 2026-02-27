@@ -140,7 +140,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3" />
@@ -155,7 +155,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
   const item = data?.listing ?? data?.item
   if (error || !item) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
         <div className="text-center">
           <h3 className="text-[18px] font-semibold text-[#1C1F26] mb-2">Объявление не найдено</h3>
           <Link href="/listings" className="text-violet-600 hover:text-violet-700 text-[14px]">
@@ -188,7 +188,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
 
   const handleWrite = async () => {
     if (!isAuthenticated()) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/listing/${id}`)}`)
       return
     }
     setWriteLoading(true)
@@ -208,7 +208,7 @@ export function ListingPageV2({ id }: ListingPageV2Props) {
 
   const handleBookingConfirm = async (data: { checkIn: Date; checkOut: Date; guests: number }) => {
     if (!isAuthenticated()) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/listing/${id}`)}`)
       return
     }
     try {

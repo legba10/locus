@@ -111,7 +111,7 @@ function ListingCardTZ7Component(props: ListingCardTZ7Props) {
 
   return (
     <Link
-      href={`/listings/${id}`}
+      href={`/listing/${id}`}
       onClick={handleCardClick}
       className={cn(
         'group block rounded-[16px] p-4 sm:p-[12px] gap-2',

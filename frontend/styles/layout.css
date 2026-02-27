@@ -45,6 +45,19 @@
   padding-right: 16px;
 }
 
+/* TZ-72 Block 6: контент — max-width 720px, padding 16px, межблочный отступ 24px */
+.content-shell-tz72 {
+  width: 100%;
+  max-width: var(--content-max-width, 720px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-px, 16px);
+  padding-right: var(--page-px, 16px);
+}
+.content-shell-tz72 > * + * {
+  margin-top: var(--block-gap, 24px);
+}
+
 /* TZ-47/TZ-49/TZ-51: контейнер профиля — max-width 720px (desktop 900px), gap 14px */
 .profile-container,
 .profile-container-tz47 {

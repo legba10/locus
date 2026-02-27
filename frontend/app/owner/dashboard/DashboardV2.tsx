@@ -300,7 +300,7 @@ function DashboardHomeTab({
           <ul className="space-y-3">
             {listings.slice(0, 3).map((item: any) => (
               <li key={item.id}>
-                <Link href={`/listings/${item.id}`} className="flex gap-3 p-3 rounded-[12px] bg-[var(--bg-input)] border border-[var(--border-main)] hover:border-[var(--accent)]/30 transition-colors">
+                <Link href={`/listing/${item.id}`} className="flex gap-3 p-3 rounded-[12px] bg-[var(--bg-input)] border border-[var(--border-main)] hover:border-[var(--accent)]/30 transition-colors">
                   <div className="w-16 h-12 rounded-[8px] bg-[var(--bg-card)] overflow-hidden shrink-0">
                     {item.photos?.[0]?.url ? <img src={item.photos[0].url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[12px]">—</div>}
                   </div>

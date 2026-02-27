@@ -195,7 +195,7 @@ function ListingCardComponent(props: ListingCardProps) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <Link href={`/listings/${id}`} onClick={handleCardClick} className="block">
+      <Link href={`/listing/${id}`} onClick={handleCardClick} className="block">
         {/* ТЗ 15: блок фото — 4:3 (desktop), 3:2 (mobile); счётчик; бейджи */}
         <div
           className={cn(
@@ -366,7 +366,7 @@ function ListingCardComponent(props: ListingCardProps) {
       {/* CTA: Избранное, Сравнить (вне основного Link) */}
       <div className="px-3 pb-3 flex items-center gap-2">
         <Link
-          href={`/listings/${id}`}
+          href={`/listing/${id}`}
           onClick={handleCardClick}
           className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] hover:opacity-95 transition-opacity"
         >
@@ -386,7 +386,7 @@ function ListingCardComponent(props: ListingCardProps) {
           </button>
         )}
         <Link
-          href={`/listings/${id}`}
+          href={`/listing/${id}`}
           onClick={handleCardClick}
           className="shrink-0 w-10 h-10 rounded-xl border border-[var(--border-main)] flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors"
           aria-label="Сравнить"

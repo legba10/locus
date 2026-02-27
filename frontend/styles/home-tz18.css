@@ -466,11 +466,14 @@
   padding: 24px;
   border-radius: 18px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  background: var(--card-bg, var(--surface));
+  background: var(--bg-card);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
+/* TZ-72 Block 8: dark = карточки #12182b */
+html.theme-dark .home-filter-block-tz-final,
 [data-theme="dark"] .home-filter-block-tz-final,
 .dark .home-filter-block-tz-final {
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }

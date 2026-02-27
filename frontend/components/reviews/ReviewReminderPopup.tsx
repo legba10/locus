@@ -47,7 +47,7 @@ export function ReviewReminderPopup() {
   const handleLeaveReview = () => {
     setDismissed(reminder.bookingId)
     setReminder(null)
-    router.push(`/listings/${reminder.listingId}#review-form`)
+    router.push(`/listing/${reminder.listingId}#review-form`)
   }
 
   const handleLater = () => {

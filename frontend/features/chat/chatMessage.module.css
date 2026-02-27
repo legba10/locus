@@ -1,0 +1,23 @@
+.row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mine {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.mine .bubble {
+  background: var(--primary);
+  color: var(--text-on-accent);
+}

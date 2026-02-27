@@ -812,7 +812,7 @@ export function ListingWizard({
                 </div>
               </div>
             )}
-            <div className="rounded-[14px] bg-gray-50 p-4 text-[13px] text-[#6B7280]">
+            <div className="rounded-[14px] bg-gray-50 p-4 text-[13px] text-[var(--text-secondary)]">
               После нажатия объявление отправится на проверку. Публикация — после одобрения модератором.
             </div>
           </div>
@@ -821,7 +821,7 @@ export function ListingWizard({
 
       {/* Errors */}
       {(error || stepError) && (
-        <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-3 text-[13px] text-[#ff6b6b]">
+        <div className="rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-card)] p-3 text-[13px] text-[var(--danger)]">
           {error || stepError}
         </div>
       )}
@@ -954,7 +954,7 @@ function PhotoStepGrid({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-medium text-[var(--text-secondary)]">Фото (минимум 5: комната и санузел)</span>
-        <span className="text-[12px] text-[#94A3B8]">{total}/12</span>
+        <span className="text-[12px] text-[var(--text-muted)]">{total}/12</span>
       </div>
       <div
         onDragEnter={handleDrag}
@@ -1044,7 +1044,7 @@ function AmenitiesStepChips({ amenityKeys, onChange }: { amenityKeys: string[]; 
   const categories = showAll ? AMENITIES_BY_CATEGORY : AMENITIES_BY_CATEGORY.slice(0, 3);
   return (
     <div className="space-y-4">
-      <div className="text-[13px] font-medium text-[#6B7280]">Удобства — выберите чипами</div>
+      <div className="text-[13px] font-medium text-[var(--text-secondary)]">Удобства — выберите чипами</div>
       {categories.map(({ category, items }) => (
         <div key={category}>
           <div className="text-[12px] text-[var(--text-muted)] mb-2">{category}</div>

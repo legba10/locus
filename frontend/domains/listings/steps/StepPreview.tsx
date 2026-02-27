@@ -45,11 +45,11 @@ export function StepPreview({
               Нет фото
             </div>
           )}
-          <div className="absolute top-3 left-3 px-2 py-1 rounded bg-black/60 text-white text-[12px] font-semibold">
+          <div className="absolute top-3 left-3 px-2 py-1 rounded bg-black/60 text-[var(--text-on-accent)] text-[12px] font-semibold">
             {rentMode === 'night' ? 'Посуточно' : 'Длительно'}
           </div>
           {price && (
-            <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-bold text-[18px]">
+            <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[var(--text-on-accent)] font-bold text-[18px]">
               {Number(price).toLocaleString('ru-RU')} ₽ {rentMode === 'night' ? '/ сутки' : '/ мес'}
             </div>
           )}

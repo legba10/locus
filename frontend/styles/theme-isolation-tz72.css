@@ -1,0 +1,34 @@
+/**
+ * TZ-72 Block 1: Theme isolation — html.theme-light / html.theme-dark.
+ * Block 8: Dark = all dark, cards #12182b.
+ */
+
+html.theme-light {
+  --bg-primary: #f4f6fb;
+  --bg-main: #f4f6fb;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-surface: #f2f3f7;
+  --bg-secondary: #f0f1f5;
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-main: rgba(0, 0, 0, 0.06);
+}
+
+html.theme-dark {
+  --bg-primary: #0f1425;
+  --bg-main: #0f1425;
+  --bg-card: #12182b;
+  --bg-elevated: #161b2e;
+  --bg-modal: #12182b;
+  --bg-surface: #161b2e;
+  --bg-secondary: #12182b;
+  --text-primary: #f3f4f8;
+  --text-main: #f3f4f8;
+  --text-secondary: #9ca3b5;
+  --text-muted: #9ca3b5;
+  --border-main: rgba(255, 255, 255, 0.08);
+}

@@ -37,6 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   /* ТЗ-1: 3 режима — light, dark, system. До гидрации выставляем data-theme по сохранённому или system */
+  /* TZ-72 Block 1: theme-light / theme-dark на html */
   const themeInitScript = `
     (function () {
       try {
@@ -44,8 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         var resolved = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
         var root = document.documentElement;
-        root.classList.remove('light', 'dark');
+        root.classList.remove('light', 'dark', 'theme-light', 'theme-dark');
         root.classList.add(resolved);
+        root.classList.add(resolved === 'dark' ? 'theme-dark' : 'theme-light');
         root.setAttribute('data-theme', resolved);
         root.style.colorScheme = resolved;
       } catch (e) {}

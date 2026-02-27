@@ -68,6 +68,9 @@ export function CreateListingWizardV2({
   const [district, setDistrict] = useState('')
   const [street, setStreet] = useState('')
   const [building, setBuilding] = useState('')
+  const [lat, setLat] = useState<number | null>(null)
+  const [lng, setLng] = useState<number | null>(null)
+  const [addressFromMap, setAddressFromMap] = useState('')
   const [photoItems, setPhotoItems] = useState<PhotoItemV2[]>([])
   const [coverPhotoIndex, setCoverPhotoIndex] = useState(0)
   const [rooms, setRooms] = useState('')
@@ -97,6 +100,8 @@ export function CreateListingWizardV2({
         description: description.trim(),
         city: city.trim(),
         addressLine: addressLine.trim() || undefined,
+        lat: lat ?? undefined,
+        lng: lng ?? undefined,
         basePrice: p || 0,
         currency: 'RUB',
         capacityGuests: 2,
@@ -121,7 +126,7 @@ export function CreateListingWizardV2({
     return () => window.clearTimeout(t)
   }, [
     initialListing?.id,
-    type, city, addressLine, title, description, price, rooms, area, floor, totalFloors, deposit,
+    type, city, addressLine, lat, lng, title, description, price, rooms, area, floor, totalFloors, deposit,
   ])
 
   useEffect(() => {
@@ -131,6 +136,14 @@ export function CreateListingWizardV2({
     setDistrict('')
     setStreet('')
     setBuilding(initialListing.addressLine ?? '')
+    const hasCoords =
+      typeof initialListing.lat === 'number' &&
+      typeof initialListing.lng === 'number' &&
+      Number.isFinite(initialListing.lat) &&
+      Number.isFinite(initialListing.lng)
+    setLat(hasCoords ? initialListing.lat : null)
+    setLng(hasCoords ? initialListing.lng : null)
+    setAddressFromMap(initialListing.addressLine ?? '')
     setRooms(String(initialListing.bedrooms ?? ''))
     const hr = initialListing.houseRules || {}
     setArea(String(hr.area ?? ''))
@@ -152,8 +165,11 @@ export function CreateListingWizardV2({
   }, [initialListing])
 
   const addressLine = useMemo(
-    () => [district, street, building].filter(Boolean).join(', ') || city,
-    [city, district, street, building]
+    () =>
+      addressFromMap.trim() ||
+      [district, street, building].filter(Boolean).join(', ') ||
+      city,
+    [addressFromMap, city, district, street, building]
   )
   const addressDisplay = useMemo(() => [city, district].filter(Boolean).join(', ') || '—', [city, district])
 
@@ -165,7 +181,7 @@ export function CreateListingWizardV2({
 
   const canGoNext = useMemo(() => {
     if (step === 0) return true
-    if (step === 1) return city.trim().length > 0
+    if (step === 1) return city.trim().length > 0 && lat != null && lng != null
     if (step === 2) return photoItems.length >= MIN_PHOTOS
     if (step === 3 || step === 4) return true
     if (step === 5) return title.trim().length > 0
@@ -242,8 +258,8 @@ export function CreateListingWizardV2({
       topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
-    if (step === 1 && !city.trim()) {
-      setError('Выберите город')
+    if (step === 1 && (!city.trim() || lat == null || lng == null)) {
+      setError('Выберите адрес на карте (город и координаты обязательны)')
       topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
@@ -278,6 +294,8 @@ export function CreateListingWizardV2({
       description: description.trim(),
       city: city.trim(),
       addressLine: addressLine.trim() || undefined,
+      lat: lat ?? undefined,
+      lng: lng ?? undefined,
       basePrice: p || 0,
       currency: 'RUB',
       capacityGuests: 2,
@@ -323,7 +341,7 @@ export function CreateListingWizardV2({
       setError(e?.message ?? 'Ошибка сохранения черновика')
     }
   }, [
-    type, city, addressLine, title, description, price, rooms, area, floor, totalFloors, deposit,
+    type, city, addressLine, lat, lng, title, description, price, rooms, area, floor, totalFloors, deposit,
     photoItems, initialListing?.id, queryClient, onSuccess,
   ])
 
@@ -361,6 +379,8 @@ export function CreateListingWizardV2({
         description: description.trim(),
         city: city.trim(),
         addressLine: addressLine.trim() || undefined,
+        lat: lat ?? undefined,
+        lng: lng ?? undefined,
         basePrice: p,
         currency: 'RUB',
         capacityGuests: 2,
@@ -503,7 +523,7 @@ export function CreateListingWizardV2({
             {publishResult.status === 'published' && (
               <>
                 <Link
-                  href={`/listings/${publishResult.listingId}`}
+                  href={`/listing/${publishResult.listingId}`}
                   className="rounded-[12px] px-5 py-3 font-semibold text-[15px] bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-95"
                 >
                   Открыть
@@ -619,10 +639,17 @@ export function CreateListingWizardV2({
             district={district}
             street={street}
             building={building}
+            lat={lat}
+            lng={lng}
             onCityChange={setCity}
             onDistrictChange={setDistrict}
             onStreetChange={setStreet}
             onBuildingChange={setBuilding}
+            onAddressDataChange={(data) => {
+              setLat(data.lat)
+              setLng(data.lng)
+              setAddressFromMap(data.address)
+            }}
           />
         )}
         {step === 2 && (

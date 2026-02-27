@@ -1,0 +1,364 @@
+/* TZ-80: Search & Filters refactor. Mobile-first, 52px/16px/8px. */
+
+.searchWrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+@media (min-width: 1024px) {
+  .searchWrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    padding: 24px;
+  }
+}
+
+.searchBar {
+  display: flex;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.searchBarInput {
+  flex: 1;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.searchBarInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchBarInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 124, 58, 237), 0.2);
+}
+
+.searchBarButton {
+  height: 52px;
+  padding: 0 20px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchBarButton:hover {
+  background: var(--bg-input);
+}
+
+.searchBarButtonAi {
+  height: 52px;
+  padding: 0 20px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchBarButtonAi:hover {
+  background: var(--bg-input);
+}
+
+.searchBarButtonAiActive {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.chipRemove {
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.chipRemove:hover {
+  color: var(--text-primary);
+  background: var(--bg-input);
+}
+
+.drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80%;
+  max-height: 600px;
+  background: var(--bg-primary);
+  border-radius: 24px 24px 0 0;
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 1024px) {
+  .drawer,
+  .drawerOverlay {
+    display: none;
+  }
+}
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.5));
+  z-index: 99;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.drawerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.drawerClose {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.drawerClose:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.filterField {
+  margin-bottom: 16px;
+}
+
+.filterLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.filterInput {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.filterSelect {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  font-size: 16px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.drawerApply {
+  margin-top: 24px;
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+}
+
+.drawerApply:hover {
+  opacity: 0.95;
+}
+
+.resultsArea {
+  min-width: 0;
+}
+
+.resultsCount {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.paginationPage {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 0;
+}
+
+.resultsCount strong {
+  color: var(--text-primary);
+}
+
+.resultsGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .resultsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    display: block;
+    position: sticky;
+    top: 80px;
+    align-self: start;
+  }
+}
+
+.sidebarFilters {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.sidebarApply {
+  margin-top: 24px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.emptyStateTitle {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.emptyStateBtn {
+  margin-top: 16px;
+  height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.emptyStateBtn:hover {
+  background: var(--bg-input);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.paginationBtn {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: var(--bg-input);
+}

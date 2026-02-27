@@ -6,7 +6,7 @@
 
 /* ─── 2. Профиль — светлый фон, карточки белые, без тёмно-синих плашек ─── */
 .profile-page {
-  background: #f5f6fb;
+  background: var(--bg-main);
 }
 
 [data-theme="dark"] .profile-page,
@@ -16,8 +16,8 @@
 
 .profile-page .profile-item,
 .profile-item {
-  background: #ffffff;
-  color: #111;
+  background: var(--bg-card);
+  color: var(--text-primary);
   border-radius: 18px;
   box-shadow: var(--shadow-card, 0 4px 20px rgba(0, 0, 0, 0.06));
   border: none;
@@ -49,7 +49,7 @@
 
 .feature-card {
   background: #fff;
-  border: 1px solid #e6e8f2;
+  border: 1px solid var(--border-primary);
   border-radius: 16px;
   transition: border-color 0.2s ease, background 0.2s ease;
 }

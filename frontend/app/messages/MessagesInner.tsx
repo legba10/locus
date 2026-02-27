@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { ChatPage } from '@/modules/chat'
+import { ChatPage } from '@/features/chat/ChatPage'
 import { cn } from '@/shared/utils/cn'
 
 type ChatItem = {
@@ -39,7 +39,11 @@ export default function MessagesInner() {
   }, [])
 
   if (!mounted) {
-    return null
+    return (
+      <div className="flex flex-col bg-[var(--bg-main)] min-h-[60vh] items-center justify-center p-4">
+        <div className="h-8 w-8 rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)] animate-spin" aria-hidden />
+      </div>
+    )
   }
 
   const openChat = (chatId: string) => {
@@ -187,14 +191,30 @@ export default function MessagesInner() {
       <div className={cn('flex-1 min-w-0 min-h-0 flex flex-col chat-column-mobile-pb md:pb-0', isMobileChatOpen ? 'flex' : 'hidden md:flex')}>
         {activeChatId ? (
           <div className="flex flex-col h-full min-h-0">
-            <ChatPage
-              chatId={activeChatId}
-              onBack={goBack}
-              embedded
-              listingId={chats?.find((c) => c.id === activeChatId)?.listingId}
-              listingTitle={chats?.find((c) => c.id === activeChatId)?.listingTitle}
-              listingPhotoUrl={chats?.find((c) => c.id === activeChatId)?.listingPhotoUrl}
-            />
+            {(() => {
+              const c = chats?.find((ch) => ch.id === activeChatId)
+              const hostId = c?.host?.id ?? ''
+              const isHost = hostId === currentUserId
+              const other = c ? (isHost ? c.guest : c.host) : null
+              const chatUser = {
+                id: other?.id ?? '',
+                name: (other?.profile?.name ?? '').toString().trim() || 'Пользователь',
+                avatar: (other?.profile?.avatarUrl ?? undefined) as string | undefined,
+              }
+              const chatAd = {
+                id: c?.listingId ?? '',
+                title: (c?.listingTitle ?? '').toString().trim() || 'Объявление',
+                image: (c?.listingPhotoUrl ?? undefined) as string | undefined,
+              }
+              return (
+                <ChatPage
+                  chatId={activeChatId}
+                  user={chatUser}
+                  ad={chatAd}
+                  onBack={goBack}
+                />
+              )
+            })()}
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center p-8 text-center">

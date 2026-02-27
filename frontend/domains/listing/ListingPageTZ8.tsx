@@ -22,6 +22,8 @@ import { analyzeListing, type ListingAnalyzerResult } from '@/lib/ai/listingAnal
 
 interface ListingPageTZ8Props {
   id: string
+  /** TZ-75: server-fetched listing to avoid useEffect initial load and hydration */
+  initialListing?: ListingResponse | null
 }
 
 interface ListingResponse {
@@ -94,7 +96,7 @@ function LazyBox({ children, fallback }: { children: React.ReactNode; fallback?:
   return <div ref={ref}>{inView ? children : (fallback ?? <div className="min-h-[120px] rounded-[16px] bg-[var(--bg-input)] animate-pulse" />)}</div>
 }
 
-export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
+export function ListingPageTZ8({ id, initialListing }: ListingPageTZ8Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
@@ -117,7 +119,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const [analysisRefreshKey, setAnalysisRefreshKey] = useState(0)
   const [aiHostOpen, setAiHostOpen] = useState(false)
 
-  const { data, isLoading, error } = useFetch<ListingResponse>(['listing', id], `/api/listings/${id}`)
+  const { data, isLoading, error } = useFetch<ListingResponse>(
+    ['listing', id],
+    `/api/listings/${id}`,
+    initialListing != null ? { initialData: initialListing } : {}
+  )
   const { data: reviewsData } = useFetch<{ items?: any[] }>(['listing-reviews', id], `/api/reviews/listing/${encodeURIComponent(id)}?limit=10`)
   const { data: ratingSummaryData } = useFetch<{
     ok: boolean
@@ -263,7 +269,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
       <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-[18px] font-semibold text-[var(--text-primary)] mb-2">Объявление не найдено</h3>
-          <Link href="/listings" className="text-[var(--accent)] hover:opacity-90 text-[14px]">← Вернуться к поиску</Link>
+        <Link href="/listings" className="text-[var(--accent)] hover:opacity-90 text-[14px]">← Вернуться к поиску</Link>
         </div>
       </div>
     )
@@ -463,10 +469,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {isOwnerMode ? (
                   <>
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                      <button type="button" onClick={() => { setOwnerPanelTab('edit'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
-                      <button type="button" onClick={() => { setOwnerPanelTab('calendar'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
-                      <button type="button" onClick={() => { setOwnerPanelTab('promo'); router.push(`/listings/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
-                      <button type="button" onClick={() => { setOwnerPanelTab('analytics'); router.push(`/listings/${item.id}?tab=analytics`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('edit'); router.push(`/listing/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'edit' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Редактировать</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('calendar'); router.push(`/listing/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'calendar' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Календарь</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('promo'); router.push(`/listing/${item.id}`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'promo' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Продвижение</button>
+                      <button type="button" onClick={() => { setOwnerPanelTab('analytics'); router.push(`/listing/${item.id}?tab=analytics`) }} className={cn('h-10 rounded-[10px] text-[13px] font-medium', ownerPanelTab === 'analytics' ? 'bg-[var(--accent)] text-[var(--button-primary-text)]' : 'bg-[var(--bg-input)] text-[var(--text-primary)]')}>Аналитика</button>
                       <button type="button" onClick={() => setAiHostOpen(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">AI-помощник</button>
                       <button type="button" onClick={() => setOwnerViewAsUser(true)} className="h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[13px] font-medium text-[var(--text-primary)]">Как пользователь</button>
                     </div>
@@ -785,7 +791,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => router.push(`/listings/${item.id}?tab=analytics`)}
+                    onClick={() => router.push(`/listing/${item.id}?tab=analytics`)}
                     className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)]"
                   >
                     Статистика
@@ -953,7 +959,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             </Link>
             <button
               type="button"
-              onClick={() => router.push(`/listings/${item.id}?tab=analytics`)}
+              onClick={() => router.push(`/listing/${item.id}?tab=analytics`)}
               className="h-11 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[var(--text-primary)] font-medium text-[13px] flex items-center justify-center"
             >
               Аналитика

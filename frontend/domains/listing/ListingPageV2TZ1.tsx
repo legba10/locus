@@ -163,7 +163,7 @@ export function ListingPageV2TZ1({ id }: ListingPageV2TZ1Props) {
 
   const handleWrite = async () => {
     if (!isAuthenticated()) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/listing/${id}`)}`)
       return
     }
     setWriteLoading(true)
@@ -181,7 +181,7 @@ export function ListingPageV2TZ1({ id }: ListingPageV2TZ1Props) {
 
   const handleBookingConfirm = async (data: { checkIn: Date; checkOut: Date; guests: number }) => {
     if (!isAuthenticated()) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(`/listings/${id}`)}`)
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/listing/${id}`)}`)
       return
     }
     try {

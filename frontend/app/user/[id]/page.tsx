@@ -51,7 +51,7 @@ export default function UserProfilePage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
         <p className="text-[#6B7280]">Не указан пользователь</p>
       </div>
     )
@@ -59,7 +59,7 @@ export default function UserProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-24 bg-gray-200 rounded-[18px]" />
@@ -76,7 +76,7 @@ export default function UserProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
         <div className="text-center">
           <h2 className="text-[20px] font-bold text-[#1C1F26] mb-2">Профиль не найден</h2>
           <Link href="/listings" className="text-violet-600 hover:text-violet-700 text-[14px]">

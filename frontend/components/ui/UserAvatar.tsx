@@ -37,7 +37,7 @@ export default function UserAvatar({ user, onClick, className, asButton = true, 
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'var(--text-on-accent, #fff)',
+    color: 'var(--text-on-accent)',
     fontWeight: 600,
     fontSize: 14,
   } as React.CSSProperties

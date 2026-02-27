@@ -626,14 +626,14 @@ function ListingsTab() {
                       <div className="w-16 h-16 rounded-lg bg-[var(--admin-input-bg)] flex items-center justify-center text-[10px] text-[var(--admin-text-muted)] flex-shrink-0">Нет</div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <Link href={`/listings/${listing.id}`} className="font-medium text-[var(--admin-text-primary)] hover:text-violet-400 line-clamp-2">{listing.title}</Link>
+                      <Link href={`/listing/${listing.id}`} className="font-medium text-[var(--admin-text-primary)] hover:text-violet-400 line-clamp-2">{listing.title}</Link>
                       <p className="text-[12px] text-[var(--admin-text-secondary)]">{listing.city} · {formatPrice(listing.basePrice)}</p>
                       <p className="text-[12px] text-[var(--admin-text-muted)]">{listing.owner?.profile?.name || listing.owner?.email || '—'}</p>
                       <span className={cn('inline-block mt-1 px-2 py-0.5 rounded-lg text-[12px] font-medium', statusColors[listing.status])}>{statusLabels[listing.status] || listing.status}</span>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link href={`/listings/${listing.id}`} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">Открыть</Link>
+                    <Link href={`/listing/${listing.id}`} className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">Открыть</Link>
                     {listing.status === 'PENDING_REVIEW' && (
                       <>
                         <button type="button" onClick={() => handleAction(listing.id, 'approve')} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-medium">Одобрить</button>
@@ -673,7 +673,7 @@ function ListingsTab() {
                         )}
                       </td>
                       <td className="p-3">
-                        <Link href={`/listings/${listing.id}`} className="font-medium text-[var(--admin-text-primary)] hover:text-violet-400 line-clamp-2">{listing.title}</Link>
+                        <Link href={`/listing/${listing.id}`} className="font-medium text-[var(--admin-text-primary)] hover:text-violet-400 line-clamp-2">{listing.title}</Link>
                         <p className="text-[12px] text-[var(--admin-text-secondary)]">{listing.city} · {formatPrice(listing.basePrice)}</p>
                       </td>
                       <td className="p-3 text-[var(--admin-text-secondary)]">{listing.owner?.profile?.name || listing.owner?.email || '—'}</td>
@@ -682,7 +682,7 @@ function ListingsTab() {
                       </td>
                       <td className="p-3">
                         <div className="flex flex-wrap gap-1">
-                          <Link href={`/listings/${listing.id}`} className="px-2 py-1 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">Открыть</Link>
+                          <Link href={`/listing/${listing.id}`} className="px-2 py-1 rounded-lg bg-violet-600 text-white text-[12px] font-medium hover:bg-violet-500">Открыть</Link>
                           {listing.status === 'PENDING_REVIEW' && (
                             <>
                               <button type="button" onClick={() => handleAction(listing.id, 'approve')} className="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[12px] font-medium hover:bg-emerald-500">Одобрить</button>
@@ -784,7 +784,7 @@ function ModerationTab() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 self-start sm:self-center">
-                  <Link href={`/listings/${listing.id}`} className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500">Просмотр</Link>
+                  <Link href={`/listing/${listing.id}`} className="px-4 py-2 rounded-[12px] bg-violet-600 text-white text-[13px] font-medium hover:bg-violet-500">Просмотр</Link>
                   <button onClick={() => handleAction(listing.id, 'approve')} className="px-4 py-2 rounded-[12px] bg-emerald-600 text-white text-[13px] font-medium hover:bg-emerald-500">Одобрить</button>
                   <button onClick={() => handleAction(listing.id, 'reject')} className="px-4 py-2 rounded-[12px] bg-red-600 text-white text-[13px] font-medium hover:bg-red-500">Отклонить</button>
                 </div>

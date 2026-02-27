@@ -238,7 +238,7 @@ export function ChatPanel({ chatId, onBack, embedded = false, suggestedCheckIn, 
           </div>
           {conv.listingId && (
             <Link
-              href={`/listings/${conv.listingId}`}
+              href={`/listing/${conv.listingId}`}
               className="flex-shrink-0 text-[13px] font-medium text-[var(--accent)] hover:underline"
             >
               К объявлению

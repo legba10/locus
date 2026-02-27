@@ -29,8 +29,9 @@ function getSystemTheme(): ResolvedTheme {
 function applyTheme(resolved: ResolvedTheme) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  root.classList.remove("light", "dark");
+  root.classList.remove("light", "dark", "theme-light", "theme-dark");
   root.classList.add(resolved);
+  root.classList.add(resolved === "dark" ? "theme-dark" : "theme-light");
   root.setAttribute("data-theme", resolved);
   root.style.colorScheme = resolved;
 }

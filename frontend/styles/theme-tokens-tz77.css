@@ -1,0 +1,107 @@
+/**
+ * TZ-77: Единый источник токенов темы. Light и dark полностью разделены.
+ * Никакой компонент не содержит цветов напрямую — только var(--token).
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   SHARED (не зависят от темы)
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --primary: #7C5CFF;
+  --accent: #7C5CFF;
+  --accent-hover: #6849F5;
+  --border-radius-lg: 20px;
+  --border-radius-md: 14px;
+  --border-radius-sm: 10px;
+  --danger: #dc2626;
+  --success: #16a34a;
+  /* Текст на акцентной кнопке / на primary фоне */
+  --text-on-accent: #FFFFFF;
+  --button-primary-text: #FFFFFF;
+  /* Overlay — задаются в теме, здесь fallback */
+  --overlay: rgba(0, 0, 0, 0.4);
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT THEME
+   ═══════════════════════════════════════════════════════════════ */
+html.theme-light {
+  --bg-primary: #F4F6FB;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-main: #F4F6FB;
+  --bg-surface: #F2F3F7;
+  --bg-elevated: #FFFFFF;
+  --bg-modal: #FFFFFF;
+  --bg-input: #F1F3F9;
+  --input-bg: #F1F3F9;
+
+  --text-primary: #111111;
+  --text-secondary: #6B7280;
+  --text-main: #111111;
+  --text-muted: #9CA3AF;
+
+  --border-primary: rgba(0, 0, 0, 0.08);
+  --border-main: rgba(0, 0, 0, 0.08);
+
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.06);
+  --header-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --nav-glass-bg: rgba(255, 255, 255, 0.7);
+  --nav-glass-bg-scrolled: rgba(255, 255, 255, 0.85);
+  --nav-glass-border: rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK THEME
+   ═══════════════════════════════════════════════════════════════ */
+html.theme-dark {
+  --bg-primary: #0F1425;
+  --bg-secondary: #12182B;
+  --bg-card: #161C33;
+  --bg-main: #0F1425;
+  --bg-surface: #161B2E;
+  --bg-elevated: #161B2E;
+  --bg-modal: #12182B;
+  --bg-input: #1B213A;
+  --input-bg: #1B213A;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAB0C0;
+  --text-main: #FFFFFF;
+  --text-muted: #9CA3B5;
+
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-main: rgba(255, 255, 255, 0.08);
+
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --header-bg: #161B2E;
+  --card-bg: #161C33;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --overlay-bg: rgba(0, 0, 0, 0.55);
+  --nav-glass-bg: rgba(18, 22, 40, 0.6);
+  --nav-glass-bg-scrolled: rgba(18, 22, 40, 0.75);
+  --nav-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Совместимость: data-theme для скриптов и старых селекторов */
+html.theme-light,
+:root[data-theme="light"] {
+  --bg-primary: #F4F6FB;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --text-primary: #111111;
+  --text-secondary: #6B7280;
+  --border-primary: rgba(0, 0, 0, 0.08);
+}
+
+html.theme-dark,
+:root[data-theme="dark"] {
+  --bg-primary: #0F1425;
+  --bg-secondary: #12182B;
+  --bg-card: #161C33;
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAB0C0;
+  --border-primary: rgba(255, 255, 255, 0.08);
+}

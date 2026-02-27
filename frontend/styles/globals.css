@@ -1,8 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* ТЗ-4: tokens.css — единственный источник токенов; импорт после theme для переопределения */
+/* TZ-77: единый источник токенов темы (light/dark разделены) */
+@import './theme-tokens-tz77.css';
 @import './theme.css';
+@import './theme-isolation-tz72.css';
 @import './tokens.css';
 @import './variables.css';
 @import './zindex.css';
@@ -34,13 +36,11 @@
 @import './tz55-critical-stabilization.css';
 @import './profile-tz56.css';
 @import './promotion-modal-tz57.css';
-@import './chat-tz58.css';
 @import './photos-step-tz59.css';
 @import './listing-page-tz60.css';
 @import './tz61-ui-cleanup.css';
 @import './tz62-form-dark.css';
 @import './tz63-form-ux.css';
-@import './tz64-chat.css';
 
 /* ════════════════════════════════════════════════════════════════
    СОВРЕМЕННЫЙ СКРОЛЛИНГ
@@ -136,8 +136,8 @@ select option {
   --text: var(--text-primary);
   --card: var(--bg-card);
   --card-bg: var(--bg-card);
-  --border: var(--border-main, #e2e8f0);
-  --input-bg: var(--bg-surface, #ffffff);
+  --border: var(--border-main);
+  --input-bg: var(--bg-surface);
   
   /* ═══════════ LOCUS BRAND (из логотипа) ═══════════ */
   --locus-primary: var(--accent);        /* Primary — главные CTA, AI, активные состояния */
@@ -765,10 +765,11 @@ textarea:focus {
   background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
 }
 
-/* Option B: premium purple radial (subtle) */
+/* TZ-71: без radial подсветок */
 .section-premium {
-  background: radial-gradient(1200px 600px at 50% 0%, rgba(123, 74, 226, 0.06), transparent 60%);
-}/* Dark section (graphite, НЕ blue) */
+  background: var(--bg-base-light, var(--bg-main));
+}
+/* Dark section (graphite, НЕ blue) */
 .section-dark {
   background: linear-gradient(180deg, #0F172A 0%, #020617 100%);
 }
@@ -1263,9 +1264,7 @@ body.modal-open {
 
 [data-theme="dark"] body,
 .dark body {
-  background:
-    radial-gradient(1200px 600px at 50% -200px, rgba(80, 120, 255, 0.25), transparent),
-    #0b0f14;
+  background: var(--bg-base-dark, #0f1425);
   color: var(--text);
 }
 
@@ -1372,7 +1371,7 @@ body.modal-open {
 
 [data-theme="dark"] .avatar,
 .dark .avatar {
-  box-shadow: 0 0 25px rgba(120, 150, 255, 0.3);
+  box-shadow: var(--shadow-e1, 0 8px 20px rgba(0, 0, 0, 0.25));
 }
 
 /* Burger/sidebar — ТЗ-6: bg-card */
@@ -1388,7 +1387,6 @@ body.modal-open {
 [data-theme="dark"] .star,
 .dark .star {
   color: #ffd76a !important;
-  filter: drop-shadow(0 0 6px rgba(255, 215, 106, 0.6));
 }
 
 /* Dark scrollbar */
@@ -1655,34 +1653,34 @@ section + section {
    ════════════════════════════════════════════════════════════════ */
 
 :root {
-  --bg: #ffffff;
-  --bg-soft: #f5f6fa;
-  --card: #ffffff;
-  --text: #111111;
-  --text-soft: #6b6b6b;
-  --accent: #7b5cff;
-  --border: rgba(0, 0, 0, 0.08);
+  --bg: var(--bg-primary);
+  --bg-soft: var(--bg-secondary);
+  --card: var(--bg-card);
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --accent: var(--accent);
+  --border: var(--border-primary);
 }
 
-[data-theme="dark"] {
-  --bg: #0f1117;
-  --bg-soft: #151823;
-  --card: rgba(30, 34, 48, 0.6);
-  --card-strong: rgba(30, 34, 48, 0.72);
-  --text: #ffffff;
-  --text-soft: #a0a3b1;
-  --accent: #8b6cff;
-  --border: rgba(255, 255, 255, 0.08);
+[data-theme="dark"],
+html.theme-dark {
+  --bg: var(--bg-primary);
+  --bg-soft: var(--bg-secondary);
+  --card: var(--bg-card);
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --border: var(--border-primary);
 }
 
 body {
-  background: #f6f7fb;
-  color: var(--text);
+  background: var(--bg-main);
+  color: var(--text-primary);
 }
 
-[data-theme="dark"] body {
-  background: radial-gradient(circle at top, #1a1f2b 0%, #0f1117 60%);
-  color: var(--text);
+[data-theme="dark"] body,
+html.theme-dark body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* Cards/glass surfaces */
@@ -1722,7 +1720,7 @@ p, span, small, .text-soft {
   .menu-cta:hover,
   .auth-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(123, 92, 255, 0.35);
+    box-shadow: var(--shadow-e1-light, 0 4px 16px rgba(0, 0, 0, 0.12));
   }
 }
 
@@ -1732,9 +1730,10 @@ p, span, small, .text-soft {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .theme-toggle {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+[data-theme="dark"] .theme-toggle,
+html.theme-dark .theme-toggle {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-primary);
 }
 
 /* Burger menu dark — ТЗ-6: bg-card */
@@ -2221,7 +2220,7 @@ button,
   .hero-search-submit:hover,
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(123, 97, 255, 0.4);
+    box-shadow: var(--shadow-e1-light, 0 4px 16px rgba(0, 0, 0, 0.12));
   }
 }
 

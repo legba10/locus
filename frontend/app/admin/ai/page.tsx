@@ -54,52 +54,52 @@ export default function AdminAiPage() {
     .slice(0, 5)
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%)' }}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-[28px] font-bold text-[#1C1F26] mb-1">Помощник</h1>
-            <p className="text-[14px] text-[#6B7280]">Ответы на основе реальных данных платформы</p>
+            <h1 className="text-[28px] font-bold text-[var(--text-primary)] mb-1">Помощник</h1>
+            <p className="text-[14px] text-[var(--text-secondary)]">Ответы на основе реальных данных платформы</p>
           </div>
-          <Link href="/admin" className="px-4 py-2 rounded-[14px] bg-gray-100 text-[#1C1F26] text-[14px] font-medium hover:bg-gray-200">
+          <Link href="/admin" className="px-4 py-2 rounded-[14px] bg-gray-100 text-[var(--text-primary)] text-[14px] font-medium hover:bg-gray-200">
             ← В админку
           </Link>
         </div>
 
         {loading ? (
-          <p className="text-[#6B7280]">Загрузка...</p>
+          <p className="text-[var(--text-secondary)]">Загрузка...</p>
         ) : (
           <div className="space-y-6">
             <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Сколько бронирований?</h2>
-              <p className="text-[15px] text-[#6B7280]">
-                Всего бронирований: <strong className="text-[#1C1F26]">{stats?.bookings?.total ?? 0}</strong>.
+              <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Сколько бронирований?</h2>
+              <p className="text-[15px] text-[var(--text-secondary)]">
+                Всего бронирований: <strong className="text-[var(--text-primary)]">{stats?.bookings?.total ?? 0}</strong>.
                 {stats?.bookings?.confirmed != null && (
-                  <> Подтверждённых: <strong className="text-[#1C1F26]">{stats.bookings.confirmed}</strong>.</>
+                  <> Подтверждённых: <strong className="text-[var(--text-primary)]">{stats.bookings.confirmed}</strong>.</>
                 )}
               </p>
             </div>
 
             <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Сколько денег?</h2>
-              <p className="text-[15px] text-[#6B7280]">
-                Выручка платформы: <strong className="text-[#1C1F26]">{stats?.economy?.revenue != null ? formatPrice(stats.economy.revenue) : '—'}</strong>.
-                GMV (объём бронирований): <strong className="text-[#1C1F26]">{stats?.economy?.gmv != null ? formatPrice(stats.economy.gmv) : '—'}</strong>.
+              <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Сколько денег?</h2>
+              <p className="text-[15px] text-[var(--text-secondary)]">
+                Выручка платформы: <strong className="text-[var(--text-primary)]">{stats?.economy?.revenue != null ? formatPrice(stats.economy.revenue) : '—'}</strong>.
+                GMV (объём бронирований): <strong className="text-[var(--text-primary)]">{stats?.economy?.gmv != null ? formatPrice(stats.economy.gmv) : '—'}</strong>.
               </p>
             </div>
 
             <div className={cn('bg-white rounded-[18px] p-6', 'shadow-[0_6px_24px_rgba(0,0,0,0.08)] border border-gray-100/80')}>
-              <h2 className="text-[18px] font-bold text-[#1C1F26] mb-3">Какие объявления популярны?</h2>
+              <h2 className="text-[18px] font-bold text-[var(--text-primary)] mb-3">Какие объявления популярны?</h2>
               {popularListings.length === 0 ? (
-                <p className="text-[15px] text-[#6B7280]">Нет данных о просмотрах или объявлениях.</p>
+                <p className="text-[15px] text-[var(--text-secondary)]">Нет данных о просмотрах или объявлениях.</p>
               ) : (
                 <ul className="space-y-2">
                   {popularListings.map((l) => (
                     <li key={l.id} className="flex items-center justify-between text-[14px]">
-                      <Link href={`/listings/${l.id}`} className="font-medium text-violet-600 hover:text-violet-700 line-clamp-1">
+                      <Link href={`/listing/${l.id}`} className="font-medium text-violet-600 hover:text-violet-700 line-clamp-1">
                         {l.title}
                       </Link>
-                      <span className="text-[#6B7280] shrink-0 ml-2">{(l as any).viewsCount ?? 0} просмотров</span>
+                      <span className="text-[var(--text-secondary)] shrink-0 ml-2">{(l as any).viewsCount ?? 0} просмотров</span>
                     </li>
                   ))}
                 </ul>

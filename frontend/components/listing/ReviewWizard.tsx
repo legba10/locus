@@ -158,7 +158,7 @@ export function ReviewWizard({
         {helpedCount === 0 && <div className="mb-4" />}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href={`/listings/${listingId}`}
+            href={`/listing/${listingId}`}
             className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-[14px] bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-500"
           >
             Вернуться к объявлению

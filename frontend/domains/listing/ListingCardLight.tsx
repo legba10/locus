@@ -86,7 +86,7 @@ function ListingCardLightComponent({
       window.dispatchEvent(new Event('locus:listing-viewed'))
     }
     track('listing_view', { listingId: id, listingTitle: title, listingCity: city, listingPrice: price })
-    router.push(`/listings/${id}`)
+    router.push(`/listing/${id}`)
   }
 
   const imageUrl = photo && isValidImageUrl(photo) ? photo : null
@@ -105,7 +105,7 @@ function ListingCardLightComponent({
     >
       {/* TZ-3: фото без затемнения, aspect-ratio 4:3 */}
       <Link
-        href={`/listings/${id}`}
+        href={`/listing/${id}`}
         className="listing-photo-tz5 block relative w-full flex-shrink-0 overflow-hidden rounded-t-[18px] bg-[var(--bg-secondary)]"
         onClick={(e) => { e.preventDefault(); openListing(); }}
       >

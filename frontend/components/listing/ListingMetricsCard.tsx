@@ -33,14 +33,14 @@ export function ListingMetricsCard({ listingId }: { listingId: string }) {
 
   return (
     <div className={cn('rounded-2xl border border-gray-100 bg-white p-5 md:p-6', 'shadow-[0_2px_12px_rgba(0,0,0,0.06)]')}>
-      <h3 className="text-[16px] font-bold text-[#1C1F26] mb-4">Метрики жилья</h3>
+      <h3 className="text-[16px] font-bold text-[var(--text-primary)] mb-4">Метрики жилья</h3>
       <div className="space-y-3">
         {display.map(({ key, avgValue, count }) => {
           const pct = Math.round(avgValue)
           return (
             <div key={key} className="flex flex-col gap-1">
               <div className="flex justify-between text-[13px]">
-                <span className="font-medium text-[#1C1F26]">{metricLabelByKey(key)}</span>
+                <span className="font-medium text-[var(--text-primary)]">{metricLabelByKey(key)}</span>
                 <span className="tabular-nums text-[#6B7280]">{pct}%</span>
               </div>
               <div className="h-2 rounded-full bg-gray-100 overflow-hidden">

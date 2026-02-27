@@ -211,7 +211,7 @@ export function FilterBar({ onOpenFilters, className }: FilterBarProps) {
               className={cn(
                 'filter-bar-tz42-btn h-10 min-w-[40px] rounded-[10px] px-3 text-[14px] font-medium transition-colors',
                 rooms.includes(r)
-                  ? 'bg-[#3b82f6] text-white border-[#3b82f6]'
+                  ? 'bg-[var(--accent)] text-[var(--text-on-accent)] border-[var(--accent)]'
                   : 'border border-[var(--filter-bar-border)] text-[var(--filter-bar-text)] hover:bg-[var(--filter-bar-hover)]'
               )}
               onClick={() => toggleRoom(r)}

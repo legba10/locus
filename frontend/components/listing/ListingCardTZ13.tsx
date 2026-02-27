@@ -137,7 +137,7 @@ function ListingCardTZ13Component(props: ListingCardTZ13Props) {
       onMouseLeave={() => setHover(false)}
     >
       {/* Фото: 4:3, max height, overlay бейджи слева, ♡ справа */}
-      <Link href={`/listings/${id}`} onClick={handleCardClick} className="block flex-shrink-0 relative w-full overflow-hidden bg-[var(--bg-input)] aspect-[4/3] max-h-[240px]">
+      <Link href={`/listing/${id}`} onClick={handleCardClick} className="block flex-shrink-0 relative w-full overflow-hidden bg-[var(--bg-input)] aspect-[4/3] max-h-[240px]">
         {showPhoto ? (
           <img
             src={displayPhoto}
@@ -272,7 +272,7 @@ function ListingCardTZ13Component(props: ListingCardTZ13Props) {
             </svg>
           </button>
           <Link
-            href={`/listings/${id}`}
+            href={`/listing/${id}`}
             onClick={handleCardClick}
             className={cn(
               'flex-1 min-w-0 h-10 md:h-11 rounded-[12px] flex items-center justify-center font-semibold text-[14px]',

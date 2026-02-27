@@ -8,7 +8,7 @@ import IconButton from '@/components/ui/IconButton'
 import { track } from '@/shared/analytics/events'
 import { NotificationsPanel } from '@/components/layout'
 import { playSound, type SoundType } from '@/lib/system/soundManager'
-import { playMessageSoundWhenAllowed } from '@/modules/chat/soundController'
+import { playMessageSoundWhenAllowed } from '@/shared/chatSound'
 import { soundEngine } from '@/services/soundEngine'
 
 const VAPID_PUBLIC = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : ''

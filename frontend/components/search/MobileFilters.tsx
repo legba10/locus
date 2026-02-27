@@ -172,7 +172,7 @@ export function MobileFilters({
                 step={BUDGET_STEP}
                 value={priceTo ?? BUDGET_MAX}
                 onChange={(e) => setPrice(priceFrom, Number(e.target.value))}
-                className="mobile-filters-tz43-slider w-full h-2 rounded-full appearance-none bg-[var(--border)] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3b82f6]"
+                className="mobile-filters-tz43-slider w-full h-2 rounded-full appearance-none bg-[var(--border)] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]"
               />
             </div>
           </div>
@@ -188,7 +188,7 @@ export function MobileFilters({
                   className={cn(
                     'min-h-[44px] min-w-[52px] rounded-[12px] px-4 text-[15px] font-medium transition-colors',
                     rooms.includes(r)
-                      ? 'bg-[#3b82f6] text-white'
+                      ? 'bg-[var(--accent)] text-[var(--text-on-accent)]'
                       : 'border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-main)] hover:bg-[var(--filter-bar-hover)]'
                   )}
                   onClick={() => toggleRoom(r)}
@@ -242,7 +242,7 @@ export function MobileFilters({
               max={20}
               value={radiusDisplay}
               onChange={(e) => setRadius(Number(e.target.value))}
-              className="mobile-filters-tz43-slider w-full h-2 rounded-full appearance-none bg-[var(--border)] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3b82f6]"
+              className="mobile-filters-tz43-slider w-full h-2 rounded-full appearance-none bg-[var(--border)] [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]"
             />
             <p className="mt-1 text-[14px] text-[var(--text-secondary)]">{radiusDisplay} км</p>
           </div>
@@ -262,7 +262,7 @@ export function MobileFilters({
           <button
             type="button"
             onClick={handleApply}
-            className="mobile-filters-tz43-apply w-full min-h-[52px] rounded-[12px] bg-[#3b82f6] text-white font-semibold text-[16px] hover:opacity-95 transition-opacity"
+            className="mobile-filters-tz43-apply w-full min-h-[52px] rounded-[12px] bg-[var(--accent)] text-white font-semibold text-[16px] hover:opacity-95 transition-opacity"
           >
             {resultCount != null
               ? `Показать ${resultCount} ${resultCount === 1 ? 'вариант' : resultCount >= 2 && resultCount <= 4 ? 'варианта' : 'вариантов'}`

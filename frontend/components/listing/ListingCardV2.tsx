@@ -122,7 +122,7 @@ function ListingCardV2Component(props: ListingCardProps) {
   if (compact) {
     return (
       <Link
-        href={`/listings/${id}`}
+        href={`/listing/${id}`}
         className={cn(
           'flex rounded-[18px] overflow-hidden max-h-[220px]',
           'bg-[var(--bg-card)] border border-[var(--border-main)]',
@@ -171,7 +171,7 @@ function ListingCardV2Component(props: ListingCardProps) {
 
   return (
     <Link
-      href={`/listings/${id}`}
+      href={`/listing/${id}`}
       className={cn(
         'block rounded-[18px] overflow-hidden',
         'bg-[var(--bg-card)] border border-[var(--border-main)]',

@@ -51,7 +51,7 @@ export function PropertyCard({
     >
       {/* 1. Фото — ТЗ-3 п.5 */}
       <Link
-        href={`/listings/${id}`}
+        href={`/listing/${id}`}
         className="block relative rounded-[16px] overflow-hidden bg-[var(--bg-secondary)]"
         style={{ height: 180 }}
         aria-label={title || 'Открыть объявление'}
@@ -123,7 +123,7 @@ export function PropertyCard({
         {/* 6. Кнопки — ТЗ-3 п.8 единый стиль */}
         <div className="flex gap-[var(--space-element)] pt-1">
           <Link
-            href={`/listings/${id}`}
+            href={`/listing/${id}`}
             className={cn(
               'btn btn--primary btn--md flex-1 flex items-center justify-center'
             )}

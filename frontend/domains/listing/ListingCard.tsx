@@ -31,7 +31,7 @@ export function ListingCard({
   const owner = (listing as { owner?: { id: string; name: string; avatar: string | null } }).owner
   const addressText = listing.city ?? ''
 
-  const openListing = () => router.push(`/listings/${listing.id}`)
+  const openListing = () => router.push(`/listing/${listing.id}`)
 
   return (
     <article

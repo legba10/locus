@@ -80,7 +80,7 @@ export function BookingCard({ booking, onCancel, className }: BookingCardProps) 
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
           <Link
-            href={`/listings/${booking.listingId}`}
+            href={`/listing/${booking.listingId}`}
             className={cn(
               "inline-flex items-center justify-center px-4 py-2 rounded-[10px]",
               "text-[13px] font-medium text-[var(--text-on-accent)] bg-[var(--accent)]",

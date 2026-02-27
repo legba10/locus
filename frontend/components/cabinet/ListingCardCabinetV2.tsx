@@ -75,7 +75,7 @@ export function ListingCardCabinetV2({
     >
       <div className="flex flex-col sm:flex-row gap-4">
         <Link
-          href={`/listings/${listing.id}`}
+          href={`/listing/${listing.id}`}
           className="shrink-0 w-full sm:w-[160px] h-[100px] sm:h-[100px] rounded-[12px] overflow-hidden bg-[var(--bg-input)]"
         >
           {listing.cover ? (
@@ -95,7 +95,7 @@ export function ListingCardCabinetV2({
 
         <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
-            <Link href={`/listings/${listing.id}`}>
+            <Link href={`/listing/${listing.id}`}>
               <h3 className="text-[15px] font-semibold text-[var(--text-primary)] truncate hover:text-[var(--accent)]">
                 {listing.title || 'Без названия'}
               </h3>
