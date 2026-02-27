@@ -1,0 +1,99 @@
+/**
+ * TZ-60: Страница объявления — контейнер, главный блок, действия по ролям, без пустот.
+ */
+
+.listing-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listing-container .listing-container__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Галерея — без рамок, скругление 24px */
+.listing-page .gallery-tz60 {
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* Главный блок: цена, город, рейтинг, хозяин */
+.main-info {
+  background: var(--bg-card, #fff);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  border: none;
+}
+
+.main-info .main-info__price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Компактная кнопка карты */
+.listing-map-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.listing-map-trigger:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+/* Фиксированный блок действий — выше bottom-nav (70px) */
+.listing-actions {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  z-index: 40;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .listing-actions {
+    position: sticky;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+}
+
+[data-theme="dark"] .listing-actions,
+.dark .listing-actions {
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}

@@ -280,9 +280,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const baseReviews = reviewsData?.items ?? []
   const isCurrentUserOwner = user?.id && owner?.id && user.id === owner.id
   const isCurrentUserAdmin = (user as any)?.isAdmin || user?.role === 'admin'
+  /** TZ-60: админ видит реальный статус; APPROVED = PUBLISHED (одобрено) */
   const listingStatusRaw = String((item as any)?.statusCanonical ?? (item as any)?.status ?? '').toUpperCase()
   const listingStatusCanonical: ListingStatusCanonical =
-    listingStatusRaw === 'PUBLISHED'
+    listingStatusRaw === 'PUBLISHED' || listingStatusRaw === 'APPROVED' || listingStatusRaw === 'ACTIVE'
       ? 'PUBLISHED'
       : listingStatusRaw === 'REJECTED'
         ? 'REJECTED'
@@ -443,12 +444,12 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   }, [showAnalyticsPanel, item?.updatedAt])
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+    <div className="min-h-screen bg-[var(--bg-main)] pb-24 md:pb-8 listing-page">
+      <div className="listing-container max-w-6xl mx-auto py-4 md:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-8">
-          <div className="min-w-0 space-y-2">
-            {/* 1. Галерея (Hero) — swipe, индикатор 1/N, полупрозрачные blur-кнопки, градиент снизу */}
-            <section className="-mx-4 md:mx-0">
+          <div className="min-w-0 flex flex-col gap-4">
+            {/* 1. Галерея — TZ-60: border-radius 24px, без рамок */}
+            <section className="-mx-4 md:mx-0 gallery-tz60">
               <GalleryTZ8
                 photos={photos}
                 isFavorite={isFavorite}
@@ -528,20 +529,20 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             )}
 
-            {/* 2. Trust block — название, город, рейтинг, факты, цена доминирует */}
-            <section className="lg:hidden rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
+            {/* 2. Trust block — TZ-60: main-info, цена крупная, карта компактно */}
+            <section className="lg:hidden main-info">
               <h1 className="text-[18px] font-bold text-[var(--text-primary)] leading-tight">
                 {typeLabel}
               </h1>
-              <div className="mt-1 flex items-center gap-2 text-[14px] text-[var(--text-secondary)]">
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[14px] text-[var(--text-secondary)]">
                 <span>{[item.city, district].filter(Boolean).join(' · ') || item.city || '—'}</span>
                 {(item as any).lat && (item as any).lng && (
                   <button
                     type="button"
                     onClick={() => setMapModalOpen(true)}
-                    className="h-8 px-3 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[12px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
+                    className="listing-map-trigger"
                   >
-                    📍 {item.city || 'Локация'} · открыть карту
+                    📍 Показать на карте
                   </button>
                 )}
               </div>
@@ -557,7 +558,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 {guestsCount} гостей · {roomsCount} комнаты · {(item as any).metro || metroText}
               </p>
               <div className="mt-5 pt-4 border-t border-[var(--border-main)]">
-                <p className="text-[28px] md:text-[32px] font-bold text-[var(--text-primary)] tracking-tight">
+                <p className="main-info__price">
                   {priceValue > 0 ? `${priceValue.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
                   <span className="text-[16px] font-normal text-[var(--text-muted)]"> / ночь</span>
                 </p>
@@ -728,6 +729,11 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 </p>
                 {pricePerMonth > 0 && <p className="text-[14px] text-[var(--text-secondary)]">{pricePerMonth.toLocaleString('ru-RU')} ₽ / месяц</p>}
                 <p className="text-[14px] text-[var(--text-secondary)]">{[item.city, district].filter(Boolean).join(' · ') || item.city || '—'}</p>
+                {(item as any).lat && (item as any).lng && (
+                  <button type="button" onClick={() => setMapModalOpen(true)} className="listing-map-trigger">
+                    📍 Показать на карте
+                  </button>
+                )}
                 {ratingAvg != null && (
                   <p className="text-[14px] font-semibold text-amber-600">★ {ratingAvg.toFixed(1)}{ratingCount > 0 ? ` (${ratingCount})` : ''}</p>
                 )}
@@ -915,11 +921,8 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
         </div>
       </div>
 
-      {/* ТЗ-48: Фиксированная нижняя панель — z-50, blur 20px, safe-area. Одна архитектура, разные кнопки по роли. */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex items-center gap-2 px-3 bg-[var(--bg-card)]/95 backdrop-blur-[20px] border-t border-[var(--border-main)]"
-        style={{ minHeight: 72, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-      >
+      {/* TZ-60: Фиксированный блок действий — выше bottom-nav (80px), 1 primary (Забронировать). */}
+      <div className="listing-actions md:hidden">
         {isCurrentUserAdmin ? (
           <>
             {isPendingModeration ? (
