@@ -1,10 +1,11 @@
 'use client'
 
-/** TZ-48: до 10 фото, drag reorder, preview grid 2x */
+/** TZ-59: загрузка фото — сетка 3–5 колонок, обложка badge, тип через bottom sheet, reorder. */
 
 import { useRef, useState } from 'react'
 import type { ListingPhotoDraft, PhotoType } from '../listingStore'
 import { PHOTO_TYPE_LABELS } from '../photoController'
+import { BottomSheet } from '@/components/ui'
 
 interface PhotosStepProps {
   photos: ListingPhotoDraft[]
@@ -21,7 +22,7 @@ const MAX_PHOTOS = 10
 export function PhotosStep({ photos, onAddFiles, onSetType, onSetCover, onRemove, onReorder }: PhotosStepProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null)
+  const [sheetPhotoId, setSheetPhotoId] = useState<string | null>(null)
 
   const handleFiles = (files: File[]) => {
     const free = Math.max(0, MAX_PHOTOS - photos.length)
@@ -50,96 +51,120 @@ export function PhotosStep({ photos, onAddFiles, onSetType, onSetCover, onRemove
 
   const handleDragEnd = () => setDraggedIdx(null)
 
+  const openSheet = (photoId: string) => setSheetPhotoId(photoId)
+  const closeSheet = () => setSheetPhotoId(null)
+
+  const sheetPhoto = sheetPhotoId ? photos.find((p) => p.id === sheetPhotoId) : null
+
   return (
-    <div className="grid gap-[14px]">
-      <div className="rounded-[14px] border border-dashed border-[var(--border-main)] bg-[var(--bg-input)]/60 p-5 text-center">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            const files = Array.from(e.target.files ?? [])
-            if (files.length) handleFiles(files)
-            e.target.value = ''
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={photos.length >= MAX_PHOTOS}
-          className="btn-secondary rounded-[12px] px-4 py-2 text-[14px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          + Добавить фото
-        </button>
-        <p className="text-[12px] text-[var(--text-muted)] mt-2">
-          {photos.length} / {MAX_PHOTOS} фото. Перетащите для изменения порядка.
-        </p>
+    <div className="space-y-4">
+      <p className="text-[13px] text-[var(--text-muted)]">
+        {photos.length} / {MAX_PHOTOS} фото. Клик по фото — тип помещения. Перетащите для изменения порядка; первое фото — обложка.
+      </p>
+
+      <div className="photo-grid">
+        {photos.map((photo, idx) => (
+          <div
+            key={photo.id}
+            draggable
+            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, idx)}
+            onDragEnd={handleDragEnd}
+            onClick={() => openSheet(photo.id)}
+            className={`photo-item cursor-grab active:cursor-grabbing ${draggedIdx === idx ? 'opacity-50' : ''}`}
+          >
+            <img src={photo.url} alt="" />
+            {photo.isCover && <span className="cover-badge">Обложка</span>}
+            <span className="photo-tag">{PHOTO_TYPE_LABELS[photo.type]}</span>
+            <button
+              type="button"
+              className="photo-delete"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemove(photo.id)
+              }}
+              aria-label="Удалить фото"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ))}
+        {photos.length < MAX_PHOTOS && (
+          <button
+            type="button"
+            className="add-photo"
+            onClick={() => inputRef.current?.click()}
+            disabled={photos.length >= MAX_PHOTOS}
+            aria-label="Добавить фото"
+          >
+            <span className="text-[28px] text-[var(--text-muted)] leading-none">+</span>
+          </button>
+        )}
       </div>
 
-      {photos.length > 0 && (
-        <>
-          {/* TZ-55: выбор категории фото — dropdown вне карточки */}
-          {selectedPhotoId && (
-            <div className="flex flex-col gap-1">
-              <label className="text-[12px] font-medium text-[var(--text-secondary)]">Категория выбранного фото</label>
-              <select
-                value={photos.find((p) => p.id === selectedPhotoId)?.type ?? 'other'}
-                onChange={(e) => onSetType(selectedPhotoId, e.target.value as PhotoType)}
-                className="w-full max-w-[240px] rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] px-3 py-2 text-[13px] text-[var(--text-primary)]"
-              >
-                {TYPES.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? [])
+          if (files.length) handleFiles(files)
+          e.target.value = ''
+        }}
+      />
+
+      <BottomSheet open={!!sheetPhoto} onClose={closeSheet} maxHeight="70vh" animateClose className="overflow-y-auto">
+        {sheetPhoto && (
+          <div className="photo-type-sheet">
+            <h3 className="photo-type-sheet__title">Выберите тип помещения</h3>
+            <div className="photo-type-sheet__options">
+              {TYPES.map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className="photo-type-sheet__option"
+                  onClick={() => {
+                    onSetType(sheetPhoto.id, value)
+                    closeSheet()
+                  }}
+                >
+                  {label}
+                  {sheetPhoto.type === value && <span className="text-[var(--accent)]">✓</span>}
+                </button>
+              ))}
             </div>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            {photos.map((photo, idx) => (
-              <div
-                key={photo.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, idx)}
-                onDragEnd={handleDragEnd}
-                onClick={() => setSelectedPhotoId(photo.id)}
-                className={`
-                  rounded-[12px] card-tz47 p-3 space-y-2 cursor-grab active:cursor-grabbing
-                  ${draggedIdx === idx ? 'opacity-50 ring-2 ring-[var(--accent)]' : ''}
-                  ${selectedPhotoId === photo.id ? 'ring-2 ring-[var(--accent)]' : ''}
-                `}
+            <div className="photo-type-sheet__actions">
+              {!sheetPhoto.isCover && (
+                <button
+                  type="button"
+                  className="photo-type-sheet__btn photo-type-sheet__btn--cover"
+                  onClick={() => {
+                    onSetCover(sheetPhoto.id)
+                    closeSheet()
+                  }}
+                >
+                  Сделать обложкой
+                </button>
+              )}
+              <button
+                type="button"
+                className="photo-type-sheet__btn photo-type-sheet__btn--delete"
+                onClick={() => {
+                  onRemove(sheetPhoto.id)
+                  closeSheet()
+                }}
               >
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-[var(--bg-input)]">
-                  <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                  {photo.isCover && (
-                    <span className="photo-badge absolute top-2 left-2 rounded bg-[var(--accent)] px-2 py-0.5 text-[11px] font-semibold text-white">
-                      Обложка
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onSetCover(photo.id) }}
-                    className="flex-1 rounded-[10px] border border-[var(--border-main)] px-2 py-1.5 text-[11px] font-medium text-[var(--text-primary)]"
-                  >
-                    Сделать обложкой
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onRemove(photo.id) }}
-                    className="rounded-[10px] border border-red-400/70 px-2 py-1.5 text-[11px] font-medium text-red-400"
-                  >
-                    Удалить
-                  </button>
-                </div>
-              </div>
-            ))}
+                Удалить фото
+              </button>
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </BottomSheet>
     </div>
   )
 }

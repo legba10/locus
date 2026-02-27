@@ -283,7 +283,10 @@ export function ListingWizard({
             onAddFiles={(files) => setPhotos(addFilesToPhotos(photos, files))}
             onSetType={(id, type) => setPhotos(setPhotoType(photos, id, type))}
             onSetCover={(id) => setPhotos(setPhotoCover(photos, id))}
-            onReorder={(from, to) => setPhotos(reorderPhotos(photos, from, to))}
+            onReorder={(from, to) => {
+              const next = reorderPhotos(photos, from, to)
+              setPhotos(next.map((p, i) => ({ ...p, isCover: i === 0 })))
+            }}
             onRemove={(id) => {
               const target = photos.find((p) => p.id === id)
               if (target && !target.isNew) {

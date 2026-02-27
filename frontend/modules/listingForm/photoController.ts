@@ -7,13 +7,14 @@ function uid() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`
 }
 
+/** TZ-59: подписи для выбора типа помещения (bottom sheet) */
 export const PHOTO_TYPE_LABELS: Record<PhotoType, string> = {
-  bedroom: 'спальня',
-  kitchen: 'кухня',
-  bathroom: 'ванна',
-  living_room: 'гостиная',
-  facade: 'фасад',
-  other: 'другое',
+  bedroom: 'Спальня',
+  kitchen: 'Кухня',
+  living_room: 'Гостиная',
+  bathroom: 'Санузел',
+  facade: 'Балкон',
+  other: 'Другое',
 }
 
 export function addFilesToPhotos(prev: ListingPhotoDraft[], files: File[]): ListingPhotoDraft[] {

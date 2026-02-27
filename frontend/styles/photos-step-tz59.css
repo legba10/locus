@@ -1,0 +1,193 @@
+/**
+ * TZ-59: UX загрузки фото — сетка, обложка badge, тип помещения tag, bottom sheet.
+ */
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .photo-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .photo-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: none;
+  outline: none;
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Обложка — только badge поверх изображения */
+.cover-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  z-index: 1;
+}
+
+/* Тип помещения — tag внизу слева */
+.photo-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  z-index: 1;
+}
+
+/* Кнопка удаления на карточке */
+.photo-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s ease;
+}
+
+.photo-delete:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.photo-delete svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Клетка «Добавить фото» */
+.add-photo {
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.add-photo:hover:not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.add-photo:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .add-photo,
+.dark .add-photo {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .add-photo:hover:not(:disabled),
+.dark .add-photo:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Bottom sheet для выбора типа помещения */
+.photo-type-sheet {
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+}
+
+.photo-type-sheet__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.photo-type-sheet__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-type-sheet__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.photo-type-sheet__option:hover {
+  background: var(--bg-input);
+}
+
+.photo-type-sheet__actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-type-sheet__btn {
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.photo-type-sheet__btn--cover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.photo-type-sheet__btn--delete {
+  background: transparent;
+  color: #ef4444;
+}
