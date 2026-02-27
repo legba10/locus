@@ -71,18 +71,19 @@
   opacity: 1;
 }
 
-/* ТЗ-6: карточки главной — bg-card, без gray */
+/* ТЗ-47/главная: без белой обводки — тень + тонкий border rgba */
 .home-card-tz4 {
   border-radius: 1rem;
   background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="dark"] .home-card-tz4,
 .dark .home-card-tz4 {
-  background: var(--card);
-  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ТЗ-3: блок статистики — карточка light/dark, анимация появления */

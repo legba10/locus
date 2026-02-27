@@ -33,7 +33,7 @@ export function PopularCities({ shake = false }: { shake?: boolean }) {
             type="button"
             onClick={() => handleCity(name)}
             className={cn(
-              'popular-cities-tz18__card bg-[var(--card)] border border-[var(--border)]',
+              'popular-cities-tz18__card card-tz47',
               DS.transition,
               'font-medium text-[var(--text)]'
             )}

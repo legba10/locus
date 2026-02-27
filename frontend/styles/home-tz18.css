@@ -465,9 +465,14 @@
   margin-right: auto;
   padding: 24px;
   border-radius: 18px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   background: var(--card-bg, var(--surface));
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .home-filter-block-tz-final,
+.dark .home-filter-block-tz-final {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 @media (max-width: 767px) {
   .home-filter-block-tz-final {
@@ -522,8 +527,8 @@
   grid-column: 1 / -1;
   height: 48px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--card);
   color: var(--text-main);
   font-size: 14px;
   font-weight: 500;
@@ -533,10 +538,17 @@
   gap: 8px;
   width: 100%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .home-filter-btn-filters:hover {
   background: var(--bg-soft, rgba(0, 0, 0, 0.04));
+}
+[data-theme="dark"] .home-filter-btn-filters,
+.dark .home-filter-btn-filters {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
 }
 .home-filter-mode-wrap {
   max-width: 520px;
