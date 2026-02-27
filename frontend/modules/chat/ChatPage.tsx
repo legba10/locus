@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { useAuthStore } from '@/domains/auth'
@@ -14,9 +16,12 @@ interface ChatPageProps {
   title?: string
   onBack?: () => void
   embedded?: boolean
+  listingId?: string
+  listingTitle?: string
+  listingPhotoUrl?: string
 }
 
-export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false }: ChatPageProps) {
+export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, listingId, listingTitle, listingPhotoUrl }: ChatPageProps) {
   const { user } = useAuthStore()
   const myId = user?.id ?? ''
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -91,9 +96,11 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false }:
     }
   }
 
+  const showListingPreview = listingId || listingTitle || listingPhotoUrl
+
   return (
-    <section className={`chatPage ${embedded ? 'h-full' : 'h-[100vh]'} flex flex-col bg-[var(--card-bg)]`}>
-      <header className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)]">
+    <section className={`chat-page ${embedded ? 'embedded h-full' : 'h-[100vh]'} flex flex-col bg-[var(--card-bg)]`}>
+      <header className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)]">
         {onBack && (
           <button
             type="button"
@@ -106,8 +113,33 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false }:
         )}
         <h2 className="text-[16px] font-semibold text-[var(--text-primary)] truncate">{title}</h2>
       </header>
-      <MessageList messages={messages} loading={loading} myId={myId} listRef={listRef} onScroll={onScroll} />
-      <ChatInput value={input} onChange={setInput} onSend={send} sending={sending} bottomOffset={keyboardOffset} />
+      {showListingPreview && (
+        <div className="chat-listing-preview flex-shrink-0">
+          {listingId ? (
+            <Link href={`/listings/${listingId}`} className="flex items-center gap-3 w-full text-left">
+              {listingPhotoUrl && (
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[var(--bg-secondary)] flex-shrink-0">
+                  <Image src={listingPhotoUrl} alt="" fill className="object-cover" sizes="48px" />
+                </div>
+              )}
+              {listingTitle && <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">{listingTitle}</span>}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3">
+              {listingPhotoUrl && (
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[var(--bg-secondary)] flex-shrink-0">
+                  <Image src={listingPhotoUrl} alt="" fill className="object-cover" sizes="48px" />
+                </div>
+              )}
+              {listingTitle && <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">{listingTitle}</span>}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="chat-messages min-h-0">
+        <MessageList messages={messages} loading={loading} myId={myId} listRef={listRef} onScroll={onScroll} />
+      </div>
+      <ChatInput value={input} onChange={setInput} onSend={send} sending={sending} bottomOffset={keyboardOffset} useStickyLayout />
     </section>
   )
 }

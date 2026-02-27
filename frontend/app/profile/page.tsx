@@ -58,7 +58,7 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-[var(--bg-primary)] pb-24 md:pb-8 min-h-screen">
-      <Container className="pt-4 flex flex-col gap-4">
+      <Container className="pt-4 flex flex-col gap-3 profile-container">
         <Card className="flex items-center gap-4 p-4 max-h-[90px] rounded-[var(--border-radius-md)]">
           <div className="w-12 h-12 rounded-full bg-[var(--bg-input)] overflow-hidden shrink-0 flex items-center justify-center text-[18px] font-semibold text-[var(--text-muted)]">
             {user?.avatar_url ? (
@@ -73,7 +73,7 @@ export default function ProfilePage() {
             </p>
             <p className="text-[12px] text-[var(--text-muted)] mt-0.5">{roleLabel}</p>
           </div>
-          <Link href="/profile/edit" className="btn-primary inline-flex items-center justify-center px-3 py-2 text-[13px] h-auto min-h-0">
+          <Link href="/profile/edit" className="btn-secondary inline-flex items-center justify-center px-3 py-2 text-[13px] h-auto min-h-0">
             Редактировать
           </Link>
         </Card>
@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
         {isAdmin && (
           <Section>
-            <h2 className={SECTION_TITLE}>Администрирование</h2>
+            <h2 className={cn(SECTION_TITLE, 'profile-section-title')}>Администрирование</h2>
             <div className="flex flex-col gap-3">
               <Link href="/admin" className={menuRowCls}>
                 <span className="flex items-center gap-3"><Shield className={ICON_CLS} />Админ панель</span>
@@ -110,7 +110,7 @@ export default function ProfilePage() {
         )}
 
         <Section>
-          <h2 className={SECTION_TITLE}>Профиль</h2>
+          <h2 className={cn(SECTION_TITLE, 'profile-section-title')}>Профиль</h2>
           <div className="flex flex-col gap-3">
             <Link href="/profile/listings" className={menuRowCls}>
               <span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span>

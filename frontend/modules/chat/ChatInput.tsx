@@ -8,13 +8,18 @@ interface ChatInputProps {
   onSend: () => void
   sending: boolean
   bottomOffset: number
+  /** TZ-55: sticky inside chat flex layout instead of fixed */
+  useStickyLayout?: boolean
 }
 
-export function ChatInput({ value, onChange, onSend, sending, bottomOffset }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSend, sending, bottomOffset, useStickyLayout }: ChatInputProps) {
   return (
     <footer
-      className="fixed left-0 right-0 z-20 border-t border-[var(--border-main)] bg-[var(--card-bg)] p-3"
-      style={{ bottom: `${bottomOffset}px` }}
+      className={cn(
+        'chat-input border-t border-[var(--border-main)] bg-[var(--card-bg)] p-3',
+        useStickyLayout ? 'sticky bottom-0 z-10' : 'fixed left-0 right-0 z-20'
+      )}
+      style={useStickyLayout ? { paddingBottom: `max(12px, env(safe-area-inset-bottom))` } : { bottom: `${bottomOffset}px` }}
     >
       <form
         onSubmit={(e) => {

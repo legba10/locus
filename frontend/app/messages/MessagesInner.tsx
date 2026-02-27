@@ -11,6 +11,7 @@ import { cn } from '@/shared/utils/cn'
 
 type ChatItem = {
   id: string
+  listingId?: string
   listingTitle?: string
   listingPhotoUrl?: string
   host: { id: string; profile?: { name?: string | null; avatarUrl?: string | null } | null }
@@ -190,6 +191,9 @@ export default function MessagesInner() {
               chatId={activeChatId}
               onBack={goBack}
               embedded
+              listingId={chats?.find((c) => c.id === activeChatId)?.listingId}
+              listingTitle={chats?.find((c) => c.id === activeChatId)?.listingTitle}
+              listingPhotoUrl={chats?.find((c) => c.id === activeChatId)?.listingPhotoUrl}
             />
           </div>
         ) : (

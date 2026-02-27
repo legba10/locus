@@ -98,6 +98,7 @@
   box-shadow: var(--shadow-card);
   overflow: hidden;
   outline: none;
+  cursor: pointer;
 }
 
 /* ─── Пустое состояние ─── */

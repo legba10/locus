@@ -3,24 +3,25 @@
  * Запрещено: box-shadow фиолетовый, radial-gradient, glow, фильтры на кнопках.
  */
 
+/* TZ-55: «жидкое стекло» — лёгкий полупрозрачный фон, без тяжёлой границы */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: 70px;
   padding-bottom: env(safe-area-inset-bottom, 0);
-  min-height: calc(64px + env(safe-area-inset-bottom, 0px));
+  min-height: calc(70px + env(safe-area-inset-bottom, 0px));
 
   display: flex;
   justify-content: space-around;
   align-items: center;
 
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
   z-index: 1000;
 
   box-shadow: none;
@@ -28,8 +29,10 @@
 
 [data-theme="dark"] .bottom-nav,
 .dark .bottom-nav {
-  background: rgba(15, 23, 42, 0.95);
-  border-top-color: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: none;
 }
 

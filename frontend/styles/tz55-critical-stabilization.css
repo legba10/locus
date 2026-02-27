@@ -1,0 +1,86 @@
+/**
+ * TZ-55: Критическая стабилизация — листинг, стекло nav, чат, профиль, кнопки.
+ */
+
+/* ─── 1. Карточка объявления кликабельна целиком ─── */
+.listing-card {
+  cursor: pointer;
+}
+
+/* ─── 3. Secondary кнопка (макс 1 primary на экран) ─── */
+.btn-secondary {
+  background: #f3f4f6;
+  color: #111827;
+  border: none;
+  border-radius: var(--border-radius-md, 14px);
+  height: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+[data-theme="dark"] .btn-secondary,
+.dark .btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+.dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ─── 4. Чат: flex layout, сообщения, input sticky ─── */
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.chat-page.embedded {
+  height: 100%;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  min-height: 0;
+}
+
+.chat-input {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card, #fff);
+  padding: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+/* ─── 5. Карточка объявления в чате (не скроллится с сообщениями) ─── */
+.chat-listing-preview {
+  padding: 12px 16px;
+  background: var(--bg-card, #fff);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+/* ─── 6. Профиль: убрать большие пустоты ─── */
+.profile-container .profile-section-title,
+.profile-section-title {
+  margin: 20px 0 8px;
+}
+
+/* ─── 7. Фото: бейдж обложки сверху фото ─── */
+.photo-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+}
