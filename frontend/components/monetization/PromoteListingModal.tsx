@@ -1,5 +1,8 @@
 'use client'
 
+/** TZ-57: Модалка «Продвинуть объявление» — bottom sheet, лёгкий overlay, без обрезания карточек. */
+
+import { useEffect, useState } from 'react'
 import { cn } from '@/shared/utils/cn'
 import type { ListingPlan } from '@/shared/contracts/api'
 import { TariffCard, type TariffCardOption } from './TariffCard'
@@ -45,26 +48,59 @@ export function PromoteListingModal({
   onSelectPlan,
   isLoading,
 }: PromoteListingModalProps) {
-  if (!open) return null
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [exiting, setExiting] = useState(false)
 
-  const options = OPTIONS.map((o) => ({ ...o, active: o.plan === currentPlan, ctaLabel: o.plan === currentPlan ? 'Текущий' : o.ctaLabel }))
+  useEffect(() => {
+    if (open) {
+      setExiting(false)
+      document.body.style.overflow = 'hidden'
+      document.body.classList.add('modal-open')
+      requestAnimationFrame(() => setSheetOpen(true))
+    } else {
+      setSheetOpen(false)
+      setExiting(true)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!exiting) return
+    const t = setTimeout(() => {
+      setExiting(false)
+      document.body.style.overflow = ''
+      document.body.classList.remove('modal-open')
+    }, 300)
+    return () => clearTimeout(t)
+  }, [exiting])
+
+  if (!open && !exiting) return null
+
+  const options = OPTIONS.map((o) => ({
+    ...o,
+    active: o.plan === currentPlan,
+    ctaLabel: o.plan === currentPlan ? 'Текущий' : o.ctaLabel,
+  }))
+
+  const handleOverlayClick = () => onClose()
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="promotion-overlay-tz57"
+      onClick={handleOverlayClick}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Продвинуть объявление"
+    >
       <div
-        className={cn(
-          'w-full max-w-2xl rounded-[20px] border border-[var(--border-main)] p-6 md:p-8',
-          'bg-[var(--bg-card)]/95 backdrop-blur-xl shadow-xl',
-          'flex flex-col max-h-[90vh] overflow-hidden'
-        )}
+        className={cn('promotion-bottom-sheet-tz57', sheetOpen && !exiting && 'promotion-bottom-sheet-tz57--open')}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[20px] font-bold text-[var(--text-primary)]">Продвинуть объявление?</h2>
+        <div className="relative pb-2">
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)] pr-12">Продвинуть объявление?</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-[10px] text-[var(--text-muted)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]"
+            className="promotion-modal-close-tz57"
             aria-label="Закрыть"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,13 +111,15 @@ export function PromoteListingModal({
         <p className="text-[14px] text-[var(--text-secondary)] mb-6">
           Выберите тариф размещения. PRO и TOP увеличивают просмотры и конверсию.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-y-auto">
+        <div className="flex flex-col">
           {options.map((opt) => (
             <TariffCard
               key={opt.plan}
               option={opt}
               onSelect={() => listingId && onSelectPlan(listingId, opt.plan)}
               disabled={isLoading || opt.plan === currentPlan}
+              className={cn('tariff-card', opt.active && 'active')}
+              buttonClassName={opt.active ? 'tariff-current' : undefined}
             />
           ))}
         </div>

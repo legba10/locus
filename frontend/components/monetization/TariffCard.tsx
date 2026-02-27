@@ -30,10 +30,16 @@ export function TariffCard({
   option,
   onSelect,
   disabled,
+  className,
+  buttonClassName,
 }: {
   option: TariffCardOption
   onSelect: () => void
   disabled?: boolean
+  /** TZ-57: класс корня (tariff-card, active) */
+  className?: string
+  /** TZ-57: класс кнопки (tariff-current) */
+  buttonClassName?: string
 }) {
   const isActive = option.active
   const isPro = option.plan === 'pro'
@@ -45,7 +51,8 @@ export function TariffCard({
         'rounded-[16px] border p-5 md:p-6 transition-all flex flex-col',
         'bg-[var(--bg-card)]/80 backdrop-blur-sm shadow-[0_2px_12px_rgba(0,0,0,0.04)]',
         PLAN_STYLES[option.plan],
-        isActive && 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-main)]'
+        isActive && 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-main)]',
+        className
       )}
     >
       <div className="flex items-center gap-2 mb-3">
@@ -80,7 +87,8 @@ export function TariffCard({
           isActive
             ? 'bg-[var(--bg-input)] text-[var(--text-secondary)] border-[var(--border-main)] cursor-default'
             : 'bg-[var(--accent)] text-[var(--button-primary-text)] border-[var(--accent)] hover:opacity-95',
-          disabled && 'opacity-60 cursor-not-allowed'
+          disabled && 'opacity-60 cursor-not-allowed',
+          buttonClassName
         )}
       >
         {option.ctaLabel}
