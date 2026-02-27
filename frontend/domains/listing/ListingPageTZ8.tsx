@@ -8,7 +8,7 @@ import { useFetch } from '@/shared/hooks/useFetch'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { addPendingReminder } from '@/shared/reviews/reviewReminderStorage'
-import { useAuthStore } from '@/domains/auth'
+import { useAuthStore, usePermissions } from '@/domains/auth'
 import { amenitiesToLabels, amenityKeysFromApi } from '@/core/i18n/ru'
 import { scoring, type Listing } from '@/domains/ai/ai-engine'
 import { cn } from '@/shared/utils/cn'
@@ -127,6 +127,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
 
   const itemFromData = data?.listing ?? data?.item
   const ownerIdFromData = itemFromData?.owner?.id ?? (itemFromData as any)?.ownerId ?? ''
+  const permissions = usePermissions({ listingOwnerId: ownerIdFromData || undefined })
   const { data: ownerPublicData } = useQuery({
     queryKey: ['user-public', ownerIdFromData || ''],
     queryFn: () => apiFetchJson<{ profile: { name?: string; avatar?: string | null; rating_avg?: number | null; reviews_count?: number } }>(`/api/users/${encodeURIComponent(ownerIdFromData)}/public`),
@@ -278,8 +279,10 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const recommendPercent = ratingSummary?.percent ?? null
   const distribution: Record<number, number> = ratingSummary?.distribution ?? { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 } as Record<number, number>
   const baseReviews = reviewsData?.items ?? []
-  const isCurrentUserOwner = user?.id && owner?.id && user.id === owner.id
-  const isCurrentUserAdmin = (user as any)?.isAdmin || user?.role === 'admin'
+  /** TZ-66: кнопки по ролям через usePermissions (user: Написать/Забронировать/В избранное; landlord+owner: Редактировать/Календарь/Продвижение/Аналитика; admin: Модерация/Статус/Удалить) */
+  const isOwnerMode = permissions.canEditListing && !ownerViewAsUser
+  const canUseHostAi = permissions.canEditListing
+  const canSeeAnalytics = permissions.canEditListing
   /** TZ-60: админ видит реальный статус; APPROVED = PUBLISHED (одобрено) */
   const listingStatusRaw = String((item as any)?.statusCanonical ?? (item as any)?.status ?? '').toUpperCase()
   const listingStatusCanonical: ListingStatusCanonical =
@@ -297,9 +300,6 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const isRejected = listingStatusCanonical === 'REJECTED'
   const isDraft = listingStatusCanonical === 'DRAFT'
   const isPublished = listingStatusCanonical === 'PUBLISHED'
-  const isOwnerMode = Boolean(isCurrentUserOwner) && !ownerViewAsUser
-  const canUseHostAi = Boolean(isCurrentUserAdmin || isOwnerMode)
-  const canSeeAnalytics = Boolean(isCurrentUserOwner || isCurrentUserAdmin)
   const analyticsTabRequested = searchParams.get('tab') === 'analytics'
   const listingStats = {
     views: Number((item as any)?.viewsCount ?? (item as any)?.views ?? 0),
@@ -333,9 +333,9 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
     if (!canSeeAnalytics) return
     if (analyticsTabRequested) {
       setOwnerPanelTab('analytics')
-      if (isCurrentUserOwner) setOwnerViewAsUser(false)
+      if (permissions.canEditListing) setOwnerViewAsUser(false)
     }
-  }, [analyticsTabRequested, canSeeAnalytics, isCurrentUserOwner])
+  }, [analyticsTabRequested, canSeeAnalytics, permissions.canEditListing])
 
   useEffect(() => {
     if (typeof window === 'undefined' || !item?.id) return
@@ -399,7 +399,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
   const district = (item as any).district ?? (item as any).addressLine ?? ''
   const guestsCount = (item as any).capacityGuests ?? (item as any).maxGuests ?? 2
   const roomsCount = item.bedrooms ?? 1
-  const showAnalyticsPanel = canSeeAnalytics && (ownerPanelTab === 'analytics' || (isCurrentUserAdmin && analyticsTabRequested))
+  const showAnalyticsPanel = canSeeAnalytics && (ownerPanelTab === 'analytics' || (permissions.isAdmin && analyticsTabRequested))
   const hostAiPayload = {
     id: String(item.id),
     title: item.title ?? '',
@@ -458,7 +458,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               />
             </section>
 
-            {Boolean(isCurrentUserOwner) && (
+            {permissions.canEditListing && (
               <section className="sticky top-[76px] md:top-[80px] z-20 rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)]/95 backdrop-blur p-3">
                 {isOwnerMode ? (
                   <>
@@ -514,12 +514,12 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
 
             {showAnalyticsPanel && (
               <ListingAnalyticsPanel
-                isAdmin={Boolean(isCurrentUserAdmin)}
+                isAdmin={permissions.isAdmin}
                 days={analyticsDays}
                 onDaysChange={setAnalyticsDays}
                 stats={listingStatsData}
                 fallbackStats={listingStats}
-                onReset={isCurrentUserAdmin ? async () => {
+                onReset={permissions.isAdmin ? async () => {
                   await apiFetchJson(`/api/listings/${encodeURIComponent(item.id)}/stats/reset`, { method: 'POST' })
                   await queryClient.invalidateQueries({ queryKey: ['listing-stats', id] })
                 } : undefined}
@@ -568,7 +568,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
             </section>
 
             {/* ТЗ-48: статус только по канону; при active не показываем блок «На модерации» */}
-            {(isOwnerMode || isCurrentUserAdmin) && !isPublished && (
+            {isOwnerMode && !isPublished && (
               <section className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
                 <p className="text-[14px] font-semibold text-[var(--text-primary)]">
                   {getListingStatusLabel(listingStatusCanonical)}
@@ -739,7 +739,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                 )}
                 {priceValue > 0 && <p className="text-[12px] text-[var(--text-muted)]">Комиссия 7%. Итог при бронировании.</p>}
               </div>
-              {isCurrentUserAdmin ? (
+              {permissions.isAdmin ? (
                 <div className="space-y-2">
                   {isPendingModeration ? (
                     <div className="grid grid-cols-2 gap-2">
@@ -890,15 +890,20 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
                   onConfirm={handleBookingConfirm}
                 />
               )}
-              {!isOwnerMode && !isCurrentUserAdmin && (
+              {/* TZ-66: user — Написать, Забронировать, В избранное; guest не видит */}
+              {!isOwnerMode && !permissions.isAdmin && !permissions.isGuest && (
                 <>
-                  <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
-                    Написать
-                  </button>
-                  <button type="button" onClick={handleToggleFavorite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
-                    <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                    {isFavorite ? 'В избранном' : 'В избранное'}
-                  </button>
+                  {permissions.canWrite && (
+                    <button type="button" onClick={handleWrite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors">
+                      Написать
+                    </button>
+                  )}
+                  {permissions.canFavorite && (
+                    <button type="button" onClick={handleToggleFavorite} className="w-full h-12 rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center gap-2 text-[var(--text-primary)] font-semibold text-[14px] hover:bg-[var(--bg-secondary)] transition-colors" aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}>
+                      <svg className={cn('w-5 h-5 transition-all duration-200', isFavorite && 'fill-red-500 text-red-500 scale-110')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                      {isFavorite ? 'В избранном' : 'В избранное'}
+                    </button>
+                  )}
                 </>
               )}
               <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-4 md:p-5">
@@ -923,7 +928,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
 
       {/* TZ-60: Фиксированный блок действий — выше bottom-nav (80px), 1 primary (Забронировать). */}
       <div className="listing-actions md:hidden">
-        {isCurrentUserAdmin ? (
+        {permissions.isAdmin ? (
           <>
             {isPendingModeration ? (
               <>
@@ -1016,32 +1021,38 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
               </>
             )}
           </>
-        ) : (
+        ) : !permissions.isGuest ? (
           <>
-            <button
-              type="button"
-              onClick={handleToggleFavorite}
-              className="w-11 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-secondary)]"
-              aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
-            >
-              <svg className={cn('w-5 h-5', isFavorite && 'fill-red-500 text-red-500')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-            </button>
-            <button
-              type="button"
-              onClick={handleWrite}
-              className="flex-1 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]"
-            >
-              Написать
-            </button>
-            <button
-              type="button"
-              onClick={handleMobileBookClick}
-              className="flex-1 h-11 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-            >
-              Забронировать
-            </button>
+            {permissions.canFavorite && (
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className="w-11 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-secondary)]"
+                aria-label={isFavorite ? 'Убрать из избранного' : 'В избранное'}
+              >
+                <svg className={cn('w-5 h-5', isFavorite && 'fill-red-500 text-red-500')} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+              </button>
+            )}
+            {permissions.canWrite && (
+              <button
+                type="button"
+                onClick={handleWrite}
+                className="flex-1 h-11 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] font-medium text-[14px]"
+              >
+                Написать
+              </button>
+            )}
+            {permissions.canBook && (
+              <button
+                type="button"
+                onClick={handleMobileBookClick}
+                className="flex-1 h-11 rounded-[10px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[14px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              >
+                Забронировать
+              </button>
+            )}
           </>
-        )}
+        ) : null}
       </div>
 
       {mapModalOpen && (
@@ -1074,7 +1085,7 @@ export function ListingPageTZ8({ id }: ListingPageTZ8Props) {
           open={aiHostOpen}
           onClose={() => setAiHostOpen(false)}
           listing={hostAiPayload}
-          isAdmin={Boolean(isCurrentUserAdmin)}
+          isAdmin={permissions.isAdmin}
         />
       )}
 

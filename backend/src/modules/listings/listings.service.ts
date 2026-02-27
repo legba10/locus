@@ -253,7 +253,7 @@ export class ListingsService {
     this.logger.debug(`Creating listing for owner: ${ownerId}`);
     const isPrivileged = await this.isPrivilegedUser(ownerId);
 
-    // TZ-47: admin — размещает бесплатно (без лимита), moderation_skip в publish()
+    // TZ-47 / TZ-66: admin — размещает бесплатно (skipPayment), publish без модерации (skipModeration)
     // FINAL LOGIC: limit is tracked in Supabase profile (listing_used/listing_limit).
     // Fallback: if Supabase is unavailable/misconfigured, use Neon limits + listing count.
     if (!isPrivileged) {
@@ -433,6 +433,7 @@ export class ListingsService {
       throw new ForbiddenException("Listing must have at least one photo before publish");
     }
 
+    // TZ-66: isPrivileged (admin) → skipModeration, immediate PUBLISHED
     const data: Prisma.ListingUpdateInput = isPrivileged
       ? {
           status: ListingStatus.PUBLISHED,

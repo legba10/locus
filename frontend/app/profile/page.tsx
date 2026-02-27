@@ -1,11 +1,11 @@
 'use client'
 
-/** TZ-49 + TZ-52 + TZ-56: Профиль — цельный экран, ProfileHeader / PrimaryActions / ProfileSections. */
+/** TZ-49 + TZ-52 + TZ-56 + TZ-66: Профиль по ролям (user / landlord / admin), без дублирования. */
 
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/domains/auth'
+import { useAuthStore, usePermissions } from '@/domains/auth'
 import {
   FileText,
   Wallet,
@@ -25,13 +25,17 @@ import { Container, Button } from '@/components/ui'
 
 const ICON_CLS = 'w-5 h-5 shrink-0 text-[var(--text-secondary)]'
 
+const ROLE_LABEL: Record<string, string> = {
+  admin: 'Администратор',
+  landlord: 'Арендодатель',
+  user: 'Пользователь',
+  guest: 'Гость',
+}
+
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, isAuthenticated, logout, hasRole } = useAuthStore()
-
-  const listingUsed = (user as any)?.listingUsed ?? 0
-  const isAdmin = hasRole?.('admin') || user?.role === 'admin'
-  const isLandlord = !isAdmin && (hasRole?.('landlord') || user?.role === 'landlord' || listingUsed > 0)
+  const { user, isAuthenticated, logout } = useAuthStore()
+  const { role, canSeeAdminPanel, canSeeMyListings, canSeeFinance, canSeePromo, canSeeAnalytics, canCreateListing } = usePermissions()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -51,14 +55,12 @@ export default function ProfilePage() {
     )
   }
 
-  const roleLabel = isAdmin ? 'Администратор' : isLandlord ? 'Арендодатель' : 'Пользователь'
-
+  const roleLabel = ROLE_LABEL[role] ?? 'Пользователь'
   const menuItemCls = 'profile-item flex items-center justify-between gap-3 w-full text-left card-ds'
 
   return (
     <div className="profile-page bg-[var(--bg-primary)] pb-24 md:pb-8">
       <Container className="profile-container pt-4">
-        {/* 1. ProfileHeader — единый цельный блок */}
         <header className="profile-header">
           <div className="profile-header__avatar">
             {user?.avatar_url ? (
@@ -78,16 +80,16 @@ export default function ProfilePage() {
           </Link>
         </header>
 
-        {/* 2. PrimaryActions — кнопка размещения (стандартная primary, отступ сверху) */}
-        <div className="md:hidden create-listing-btn">
-          <Link href="/profile/listings/create" className="btn-primary inline-flex items-center justify-center gap-2">
-            <Plus className="w-4 h-4" strokeWidth={2.2} />
-            Разместить объявление
-          </Link>
-        </div>
+        {canCreateListing && (
+          <div className="md:hidden create-listing-btn">
+            <Link href="/profile/listings/create" className="btn-primary inline-flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" strokeWidth={2.2} />
+              Разместить объявление
+            </Link>
+          </div>
+        )}
 
-        {/* 3. ProfileSections */}
-        {isAdmin && (
+        {canSeeAdminPanel && (
           <section className="profile-admin-section">
             <h2 className="profile-admin-section__title">Администрирование</h2>
             <div className="profile-item-wrap">
@@ -114,26 +116,34 @@ export default function ProfilePage() {
         <section className="profile-sections">
           <h2 className="profile-section-title">Профиль</h2>
           <div className="profile-item-wrap">
-            <Link href="/profile/listings" className={menuItemCls}>
-              <span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span>
-              <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
+            {canSeeMyListings && (
+              <Link href="/profile/listings" className={menuItemCls}>
+                <span className="flex items-center gap-3"><FileText className={ICON_CLS} />Мои объявления</span>
+                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
+              </Link>
+            )}
             <Link href="/profile/bookings" className={menuItemCls}>
               <span className="flex items-center gap-3"><CalendarCheck className={ICON_CLS} />Бронирования</span>
               <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
             </Link>
-            <Link href="/profile/finance" className={menuItemCls}>
-              <span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span>
-              <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
-            <Link href="/profile/promo" className={menuItemCls}>
-              <span className="flex items-center gap-3"><Megaphone className={ICON_CLS} />Продвижение</span>
-              <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
-            <Link href="/profile/analytics" className={menuItemCls}>
-              <span className="flex items-center gap-3"><BarChart3 className={ICON_CLS} />Аналитика</span>
-              <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
+            {canSeeFinance && (
+              <Link href="/profile/finance" className={menuItemCls}>
+                <span className="flex items-center gap-3"><Wallet className={ICON_CLS} />Финансы</span>
+                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
+              </Link>
+            )}
+            {canSeePromo && (
+              <Link href="/profile/promo" className={menuItemCls}>
+                <span className="flex items-center gap-3"><Megaphone className={ICON_CLS} />Продвижение</span>
+                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
+              </Link>
+            )}
+            {canSeeAnalytics && (
+              <Link href="/profile/analytics" className={menuItemCls}>
+                <span className="flex items-center gap-3"><BarChart3 className={ICON_CLS} />Аналитика</span>
+                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
+              </Link>
+            )}
             <Link href="/profile/settings" className={menuItemCls}>
               <span className="flex items-center gap-3"><Settings className={ICON_CLS} />Настройки</span>
               <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
