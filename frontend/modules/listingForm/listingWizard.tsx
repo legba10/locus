@@ -242,14 +242,31 @@ export function ListingWizard({
           {isEdit ? 'Редактировать объявление' : 'Новое объявление'}
         </h1>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          Шаг {currentStep} из {totalSteps}: {STEP_TITLES[step]}
+          {STEP_TITLES[step]}
         </p>
       </div>
 
-      {/* TZ-50 + TZ-62: прогресс — progress-bg / progress-fill */}
-      <div className="progress-bg h-1.5 w-full rounded-[6px] overflow-hidden">
-        <div className="progress-fill h-full rounded-[6px] transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+      {/* TZ-63: прогресс — подпись «Шаг X из N», %, анимация 0.4s */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[14px] font-semibold text-[var(--text-primary)] tabular-nums">
+            Шаг {currentStep} из {totalSteps}
+          </span>
+          <span className="text-[12px] text-[var(--text-secondary)] tabular-nums">
+            {Math.round(progressPercent)}%
+          </span>
+        </div>
+        <div className="progress-bg h-2 w-full rounded-[6px] overflow-hidden">
+          <div className="progress-fill h-full rounded-[6px] transition-all duration-[0.4s] ease-out" style={{ width: `${progressPercent}%` }} />
+        </div>
       </div>
+
+      {/* TZ-63: осталось шагов до публикации */}
+      {step < 7 && (
+        <p className="text-[13px] text-[var(--text-secondary)] text-center">
+          Осталось {7 - step} {(7 - step) === 1 ? 'шаг' : (7 - step) < 5 ? 'шага' : 'шагов'} до публикации
+        </p>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
         <div className="flex-1 min-w-0 flex flex-col">

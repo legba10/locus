@@ -2,13 +2,14 @@
 
 import { cn } from '@/shared/utils/cn'
 import { AMENITIES_MAP, amenityLabel } from '@/core/i18n/ru'
+import { Check } from 'lucide-react'
 
-/** ТЗ-5: Удобства — чекбоксы по категориям. Базовые, кухня, комфорт, безопасность. */
+/** TZ-63: Удобства — компактная сетка, блоки с паузой, галочка при выборе. */
 const CATEGORIES: { key: string; label: string; keys: string[] }[] = [
-  { key: 'base', label: 'Базовые', keys: ['wifi', 'washer', 'air_conditioner', 'kitchen', 'parking', 'balcony', 'tv', 'elevator'] },
+  { key: 'base', label: 'Базовые', keys: ['wifi', 'tv', 'elevator', 'balcony', 'parking', 'air_conditioner', 'kitchen'] },
   { key: 'kitchen', label: 'Кухня', keys: ['refrigerator', 'dishwasher', 'workspace'] },
-  { key: 'comfort', label: 'Комфорт', keys: ['heating', 'iron', 'hair_dryer', 'workspace_desk'] },
-  { key: 'safety', label: 'Безопасность', keys: ['first_aid', 'fire_extinguisher'] },
+  { key: 'bathroom', label: 'Санузел', keys: ['washer', 'dryer', 'bathtub', 'shower', 'hair_dryer'] },
+  { key: 'extra', label: 'Дополнительно', keys: ['heating', 'iron', 'first_aid', 'fire_extinguisher', 'workspace_desk'] },
 ]
 
 export interface StepAmenitiesProps {
@@ -23,29 +24,36 @@ export function StepAmenities({ amenityKeys, onChange }: StepAmenitiesProps) {
   }
 
   return (
-    <div className="step-container space-y-6">
+    <div className="step-container step-amenities-tz63">
       {CATEGORIES.map((cat) => (
-        <div key={cat.key}>
-          <p className="text-[14px] font-medium text-[var(--text-secondary)] mb-3">{cat.label}</p>
-          <div className="grid grid-cols-2 gap-2">
+        <section key={cat.key} className="features-section">
+          <h3 className="features-section__title">{cat.label}</h3>
+          <div className="features-grid">
             {cat.keys.map((key) => {
               const label = AMENITIES_MAP[key] ?? amenityLabel(key)
               const checked = amenityKeys.includes(key)
               return (
                 <label
                   key={key}
-                  className={cn(
-                    'feature-card flex items-center gap-2 px-4 py-3 cursor-pointer',
-                    checked && 'active'
-                  )}
+                  className={cn('feature-card', checked && 'active')}
                 >
-                  <input type="checkbox" checked={checked} onChange={() => toggle(key)} className="rounded border-[var(--border-main)] text-[var(--accent)] accent-[var(--accent)]" />
-                  <span className="text-[14px] font-medium text-[var(--text-primary)]">{label}</span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(key)}
+                    className="feature-card__input"
+                  />
+                  <span className="feature-card__label">{label}</span>
+                  {checked && (
+                    <span className="feature-card__check" aria-hidden>
+                      <Check className="w-4 h-4" strokeWidth={2.5} />
+                    </span>
+                  )}
                 </label>
               )
             })}
           </div>
-        </div>
+        </section>
       ))}
     </div>
   )

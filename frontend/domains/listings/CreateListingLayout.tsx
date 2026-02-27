@@ -12,6 +12,8 @@ export interface CreateListingLayoutProps {
   children: React.ReactNode
   /** Скрыть кнопку «Далее» (например на шаге предпросмотра) */
   hideNext?: boolean
+  /** TZ-63: текст «Осталось N шагов до публикации» */
+  stepsLeft?: number
 }
 
 export function CreateListingLayout({
@@ -23,18 +25,25 @@ export function CreateListingLayout({
   nextDisabled,
   children,
   hideNext,
+  stepsLeft,
 }: CreateListingLayoutProps) {
   const progress = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
 
   return (
     <div className="flex flex-col min-h-0 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <span className="text-[14px] font-medium text-[var(--text-secondary)] tabular-nums">
-          {currentStep} / {totalSteps}
-        </span>
-        <div className="progress-bg flex-1 mx-4 h-2 rounded-full overflow-hidden">
+      {/* TZ-63: прогресс — подпись «Шаг X из N», полоска с анимацией */}
+      <div className="flex flex-col gap-2 mb-5">
+        <div className="flex items-center justify-between">
+          <span className="text-[14px] font-semibold text-[var(--text-primary)] tabular-nums">
+            Шаг {currentStep} из {totalSteps}
+          </span>
+          <span className="text-[12px] text-[var(--text-secondary)] tabular-nums">
+            {Math.round(progress)}%
+          </span>
+        </div>
+        <div className="progress-bg h-2 rounded-full overflow-hidden">
           <div
-            className="progress-fill h-full rounded-full transition-all duration-300"
+            className="progress-fill h-full rounded-full"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -43,18 +52,24 @@ export function CreateListingLayout({
       <div
         className={cn(
           'form-step form-step-box rounded-[16px] border p-6 sm:p-[24px]',
-          'border-[var(--border-main)] bg-[var(--bg-card)]',
-          'shadow-[var(--shadow-card)]'
+          'border-[var(--border-main)] bg-[var(--bg-card)]'
         )}
       >
         {children}
       </div>
 
-      <div className="flex items-center justify-between gap-4 mt-6">
+      {/* TZ-63: «Осталось N шагов до публикации» */}
+      {typeof stepsLeft === 'number' && stepsLeft > 0 && (
+        <p className="mt-4 text-[13px] text-[var(--text-secondary)] text-center">
+          Осталось {stepsLeft} {stepsLeft === 1 ? 'шаг' : stepsLeft < 5 ? 'шага' : 'шагов'} до публикации
+        </p>
+      )}
+
+      <div className="form-navigation">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-[12px] px-5 py-3 font-semibold text-[15px] text-[var(--text-primary)] bg-[var(--bg-input)] border border-[var(--border-main)] hover:bg-[var(--border-main)]/30 transition-colors"
+          className="form-nav-back"
         >
           Назад
         </button>
@@ -63,12 +78,7 @@ export function CreateListingLayout({
             type="button"
             onClick={onNext}
             disabled={nextDisabled}
-            className={cn(
-              'rounded-[12px] px-5 py-3 font-semibold text-[15px] transition-colors',
-              nextDisabled
-                ? 'bg-[var(--bg-input)] text-[var(--text-muted)] cursor-not-allowed'
-                : 'bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-95'
-            )}
+            className="form-nav-next"
           >
             {nextLabel}
           </button>

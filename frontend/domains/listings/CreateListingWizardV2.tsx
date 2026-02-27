@@ -194,20 +194,24 @@ export function CreateListingWizardV2({
     setError(null)
     if (step === 2 && photoItems.length < MIN_PHOTOS) {
       setError(PHOTO_MIN_MSG)
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
     if (step === 1 && !city.trim()) {
       setError('Выберите город')
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
     if (step === 5 && !title.trim()) {
       setError('Введите заголовок')
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
     if (step === 6) {
       const p = Number(price)
       if (!price.trim() || Number.isNaN(p) || p <= 0) {
         setError('Укажите цену')
+        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         return
       }
     }
@@ -381,6 +385,7 @@ export function CreateListingWizardV2({
         nextLabel="Далее"
         nextDisabled={!canGoNext}
         hideNext={step === 6}
+        stepsLeft={step === 6 ? 0 : TOTAL_STEPS - currentStepDisplay}
       >
         {step === 0 && (
           <StepType
