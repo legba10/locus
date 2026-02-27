@@ -1,0 +1,75 @@
+/**
+ * TZ-52: Единая дизайн-система.
+ * Только токены из theme.css. Запрещены: outline, border на кнопках, glow, radial-gradient.
+ */
+
+/* ─── Card (один размер: padding 20px, radius lg) ─── */
+.card-ds {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  border: none;
+  outline: none;
+}
+
+[data-theme="dark"] .card-ds,
+.dark .card-ds {
+  background: var(--bg-card);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Button primary (один размер: 48px, radius 14px) ─── */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius-md);
+  height: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  transition: 0.2s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Section (единые отступы, без margin-top 40+) ─── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── Container (TZ-52: max-width 720px, padding 16px) ─── */
+.container-ds {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .container-ds {
+    max-width: 900px;
+  }
+}
+
+/* ─── Body (Telegram webview) ─── */
+body {
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

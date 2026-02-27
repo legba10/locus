@@ -1,12 +1,29 @@
 /**
- * ТЗ-1 + ТЗ-3: Архитектура системы тем (Light / Dark) для LOCUS
- * Единый theme-движок: design tokens + data-theme на <html>
+ * ТЗ-1 + ТЗ-3 + ТЗ-52: Архитектура системы тем и единые design tokens.
  * Запрет: не использовать #fff, #000, rgba() в компонентах — только var(--token)
  */
 
-/* ТЗ-6: только bg-background, bg-card, bg-secondary, text-primary. Не bg-white/bg-black/bg-gray */
-/* ТЗ-18 светлая тема: фон #F6F7FB, карточки #FFFFFF, тень 0 8px 24px (без пересвета) */
+/* ТЗ-52: глобальные design tokens (единый источник размеров и цветов) */
 :root {
+  /* Colors — TZ-52 canonical */
+  --bg-primary: #f5f6fa;
+  --bg-card: #ffffff;
+  --bg-dark: #0f172a;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+
+  --accent: #7b5cff;
+  --accent-hover: #6849f5;
+
+  /* Radii — только 3 размера (TZ-52) */
+  --border-radius-lg: 20px;
+  --border-radius-md: 14px;
+  --border-radius-sm: 10px;
+
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.06);
+
+  /* Legacy aliases (совместимость) */
   --background: #F6F7FB;
   --bg: #F6F7FB;
   --card: #FFFFFF;
@@ -16,30 +33,23 @@
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
-  --bg-main: #F6F7FB;
+  --bg-main: var(--bg-primary);
   --bg-secondary: #f0f1f5;
   --bg-surface: #f2f3f7;
-  --bg-card: #FFFFFF;
   --bg-elevated: #FFFFFF;
   --bg-modal: #FFFFFF;
 
-  --text-primary: #0F172A;
-  --text-main: #0F172A;
-  --text-secondary: #6B7280;
+  --text-main: var(--text-primary);
   --text-muted: #9ca3af;
 
   --border-main: rgba(0, 0, 0, 0.06);
 
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-gradient: linear-gradient(to right, #7c3aed, #4f46e5);
-  --button-primary: linear-gradient(to right, #7c3aed, #4f46e5);
+  --accent-gradient: linear-gradient(to right, var(--accent), var(--accent-hover));
+  --button-primary: var(--accent);
 
   --button-primary-text: #ffffff;
   --button-secondary-bg: #f3f4f6;
 
-  /* ТЗ-18: белая тема — тень без пересвета */
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.06);
   --overlay: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(0, 0, 0, 0.35);
   --overlay-bg-light: rgba(0, 0, 0, 0.45);
@@ -59,8 +69,17 @@
   --danger: #dc2626;
 }
 
-/* Light — без жёсткой обводки: мягкий rgba */
+/* Light — TZ-52 tokens + совместимость */
 :root[data-theme="light"] {
+  --bg-primary: #f5f6fa;
+  --bg-card: #ffffff;
+  --border-radius-lg: 20px;
+  --border-radius-md: 14px;
+  --border-radius-sm: 10px;
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.06);
+  --accent: #7b5cff;
+  --accent-hover: #6849f5;
+
   --background: #F6F7FB;
   --bg: #F6F7FB;
   --card: #FFFFFF;
@@ -70,7 +89,7 @@
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
-  --bg-main: #F6F7FB;
+  --bg-main: var(--bg-primary);
   --bg-secondary: #f0f1f5;
   --bg-surface: #f2f3f7;
   --bg-card: #FFFFFF;

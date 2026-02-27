@@ -107,7 +107,4 @@ html:not([data-theme="dark"]) .bottom-nav {
   margin-top: 12px;
 }
 
-/* ─── 7. Telegram Webview: safe area ─── */
-body {
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
+/* TZ-52: body min-height + safe-area перенесены в design-system-tz52.css */

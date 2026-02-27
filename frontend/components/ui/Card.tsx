@@ -3,8 +3,8 @@
 import { cn } from '@/shared/utils/cn'
 
 /**
- * ТЗ-4 БЛОК 3: Единая карточка. Везде: объявления, отзывы, профиль, уведомления.
- * background: var(--bg-card), border, radius 20px, backdrop-filter blur(20px)
+ * TZ-52: Единая карточка дизайн-системы.
+ * background: var(--bg-card), border-radius: var(--border-radius-lg), box-shadow: var(--shadow-card), padding 20px, без border/outline.
  */
 export function Card({
   className,
@@ -12,11 +12,7 @@ export function Card({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        'rounded-[20px] border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]',
-        'backdrop-blur-[20px] transition-shadow hover:shadow-[var(--shadow-elevated)]',
-        className
-      )}
+      className={cn('card-ds', className)}
       {...props}
     />
   )

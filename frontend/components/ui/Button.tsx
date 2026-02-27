@@ -28,6 +28,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variantClass =
       variant === 'outline' ? 'btn--secondary' : variant === 'primary' ? 'btn--primary' : variant === 'secondary' ? 'btn--secondary' : variant === 'ghost' ? 'btn--ghost' : variant === 'danger' ? 'btn--danger' : 'btn--primary'
     const sizeClass = isIcon ? '' : size === 'sm' ? 'btn--sm' : size === 'lg' ? 'btn--lg' : 'btn--md'
+    /* TZ-52: primary использует единый .btn-primary (без outline/border/glow) */
+    const dsPrimary = variant === 'primary' && !isIcon ? 'btn-primary' : ''
 
     return (
       <button
@@ -40,6 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'btn',
           variantClass,
           !isIcon && sizeClass,
+          dsPrimary,
           loading && 'is-loading',
           disabled && 'is-disabled',
           isIcon && 'rounded-full p-2 min-w-[44px] min-h-[44px] w-10 h-10 [&>svg]:w-6 [&>svg]:h-6',

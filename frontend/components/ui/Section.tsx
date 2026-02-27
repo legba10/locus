@@ -1,18 +1,17 @@
 'use client'
 
-/** TZ-33: Секция с отступом снизу (между секциями 32px). */
+/** TZ-52: Секция — flex column, gap 16px, margin-bottom 24px. Никаких margin-top 40+. */
 
 import { cn } from '@/shared/utils/cn'
 
-export interface SectionProps {
-  className?: string
+export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode
   as?: 'section' | 'div'
 }
 
-export function Section({ className, children, as: Tag = 'section' }: SectionProps) {
+export function Section({ className, children, as: Tag = 'section', ...props }: SectionProps) {
   return (
-    <Tag className={cn('mb-8', className)}>
+    <Tag className={cn('section', className)} {...props}>
       {children}
     </Tag>
   )
