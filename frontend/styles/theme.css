@@ -12,7 +12,7 @@
   --card: #FFFFFF;
   --text: #0F172A;
   --sub: #6B7280;
-  --border: #E6E8EC;
+  --border: rgba(0, 0, 0, 0.06);
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
@@ -28,7 +28,7 @@
   --text-secondary: #6B7280;
   --text-muted: #9ca3af;
 
-  --border-main: #E6E8EC;
+  --border-main: rgba(0, 0, 0, 0.06);
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
@@ -48,7 +48,7 @@
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
   --header-bg: #ffffff;
-  --border-primary: #E6E8EC;
+  --border-primary: rgba(0, 0, 0, 0.06);
   --input-bg: #f5f6fa;
   --bg-input: #f5f6fa;
   --icon-primary: #0f172a;
@@ -59,14 +59,14 @@
   --danger: #dc2626;
 }
 
-/* Light — ТЗ-18: фон #F6F7FB, карточки #FFFFFF, тень 0 8px 24px (без пересвета) */
+/* Light — без жёсткой обводки: мягкий rgba */
 :root[data-theme="light"] {
   --background: #F6F7FB;
   --bg: #F6F7FB;
   --card: #FFFFFF;
   --text: #0F172A;
   --sub: #6B7280;
-  --border: #E6E8EC;
+  --border: rgba(0, 0, 0, 0.06);
   --accent1: #7c3aed;
   --accent2: #6366f1;
 
@@ -82,7 +82,7 @@
   --text-secondary: #6B7280;
   --text-muted: #9ca3af;
 
-  --border-main: #E6E8EC;
+  --border-main: rgba(0, 0, 0, 0.06);
 
   --accent: #7c3aed;
   --accent-hover: #6d28d9;
@@ -101,7 +101,7 @@
   --surface-primary: #ffffff;
   --surface-secondary: #f5f6fa;
   --header-bg: #ffffff;
-  --border-primary: #E6E8EC;
+  --border-primary: rgba(0, 0, 0, 0.06);
   --input-bg: #f5f6fa;
   --bg-input: #f5f6fa;
   --icon-primary: #0f172a;
@@ -200,3 +200,4 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   border: none;
 }
+
