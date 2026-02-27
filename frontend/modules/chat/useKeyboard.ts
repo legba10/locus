@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /** TZ-58: --keyboard-offset на document для padding-bottom чата (iOS клавиатура). */
 function setKeyboardOffsetCSS(px: number) {
@@ -8,7 +8,13 @@ function setKeyboardOffsetCSS(px: number) {
   document.documentElement.style.setProperty('--keyboard-offset', `${px}px`)
 }
 
-export function useKeyboard() {
+export interface UseKeyboardOptions {
+  /** TZ-64: контейнер чата — при открытой клавиатуре задаём ему height = visualViewport.height */
+  containerRef?: React.RefObject<HTMLElement | null>
+}
+
+export function useKeyboard(options: UseKeyboardOptions = {}) {
+  const { containerRef } = options
   const [keyboardOffset, setKeyboardOffset] = useState(0)
 
   useEffect(() => {
@@ -20,9 +26,14 @@ export function useKeyboard() {
       const offset = Math.max(0, window.innerHeight - vv.height)
       setKeyboardOffset(offset)
       setKeyboardOffsetCSS(offset)
-      /* TZ-61: iOS — при открытой клавиатуре подгоняем высоту body под visualViewport */
-      if (typeof document !== 'undefined' && document.body) {
+      /* TZ-61: body height для iOS */
+      if (document.body) {
         document.body.style.height = offset > 0 ? `${vv.height}px` : ''
+      }
+      /* TZ-64: высота контейнера чата = visualViewport, чтобы не ломало layout */
+      const el = containerRef?.current ?? document.querySelector<HTMLElement>('.chat-container')
+      if (el) {
+        el.style.height = offset > 0 ? `${vv.height}px` : ''
       }
     }
 
@@ -33,9 +44,11 @@ export function useKeyboard() {
       vv.removeEventListener('resize', updateOffset)
       vv.removeEventListener('scroll', updateOffset)
       setKeyboardOffsetCSS(0)
-      if (typeof document !== 'undefined' && document.body) document.body.style.height = ''
+      if (document.body) document.body.style.height = ''
+      const el = containerRef?.current ?? document.querySelector<HTMLElement>('.chat-container')
+      if (el) el.style.height = ''
     }
-  }, [])
+  }, [containerRef])
 
   return { keyboardOffset }
 }

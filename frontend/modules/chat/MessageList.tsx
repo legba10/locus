@@ -13,42 +13,77 @@ interface MessageListProps {
   messages: ChatMessage[]
   loading: boolean
   myId: string
-  /** TZ-58: ref для scrollIntoView к последнему сообщению */
   messagesEndRef?: React.RefObject<HTMLDivElement>
+  /** TZ-64: индикатор «печатает…» */
+  typing?: boolean
 }
 
-export function MessageList({ messages, loading, myId, messagesEndRef }: MessageListProps) {
+function formatDay(date: Date): string {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  const diff = Math.floor((today.getTime() - d.getTime()) / 86400000)
+  if (diff === 0) return 'Сегодня'
+  if (diff === 1) return 'Вчера'
+  if (diff < 7) return d.toLocaleDateString('ru', { weekday: 'long' })
+  return d.toLocaleDateString('ru', { day: 'numeric', month: 'long' })
+}
+
+export function MessageList({ messages, loading, myId, messagesEndRef, typing }: MessageListProps) {
+  const groups: { date: string; items: ChatMessage[] }[] = []
+  let lastDate = ''
+  for (const m of messages) {
+    const d = new Date(m.createdAt)
+    const dateKey = d.toDateString()
+    if (dateKey !== lastDate) {
+      lastDate = dateKey
+      groups.push({ date: formatDay(d), items: [m] })
+    } else {
+      groups[groups.length - 1].items.push(m)
+    }
+  }
+
   return (
-    <div className="space-y-2">
+    <div className="chat-messages-inner">
       {loading ? (
         <div className="space-y-2 animate-pulse">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className={cn('message-bubble', i % 2 ? 'message-bubble--other' : 'message-bubble--own ml-auto')}
+              className={cn('message', i % 2 ? 'received' : 'sent')}
               style={{ width: '60%', height: 48 }}
             />
           ))}
         </div>
       ) : messages.length === 0 ? (
-        <div className="text-center text-[14px] text-[var(--text-secondary)] py-8">Сообщений пока нет</div>
+        <div className="chat-messages-empty">Сообщений пока нет</div>
       ) : (
-        messages.map((m) => (
-          <div
-            key={m.id}
-            className={cn(
-              'message-bubble',
-              m.senderId === myId ? 'message-bubble--own' : 'message-bubble--other'
-            )}
-          >
-            <div>{m.text}</div>
-            <div className="message-bubble__time">
-              {new Date(m.createdAt).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+        <>
+          {groups.map((g) => (
+            <div key={g.date} className="chat-messages-group">
+              <div className="chat-messages-date">{g.date}</div>
+              {g.items.map((m) => (
+                <div
+                  key={m.id}
+                  className={cn('message', m.senderId === myId ? 'sent' : 'received')}
+                >
+                  <div className="message__text">{m.text}</div>
+                  <div className="message__time">
+                    {new Date(m.createdAt).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))
+          ))}
+          {typing && (
+            <div className="message received message--typing">
+              <span className="message__typing-dots">печатает…</span>
+            </div>
+          )}
+        </>
       )}
-      <div ref={messagesEndRef} aria-hidden />
+      <div ref={messagesEndRef} aria-hidden className="chat-messages-end" />
     </div>
   )
 }

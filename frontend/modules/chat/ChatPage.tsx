@@ -1,17 +1,17 @@
 'use client'
 
-import Link from 'next/link'
-import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetchJson } from '@/shared/utils/apiFetch'
 import { useAuthStore } from '@/domains/auth'
 import { useAutoScroll } from './useAutoScroll'
 import { useKeyboard } from './useKeyboard'
+import { ChatHeader } from './ChatHeader'
+import { ChatListingPreview } from './ChatListingPreview'
 import { ChatInput } from './ChatInput'
 import { MessageList, type ChatMessage } from './MessageList'
 import { initChatSoundController } from './soundController'
 
-interface ChatPageProps {
+export interface ChatPageProps {
   chatId: string
   title?: string
   onBack?: () => void
@@ -19,16 +19,36 @@ interface ChatPageProps {
   listingId?: string
   listingTitle?: string
   listingPhotoUrl?: string
+  listingPrice?: string
+  /** Статус в header: «Онлайн», «Был(а) недавно» */
+  statusLabel?: string
+  /** Аватар собеседника */
+  avatarUrl?: string | null
+  /** Индикатор «печатает…» */
+  typing?: boolean
 }
 
-export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, listingId, listingTitle, listingPhotoUrl }: ChatPageProps) {
+export function ChatPage({
+  chatId,
+  title = 'Чат',
+  onBack,
+  embedded = false,
+  listingId,
+  listingTitle,
+  listingPhotoUrl,
+  listingPrice,
+  statusLabel = 'Был(а) недавно',
+  avatarUrl,
+  typing = false,
+}: ChatPageProps) {
   const { user } = useAuthStore()
   const myId = user?.id ?? ''
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const { keyboardOffset } = useKeyboard()
+  const containerRef = useRef<HTMLElement>(null)
+  const { keyboardOffset } = useKeyboard({ containerRef })
   const { listRef, onScroll, scrollToBottom, scrollOnNewMessage } = useAutoScroll()
   const lastMessageIdRef = useRef<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -50,7 +70,10 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
     void loadMessages()
       .then(() => {
         if (!mounted) return
-        requestAnimationFrame(() => { scrollToBottom('auto'); messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }) })
+        requestAnimationFrame(() => {
+          scrollToBottom('auto')
+          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+        })
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -59,6 +82,20 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
       mounted = false
     }
   }, [chatId, loadMessages, scrollToBottom])
+
+  useEffect(() => {
+    scrollToBottom('smooth')
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (keyboardOffset > 0) {
+      requestAnimationFrame(() => {
+        scrollToBottom('smooth')
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      })
+    }
+  }, [keyboardOffset, scrollToBottom])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -71,7 +108,8 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
         }
         if (last.id !== lastMessageIdRef.current) {
           lastMessageIdRef.current = last.id
-          scrollOnNewMessage('smooth'); messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+          scrollOnNewMessage('smooth')
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
         }
       })
     }, 4000)
@@ -89,60 +127,54 @@ export function ChatPage({ chatId, title = 'Чат', onBack, embedded = false, l
         body: JSON.stringify({ text }),
       })
       setMessages((prev) => [...prev, msg])
-      requestAnimationFrame(() => { scrollToBottom('smooth'); messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) })
+      requestAnimationFrame(() => {
+        scrollToBottom('smooth')
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      })
     } catch {
-      // ignore, existing error handling is noisy in chat flow
+      // ignore
     } finally {
       setSending(false)
     }
   }
 
-  const showListingPreview = listingId || listingTitle || listingPhotoUrl
+  const headerTitle = listingTitle || title
 
   return (
-    <section className={`chat-page chat-container ${embedded ? 'embedded' : ''} flex flex-col`}>
-      <header className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-[var(--border-main)] bg-[var(--card-bg)]">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded-full p-2 text-[var(--accent)] hover:bg-[var(--bg-secondary)]"
-            aria-label="Назад"
-          >
-            ←
-          </button>
-        )}
-        <h2 className="text-[16px] font-semibold text-[var(--text-primary)] truncate">{title}</h2>
-      </header>
-      {showListingPreview && (
-        <div className="chat-listing-preview">
-          {listingId ? (
-            <Link href={`/listings/${listingId}`} className="flex items-center gap-3 w-full text-left">
-              {listingPhotoUrl && (
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[var(--bg-secondary)] flex-shrink-0">
-                  <Image src={listingPhotoUrl} alt="" fill className="object-cover" sizes="48px" />
-                </div>
-              )}
-              {listingTitle && <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">{listingTitle}</span>}
-            </Link>
-          ) : (
-            <div className="flex items-center gap-3">
-              {listingPhotoUrl && (
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[var(--bg-secondary)] flex-shrink-0">
-                  <Image src={listingPhotoUrl} alt="" fill className="object-cover" sizes="48px" />
-                </div>
-              )}
-              {listingTitle && <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">{listingTitle}</span>}
-            </div>
-          )}
-        </div>
-      )}
+    <section
+      ref={containerRef}
+      className={`chat-page chat-container ${embedded ? 'embedded' : ''}`}
+    >
+      <ChatHeader
+        title={headerTitle}
+        onBack={onBack}
+        statusLabel={statusLabel}
+        avatarUrl={avatarUrl}
+      />
+      <ChatListingPreview
+        listingId={listingId}
+        listingTitle={listingTitle}
+        listingPhotoUrl={listingPhotoUrl}
+        listingPrice={listingPrice}
+        sticky
+      />
       <div className="chat-messages" ref={listRef} onScroll={onScroll}>
-        <MessageList messages={messages} loading={loading} myId={myId} messagesEndRef={messagesEndRef} />
+        <MessageList
+          messages={messages}
+          loading={loading}
+          myId={myId}
+          messagesEndRef={messagesEndRef}
+          typing={typing}
+        />
       </div>
-      <div className="chat-input-wrapper">
-        <ChatInput value={input} onChange={setInput} onSend={send} sending={sending} bottomOffset={keyboardOffset} useStickyLayout />
-      </div>
+      <ChatInput
+        value={input}
+        onChange={setInput}
+        onSend={send}
+        sending={sending}
+        bottomOffset={keyboardOffset}
+        useStickyLayout
+      />
     </section>
   )
 }

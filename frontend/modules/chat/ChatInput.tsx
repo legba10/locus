@@ -8,45 +8,44 @@ interface ChatInputProps {
   onSend: () => void
   sending: boolean
   bottomOffset: number
-  /** TZ-55: sticky inside chat flex layout instead of fixed */
   useStickyLayout?: boolean
 }
 
 export function ChatInput({ value, onChange, onSend, sending, bottomOffset, useStickyLayout }: ChatInputProps) {
+  const hasText = value.trim().length > 0
+
   return (
-    <footer
+    <div
       className={cn(
-        'chat-input',
-        useStickyLayout ? 'flex-shrink-0' : 'fixed left-0 right-0 z-20'
+        'chat-input-wrapper',
+        useStickyLayout && 'flex-shrink-0'
       )}
-      style={useStickyLayout ? undefined : { bottom: `${bottomOffset}px` }}
+      style={useStickyLayout ? undefined : { paddingBottom: `calc(12px + env(safe-area-inset-bottom) + ${bottomOffset}px)` }}
     >
       <form
         onSubmit={(e) => {
           e.preventDefault()
           onSend()
         }}
-        className="mx-auto max-w-[980px] flex items-center gap-2"
+        className="chat-input"
       >
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Сообщение..."
-          className={cn(
-            'flex-1 rounded-[14px] border border-[var(--border-main)] bg-[var(--bg-secondary)] px-4 py-3 text-[var(--text-primary)]',
-            'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20'
-          )}
+          className="chat-input__field"
           style={{ fontSize: '16px' }}
           disabled={sending}
         />
         <button
           type="submit"
-          disabled={sending || !value.trim()}
-          className="btn-secondary rounded-[14px] px-5 py-3 text-[14px] font-semibold disabled:opacity-50 min-h-0 h-auto"
+          disabled={sending || !hasText}
+          className={cn('send-btn', hasText && !sending && 'active')}
+          aria-label="Отправить"
         >
           {sending ? '…' : 'Отправить'}
         </button>
       </form>
-    </footer>
+    </div>
   )
 }
