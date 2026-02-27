@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch'
@@ -13,6 +14,7 @@ import { StepDetails } from '@/domains/listings/steps/StepDetails'
 import { StepDescription } from '@/domains/listings/steps/StepDescription'
 import { StepPrice } from '@/domains/listings/steps/StepPrice'
 import { StepPreview } from '@/domains/listings/steps/StepPreview'
+import { toCanonicalStatus } from '@/domains/listings/listing-status'
 
 const TOTAL_STEPS = 8
 const MIN_PHOTOS = 5
@@ -53,7 +55,12 @@ export function CreateListingWizardV2({
   const [step, setStep] = useState<WizardStepIndex>(0)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  /** TZ-65: после публикации — экран «На модерации» или «Опубликовано» */
+  const [publishResult, setPublishResult] = useState<{ status: 'moderation' | 'published'; listingId: string } | null>(null)
+  /** TZ-65: модал подтверждения выхода */
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
+  const isDirtyRef = useRef(false)
 
   const [type, setType] = useState<PropertyType>('apartment')
   const [rentMode, setRentMode] = useState<RentMode>('month')
@@ -78,6 +85,44 @@ export function CreateListingWizardV2({
   const [utilities, setUtilities] = useState('')
 
   const isEdit = Boolean(initialListing?.id)
+
+  /** TZ-65: автосохранение черновика при редактировании (debounce 800ms) */
+  useEffect(() => {
+    if (!initialListing?.id) return
+    const t = window.setTimeout(() => {
+      const p = Number(price)
+      const apiType = (type === 'apartment_suite' ? 'apartment' : type).toUpperCase()
+      const payload = {
+        title: title.trim() || 'Черновик',
+        description: description.trim(),
+        city: city.trim(),
+        addressLine: addressLine.trim() || undefined,
+        basePrice: p || 0,
+        currency: 'RUB',
+        capacityGuests: 2,
+        bedrooms: Number(rooms || '1') || 1,
+        bathrooms: 1,
+        type: apiType,
+        houseRules: {
+          area: Number(area || '0') || undefined,
+          floor: Number(floor || '0') || undefined,
+          totalFloors: Number(totalFloors || '0') || undefined,
+          type: type,
+          deposit: deposit.trim() ? Number(deposit) || undefined : undefined,
+          negotiable: false,
+        },
+        amenityKeys: [],
+      }
+      apiFetchJson(`/listings/${encodeURIComponent(initialListing.id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }).catch(() => {})
+    }, 800)
+    return () => window.clearTimeout(t)
+  }, [
+    initialListing?.id,
+    type, city, addressLine, title, description, price, rooms, area, floor, totalFloors, deposit,
+  ])
 
   useEffect(() => {
     if (!initialListing) return
@@ -223,6 +268,65 @@ export function CreateListingWizardV2({
     if (step > 0) setStep((s) => (s - 1) as WizardStepIndex)
   }, [step])
 
+  /** TZ-65: сохранить черновик и выйти (без публикации) */
+  const saveDraftAndExit = useCallback(async () => {
+    setError(null)
+    const p = Number(price)
+    const apiType = (type === 'apartment_suite' ? 'apartment' : type).toUpperCase()
+    const payload = {
+      title: title.trim() || 'Черновик',
+      description: description.trim(),
+      city: city.trim(),
+      addressLine: addressLine.trim() || undefined,
+      basePrice: p || 0,
+      currency: 'RUB',
+      capacityGuests: 2,
+      bedrooms: Number(rooms || '1') || 1,
+      bathrooms: 1,
+      type: apiType,
+      houseRules: {
+        area: Number(area || '0') || undefined,
+        floor: Number(floor || '0') || undefined,
+        totalFloors: Number(totalFloors || '0') || undefined,
+        type: type,
+        deposit: deposit.trim() ? Number(deposit) || undefined : undefined,
+        negotiable: false,
+      },
+      amenityKeys: [],
+    }
+    try {
+      let listingId: string | undefined = initialListing?.id
+      if (listingId) {
+        await apiFetchJson(`/listings/${encodeURIComponent(String(listingId))}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        })
+      } else {
+        const createData = await apiFetchJson<any>('/listings', { method: 'POST', body: JSON.stringify(payload) })
+        listingId = createData?.listing?.id ?? createData?.item?.id ?? createData?.id ?? createData?.listingId
+        if (!listingId) throw new Error('Не удалось сохранить черновик')
+      }
+      const newPhotos = photoItems.filter((x) => x.isNew && x.file)
+      for (let i = 0; i < newPhotos.length; i++) {
+        const file = newPhotos[i]?.file
+        if (!file) continue
+        const form = new FormData()
+        form.append('file', file)
+        form.append('sortOrder', String(i))
+        await apiFetch(`/listings/${encodeURIComponent(String(listingId))}/photos`, { method: 'POST', body: form })
+      }
+      await queryClient.invalidateQueries({ queryKey: ['owner-listings'] }).catch(() => {})
+      isDirtyRef.current = false
+      setShowExitConfirm(false)
+      onSuccess?.(listingId)
+    } catch (e: any) {
+      setError(e?.message ?? 'Ошибка сохранения черновика')
+    }
+  }, [
+    type, city, addressLine, title, description, price, rooms, area, floor, totalFloors, deposit,
+    photoItems, initialListing?.id, queryClient, onSuccess,
+  ])
+
   const submit = useCallback(async () => {
     if (isSubmitting) return
     setError(null)
@@ -308,12 +412,24 @@ export function CreateListingWizardV2({
         })
       }
 
+      /** TZ-65: отправка на модерацию (или автоодобрение → published) */
+      const publishRes = await apiFetchJson<{ item?: { statusCanonical?: string; status?: string } }>(
+        `/listings/${encodeURIComponent(String(listingId))}/publish`,
+        { method: 'POST' }
+      )
+      const canonical = toCanonicalStatus(publishRes?.item?.statusCanonical ?? publishRes?.item?.status)
+      const isPublished = canonical === 'approved' || canonical === 'published'
+
       try {
         await queryClient.invalidateQueries({ queryKey: ['owner-listings'] })
       } catch {
         /* ignore */
       }
-      onSuccess?.(listingId)
+      isDirtyRef.current = false
+      setPublishResult({
+        status: isPublished ? 'published' : 'moderation',
+        listingId: String(listingId),
+      })
     } catch (err: any) {
       if (err?.code === 'LIMIT_REACHED') {
         onLimitReached?.()
@@ -348,6 +464,71 @@ export function CreateListingWizardV2({
   ])
 
   const currentStepDisplay = step + 1
+  const hasContent = city.trim() || title.trim() || price.trim() || photoItems.length > 0
+
+  const handleCloseClick = useCallback(() => {
+    if (hasContent) setShowExitConfirm(true)
+    else onCancel?.()
+  }, [hasContent, onCancel])
+
+  const handleExitWithoutSave = useCallback(() => {
+    setShowExitConfirm(false)
+    isDirtyRef.current = false
+    onCancel?.()
+  }, [onCancel])
+
+  const handleContinueEdit = useCallback(() => {
+    setShowExitConfirm(false)
+  }, [])
+
+  /** TZ-65: успех публикации — экран с кнопками */
+  if (publishResult) {
+    return (
+      <div className="create-listing-wizard space-y-6 max-w-md mx-auto">
+        <div className="rounded-[16px] border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-[var(--accent)]/15 flex items-center justify-center text-2xl mx-auto" aria-hidden>
+            {publishResult.status === 'published' ? '✓' : '🟡'}
+          </div>
+          <h2 className="text-[20px] font-bold text-[var(--text-primary)]">
+            {publishResult.status === 'published'
+              ? 'Объявление опубликовано'
+              : 'Объявление отправлено на модерацию'}
+          </h2>
+          <p className="text-[14px] text-[var(--text-secondary)]">
+            {publishResult.status === 'published'
+              ? 'Оно уже видно в поиске. Вы можете открыть его или продвинуть.'
+              : 'Мы проверим объявление и уведомим о результате.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            {publishResult.status === 'published' && (
+              <>
+                <Link
+                  href={`/listings/${publishResult.listingId}`}
+                  className="rounded-[12px] px-5 py-3 font-semibold text-[15px] bg-[var(--accent)] text-[var(--button-primary-text)] hover:opacity-95"
+                >
+                  Открыть
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => onSuccess?.(publishResult.listingId)}
+                  className="rounded-[12px] px-5 py-3 font-semibold text-[15px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+                >
+                  Продвинуть
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => onSuccess?.(publishResult.listingId)}
+              className="rounded-[12px] px-5 py-3 font-semibold text-[15px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+            >
+              К моим объявлениям
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div ref={topRef} className="create-listing-wizard space-y-6">
@@ -363,13 +544,50 @@ export function CreateListingWizardV2({
         {onCancel && (
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCloseClick}
             className="rounded-[12px] border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-input)]"
           >
             Закрыть
           </button>
         )}
       </div>
+
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog" aria-modal="true">
+          <div className="rounded-[16px] bg-[var(--bg-card)] border border-[var(--border-main)] p-6 max-w-sm w-full shadow-xl space-y-4">
+            <h3 className="text-[18px] font-bold text-[var(--text-primary)]">Выйти из формы?</h3>
+            <p className="text-[14px] text-[var(--text-secondary)]">
+              У вас есть несохранённые данные. Сохранить черновик или выйти без сохранения?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleContinueEdit}
+                className="rounded-[12px] px-4 py-3 font-semibold text-[15px] bg-[var(--accent)] text-[var(--button-primary-text)]"
+              >
+                Продолжить редактирование
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExitConfirm(false)
+                  saveDraftAndExit()
+                }}
+                className="rounded-[12px] px-4 py-3 font-semibold text-[15px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)]"
+              >
+                Сохранить и выйти
+              </button>
+              <button
+                type="button"
+                onClick={handleExitWithoutSave}
+                className="rounded-[12px] px-4 py-3 font-semibold text-[15px] text-[var(--danger)] hover:bg-[var(--danger)]/10"
+              >
+                Выйти без сохранения
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="text-[14px] font-medium text-[var(--danger)]" role="alert">
@@ -473,7 +691,14 @@ export function CreateListingWizardV2({
               rooms={rooms}
               area={area}
             />
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setStep(5)}
+                className="rounded-[12px] px-5 py-3 font-semibold text-[15px] border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+              >
+                Редактировать
+              </button>
               <button
                 type="button"
                 onClick={submit}

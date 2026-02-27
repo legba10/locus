@@ -57,6 +57,7 @@ export default function ProfileListingsPage() {
     createdAt: item.createdAt,
     views: (item as any).viewsCount ?? (item as any).views ?? 0,
     favorites: (item as any).favoritesCount ?? 0,
+    rejectionReason: item.moderationNote ?? item.moderationComment ?? (item as any).moderation_note ?? null,
   })
 
   const activeAiListing = items.find((item) => item.id === aiPanelListingId) ?? null

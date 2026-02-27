@@ -17,6 +17,8 @@ export interface ListingCardCabinetV2Data {
   createdAt?: string
   views?: number
   favorites?: number
+  /** TZ-65: причина отклонения (при status rejected) */
+  rejectionReason?: string | null
 }
 
 export interface ListingCardCabinetV2Props {
@@ -50,6 +52,8 @@ export function ListingCardCabinetV2({
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const statusBadge = apiStatusToBadge(listing.status)
+  const isPending = statusBadge === 'pending'
+  const isRejected = statusBadge === 'rejected'
 
   useEffect(() => {
     if (!menuOpen) return
@@ -99,6 +103,11 @@ export function ListingCardCabinetV2({
             <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">
               {formatPrice(listing.price)}
             </p>
+            {isRejected && listing.rejectionReason && (
+              <p className="text-[13px] text-[var(--danger)] mt-2 mb-1">
+                Причина: {listing.rejectionReason}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <StatusBadge status={statusBadge} />
               <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
@@ -115,13 +124,19 @@ export function ListingCardCabinetV2({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => onEdit(listing.id)}
-              className="px-3 py-2 rounded-[10px] text-[13px] font-medium bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-[var(--button-primary-text)] transition-colors"
-            >
-              Редактировать
-            </button>
+            {isPending ? (
+              <span className="px-3 py-2 rounded-[10px] text-[13px] text-[var(--text-muted)]">
+                Редактирование недоступно
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onEdit(listing.id)}
+                className="px-3 py-2 rounded-[10px] text-[13px] font-medium bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-[var(--button-primary-text)] transition-colors"
+              >
+                {isRejected ? 'Исправить и отправить снова' : 'Редактировать'}
+              </button>
+            )}
             {onStats && (
               <button type="button" onClick={() => onStats(listing.id)} className="px-3 py-2 rounded-[10px] text-[13px] font-medium bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)] transition-colors">
                 Статистика
@@ -136,13 +151,15 @@ export function ListingCardCabinetV2({
                 {listing.plan === 'pro' || listing.plan === 'top' ? 'Изменить' : 'Улучшить объявление'}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => onHide(listing.id)}
-              className="px-3 py-2 rounded-[10px] text-[13px] font-medium bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)] transition-colors"
-            >
-              Скрыть
-            </button>
+            {statusBadge === 'active' && (
+              <button
+                type="button"
+                onClick={() => onHide(listing.id)}
+                className="px-3 py-2 rounded-[10px] text-[13px] font-medium bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-main)] transition-colors"
+              >
+                Снять с публикации
+              </button>
+            )}
             {onArchive && (
               <button
                 type="button"

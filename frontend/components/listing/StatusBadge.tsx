@@ -10,9 +10,10 @@ export type ListingStatusBadge =
   | "archived" // архив — muted
   | "draft";   // черновик — серый
 
+/** TZ-65: понятные статусы для пользователя */
 const LABELS: Record<ListingStatusBadge, string> = {
-  active: "Активно",
-  pending: "На проверке",
+  active: "Опубликовано",
+  pending: "На модерации",
   rejected: "Отклонено",
   archived: "Архив",
   draft: "Черновик",
