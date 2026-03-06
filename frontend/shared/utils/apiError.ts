@@ -18,11 +18,24 @@ const STATUS_MESSAGES: Record<number, string> = {
 };
 
 /**
+ * Сообщения, которые не показывать пользователю (заменяем на понятные).
+ * ТЗ-4: "Application not found" и подобные — заменяем на "Ошибка публикации".
+ */
+const REPLACE_MESSAGES: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /application\s+not\s+found/i, replacement: "Ошибка публикации. Проверьте подключение к серверу." },
+  { pattern: /cannot\s+(get|post|put|patch|delete)\s+/i, replacement: "Ошибка сервера. Попробуйте позже." },
+];
+
+/**
  * Возвращает понятное сообщение для пользователя по коду ответа или тексту ошибки.
  */
 export function getApiErrorMessage(status: number, serverMessage?: string): string {
-  if (serverMessage && serverMessage.trim().length > 0 && serverMessage.length < 200) {
-    return serverMessage;
+  let msg = serverMessage?.trim() ?? "";
+  if (msg.length > 0 && msg.length < 200) {
+    for (const { pattern, replacement } of REPLACE_MESSAGES) {
+      if (pattern.test(msg)) return replacement;
+    }
+    return msg;
   }
   return STATUS_MESSAGES[status] ?? `Ошибка запроса (${status}). Попробуйте позже.`;
 }

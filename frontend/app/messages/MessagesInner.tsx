@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/domains/auth'
 import { useFetch } from '@/shared/hooks/useFetch'
-import { ChatPage } from '@/features/chat/ChatPage'
+import ChatPage from '@/features/chat/ChatPage'
 import { cn } from '@/shared/utils/cn'
 
 type ChatItem = {
