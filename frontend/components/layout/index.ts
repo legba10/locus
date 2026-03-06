@@ -1,7 +1,5 @@
 export { Header } from './Header'
-export { BottomNav } from './BottomNav'
 export { ProfileRouteBodyClass } from './ProfileRouteBodyClass'
-export { BottomNavGlobal } from './BottomNav'
 export { AppSidebarTZ14 } from './AppSidebarTZ14'
 export { NotificationsPanel } from './NotificationsPanel'
 export type { NotificationsPanelProps, NotificationItem } from './NotificationsPanel'
