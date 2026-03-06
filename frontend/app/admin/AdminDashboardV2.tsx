@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, usePathname } from 'next/navigation'
 import { cn } from '@/shared/utils/cn'
 import { formatPrice } from '@/core/i18n/ru'
 import { apiFetch } from '@/shared/utils/apiFetch'
@@ -11,8 +11,17 @@ import { getAiAdminMockReviewMetrics } from '@/ai/aiAdmin'
 import { useAiController } from '@/ai/aiController'
 import { AiAdminPanel } from '@/components/ai/AiAdminPanel'
 
-type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'chats' | 'settings'
-const ADMIN_TAB_IDS: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'chats', 'settings']
+type AdminTab = 'dashboard' | 'users' | 'listings' | 'moderation' | 'bookings' | 'push' | 'reports' | 'stats' | 'chats' | 'settings'
+const ADMIN_TAB_IDS: AdminTab[] = ['dashboard', 'users', 'listings', 'moderation', 'bookings', 'push', 'reports', 'stats', 'chats', 'settings']
+
+/** TZ-1: derive tab from pathname for route-based admin navigation */
+function getTabFromPath(pathname: string | null): AdminTab | null {
+  if (!pathname) return null
+  const segment = pathname.replace(/^\/admin\/?/, '').split('/')[0] || 'dashboard'
+  if (segment === 'dashboard' || segment === '') return 'dashboard'
+  if (ADMIN_TAB_IDS.includes(segment as AdminTab)) return segment as AdminTab
+  return null
+}
 
 /** ТЗ-5: flat + nested from GET /admin/stats */
 interface AdminStats {
@@ -84,43 +93,69 @@ interface AdminListing {
   amenities?: unknown[]
 }
 
-export function AdminDashboardV2() {
+export interface AdminDashboardV2Props {
+  /** TZ-1: initial tab from route (e.g. /admin/users → "users") */
+  initialTab?: AdminTab
+}
+
+export function AdminDashboardV2({ initialTab }: AdminDashboardV2Props = {}) {
   const searchParams = useSearchParams()
-  const tabFromUrl = searchParams?.get('tab') as AdminTab | null
-  const [activeTab, setActiveTab] = useState<AdminTab>(tabFromUrl && ADMIN_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'dashboard')
+  const pathname = usePathname()
+  const tabFromPath = getTabFromPath(pathname)
+  const tabFromQuery = searchParams?.get('tab') as AdminTab | null
+  const resolvedTab = initialTab ?? tabFromPath ?? (tabFromQuery && ADMIN_TAB_IDS.includes(tabFromQuery) ? tabFromQuery : null)
+  const [activeTab, setActiveTab] = useState<AdminTab>(resolvedTab ?? 'dashboard')
   const aiController = useAiController()
 
   useEffect(() => {
-    if (tabFromUrl && tabFromUrl !== activeTab && ADMIN_TAB_IDS.includes(tabFromUrl)) {
-      setActiveTab(tabFromUrl)
-    }
-  }, [tabFromUrl, activeTab])
+    const next = resolvedTab ?? activeTab
+    if (next && next !== activeTab) setActiveTab(next)
+  }, [resolvedTab, activeTab])
 
-  const tabs = [
-    { id: 'dashboard' as AdminTab, label: 'Дашборд', icon: <DashboardIcon /> },
-    { id: 'users' as AdminTab, label: 'Пользователи', icon: <UsersIcon /> },
-    { id: 'listings' as AdminTab, label: 'Объявления', icon: <ListingsIcon /> },
-    { id: 'moderation' as AdminTab, label: 'Модерация', icon: <ModerationIcon /> },
+  /** TZ-1: основные пункты с route-based навигацией */
+  const mainTabs = [
+    { id: 'dashboard' as AdminTab, label: 'Дашборд', icon: <DashboardIcon />, href: '/admin' },
+    { id: 'listings' as AdminTab, label: 'Объявления', icon: <ListingsIcon />, href: '/admin/listings' },
+    { id: 'moderation' as AdminTab, label: 'Модерация', icon: <ModerationIcon />, href: '/admin/moderation' },
+    { id: 'reports' as AdminTab, label: 'Жалобы', icon: <ReportsIcon />, href: '/admin/reports' },
+    { id: 'users' as AdminTab, label: 'Пользователи', icon: <UsersIcon />, href: '/admin/users' },
+    { id: 'stats' as AdminTab, label: 'Статистика', icon: <DashboardIcon />, href: '/admin/stats' },
+  ]
+
+  const extraTabs = [
     { id: 'bookings' as AdminTab, label: 'Брони', icon: <BookingsIcon /> },
     { id: 'push' as AdminTab, label: 'Уведомления', icon: <PushIcon /> },
     { id: 'chats' as AdminTab, label: 'Чаты', icon: <ChatsIcon /> },
     { id: 'settings' as AdminTab, label: 'Настройки', icon: <SettingsIcon /> },
   ]
 
-  const tabButton = (tab: (typeof tabs)[0]) => (
-    <button
-      key={tab.id}
-      type="button"
-      onClick={() => setActiveTab(tab.id)}
-      className={cn(
-        'w-full lg:w-auto px-4 py-2.5 rounded-[12px] text-[14px] font-medium transition-all whitespace-nowrap flex items-center gap-2',
-        activeTab === tab.id ? 'admin-tab-active' : 'admin-tab-inactive'
-      )}
-    >
-      {tab.icon}
-      {tab.label}
-    </button>
-  )
+  const mobileTabEl = (tab: { id: AdminTab; label: string; icon: JSX.Element; href?: string }) =>
+    tab.href ? (
+      <Link
+        key={tab.id}
+        href={tab.href}
+        className={cn(
+          'px-4 py-2.5 rounded-[12px] text-[14px] font-medium transition-all whitespace-nowrap flex items-center gap-2',
+          activeTab === tab.id ? 'admin-tab-active' : 'admin-tab-inactive'
+        )}
+      >
+        {tab.icon}
+        {tab.label}
+      </Link>
+    ) : (
+      <button
+        key={tab.id}
+        type="button"
+        onClick={() => setActiveTab(tab.id)}
+        className={cn(
+          'px-4 py-2.5 rounded-[12px] text-[14px] font-medium transition-all whitespace-nowrap flex items-center gap-2',
+          activeTab === tab.id ? 'admin-tab-active' : 'admin-tab-inactive'
+        )}
+      >
+        {tab.icon}
+        {tab.label}
+      </button>
+    )
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -153,22 +188,17 @@ export function AdminDashboardV2() {
       </header>
 
       <div className="admin-layout flex-1">
-        {/* ТЗ-4: sidebar desktop 240px — вертикальные табы */}
-        <aside className="admin-sidebar">
-          <nav className="flex flex-col gap-1 px-3">
-            {tabs.map(tab => tabButton(tab))}
-          </nav>
-        </aside>
-
-        <main className="admin-main">
-          {/* Mobile: табы горизонтально */}
+        {/* TZ-1: sidebar в layout (AdminSidebar), здесь только контент */}
+        <main className="admin-main flex-1">
+          {/* Mobile: табы горизонтально (TZ-1: основные + доп.) */}
           <div className="lg:hidden border-b border-[var(--admin-card-border)] px-4 py-3 overflow-x-auto">
             <div className="flex gap-2 min-w-max">
-              {tabs.map(tab => tabButton(tab))}
+              {mainTabs.map(tab => mobileTabEl(tab))}
+              {extraTabs.map(tab => mobileTabEl(tab))}
             </div>
           </div>
 
-          <div className="admin-container flex-1 py-6 lg:py-8">
+          <div className="admin-container flex-1 py-6 lg:py-8 px-4 lg:px-6">
             <div className="admin-content admin-gap-section flex flex-col" style={{ maxHeight: 'none' }}>
               {activeTab === 'dashboard' && <DashboardTab />}
               {activeTab === 'users' && <UsersTab />}
@@ -176,6 +206,8 @@ export function AdminDashboardV2() {
               {activeTab === 'moderation' && <ModerationTab />}
               {activeTab === 'bookings' && <BookingsTab />}
               {activeTab === 'push' && <PushTab />}
+              {activeTab === 'reports' && <ReportsTab />}
+              {activeTab === 'stats' && <DashboardTab />}
               {activeTab === 'chats' && <ChatsTab />}
               {activeTab === 'settings' && <SettingsTab />}
             </div>
@@ -945,6 +977,21 @@ function SettingsTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// REPORTS — жалобы пользователей (TZ-1)
+// ═══════════════════════════════════════════════════════════════
+function ReportsTab() {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-[18px] font-bold text-[var(--admin-text-primary)]">Жалобы</h2>
+      <p className="text-[14px] text-[var(--admin-text-secondary)]">Управление жалобами пользователей на объявления и других пользователей.</p>
+      <div className="admin-card p-6 text-center text-[var(--admin-text-secondary)]">
+        Список жалоб загружается...
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PUSH — отправка уведомлений всем пользователям
 // ═══════════════════════════════════════════════════════════════
 function PushTab() {
@@ -1064,6 +1111,14 @@ function ModerationIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  )
+}
+
+function ReportsIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   )
 }

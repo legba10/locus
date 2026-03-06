@@ -783,10 +783,10 @@ export function ListingPageTZ8({ id, initialListing }: ListingPageTZ8Props) {
                   <Link href={`/listing/edit/${item.id}`} className="block w-full h-12 rounded-[12px] bg-[var(--accent)] text-[var(--button-primary-text)] font-semibold text-[15px] flex items-center justify-center hover:opacity-95">
                     Редактировать
                   </Link>
-                  <Link href="/admin?tab=moderation" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
+                  <Link href="/admin/moderation" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
                     Модерация
                   </Link>
-                  <Link href="/admin?tab=push" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
+                  <Link href="/admin/reports" className="w-full h-10 rounded-[10px] border border-[var(--border-main)] bg-[var(--bg-input)] text-[13px] font-medium text-[var(--text-primary)] flex items-center justify-center">
                     Жалобы
                   </Link>
                   <button

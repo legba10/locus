@@ -11,7 +11,7 @@ const PageClient = dynamic(() => import('../PageClient'), {
   ),
 })
 
-/** TZ-1: /admin/moderation — вкладка Модерация */
-export default function AdminModerationPage() {
+/** TZ-1: /admin/listings — вкладка Объявления */
+export default function AdminListingsPage() {
   return <PageClient />
 }

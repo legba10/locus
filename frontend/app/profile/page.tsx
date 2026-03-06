@@ -16,8 +16,6 @@ import {
   LogOut,
   BarChart3,
   Shield,
-  AlertTriangle,
-  Users,
   Plus,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
@@ -35,7 +33,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { role, canSeeAdminPanel, canSeeMyListings, canSeeFinance, canSeePromo, canSeeAnalytics, canCreateListing } = usePermissions()
+  const { role, canSeeMyListings, canSeeFinance, canSeePromo, canSeeAnalytics, canCreateListing } = usePermissions()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -89,24 +87,12 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {canSeeAdminPanel && (
+        {user?.role === 'admin' && (
           <section className="profile-admin-section">
             <h2 className="profile-admin-section__title">Администрирование</h2>
             <div className="profile-item-wrap">
               <Link href="/admin" className={menuItemCls}>
                 <span className="flex items-center gap-3"><Shield className={ICON_CLS} />Админ панель</span>
-                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-              </Link>
-              <Link href="/admin?tab=moderation" className={menuItemCls}>
-                <span className="flex items-center gap-3"><Shield className={ICON_CLS} />Модерация</span>
-                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-              </Link>
-              <Link href="/admin?tab=push" className={menuItemCls}>
-                <span className="flex items-center gap-3"><AlertTriangle className={ICON_CLS} />Жалобы</span>
-                <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
-              </Link>
-              <Link href="/admin?tab=users" className={menuItemCls}>
-                <span className="flex items-center gap-3"><Users className={ICON_CLS} />Пользователи</span>
                 <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
               </Link>
             </div>

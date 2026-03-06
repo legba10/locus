@@ -98,7 +98,7 @@ export interface Booking {
 }
 
 // ——— User / Auth (совместимо с backend /auth/me)
-export type AppRole = "user" | "landlord" | "admin";
+export type AppRole = "user" | "landlord" | "admin" | "moderator";
 export type UserTariff = "free" | "landlord_basic" | "landlord_pro";
 export type UserPlan = "FREE" | "PRO" | "AGENCY";
 export interface UserProfile {
